@@ -1,0 +1,141 @@
+"""
+ML Service — Container 2 (Internal)
+Serves demand forecasting (Model 1) and departure prediction (Model 2).
+"""
+
+import json
+import logging
+from contextlib import asynccontextmanager
+from datetime import timezone
+from pathlib import Path
+
+from fastapi import FastAPI
+
+from app.config import MODEL_VERSION, ARTIFACTS_DIR
+from app.models.demand_forecast import load_demand_models, predict_demand
+from app.models.departure_prediction import load_departure_model, predict_departure
+from app.schemas import (
+    DemandForecastRequest,
+    DemandForecastResponse,
+    DemandForecastPoint,
+    DeparturePredictionRequest,
+    DeparturePredictionResponse,
+    HealthResponse,
+)
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+_demand_loaded = False
+_departure_loaded = False
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _demand_loaded, _departure_loaded
+    try:
+        load_demand_models()
+        _demand_loaded = True
+        logger.info("Demand forecasting models loaded")
+    except FileNotFoundError:
+        logger.warning("Demand model not found — /forecast will be unavailable")
+
+    try:
+        load_departure_model()
+        _departure_loaded = True
+        logger.info("Departure prediction model loaded")
+    except FileNotFoundError:
+        logger.warning("Departure model not found — /predict-departure will be unavailable")
+
+    yield
+
+
+app = FastAPI(
+    title="EV Charging ML Service",
+    description="Internal ML inference for demand forecasting and departure prediction",
+    version=MODEL_VERSION,
+    lifespan=lifespan,
+)
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health():
+    return HealthResponse(
+        status="healthy",
+        model_version=MODEL_VERSION,
+        demand_model_loaded=_demand_loaded,
+        departure_model_loaded=_departure_loaded,
+    )
+
+
+@app.post("/forecast", response_model=DemandForecastResponse)
+async def forecast(request: DemandForecastRequest):
+    current = request.current_time.replace(tzinfo=timezone.utc) if request.current_time.tzinfo is None else request.current_time
+    results = predict_demand(
+        current_time=current,
+        horizon_windows=request.horizon_windows,
+        recent_arrivals=request.recent_arrivals,
+        recent_kwh=request.recent_kwh,
+    )
+    return DemandForecastResponse(
+        model_version=MODEL_VERSION,
+        forecast=[DemandForecastPoint(**r) for r in results],
+    )
+
+
+@app.post("/predict-departure", response_model=DeparturePredictionResponse)
+async def predict_departure_endpoint(request: DeparturePredictionRequest):
+    arrival = request.arrival_time.replace(tzinfo=timezone.utc) if request.arrival_time.tzinfo is None else request.arrival_time
+    result = predict_departure(
+        arrival_time=arrival,
+        site_id=request.site_id,
+        cluster_id=request.cluster_id,
+        user_mean_stay=request.user_historical_mean_stay_min,
+        station_mean_stay=request.station_historical_mean_stay_min,
+    )
+    return DeparturePredictionResponse(
+        model_version=MODEL_VERSION,
+        predicted_stay_duration_min=result["predicted_stay_duration_min"],
+        predicted_departure_time=result["predicted_departure_time"],
+    )
+
+
+@app.get("/model-metrics")
+async def model_metrics():
+    """Return model evaluation metrics and metadata for monitoring."""
+    eval_path = ARTIFACTS_DIR / "eval_report.json"
+    eval_data = {}
+    if eval_path.exists():
+        eval_data = json.loads(eval_path.read_text())
+
+    return {
+        "model_version": MODEL_VERSION,
+        "demand_model_loaded": _demand_loaded,
+        "departure_model_loaded": _departure_loaded,
+        "evaluation": eval_data,
+        "models": {
+            "demand_forecast": {
+                "type": "XGBoost",
+                "targets": ["arrival_count", "total_kwh"],
+                "input_features": [
+                    "hour_sin", "hour_cos", "dow_sin", "dow_cos",
+                    "is_weekend", "month_sin", "month_cos",
+                    "lag_1", "lag_2", "lag_48",
+                    "lag_kwh_1", "lag_kwh_48",
+                    "rolling_6", "rolling_48", "rolling_kwh_6",
+                ],
+                "description": "Predicts future EV arrivals and energy demand per 30-min window",
+            },
+            "departure_prediction": {
+                "type": "XGBoost",
+                "target": "stay_duration_minutes",
+                "input_features": [
+                    "hour_sin", "hour_cos", "dow_sin", "dow_cos",
+                    "is_weekend", "month_sin", "month_cos",
+                    "site_encoded", "cluster_encoded",
+                    "user_mean_stay", "station_mean_stay",
+                ],
+                "description": "Predicts how long each EV will stay based on arrival patterns",
+            },
+        },
+    }

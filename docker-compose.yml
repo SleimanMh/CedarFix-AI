@@ -1,0 +1,43 @@
+# EV Charging Optimization — Docker Compose
+# Architecture: 3 containers (1 external, 2 internal)
+# See SYSTEM_DESIGN.md Section 3
+
+services:
+  # ── Container 1: API Gateway + Dashboard (EXTERNAL) ──
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"   # API Gateway
+      - "8501:8501"   # Streamlit Dashboard
+    environment:
+      - ML_SERVICE_URL=http://ml-service:8001
+      - OPTIMIZER_SERVICE_URL=http://optimizer:8002
+    networks:
+      - internal
+    depends_on:
+      ml-service:
+        condition: service_healthy
+      optimizer:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Container 2: ML Inference Service (INTERNAL) ──
+  ml-service:
+    build: ./ml-service
+    # No ports exposed to host — internal only
+    networks:
+      - internal
+    restart: unless-stopped
+
+  # ── Container 3: Optimizer + Grid Validation (INTERNAL) ──
+  optimizer:
+    build: ./optimizer
+    # No ports exposed to host — internal only
+    networks:
+      - internal
+    restart: unless-stopped
+
+networks:
+  internal:
+    driver: bridge
+    # Container 2 and 3 are only accessible via this private network
