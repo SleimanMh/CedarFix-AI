@@ -1,0 +1,6 @@
+{
+  "holdout_mae_kw": 3.2542,
+  "holdout_rmse_kw": 7.9372,
+  "holdout_coverage_pct": 86.93,
+  "holdout_rows": 1262
+}
