@@ -1,0 +1,186 @@
+{
+  "dataset_path": "C:\\Users\\HP\\Desktop\\Project 503N\\data\\raw\\simulation_dataset_final.csv",
+  "rows": 40000,
+  "estimators": 120,
+  "seed": 42,
+  "baseline_random_split": {
+    "accuracy": 0.99025,
+    "macro_f1": 0.9533974363989953,
+    "per_class": {
+      "compatible": {
+        "precision": 0.9553264604810997,
+        "recall": 0.9455782312925171,
+        "f1": 0.9504273504273504,
+        "support": 294
+      },
+      "conditional": {
+        "precision": 0.9234234234234234,
+        "recall": 0.9030837004405287,
+        "f1": 0.9131403118040089,
+        "support": 454
+      },
+      "not_compatible": {
+        "precision": 0.995732966276669,
+        "recall": 0.9975179260893546,
+        "f1": 0.9966246469656265,
+        "support": 7252
+      }
+    },
+    "confusion_matrix": [
+      [
+        278,
+        16,
+        0
+      ],
+      [
+        13,
+        410,
+        31
+      ],
+      [
+        0,
+        18,
+        7234
+      ]
+    ],
+    "train_rows": 32000,
+    "test_rows": 8000
+  },
+  "ood_transformer_kva": {
+    "rows": [
+      {
+        "group_col": "transformer_kva",
+        "holdout_value": 100,
+        "test_rows": 7990,
+        "accuracy": 0.9973717146433041,
+        "macro_f1": 0.8842916720616275
+      },
+      {
+        "group_col": "transformer_kva",
+        "holdout_value": 160,
+        "test_rows": 7957,
+        "accuracy": 0.9937162247078044,
+        "macro_f1": 0.8823287521831622
+      },
+      {
+        "group_col": "transformer_kva",
+        "holdout_value": 250,
+        "test_rows": 7914,
+        "accuracy": 0.983826130907253,
+        "macro_f1": 0.8992647445970819
+      },
+      {
+        "group_col": "transformer_kva",
+        "holdout_value": 400,
+        "test_rows": 7997,
+        "accuracy": 0.9661122921095411,
+        "macro_f1": 0.8962816236365065
+      },
+      {
+        "group_col": "transformer_kva",
+        "holdout_value": 500,
+        "test_rows": 8142,
+        "accuracy": 0.9540653402112503,
+        "macro_f1": 0.8939342033439163
+      }
+    ],
+    "summary": {
+      "mean_accuracy": 0.9790183405158306,
+      "mean_macro_f1": 0.8912201991644588,
+      "worst_macro_f1": 0.8823287521831622
+    }
+  },
+  "ood_cable_type": {
+    "rows": [
+      {
+        "group_col": "cable_type",
+        "holdout_value": "A_strong",
+        "test_rows": 13408,
+        "accuracy": 0.9311605011933174,
+        "macro_f1": 0.7303421636196136
+      },
+      {
+        "group_col": "cable_type",
+        "holdout_value": "B_medium",
+        "test_rows": 13278,
+        "accuracy": 0.9411055881909927,
+        "macro_f1": 0.764955215734442
+      },
+      {
+        "group_col": "cable_type",
+        "holdout_value": "C_weak",
+        "test_rows": 13314,
+        "accuracy": 0.9568123779480247,
+        "macro_f1": 0.7248745827526527
+      }
+    ],
+    "summary": {
+      "mean_accuracy": 0.9430261557774449,
+      "mean_macro_f1": 0.7400573207022361,
+      "worst_macro_f1": 0.7248745827526527
+    }
+  },
+  "ood_phase_balance_class": {
+    "rows": [
+      {
+        "group_col": "phase_balance_class",
+        "holdout_value": "balanced",
+        "test_rows": 13415,
+        "accuracy": 0.9572120760342899,
+        "macro_f1": 0.7909808102624581
+      },
+      {
+        "group_col": "phase_balance_class",
+        "holdout_value": "heavily_unbalanced",
+        "test_rows": 13300,
+        "accuracy": 0.9723308270676692,
+        "macro_f1": 0.8568493252174139
+      },
+      {
+        "group_col": "phase_balance_class",
+        "holdout_value": "mildly_unbalanced",
+        "test_rows": 13285,
+        "accuracy": 0.9802032367331577,
+        "macro_f1": 0.8968552720229978
+      }
+    ],
+    "summary": {
+      "mean_accuracy": 0.969915379945039,
+      "mean_macro_f1": 0.8482284691676233,
+      "worst_macro_f1": 0.7909808102624581
+    }
+  },
+  "hard_zone_load_ratio_bins": {
+    "rows": [
+      {
+        "load_ratio_bin": "<=0.8",
+        "rows": 1370,
+        "accuracy": 0.9510948905109489,
+        "macro_f1": 0.9327018514109544
+      },
+      {
+        "load_ratio_bin": "0.8-1.0",
+        "rows": 670,
+        "accuracy": 0.9835820895522388,
+        "macro_f1": 0.9797649216542794
+      },
+      {
+        "load_ratio_bin": "1.0-1.5",
+        "rows": 1232,
+        "accuracy": 1.0,
+        "macro_f1": 1.0
+      },
+      {
+        "load_ratio_bin": ">1.5",
+        "rows": 4728,
+        "accuracy": 1.0,
+        "macro_f1": 1.0
+      }
+    ],
+    "summary": {
+      "mean_accuracy": 0.9836692450157969,
+      "mean_macro_f1": 0.9781166932663085,
+      "worst_macro_f1": 0.9327018514109544
+    }
+  }
+}
