@@ -1,0 +1,225 @@
+{
+  "title": "EV Charging Platform",
+  "uid": "ev-platform",
+  "version": 1,
+  "schemaVersion": 36,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"eep\"}[1m])",
+          "legendFormat": "EEP"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-forecast\"}[1m])",
+          "legendFormat": "Forecast"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-optimizer\"}[1m])",
+          "legendFormat": "Optimizer"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-governance\"}[1m])",
+          "legendFormat": "Governance"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-grid-compatibility\"}[1m])",
+          "legendFormat": "GridCompat"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latency p50 / p95 (seconds)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"eep\"}[5m]))",
+          "legendFormat": "EEP p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"eep\"}[5m]))",
+          "legendFormat": "EEP p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"iep-optimizer\"}[5m]))",
+          "legendFormat": "Optimizer p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"iep-optimizer\"}[5m]))",
+          "legendFormat": "Optimizer p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"iep-forecast\"}[5m]))",
+          "legendFormat": "Forecast p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"iep-forecast\"}[5m]))",
+          "legendFormat": "Forecast p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"iep-governance\"}[5m]))",
+          "legendFormat": "Governance p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"iep-governance\"}[5m]))",
+          "legendFormat": "Governance p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"iep-grid-compatibility\"}[5m]))",
+          "legendFormat": "GridCompat p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"iep-grid-compatibility\"}[5m]))",
+          "legendFormat": "GridCompat p95"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Error Rate by Service",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"eep\",status=~\"5..\"}[1m])",
+          "legendFormat": "EEP 5xx"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-forecast\",status=~\"5..\"}[1m])",
+          "legendFormat": "Forecast 5xx"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-optimizer\",status=~\"5..\"}[1m])",
+          "legendFormat": "Optimizer 5xx"
+        },
+        {
+          "expr": "rate(http_requests_total{job=\"iep-grid-compatibility\",status=~\"5..\"}[1m])",
+          "legendFormat": "GridCompat 5xx"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Forecast Avg Predicted kW",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "ev_forecast_predicted_kw_avg",
+          "legendFormat": "Avg Predicted kW"
+        },
+        {
+          "expr": "ev_forecast_confidence_width_avg",
+          "legendFormat": "Avg CI Width (kW)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Optimizer Solver Status",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "rate(ev_optimizer_solves_total{status=\"optimal\"}[5m])",
+          "legendFormat": "Optimal solves/s"
+        },
+        {
+          "expr": "rate(ev_optimizer_solves_total{status=\"greedy_fallback\"}[5m])",
+          "legendFormat": "Greedy fallbacks/s"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Optimizer Solve Time (s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(ev_optimizer_solve_time_seconds_bucket[5m]))",
+          "legendFormat": "p50 solve time"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(ev_optimizer_solve_time_seconds_bucket[5m]))",
+          "legendFormat": "p95 solve time"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Governance: MAE vs Baseline",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "ev_governance_mae_kw",
+          "legendFormat": "Rolling MAE (kW)"
+        },
+        {
+          "expr": "ev_governance_mae_baseline_kw",
+          "legendFormat": "Baseline MAE (kW)"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Drift Detection (PSI)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "ev_governance_psi",
+          "legendFormat": "PSI score"
+        }
+      ]
+    }
+  ]
+}

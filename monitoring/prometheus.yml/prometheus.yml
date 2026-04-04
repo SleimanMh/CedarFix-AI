@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "eep"
+    static_configs:
+      - targets: ["eep:8000"]
+    metrics_path: /metrics
+
+  - job_name: "iep-forecast"
+    static_configs:
+      - targets: ["iep-forecast:8001"]
+    metrics_path: /metrics
+
+  - job_name: "iep-optimizer"
+    static_configs:
+      - targets: ["iep-optimizer:8002"]
+    metrics_path: /metrics
+
+  - job_name: "iep-governance"
+    static_configs:
+      - targets: ["iep-governance:8003"]
+    metrics_path: /metrics
