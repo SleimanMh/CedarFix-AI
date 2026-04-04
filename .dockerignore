@@ -1,0 +1,51 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+*.egg-info
+.eggs
+
+# Non-service directories (not needed in any image)
+web-dashboard/
+FriendsWork/
+docs/
+tests/
+k8s/
+monitoring/
+
+# MLflow run artifacts (training-time only)
+mlruns/
+iep-forecast/mlruns/
+iep-optimizer/mlruns/
+iep-governance/mlruns/
+iep-grid-compatibility/mlruns/
+
+# Training-only scripts
+iep-forecast/train.py
+iep-forecast/evaluate_holdout.py
+iep-grid-compatibility/train_classifier.py
+iep-grid-compatibility/train_regressor.py
+
+# Data files not needed at runtime
+# (optimizer selectively copies only the 3 .py modules it needs)
+data/raw/
+data/new/
+data/processed/
+data/*.csv
+data/*.json
+data/preprocess.py
+data/grid_simulator.py
+data/__pycache__/
+
+# Misc repo files
+docker-compose.yml
+README.md
+feature_backlog.md
