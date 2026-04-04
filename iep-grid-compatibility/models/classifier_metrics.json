@@ -1,0 +1,29 @@
+{
+  "macro_f1": 0.9554,
+  "train_rows": 32000,
+  "test_rows": 8000,
+  "classes": [
+    "compatible",
+    "conditional",
+    "not_compatible"
+  ],
+  "features_numeric": [
+    "transformer_kva",
+    "base_load_kw",
+    "feeder_length_km",
+    "r1",
+    "x1",
+    "r0",
+    "x0",
+    "num_chargers_installed",
+    "num_chargers_active",
+    "charger_power_kw",
+    "nominal_load_ratio",
+    "nominal_headroom_kw"
+  ],
+  "features_categorical": [
+    "cable_type",
+    "phase_balance_class"
+  ],
+  "model": "RandomForestClassifier"
+}
