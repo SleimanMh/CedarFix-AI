@@ -199,6 +199,53 @@ def _build_forecast_slots(date_str: str, sessions: list[EVSessionInput]) -> list
 
 
 # ---------------------------------------------------------------------------
+# Adaptive reservation weight
+# ---------------------------------------------------------------------------
+
+def _compute_adaptive_beta(
+    base_load_kw: float,
+    transformer_kva: float,
+    grid_pattern: str,
+    drift_detected: bool,
+    n_sessions: int,
+) -> float:
+    """
+    Compute demand reservation weight (beta) from real-time signals.
+
+    Called on every /schedule request so the system reacts autonomously to
+    changing conditions — no manual tuning required.
+
+    Factors:
+      • Transformer utilization  → higher load → higher beta
+      • Grid pattern             → peak hours add pressure
+      • Forecast drift           → degraded model → lower demand trust
+      • Session density          → more EVs competing → tighter headroom
+
+    Returns beta in [0.10, 0.65].
+    """
+    beta = 0.30  # baseline
+
+    # Transformer pressure: reserve more when base load already occupies headroom
+    capacity_kw = transformer_kva * 0.9
+    utilization = base_load_kw / max(capacity_kw, 1.0)
+    beta += 0.20 * min(utilization, 1.0)  # up to +0.20 at full utilization
+
+    # Peak grid patterns demand more conservative scheduling
+    if grid_pattern in {"morning", "evening"}:
+        beta += 0.08
+
+    # Governance drift: predicted_kw values are less reliable → weight them less
+    if drift_detected:
+        beta -= 0.12
+
+    # More sessions competing for the same transformer → tighten headroom
+    if n_sessions >= 5:
+        beta += 0.05
+
+    return max(0.10, min(0.65, round(beta, 3)))
+
+
+# ---------------------------------------------------------------------------
 # Main endpoint
 # ---------------------------------------------------------------------------
 
@@ -350,6 +397,25 @@ async def schedule(request: Request, body: ScheduleRequest) -> ScheduleResponse:
                 # Map each prediction back to the actual slot_of_day from the
                 # input feature row — NOT the forecast response's list index.
                 # For duplicate slot_of_day values, take max (conservative).
+                # Extract governance drift signal — governance_resp was resolved
+                # concurrently above; no extra await needed.
+                _gov_drift = False
+                if not isinstance(governance_resp, Exception) and governance_resp.status_code == 200:
+                    try:
+                        _gov_drift = bool(governance_resp.json().get("drift_detected", False))
+                    except Exception:
+                        pass
+
+                # Compute demand reservation weight from live signals (adaptive)
+                demand_beta = _compute_adaptive_beta(
+                    base_load_kw=body.transformer.base_load_kw,
+                    transformer_kva=body.transformer.transformer_kva,
+                    grid_pattern=body.grid_pattern,
+                    drift_detected=_gov_drift,
+                    n_sessions=len(active_sessions),
+                )
+                forecast_summary["demand_reservation_beta"] = demand_beta
+
                 reservation_96 = [0.0] * 96
                 for i, p in enumerate(predictions):
                     if i < len(forecast_slots):
@@ -358,8 +424,10 @@ async def schedule(request: Request, body: ScheduleRequest) -> ScheduleResponse:
                         actual_slot = -1  # out-of-range → skip
                     if 0 <= actual_slot < 96:
                         uncertainty = max(0.0, p["upper_ci"] - p["predicted_kw"])
-                        value = UNCERTAINTY_BUFFER_ALPHA * uncertainty
+                        demand = max(0.0, p["predicted_kw"])
+                        value = UNCERTAINTY_BUFFER_ALPHA * uncertainty + demand_beta * demand
                         reservation_96[actual_slot] = max(reservation_96[actual_slot], value)
+                forecast_summary["forecast_influence_kw"] = round(sum(reservation_96), 4)
                 if any(v > 0 for v in reservation_96):
                     forecast_reservation = reservation_96
             elif predictions:
@@ -426,6 +494,10 @@ async def schedule(request: Request, body: ScheduleRequest) -> ScheduleResponse:
     kpis: dict = dict(optimizer_data.get("kpis", {}))
     if forecast_summary and "avg_predicted_kw" in forecast_summary:
         kpis["forecast_avg_kw"] = forecast_summary["avg_predicted_kw"]
+        if "forecast_influence_kw" in forecast_summary:
+            kpis["forecast_influence_kw"] = forecast_summary["forecast_influence_kw"]
+        if "demand_reservation_beta" in forecast_summary:
+            kpis["demand_reservation_beta"] = forecast_summary["demand_reservation_beta"]
 
     solver_status: str = optimizer_data.get("solver_status", "unknown")
 

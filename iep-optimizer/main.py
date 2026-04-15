@@ -59,7 +59,8 @@ except Exception as exc:
 SLOTS_PER_DAY = 96
 SLOT_DURATION_H = 0.25       # each slot = 15 minutes = 0.25 hours
 CVXPY_TIME_LIMIT = 2.0       # seconds before falling back to greedy
-UNCERTAINTY_BUFFER_ALPHA = 0.5  # fraction of forecast uncertainty reserved as headroom buffer
+# Note: forecast reservation weights are computed adaptively in EEP (_compute_adaptive_beta)
+# and sent as a pre-computed 96-slot array via OptimizeRequest.forecast_reservation.
 URGENCY_EPSILON = 1e-4           # LP tiebreak weight for laxity-based urgency (≪ min tariff)
 
 # ─────────────────────────────────────────────────────────────────────────────

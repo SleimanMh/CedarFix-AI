@@ -88,6 +88,10 @@ def test_schedule_forecast_summary_populated(client):
     assert fs is not None
     assert not fs.get("degraded", False), f"Forecast degraded: {fs}"
     assert "avg_predicted_kw" in fs
+    # Adaptive reservation fields — present when forecast succeeds
+    assert "demand_reservation_beta" in fs, "Missing adaptive beta in forecast_summary"
+    assert 0.10 <= fs["demand_reservation_beta"] <= 0.65, f"Beta out of range: {fs['demand_reservation_beta']}"
+    assert "forecast_influence_kw" in fs, "Missing forecast_influence_kw in forecast_summary"
 
 
 def test_schedule_kpis_non_negative(client):
@@ -398,11 +402,50 @@ def test_eep_forwards_optimizer_422_not_502(client):
     assert 400 <= r.status_code < 500
 
 
-def test_eep_forwards_unmet_demand_kpis(client):
-    """EEP must forward unmet-demand KPIs from the optimizer.
-    Detailed unmet-demand scenarios are tested in test_optimizer.py."""
+def test_unmet_demand_zero_when_fully_satisfied(client):
+    """A normal fully-satisfiable request should report zero unmet demand."""
     r = client.post("/schedule", json=SAMPLE_PAYLOAD)
     assert r.status_code == 200
     kpis = r.json()["kpis"]
     assert "unmet_energy_kwh" in kpis
     assert "unmet_sessions_count" in kpis
+    assert kpis["unmet_energy_kwh"] == 0.0
+    assert kpis["unmet_sessions_count"] == 0
+
+
+def test_unmet_demand_positive_when_constrained(client):
+    """With a tiny transformer and short window, not all energy can be delivered.
+    The unmet fields should reflect the shortfall transparently."""
+    constrained_payload = {
+        "date": "2021-08-01",
+        "sessions": [
+            {
+                "session_id": "constrained-001",
+                "connection_time": "2021-08-01T00:00:00",
+                "disconnect_time": "2021-08-01T00:30:00",  # only 30 min window
+                "kwh_requested": 50.0,  # needs 50 kWh in 30 min — impossible
+                "kwh_delivered": 0.0,
+                "max_charge_rate_kw": 7.4,
+                "has_user_inputs": True,
+            }
+        ],
+        "grid_pattern": "morning",
+        "transformer": {"transformer_kva": 10.0, "base_load_kw": 0.0},
+    }
+    r = client.post("/schedule", json=constrained_payload)
+    assert r.status_code == 200
+    kpis = r.json()["kpis"]
+    assert kpis["unmet_energy_kwh"] > 0, (
+        f"Expected positive unmet_energy_kwh for constrained case, got {kpis['unmet_energy_kwh']}"
+    )
+    assert kpis["unmet_sessions_count"] >= 1
+
+
+def test_unmet_demand_empty_sessions_zero(client):
+    """Empty sessions → zero unmet demand (nothing was requested)."""
+    payload = {**SAMPLE_PAYLOAD, "sessions": []}
+    r = client.post("/schedule", json=payload)
+    assert r.status_code == 200
+    kpis = r.json()["kpis"]
+    assert kpis["unmet_energy_kwh"] == 0.0
+    assert kpis["unmet_sessions_count"] == 0

@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -28,8 +29,79 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 MAE_BASELINE_DEFAULT = 3.5  # kW
 
 MODELS_DIR = Path(__file__).parent.parent / "iep-forecast" / "models"
+HOLDOUT_METRICS_PATH = MODELS_DIR / "holdout_metrics.json"
 
-app = FastAPI(title="IEP Governance Service", version="1.0.0")
+_last_governance_state: Optional[dict] = None
+
+
+def _self_assess_from_metrics() -> None:
+    """
+    Populate _last_governance_state at startup using saved holdout metrics,
+    so the GET /governance/status endpoint always returns a real drift signal
+    without requiring an external POST call first.
+    """
+    global _last_governance_state
+    try:
+        if not HOLDOUT_METRICS_PATH.exists():
+            # Fall back to training metrics if holdout not saved yet
+            fallback = MODELS_DIR / "metrics.json"
+            if not fallback.exists():
+                logger.info("[startup] No metrics files found — governance state will be 'no_data'")
+                return
+            metrics_path = fallback
+        else:
+            metrics_path = HOLDOUT_METRICS_PATH
+
+        with open(metrics_path) as f:
+            saved = json.load(f)
+
+        mae = float(saved.get("mae", MAE_BASELINE_DEFAULT))
+        mae_baseline = _load_baseline_mae()
+        mae_degradation_pct = (mae - mae_baseline) / mae_baseline * 100
+        psi = float(saved.get("psi", 0.0))
+
+        drift_detected = psi > 0.2 or mae_degradation_pct > 15.0
+        retrain_recommended = drift_detected
+
+        if retrain_recommended:
+            decision = f"RETRAIN (startup): MAE={mae:.2f}kW ({mae_degradation_pct:+.1f}% vs baseline), PSI={psi:.3f}"
+        else:
+            decision = f"OK (startup): MAE={mae:.2f}kW ({mae_degradation_pct:+.1f}% vs baseline), PSI={psi:.3f}"
+
+        _last_governance_state = {
+            "mae": mae,
+            "mae_baseline": mae_baseline,
+            "mae_degradation_pct": mae_degradation_pct,
+            "psi": psi,
+            "drift_detected": drift_detected,
+            "retrain_recommended": retrain_recommended,
+            "n_records": int(saved.get("n_records", 0)),
+            "window_days": int(saved.get("window_days", 1)),
+            "decision": decision,
+        }
+
+        # Prime Prometheus gauges so metrics are accurate from first scrape
+        ev_governance_mae_kw.set(mae)
+        ev_governance_mae_baseline_kw.set(mae_baseline)
+        ev_governance_psi.set(psi)
+        ev_governance_drift_detected.set(int(drift_detected))
+        ev_governance_retrain_recommended.set(int(retrain_recommended))
+
+        logger.info(
+            "[startup] Governance self-assessed: MAE=%.2f drift=%s",
+            mae, drift_detected,
+        )
+    except Exception as exc:
+        logger.warning("[startup] Governance self-assessment failed: %s", exc)
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    _self_assess_from_metrics()
+    yield
+
+
+app = FastAPI(title="IEP Governance Service", version="1.0.0", lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
@@ -39,8 +111,6 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
-_last_governance_state: Optional[dict] = None
-
 setup_metrics(app, "iep-governance")
 
 class ForecastRecord(BaseModel):
