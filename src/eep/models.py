@@ -6,10 +6,25 @@ src/shared/schemas.py.
 """
 from __future__ import annotations
 
+import base64
+import binascii
+import json
+from functools import lru_cache
+from pathlib import Path
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+ROOT = Path(__file__).resolve().parents[2]
+GPS_BOUNDS_PATH = ROOT / "data" / "knowledge_base" / "gps_bounds.json"
+
+
+@lru_cache(maxsize=1)
+def _load_gps_bounds() -> dict:
+    return json.loads(GPS_BOUNDS_PATH.read_text(encoding="utf-8"))["lebanon"]
+VALID_LANGUAGE_HINTS = {"ar", "arabizi", "en", "fr", "mixed"}
 
 
 class ComplaintState(str, Enum):
@@ -43,9 +58,42 @@ class ComplaintRequest(BaseModel):
     @classmethod
     def _check_image_size(cls, v: Optional[str]) -> Optional[str]:
         # base64 is ~4/3× the binary size; 4 MB decoded ≈ 5.5 MB base64
-        if v is not None and len(v) > 5_500_000:
+        if v is None:
+            return v
+        if len(v) > 5_500_000:
             raise ValueError("image_b64 exceeds the 4 MB decoded size limit")
+        try:
+            decoded = base64.b64decode(v, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise ValueError("image_b64 must be valid base64") from exc
+        if len(decoded) > 4_000_000:
+            raise ValueError("image_b64 exceeds the 4 MB decoded size limit")
+        if not (decoded.startswith(b"\xff\xd8\xff") or decoded.startswith(b"\x89PNG\r\n\x1a\n")):
+            raise ValueError("image_b64 must decode to JPEG or PNG bytes")
         return v
+
+    @field_validator("language_hint")
+    @classmethod
+    def _check_language_hint(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        lowered = v.strip().lower()
+        if lowered not in VALID_LANGUAGE_HINTS:
+            raise ValueError(f"language_hint must be one of {sorted(VALID_LANGUAGE_HINTS)}")
+        return lowered
+
+    @model_validator(mode="after")
+    def _check_gps_pair_and_lebanon_bounds(self) -> "ComplaintRequest":
+        if (self.gps_lat is None) ^ (self.gps_lon is None):
+            raise ValueError("gps_lat and gps_lon must be provided together")
+        if self.gps_lat is None or self.gps_lon is None:
+            return self
+        bounds = _load_gps_bounds()
+        if not (bounds["lat_min"] <= self.gps_lat <= bounds["lat_max"]):
+            raise ValueError("gps_lat is outside Lebanon bounds")
+        if not (bounds["lon_min"] <= self.gps_lon <= bounds["lon_max"]):
+            raise ValueError("gps_lon is outside Lebanon bounds")
+        return self
 
 
 class ComplaintAccepted(BaseModel):

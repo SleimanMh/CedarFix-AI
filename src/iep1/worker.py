@@ -26,6 +26,7 @@ from src.eep.db import Complaint, SessionLocal
 from src.eep.models import ComplaintState
 from src.eep.queue import STREAM_IEP1, STREAM_IEP2
 from src.iep1.extractor import extract
+from src.shared.schemas import IEP1LanguageSignal
 
 logger = logging.getLogger("iep1.worker")
 
@@ -78,10 +79,8 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         await r.xack(STREAM_IEP1, CONSUMER_GROUP, msg_id)
         return
 
-    # Check if HITL is required before writing state
+    # Check if language-risk HITL is required before writing state
     signal_json = result.get("iep1_signal_json") or {}
-    from src.shared.schemas import ROUTE_CONFIDENCE_THRESHOLD, IEP1LanguageSignal  # noqa: PLC0415
-
     signal_obj = IEP1LanguageSignal.model_validate(signal_json)
     force_hitl = signal_obj.force_hitl()
     hitl_reason = "language_drift_or_high_risk_oov" if force_hitl else None
@@ -95,6 +94,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         "drift_score": result["drift_score"],
         "issue_type": result["issue_type"],
         "issue_type_confidence": result["issue_type_confidence"],
+        "routing_sector": result["routing_sector"],
         "normalized_text": result["normalized_text"],
         "text_embedding_ref": result["text_embedding_ref"],
         "iep1_signal_json": result["iep1_signal_json"],
@@ -111,7 +111,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         )
         await session.commit()
 
-    # Enqueue IEP-2 (only if not force-HITL — IEP-2 can still run for dedup)
+    # Enqueue IEP-2 even if HITL is required; dedup evidence still helps the reviewer.
     embedding = result.get("_embedding_vector")
     iep2_payload: dict = {
         "complaint_id": complaint_id,

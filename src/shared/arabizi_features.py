@@ -5,6 +5,7 @@ import math
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from src.shared.arabizi_lexical_policy import HIGH_RISK_HINTS, IGNORED_OOV_TOKENS, STOPWORDS
@@ -64,6 +65,7 @@ def iter_strings(value) -> Iterable[str]:
             yield from iter_strings(item)
 
 
+@lru_cache(maxsize=4)
 def load_vocabulary_index(vocab_path: Path = DEFAULT_VOCAB_PATH) -> VocabularyIndex:
     vocab = json.loads(vocab_path.read_text(encoding="utf-8-sig"))
     known: set[str] = set(STOPWORDS)
