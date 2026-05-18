@@ -1,6 +1,7 @@
 # Version control
 .git
 .gitignore
+.gitattributes
 .github
 
 # Python caches
@@ -13,39 +14,29 @@ __pycache__
 *.egg-info
 .eggs
 
-# Non-service directories (not needed in any image)
-web-dashboard/
-FriendsWork/
+# Virtual environments
+.venv*/
+
+# Local scratch / temp
+.tmp/
+
+# Repo-only dirs (not needed inside any image)
+_archive/
+bin/
+Rubric/
 docs/
-tests/
+scripts/
 k8s/
-monitoring/
 
-# MLflow run artifacts (training-time only)
+# Test suite
+scripts/tests/
+
+# MLflow run artifacts
 mlruns/
-iep-forecast/mlruns/
-iep-optimizer/mlruns/
-iep-governance/mlruns/
-iep-grid-compatibility/mlruns/
 
-# Training-only scripts
-iep-forecast/train.py
-iep-forecast/evaluate_holdout.py
-iep-grid-compatibility/train_classifier.py
-iep-grid-compatibility/train_regressor.py
-
-# Data files not needed at runtime
-# (optimizer selectively copies only the 3 .py modules it needs)
-data/raw/
-data/new/
-data/processed/
-data/*.csv
-data/*.json
-data/preprocess.py
-data/grid_simulator.py
-data/__pycache__/
+# Eval artifacts (generated at runtime, not baked in)
+data/eval/
 
 # Misc repo files
 docker-compose.yml
 README.md
-feature_backlog.md
