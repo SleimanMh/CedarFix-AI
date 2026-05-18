@@ -7,7 +7,6 @@ GET  /health            → liveness probe
 """
 from __future__ import annotations
 
-import re
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -22,21 +21,8 @@ from src.eep.models import (
     ComplaintState,
     ComplaintStatus,
 )
+from src.eep.pii import scrub_pii
 from src.eep.queue import close_redis, enqueue_iep1, get_redis
-
-# ── PII scrubbing ─────────────────────────────────────────────────────────────
-# Lebanese phone numbers (03-xxx-xxx, +961-x-xxx-xxx, etc.) and e-mail addresses.
-_PHONE_RE = re.compile(
-    r"\b(?:\+?961[-\s]?)?(?:0?[013-9]\d)[-\s]?\d{3}[-\s]?\d{3}\b"
-)
-_EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
-
-
-def _scrub_pii(text: str) -> str:
-    text = _PHONE_RE.sub("[PHONE]", text)
-    text = _EMAIL_RE.sub("[EMAIL]", text)
-    return text
-
 
 # ── Application lifecycle ─────────────────────────────────────────────────────
 @asynccontextmanager
@@ -72,7 +58,7 @@ async def submit_complaint(
 ) -> ComplaintAccepted:
     """Accept a citizen complaint, persist it, and enqueue async processing."""
     complaint_id = str(uuid.uuid4())
-    clean_text = _scrub_pii(payload.text)
+    clean_text = scrub_pii(payload.text)
 
     # 1. Persist with RECEIVED state
     async with get_session() as session:
@@ -89,22 +75,37 @@ async def submit_complaint(
         session.add(complaint)
         await session.commit()
 
-    # 2. Enqueue IEP-1 (non-blocking; complaint already durable)
-    await enqueue_iep1(complaint_id, clean_text, payload.language_hint)
+    # 2. Enqueue IEP-1. If Redis is unavailable, keep the durable complaint and
+    # force a human fallback instead of losing the citizen report.
+    enqueue_failed = False
+    try:
+        await enqueue_iep1(complaint_id, clean_text, payload.language_hint)
+    except Exception:  # noqa: BLE001 - API fallback path must catch transport failures
+        enqueue_failed = True
 
-    # 3. Transition to PROCESSING
+    # 3. Transition based on async pipeline availability
+    next_state = ComplaintState.HITL_REQUIRED if enqueue_failed else ComplaintState.PROCESSING
+    update_values = {"state": next_state}
+    if enqueue_failed:
+        update_values.update(
+            {
+                "hitl_required": True,
+                "hitl_reason": "iep1_queue_unavailable",
+                "error_flags": ["iep1_enqueue_failed"],
+            }
+        )
     async with get_session() as session:
         await session.execute(
             update(Complaint)
             .where(Complaint.id == complaint_id)
-            .values(state=ComplaintState.PROCESSING)
+            .values(**update_values)
         )
         await session.commit()
 
     base_url = str(request.base_url).rstrip("/")
     return ComplaintAccepted(
         complaint_id=complaint_id,
-        status=ComplaintState.PROCESSING,
+        status=next_state,
         status_url=f"{base_url}/complaints/{complaint_id}/status",
     )
 

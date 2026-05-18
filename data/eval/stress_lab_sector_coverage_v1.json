@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-05-18T10:02:29.742509+00:00",
+  "vocab_path": "data\\knowledge_base\\arabizi_vocabulary.json",
+  "stress_lab_path": "data\\eval\\arabizi_stress_lab_v1.json",
+  "min_vocab_tokens_threshold": 10,
+  "vocab_sector_counts": {
+    "ROADS": 53,
+    "WATER": 37,
+    "ELECTRICITY": 36,
+    "WASTE": 38,
+    "FLOODING": 33,
+    "SAFETY": 44,
+    "OTHER": 7
+  },
+  "required_sectors": [
+    "ELECTRICITY",
+    "FLOODING",
+    "ROADS",
+    "SAFETY",
+    "WASTE",
+    "WATER"
+  ],
+  "exercised_sectors": [
+    "ELECTRICITY",
+    "FLOODING",
+    "ROADS",
+    "SAFETY",
+    "WASTE",
+    "WATER"
+  ],
+  "missing_sectors": [],
+  "coverage_rate": 1.0,
+  "passed": true,
+  "verdict": "PASS",
+  "message": "All sectors with sufficient vocabulary are covered by at least one stress scenario."
+}

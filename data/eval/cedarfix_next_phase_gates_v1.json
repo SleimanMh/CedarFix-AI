@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "generated_at": "2026-05-18T09:34:54.406152+00:00",
+    "scope": "CedarFix next-phase readiness gates",
+    "output_path": "data\\eval\\cedarfix_next_phase_gates_v1.json",
+    "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
+  },
+  "summary": {
+    "readiness": "NOT_READY_FOR_FINAL_RELEASE",
+    "gate_pass_count": 1,
+    "gate_total": 9,
+    "test_count": 28
+  },
+  "gates": [
+    {
+      "gate_id": "CFX-G01",
+      "name": "EEP + IEP-1 foundation",
+      "target": "EEP and IEP-1 source, Dockerfiles, compose services, and contract tests exist",
+      "actual": {
+        "eep_main": true,
+        "iep1_main": true,
+        "eep_dockerfile": true,
+        "iep1_dockerfile": true,
+        "compose_eep": true,
+        "compose_iep1": true,
+        "contract_tests": true
+      },
+      "pass": true,
+      "why": "This is the current working spine: validated ingest plus language signal extraction."
+    },
+    {
+      "gate_id": "CFX-G02",
+      "name": "IEP-2 duplicate/cluster service",
+      "target": "src/iep2 service, Dockerfile, compose service, and pair-evaluation artifact exist",
+      "actual": {
+        "iep2_main": false,
+        "iep2_dockerfile": false,
+        "compose_iep2": false,
+        "pair_eval_artifact": false
+      },
+      "pass": false,
+      "why": "IEP-2 is the highest-ROI next build because it unlocks real incident fusion and T3."
+    },
+    {
+      "gate_id": "CFX-G03",
+      "name": "IEP-3 calibrated routing and priority",
+      "target": "src/iep3 service, calibration artifact, threshold sweep, and route test suite exist",
+      "actual": {
+        "iep3_main": false,
+        "iep3_dockerfile": false,
+        "compose_iep3": false,
+        "calibration_artifact": false,
+        "route_tests": false
+      },
+      "pass": false,
+      "why": "Calibration is what separates a serious triage system from a rules dashboard."
+    },
+    {
+      "gate_id": "CFX-G04",
+      "name": "IEP-4 explanation and HITL service",
+      "target": "Prompts, explanation service, HITL decision contract, and prompt tests exist",
+      "actual": {
+        "prompts": true,
+        "iep4_main": false,
+        "compose_iep4": false,
+        "prompt_tests": false
+      },
+      "pass": false,
+      "why": "Prompts are present, but the service and contract tests must make IEP-4 real."
+    },
+    {
+      "gate_id": "CFX-G05",
+      "name": "MLOps lifecycle and experiment evidence",
+      "target": "MLflow service, training/eval scripts, model registry artifact, and promotion thresholds exist",
+      "actual": {
+        "compose_mlflow": false,
+        "training_scripts": false,
+        "mlflow_artifact": false,
+        "promotion_doc": false
+      },
+      "pass": false,
+      "why": "Rubric M1/M2 require lifecycle evidence, not just model code."
+    },
+    {
+      "gate_id": "CFX-G06",
+      "name": "Observability",
+      "target": "Prometheus/Grafana services and low-cardinality ML metric contract exist",
+      "actual": {
+        "compose_prometheus": false,
+        "compose_grafana": false,
+        "monitoring_doc": false,
+        "metrics_tests": false
+      },
+      "pass": false,
+      "why": "Monitoring needs ML-specific signals: drift, HITL rate, confidence, false auto-route risk."
+    },
+    {
+      "gate_id": "CFX-G07",
+      "name": "Public cloud EEP readiness",
+      "target": "Azure/app deployment config, cloud runbook, and public healthcheck evidence exist",
+      "actual": {
+        "azure_yaml": false,
+        "infra": false,
+        "cloud_doc": false,
+        "public_healthcheck_artifact": false
+      },
+      "pass": false,
+      "why": "GT2 is a hard gate: the EEP must be publicly reachable for grading."
+    },
+    {
+      "gate_id": "CFX-G08",
+      "name": "Demo evidence package",
+      "target": "Stress lab, reliability certificate, pair coverage, and final demo script exist",
+      "actual": {
+        "arabizi_stress_lab": true,
+        "reliability_certificate": true,
+        "pair_coverage": true,
+        "demo_script": false
+      },
+      "pass": false,
+      "why": "The demo must show live input, intermediate AI outputs, metrics, fallback, and MLOps proof."
+    },
+    {
+      "gate_id": "CFX-G09",
+      "name": "QA breadth",
+      "target": ">=30 unit/regression tests plus all validators present",
+      "actual": {
+        "test_count": 28,
+        "validators": {
+          "corpus": true,
+          "vocab": true,
+          "benchmark": true,
+          "external_manifest": true
+        }
+      },
+      "pass": false,
+      "why": "QA needs to scale with the system as IEP-2/3/4 are added."
+    }
+  ],
+  "recommended_build_order": [
+    {
+      "rank": 1,
+      "task": "Build IEP-2 dedup/cluster service with pair-evaluation artifact",
+      "rubric_unlock": "T3, T4, T5, D3",
+      "why": "Incident fusion is the core CedarFix originality beyond a complaint dashboard."
+    },
+    {
+      "rank": 2,
+      "task": "Build IEP-3 calibrated routing with threshold sweep and false-auto-route metrics",
+      "rubric_unlock": "T1, T5, M2, D3",
+      "why": "Calibration makes the routing decision defensible under professor attack."
+    },
+    {
+      "rank": 3,
+      "task": "Expand Batch 002 with Arabizi/mixed hard negatives and unrelated negatives",
+      "rubric_unlock": "P2, T5, Q2, M2",
+      "why": "Better data beats clever architecture with weak validation."
+    },
+    {
+      "rank": 4,
+      "task": "Add IEP-4 explanation/HITL service with prompt tests and audit output",
+      "rubric_unlock": "T4, D2, D3, M4",
+      "why": "This connects AI outputs to human decisions and makes the demo understandable."
+    },
+    {
+      "rank": 5,
+      "task": "Add MLflow + Prometheus/Grafana with low-cardinality ML signals",
+      "rubric_unlock": "M1, M2, M3, S4",
+      "why": "MLOps evidence is 10% of the rubric and strengthens Q&A."
+    },
+    {
+      "rank": 6,
+      "task": "Prepare cloud deployment and public healthcheck artifact",
+      "rubric_unlock": "GT2, S5, D1",
+      "why": "Public cloud EEP is a hard gate."
+    }
+  ]
+}

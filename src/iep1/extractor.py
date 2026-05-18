@@ -14,16 +14,15 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from pathlib import Path
 
-from src.shared.arabizi_features import analyze_language_signal
+from src.shared.arabizi_features import VocabularyIndex, analyze_language_signal, load_vocabulary_index
+from src.shared.arabizi_lexical_policy import IGNORED_OOV_TOKENS
 from src.shared.schemas import IEP1LanguageSignal
 
 logger = logging.getLogger("iep1.extractor")
 
 # ── Issue-type keyword table (B1 baseline) ────────────────────────────────────
-# Keys match the Sector enum values in src/shared/schemas.py
-_ISSUE_KEYWORDS: dict[str, list[str]] = {
+_SECTOR_KEYWORDS: dict[str, list[str]] = {
     "ROADS": [
         "pothole", "road", "street", "asphalt", "pavement", "sidewalk", "curb",
         "حفرة", "طريق", "شارع", "رصيف", "asfalt",
@@ -40,7 +39,7 @@ _ISSUE_KEYWORDS: dict[str, list[str]] = {
         "electricity", "power", "blackout", "wire", "cable", "transformer",
         "كهرباء", "كابل", "سلك", "محول",
         "électricité", "câble", "panne",
-        "kahraba", "kahrabeh", "salk", "kabel",
+        "kahraba", "kahrabeh", "salk", "kabel", "silk", "transformateur", "m7arrak", "mcharrak",
     ],
     "WASTE": [
         "garbage", "trash", "waste", "litter", "bin", "rubbish", "recycling",
@@ -58,21 +57,21 @@ _ISSUE_KEYWORDS: dict[str, list[str]] = {
         "danger", "fire", "explosion", "collapse", "accident", "crime", "threat",
         "خطر", "حريق", "انهيار", "جريمة",
         "danger", "incendie", "effondrement",
-        "5atr", "khatar", "7arik", "7ariki", "nnar", "masalla7",
+        "5atr", "khatar", "7arik", "7ariki", "7ar2", "7are2", "nnar", "masalla7",
     ],
 }
 
 
-def classify_issue_type(text: str) -> tuple[str, float]:
+def classify_sector(text: str) -> tuple[str, float]:
     """Keyword V1 sector classifier (non-AI baseline B1).
 
-    Returns (sector: str, confidence: float ∈ [0, 1]).
+    Returns (sector: str, confidence: float in [0, 1]).
     Confidence is the fractional keyword hit share; returns OTHER at 0.4
     when no keywords match.
     """
     lower = text.lower()
-    scores: dict[str, int] = {k: 0 for k in _ISSUE_KEYWORDS}
-    for sector, keywords in _ISSUE_KEYWORDS.items():
+    scores: dict[str, int] = {k: 0 for k in _SECTOR_KEYWORDS}
+    for sector, keywords in _SECTOR_KEYWORDS.items():
         for kw in keywords:
             if kw in lower:
                 scores[sector] += 1
@@ -83,6 +82,38 @@ def classify_issue_type(text: str) -> tuple[str, float]:
 
     total = sum(scores.values())
     return best, round(scores[best] / total, 3)
+
+
+def classify_issue_type_from_signal(
+    signal: IEP1LanguageSignal,
+    vocab: VocabularyIndex | None = None,
+) -> tuple[str, str, float]:
+    """Return (sector, issue_type, confidence) from reviewed vocabulary hits.
+
+    This avoids the earlier anti-pattern of writing broad sectors such as ROADS
+    into the `issue_type` DB column. If no specific issue is visible, the sector
+    baseline still runs, but issue_type remains UNCLASSIFIED.
+    """
+
+    vocab = vocab or load_vocabulary_index()
+    sector_hint, sector_confidence = classify_sector(signal.raw_text)
+    hits: dict[tuple[str, str], int] = {}
+    for term in signal.known_terms:
+        term_hits = vocab.token_issue_map.get(term, set())
+        if term in IGNORED_OOV_TOKENS or len(term_hits) != 1:
+            continue
+        for sector, issue_type in term_hits:
+            key = (sector, issue_type)
+            hits[key] = hits.get(key, 0) + 1
+
+    if hits:
+        if sector_hint != "OTHER" and any(key[0] == sector_hint for key in hits):
+            hits = {key: count for key, count in hits.items() if key[0] == sector_hint}
+        best_key, best_count = max(hits.items(), key=lambda item: (item[1], item[0]))
+        confidence = min(0.95, max(sector_confidence, 0.55) + 0.10 * best_count)
+        return best_key[0], best_key[1], round(confidence, 3)
+
+    return sector_hint, "UNCLASSIFIED", max(0.35, round(sector_confidence * 0.6, 3))
 
 
 # ── Sentence-transformers embedding ───────────────────────────────────────────
@@ -119,6 +150,8 @@ def extract(
     complaint_id: str,
     text: str,
     language_hint: str | None = None,
+    *,
+    include_embedding: bool = True,
 ) -> dict:
     """Run all IEP-1 sub-tasks and return a flat dict suitable for DB writes."""
     # Step 1 — language signal (Arabizi-aware, drift-aware)
@@ -128,17 +161,12 @@ def extract(
         report_id=complaint_id,
     )
 
-    # Step 2 — issue type (V1 keyword baseline)
-    issue_type, issue_conf = classify_issue_type(text)
+    # Step 2 — issue type (V1 vocabulary-backed baseline)
+    sector, issue_type, issue_conf = classify_issue_type_from_signal(signal)
 
-    # Upgrade issue type to SAFETY if the signal has high-risk OOV tokens
-    if signal.oov_high_risk_count > 0 and issue_type not in {"SAFETY"}:
-        # High-risk Arabizi safety tokens dominate over infra keyword hits
-        issue_type = "SAFETY"
-        issue_conf = max(issue_conf, 0.6)
-
-    # Step 3 — embedding
-    embedding = embed_text(signal.normalized_text)
+    # Step 3 — embedding. Unit tests and demo stress probes can disable this
+    # so contract checks do not depend on a local model download.
+    embedding = embed_text(signal.normalized_text) if include_embedding else None
     embedding_ref = f"iep1:{complaint_id}" if embedding else None
 
     return {
@@ -147,6 +175,7 @@ def extract(
         "drift_score": signal.drift_score,
         "issue_type": issue_type,
         "issue_type_confidence": issue_conf,
+        "routing_sector": sector,
         "normalized_text": signal.normalized_text,
         "text_embedding_ref": embedding_ref,
         "iep1_signal_json": signal.model_dump(mode="json"),

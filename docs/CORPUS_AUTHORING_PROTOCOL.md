@@ -261,6 +261,10 @@ A report can leave draft status only if ALL of the following pass:
 | G13 | `python scripts/analyze_arabizi_oov.py` and `python scripts/validate_arabizi_oov_queue.py` run after every batch with Arabizi/mixed rows |
 | G14 | `python scripts/validate_arabizi_benchmark.py` passes before any normalizer, vocabulary, or IEP-1 change is promoted |
 | G15 | `python scripts/tests/test_arabizi_adversarial.py` passes before any language normalization, OOV, or IEP-1 contract change is promoted |
+| G16 | `python scripts/run_arabizi_stress_lab.py` passes before demo rehearsal and before any Arabizi/IEP-1 behavior change is promoted |
+| G17 | `python scripts/certify_arabizi_input.py` runs before demo rehearsal and produces JSON/HTML certificate artifacts |
+| G18 | `python scripts/audit_arabizi_excellence_gates.py` and `python scripts/evaluate_arabizi_pair_coverage.py` run before making final Arabizi claims |
+| G19 | `python scripts/audit_cedarfix_next_phase_gates.py` and `python scripts/audit_rubric_readiness.py` run before choosing each next build task |
 
 Reports that fail any gate should be set to `review_status=NEEDS_FIX` with a note explaining which gate failed.
 
@@ -294,6 +298,13 @@ Reports that fail any gate should be set to `review_status=NEEDS_FIX` with a not
 | `data/corpus/arabizi_oov_review_queue_v1.csv` | Unknown Arabizi token review queue for language drift and active learning |
 | `data/eval/arabizi_benchmark_v0_regression.csv` | Frozen B001 Arabizi regression benchmark; not a final F1 evaluation set |
 | `data/eval/arabizi_benchmark_v0_regression.sha256` | SHA256 hash for benchmark immutability and MLflow lineage |
+| `data/eval/arabizi_stress_lab_v1.json` | Adversarial Arabizi Stress Lab output for demo/regression lineage |
+| `data/eval/arabizi_reliability_certificate_v1.json` | Live single-input Arabizi reliability certificate JSON artifact |
+| `data/eval/arabizi_reliability_certificate_v1.html` | Standalone visual reliability certificate for demo/presentation |
+| `data/eval/arabizi_excellence_gates_v1.json` | Honest next-phase gate audit for final Arabizi claim readiness |
+| `data/eval/arabizi_pair_coverage_v1.json` | Arabizi-involving pair coverage report for IEP-2 readiness |
+| `data/eval/cedarfix_next_phase_gates_v1.json` | Full-project readiness gate audit for next build phases |
+| `data/eval/rubric_readiness_v1.json` | Conservative rubric readiness scorecard based on implemented evidence |
 | `data/knowledge_base/sector_agency_map.csv` | Route entity and HITL policy lookup |
 | `data/knowledge_base/municipality_responsibility_map.csv` | District codes, GPS centroids, water authorities |
 | `data/knowledge_base/issue_severity_reference.yaml` | Severity keywords, SLA, safety flags |
@@ -301,12 +312,19 @@ Reports that fail any gate should be set to `review_status=NEEDS_FIX` with a not
 | `data/knowledge_base/arabizi_vocabulary.json` | Arabizi vocabulary seeds per sector |
 | `docs/ANNOTATION_GUIDELINES.md` | Label definitions and decision rules |
 | `docs/IEP1_LANGUAGE_SIGNAL_CONTRACT.md` | Required IEP-1 language reliability output contract |
+| `docs/LOCAL_DOCKER_RUNBOOK.md` | Safe local Docker startup, env, and smoke-test instructions |
 | `src/shared/schemas.py` | Pydantic contracts for IEP-1 language signals and IEP-2 pair fusion gates |
 | `src/shared/arabizi_features.py` | Lightweight Arabizi regression probe used before trained IEP-1 exists |
 | `src/shared/arabizi_lexical_policy.py` | Shared stopword/entity/high-risk lexical policy for the OOV queue and regression probe |
 | `scripts/validate_cedarfix_corpus.py` | Corpus consistency validator; must pass before scaling a batch |
 | `scripts/analyze_arabizi_oov.py` | Generates the Arabizi OOV/drift review queue from corpus reports |
 | `scripts/evaluate_arabizi_coverage.py` | C-phase offline Arabizi coverage, drift, and recall smoke-test evaluator |
+| `scripts/run_arabizi_stress_lab.py` | Demo-grade adversarial stress lab for messy Lebanese Arabizi variants |
+| `scripts/certify_arabizi_input.py` | Live-input Arabizi robustness certificate generator with JSON/HTML output |
+| `scripts/audit_arabizi_excellence_gates.py` | Audits whether Arabizi is ready for final best-in-class claims |
+| `scripts/evaluate_arabizi_pair_coverage.py` | Measures Arabizi duplicate/negative-pair coverage by language pair |
+| `scripts/audit_cedarfix_next_phase_gates.py` | Audits full-project readiness across IEP-2/3/4, MLOps, cloud, demo, and QA |
+| `scripts/audit_rubric_readiness.py` | Produces a conservative 30-item rubric readiness scorecard |
 | `scripts/validate_arabizi_oov_queue.py` | Validates the OOV review queue and accepted vocabulary decisions |
 | `scripts/build_arabizi_regression_benchmark.py` | Creates the immutable B001 Arabizi regression benchmark |
 | `scripts/validate_arabizi_benchmark.py` | Validates benchmark schema, source consistency, counts, and SHA256 |

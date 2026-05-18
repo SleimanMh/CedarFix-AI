@@ -3,7 +3,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev gcc \
+    && apt-get install -y --no-install-recommends curl libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Install runtime dependencies
@@ -24,6 +24,7 @@ SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
 EOF
 
 COPY src/ ./src/
+COPY data/knowledge_base/ ./data/knowledge_base/
 
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8001

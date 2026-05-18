@@ -180,7 +180,13 @@ def analyze_language_signal(
         embedded = [
             token
             for token in vocab.known_tokens
-            if len(token) >= 5 and len(raw_token) >= 9 and token in raw_token
+            if (
+                token not in STOPWORDS
+                and len(token) >= 4
+                and token in raw_token
+                and len(raw_token) >= len(token) + 2
+                and (len(token) >= 5 or token in vocab.token_issue_map)
+            )
         ]
         if embedded:
             known_terms.update(embedded)

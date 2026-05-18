@@ -135,7 +135,12 @@ To claim this in the final presentation, show:
 - `python scripts/analyze_arabizi_oov.py`
 - `python scripts/validate_arabizi_oov_queue.py`
 - `python scripts/tests/test_arabizi_adversarial.py`
+- `python scripts/run_arabizi_stress_lab.py`
+- `python scripts/certify_arabizi_input.py`
 - `data/eval/arabizi_benchmark_v0_regression.sha256`
+- `data/eval/arabizi_stress_lab_v1.json`
+- `data/eval/arabizi_reliability_certificate_v1.json`
+- `data/eval/arabizi_reliability_certificate_v1.html`
 - OOV queue table before review
 - One accepted/rejected example with reviewer rationale
 - MLflow tag or run artifact containing vocabulary version and OOV queue hash
@@ -213,3 +218,39 @@ combine with this language-risk signal.
 - **Batch 001 recall is not generalization evidence** because v1.4.0 includes
   reviewed terms from Batch 001. Use it as a contract smoke test; use Batch
   002+ held-out rows for real Arabizi F1.
+
+---
+
+## 9. Arabizi Stress Lab
+
+Script: `scripts/run_arabizi_stress_lab.py`
+Output: `data/eval/arabizi_stress_lab_v1.json`
+
+Run before demos and before promoting language-layer changes:
+
+```bash
+python scripts/run_arabizi_stress_lab.py
+```
+
+The Stress Lab is the adversarial "wow" surface for Arabizi. It generates messy
+variants across pothole, transformer, and sewage scenarios, then records:
+
+- strict sector and issue stability
+- acceptable operational-decision stability for genuinely ambiguous cases
+- OOV tokens and orthographic-noise counts
+- code-mix ratio and marker density
+- drift score and HITL trigger
+
+Current gates:
+
+| Gate | Threshold |
+| --- | ---: |
+| Stable sector rate | >= 90% |
+| Acceptable decision rate | >= 90% |
+| Strict issue rate observed | >= 75% |
+| HITL-triggering variants | >= 3 |
+| OOV/noise variants | >= 3 |
+
+This is not a substitute for Batch 002+ held-out evaluation. It is a permanent
+regression and demo artifact showing that CedarFix survives noisy Lebanese
+Arabizi while exposing uncertainty instead of overclaiming certainty.

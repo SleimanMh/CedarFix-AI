@@ -57,6 +57,20 @@ python -m unittest discover -s scripts/tests -p "test_*.py" -v
 
 # Run Arabizi coverage evaluation (Batch 001)
 python scripts/evaluate_arabizi_coverage.py
+
+# Run adversarial Arabizi Stress Lab
+python scripts/run_arabizi_stress_lab.py
+
+# Generate a live Arabizi reliability certificate (JSON + HTML)
+python scripts/certify_arabizi_input.py
+
+# Audit whether Arabizi is ready for final best-in-class claims
+python scripts/audit_arabizi_excellence_gates.py
+python scripts/evaluate_arabizi_pair_coverage.py
+
+# Audit full-project next-phase gates and rubric readiness
+python scripts/audit_cedarfix_next_phase_gates.py
+python scripts/audit_rubric_readiness.py
 ```
 
 ## Corpus — Batch 001
@@ -73,6 +87,41 @@ python scripts/evaluate_arabizi_coverage.py
 | Mean OOV tokens / row | 0.21 |
 | Drift score ≥ 2 rate | 28.6% |
 | Issue-type probe recall | 100% (14/14) |
+
+## Arabizi Stress Lab
+
+`scripts/run_arabizi_stress_lab.py` attacks the language layer with messy
+Lebanese Arabizi: missing numerals, repeated letters, fused no-space tokens,
+panic shorthand, and French/English code-switching. It writes
+`data/eval/arabizi_stress_lab_v1.json` and is covered by permanent unit tests.
+
+Current purpose: demo/regression evidence, not final held-out F1.
+
+## Live Reliability Certificate
+
+`scripts/certify_arabizi_input.py` takes one live report, generates noisy
+Arabizi variants, reruns IEP-1, and writes:
+
+- `data/eval/arabizi_reliability_certificate_v1.json`
+- `data/eval/arabizi_reliability_certificate_v1.html`
+
+This is the presentation artifact for showing decision stability, OOV drift,
+HITL triggers, and vocabulary lineage on a single live input.
+
+## Next-Phase Arabizi Gates
+
+`scripts/audit_arabizi_excellence_gates.py` and
+`scripts/evaluate_arabizi_pair_coverage.py` keep the next phase honest:
+Batch 002 scale, native Lebanese review, cross-language duplicate pairs,
+hard negatives, unrelated negatives, and demo/evidence artifacts are all
+tracked before any final best-in-class Arabizi claim is made.
+
+## Full Project Gates
+
+`scripts/audit_cedarfix_next_phase_gates.py` and
+`scripts/audit_rubric_readiness.py` apply the same standard to the full
+CedarFix project: IEP-2, IEP-3, IEP-4, MLOps, monitoring, cloud deployment,
+demo evidence, QA breadth, and rubric readiness.
 
 ## CI
 
