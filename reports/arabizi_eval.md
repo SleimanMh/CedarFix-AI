@@ -3,9 +3,9 @@
 Status: PENDING REAL DATA
 
 This report lists each evaluation metric, the required inputs, how to generate it,
-and the current blocker. No numeric results are claimed here. All metrics will be
-populated once the required eval files have been reviewed by a native Lebanese speaker
-and the pipeline has been run against real corpus data.
+and the current blocker. No numeric results are claimed here except the measured
+coverage baseline. The eval CSV files are intentionally header-only until reviewed
+rows exist; their schemas live in `data/eval/arabizi_eval_schemas.md`.
 
 ---
 
@@ -204,7 +204,7 @@ python scripts/validate_arabizi_benchmark.py
 # Candidate bank schema
 python scripts/validate_arabizi_candidate_bank.py
 
-# Reliability (will report FATAL if corpus not found)
+# Reliability (exits non-zero if required input is missing)
 python scripts/validate_arabizi_reliability.py
 ```
 

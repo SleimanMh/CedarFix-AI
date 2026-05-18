@@ -1,3 +1,4 @@
+import argparse
 import json
 import re
 import sys
@@ -50,8 +51,8 @@ def add_error(errors: list[str], code: str, message: str) -> None:
     errors.append(f"{code}: {message}")
 
 
-def validate() -> int:
-    vocab = json.loads(VOCAB_PATH.read_text(encoding="utf-8-sig"))
+def validate(vocab_path: Path = VOCAB_PATH) -> int:
+    vocab = json.loads(vocab_path.read_text(encoding="utf-8-sig"))
     expected = load_expected_issue_types()
     errors: list[str] = []
     warnings: list[str] = []
@@ -114,5 +115,17 @@ def finish(errors: list[str], warnings: list[str]) -> int:
     return 0
 
 
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Validate Arabizi production vocabulary.")
+    parser.add_argument(
+        "--vocab-path",
+        type=Path,
+        default=VOCAB_PATH,
+        help=f"Vocabulary JSON to validate (default: {VOCAB_PATH.relative_to(ROOT)})",
+    )
+    args = parser.parse_args()
+    sys.exit(validate(args.vocab_path))
+
+
 if __name__ == "__main__":
-    sys.exit(validate())
+    main()

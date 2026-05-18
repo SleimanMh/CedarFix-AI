@@ -1,6 +1,6 @@
 # Arabizi Reliability Report
 
-**Status: PENDING REAL DATA**
+**Status: PENDING REVIEWED EVAL DATA**
 
 This document defines the methodology for measuring CedarFix pipeline reliability
 on Lebanese Arabizi input. No numeric results are claimed here until real corpus data
@@ -73,16 +73,17 @@ Fraction of arabizi report tokens that can be normalized to a canonical form
 
 ## 3. Known ARZ Gate Status
 
-Gate definitions are in `data/eval/arabizi_excellence_gates_v1.json`.
+Gate definitions are in `data/eval/arabizi_excellence_gates_v1.json`. This
+section mirrors that generated artifact; do not reinterpret the gate IDs here.
 
 | Gate | Description | Status |
 |------|-------------|--------|
-| ARZ-G01 | Vocab size ≥ 300 keywords | PASS (395 keywords in v1.5.1) |
-| ARZ-G02 | Native speaker review sign-off | PENDING — needs human review |
-| ARZ-G03 | Benchmark regression passes | PASS |
-| ARZ-G04 | No stoplist terms in production | PASS |
-| ARZ-G05 | Controlled promotion workflow | PASS (promote_arabizi_candidates.py) |
-| ARZ-G06 | Reliability script runnable | PASS (gracefully handles missing corpus) |
+| ARZ-G01 | Batch 002+ Arabizi/mixed scale | PASS (40 Arabizi/mixed rows) |
+| ARZ-G02 | Native Lebanese/dialect review | PENDING — needs human review |
+| ARZ-G03 | Arabizi cross-language duplicate evidence | PASS (37 cross-language Arabizi/mixed pairs) |
+| ARZ-G04 | Arabizi hard-negative coverage | PASS (6 Arabizi/mixed hard-negative pairs) |
+| ARZ-G05 | Arabizi unrelated-negative coverage | PASS (7 Arabizi/mixed unrelated pairs) |
+| ARZ-G06 | Regression and demo artifacts | PASS (benchmark, stress lab, and live certificate artifacts exist) |
 
 5/6 gates passing. ARZ-G02 requires human review — cannot be automated.
 
@@ -95,7 +96,7 @@ Gate definitions are in `data/eval/arabizi_excellence_gates_v1.json`.
 - **Total term_metadata entries**: 24
 - **Stoplist entries**: 7 (in `arabizi_stoplist.csv`)
 - **Candidate bank**: 126 rows (122 PENDING, 4 DEFERRED)
-- **Key corrections applied (v1.5.0 → v1.5.1)**:
+- **Key correction candidates applied (v1.5.0 → v1.5.1, pending native sign-off through ARZ-G02)**:
   - Removed all `miye*` forms (Lebanese standard is `may`)
   - Removed `mat3a` forms (→ `2at3a`)
   - Removed `tire2` forms (→ `tari2`)

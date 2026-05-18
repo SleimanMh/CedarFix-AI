@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,7 +97,7 @@ def main() -> None:
     # Load vocabulary
     if not VOCAB_PATH.exists():
         print(f"FATAL: vocabulary not found at {VOCAB_PATH}")
-        return
+        sys.exit(1)
     vocab = json.loads(VOCAB_PATH.read_text(encoding="utf-8"))
     vocab_tokens = build_token_set(vocab)
     print(f"Vocabulary tokens loaded: {len(vocab_tokens)}")
@@ -106,7 +107,7 @@ def main() -> None:
         print(f"FATAL: corpus not found at {CORPUS_PATH}")
         print("  Expected: data/corpus/cedarfix_reports_v1.csv")
         print("  To generate coverage, provide the real corpus file.")
-        return
+        sys.exit(1)
 
     import csv
     results: list[tuple[str, str, float]] = []
@@ -125,7 +126,7 @@ def main() -> None:
         if not text_field:
             print("FATAL: could not detect text column in corpus. "
                   "Expected column named 'text', 'report_text', 'content', or 'message'.")
-            return
+            sys.exit(1)
         if not lang_field:
             print("WARNING: could not detect language column. "
                   "Processing all rows (not just arabizi/mixed).")
@@ -144,7 +145,7 @@ def main() -> None:
 
     if not results:
         print(f"No arabizi/mixed rows found in corpus ({CORPUS_PATH.name}).")
-        return
+        sys.exit(1)
 
     scores = [s for _, _, s in results]
     avg = sum(scores) / len(scores)
@@ -163,7 +164,7 @@ def main() -> None:
     if not args.low_only:
         lines.append("All rows (report_id | language | hit_rate):")
         for rid, lang, s in results:
-            flag = " ← LOW" if s < args.threshold else ""
+            flag = " <- LOW" if s < args.threshold else ""
             lines.append(f"  {rid:>10}  {lang:<8}  {s:>6.1%}{flag}")
         lines.append("")
 
