@@ -1,0 +1,171 @@
+# CedarFix AI — Issue Severity Reference
+# Used by IEP-4 explanation service for RAG context retrieval
+# Used by IEP-3 routing to boost priority score for high-severity incidents
+# Severity scale: LOW | MEDIUM | HIGH | CRITICAL
+# urgency_sla_hours: target dispatch time for responsive municipalities
+# public_safety: if true, Civil Defense or ISF must be notified regardless of sector
+# hitl_always: if true, never auto-route regardless of model confidence
+# Sample Arabizi strings are authoring seeds for the corpus annotation team.
+
+sectors:
+
+  ROADS:
+    default_severity: MEDIUM
+    urgency_sla_hours: 48
+    public_safety: false
+    hitl_always: false
+    routing_fallback: CDR
+    severity_keywords:
+      CRITICAL:
+        en: ["road collapse", "sinkhole", "bridge damage", "bridge collapse", "trench open", "pavement collapse"]
+        ar: ["انهيار طريق", "انهيار جسر", "حفرة سقوط", "انهيار رصيف"]
+        arabizi: ["tari2 nkassar", "jisr nkassar", "hofra kbire ktir w fi khatar", "jora kbire ktir w fi khatar"]
+      HIGH:
+        en: ["large pothole", "road blocked", "road impassable", "missing manhole cover", "flooding due to road damage"]
+        ar: ["حفرة كبيرة", "طريق مقطوع", "غطاء بئر مفقود", "طريق غير سالك"]
+        arabizi: ["hofra kbire 3al tari2", "jora kbire 3al tari2", "joura 3am tkassar l seyyarat", "tari2 ma 3amil", "tari2 maftoum", "ghata biar mafqoud"]
+      MEDIUM:
+        en: ["pothole", "road crack", "broken pavement", "damaged sidewalk", "speed bump broken"]
+        ar: ["حفرة", "تشقق طريق", "رصيف مكسور", "شارع متشقق"]
+        arabizi: ["fi hofra", "fi jora", "fi joora", "tari2 mtsha22a2", "rasif maksour", "7ofra w7de"]
+      LOW:
+        en: ["faded road markings", "uneven surface", "minor crack", "paving needs replacement"]
+        ar: ["دهانات باهتة", "سطح غير مستوٍ", "تشقق صغير"]
+        arabizi: ["tari2 me7teje tarmim", "khoutout madriyye 2adime"]
+
+  WATER:
+    default_severity: HIGH
+    urgency_sla_hours: 24
+    public_safety: false
+    hitl_always: false
+    routing_fallback: RWA
+    note: "Route to regional water authority based on GPS district. See municipality_responsibility_map.csv."
+    severity_keywords:
+      CRITICAL:
+        en: ["main pipe burst", "sewage overflow on street", "sewage in drinking water", "water main explosion", "black water", "contaminated water supply"]
+        ar: ["انفجار أنبوب رئيسي", "فيضان صرف صحي", "تلوث مياه الشرب", "مياه ملوثة", "صرف صحي على الطريق"]
+        arabizi: ["inbob nfajar", "sarif sa77i 3am yetfa2ar 3al tari2", "may mla2wate", "may sawda"]
+      HIGH:
+        en: ["water cut", "no water for days", "pipe leak flooding", "sewage smell", "water pressure zero"]
+        ar: ["انقطاع مياه", "تسرب أنبوب", "رائحة صرف صحي", "مياه مقطوعة منذ أيام"]
+        arabizi: ["ma fi may", "may 2ata3et", "anboub 3am yesarrab", "ri7et sarif", "men emes ma fi may"]
+      MEDIUM:
+        en: ["low water pressure", "intermittent supply", "discolored water", "dirty water", "leaking valve"]
+        ar: ["ضغط منخفض", "مياه متقطعة", "مياه ملونة", "مياه وسخة"]
+        arabizi: ["daght may khafif", "may me7 3am teje mnee7", "may lawanta", "may wse5a"]
+      LOW:
+        en: ["dripping tap", "meter issue", "slow drain", "water bill dispute"]
+        ar: ["حنفية تقطر", "مشكلة عداد", "تصريف بطيء"]
+        arabizi: ["7anafiye 3am t2atter", "mesbeye mashkle"]
+
+  ELECTRICITY:
+    default_severity: HIGH
+    urgency_sla_hours: 12
+    public_safety: true
+    hitl_always: true
+    routing_fallback: EDL
+    note: "Always HITL. EDL handles grid. Many areas use private generator operators (moualid). Human reviewer must confirm correct entity before dispatch."
+    severity_keywords:
+      CRITICAL:
+        en: ["exposed wire", "live wire on street", "electrical fire", "transformer explosion", "electrocution risk", "fallen power line"]
+        ar: ["سلك مكشوف", "سلك كهربائي على الطريق", "حريق كهربائي", "انفجار محطة", "خطر صعق"]
+        arabizi: ["silk mekshouf", "silk kahraba 3al tari2", "7ariki kahrabe", "khatar sa32", "5atar sa32 kahrabe", "5tr sa32", "khtr sa32"]
+      HIGH:
+        en: ["full power outage", "neighborhood blackout", "transformer fault", "power cut for 24+ hours", "no electricity for days"]
+        ar: ["انقطاع كهرباء كامل", "انقطاع كهرباء اليوم", "عطل محول", "بدون كهرباء منذ أيام"]
+        arabizi: ["kahraba 2at3a", "kahraba ma fi", "ma fi kahraba men yom", "ka2 2at3a kaman"]
+      MEDIUM:
+        en: ["intermittent power", "flickering lights", "voltage fluctuation", "partial outage", "street light out"]
+        ar: ["كهرباء متقطعة", "تذبذب كهربائي", "إنارة عامة مطفأة"]
+        arabizi: ["kahraba 3am tji w troo7", "nour share3 ma shi3el", "tazabzob kahrabe"]
+      LOW:
+        en: ["street light issue", "meter problem", "billing issue", "connection delay"]
+        ar: ["مشكلة عداد", "إنارة شارع"]
+        arabizi: ["3adad kahrabe mashkle", "nour l share3 ta3e"]
+
+  WASTE:
+    default_severity: MEDIUM
+    urgency_sla_hours: 72
+    public_safety: false
+    hitl_always: false
+    routing_fallback: MUN
+    severity_keywords:
+      CRITICAL:
+        en: ["toxic waste dumping", "medical waste", "hazardous chemical spill", "burning garbage", "industrial waste illegal dump"]
+        ar: ["نفايات سامة", "نفايات طبية", "تسرب مواد كيماوية", "حرق نفايات", "نفايات صناعية"]
+        arabizi: ["zbele sam", "7ar2 zbele", "nfayat tibbiye maskoube", "kimyawi meshkob"]
+      HIGH:
+        en: ["garbage blocking road", "overflowing skip attracting animals", "uncollected waste 5+ days", "sewage mixed with garbage"]
+        ar: ["نفايات تعيق الطريق", "نفايات لم تُجمع منذ أيام", "قمامة تجذب الحيوانات", "نفايات مختلطة بصرف صحي"]
+        arabizi: ["zbele 3am tsedd tari2", "zbele ma taloo men 5 iyem", "2lebe tafane", "7ayawanat 3al zbele"]
+      MEDIUM:
+        en: ["overdue garbage collection", "overflowing bin", "waste near water source", "dead animals on road"]
+        ar: ["تأخر جمع النفايات", "سلة ممتلئة", "نفايات بجانب مصدر مياه"]
+        arabizi: ["zbele ma jmaou", "2lebe mmtele", "zbele jemb l may", "zbele men 3 iyem"]
+      LOW:
+        en: ["missed pickup", "litter on sidewalk", "bin damaged", "recycling issue"]
+        ar: ["تأخر في الجمع", "قمامة على الرصيف", "سلة مكسورة"]
+        arabizi: ["nas2ou yji yshilu zbele", "zbele 3al rasif"]
+
+  FLOODING:
+    default_severity: HIGH
+    urgency_sla_hours: 6
+    public_safety: true
+    hitl_always: false
+    routing_fallback: CD
+    note: "Civil Defense (Défense Civile / الدفاع المدني) is always primary for active flooding. Municipality for drainage repair after water recedes."
+    severity_keywords:
+      CRITICAL:
+        en: ["house flooding", "road completely flooded", "person trapped", "flash flood", "structural damage from flood", "car submerged"]
+        ar: ["منزل يغرق", "فيضان", "شخص محاصر", "سيل", "تضرر مبنى من الفيضان"]
+        arabizi: ["seyle", "bayte 3am yetra2", "7ada ma2sour", "seyle kbire", "sayyara gharet"]
+      HIGH:
+        en: ["road flooded", "neighborhood flooding", "flooding blocking access", "basement flooded", "water entering homes"]
+        ar: ["طريق مغمور بالمياه", "فيضان في الحي", "مياه تدخل المنازل", "طابق سفلي يغرق"]
+        arabizi: ["tari2 3am yetfayan", "7ayye 3am yetfayan", "may dakhlet 3al bayt", "2abi tafyan"]
+      MEDIUM:
+        en: ["blocked drain", "large puddle on road", "standing water after rain", "drain overflow", "flooding risk"]
+        ar: ["بالوعة مسدودة", "مياه راكدة", "فيضان بعد المطر", "تسرب مياه الأمطار"]
+        arabizi: ["balou3a masduude", "may wa2fe 3al tari2", "ba3d l matar ma fi tasrif", "balou3a 3am teta3abba"]
+      LOW:
+        en: ["slow drainage", "puddle after rain", "drain grate clogged", "surface water issue"]
+        ar: ["تصريف بطيء", "برك مياه بعد المطر", "شبكة التصريف مسدودة"]
+        arabizi: ["tasrif bati2", "may ba3d l matar", "balo3a msadoude shway"]
+
+  SAFETY:
+    default_severity: CRITICAL
+    urgency_sla_hours: 1
+    public_safety: true
+    hitl_always: true
+    routing_fallback: ISF
+    note: "Always HITL. ISF for public safety and crime. Civil Defense for structural hazard, fire, and collapse. Human reviewer determines correct entity and urgency before any dispatch."
+    severity_keywords:
+      CRITICAL:
+        en: ["fire", "building collapse", "explosion", "injured person", "armed incident", "chemical leak", "gas leak", "person in danger"]
+        ar: ["حريق", "انهيار مبنى", "انفجار", "شخص مصاب", "حادث مسلح", "تسرب غاز", "شخص في خطر"]
+        arabizi: ["7ariki", "infijar", "7ada 2anje7", "bnayi nkassar", "ghaz 3am yetfassal", "7ada bi khattar", "fi 5tr", "5trrr", "khtr"]
+      HIGH:
+        en: ["structural crack", "dangerous building", "unstable wall", "unsafe scaffold", "gas smell", "broken manhole"]
+        ar: ["تشقق هيكلي", "مبنى خطر", "جدار غير مستقر", "رائحة غاز", "بئر مكشوف"]
+        arabizi: ["bnayi bi khatar", "bnayi bi 5tr", "jdar 3am yenkaser", "ri7et ghaz", "biar mfatou7", "sho3ouliye khatra"]
+      MEDIUM:
+        en: ["suspicious package", "vandalism", "broken street light at night", "nuisance", "suspicious activity"]
+        ar: ["حزمة مشبوهة", "تخريب", "إنارة معطلة ليلاً", "مشبوه"]
+        arabizi: ["shi 2murib", "takrib", "nour share3 maffi bel leil", "ta2arrouf"]
+      LOW:
+        en: ["noise complaint", "property dispute", "minor vandalism", "parking obstruction"]
+        ar: ["شكوى ضوضاء", "نزاع ملكية", "انسداد مواقف"]
+        arabizi: ["dajje ktir", "niza3 3al 2ard", "7add sede tari2"]
+
+  OTHER:
+    default_severity: LOW
+    urgency_sla_hours: 168
+    public_safety: false
+    hitl_always: true
+    routing_fallback: null
+    note: "Sector not identified by IEP-1 with sufficient confidence. Route entirely to human review. Every corrected OTHER complaint is a high-value training label."
+    severity_keywords:
+      CRITICAL: {en: [], ar: [], arabizi: []}
+      HIGH: {en: [], ar: [], arabizi: []}
+      MEDIUM: {en: [], ar: [], arabizi: []}
+      LOW: {en: [], ar: [], arabizi: []}

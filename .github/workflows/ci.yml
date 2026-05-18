@@ -1,0 +1,120 @@
+name: CedarFix CI
+
+on:
+  push:
+    branches: [main, cedarfix-dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-test:
+    name: Validate corpus & run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Arabizi vocabulary
+        run: python scripts/validate_arabizi_vocabulary.py
+
+      - name: Validate CedarFix corpus
+        run: python scripts/validate_cedarfix_corpus.py
+
+      - name: Validate OOV review queue
+        run: python scripts/validate_arabizi_oov_queue.py
+
+      - name: Validate regression benchmark + SHA
+        run: python scripts/validate_arabizi_benchmark.py
+
+      - name: OOV analyzer self-test
+        run: python scripts/analyze_arabizi_oov.py --self-test
+
+      - name: Run unit tests
+        run: python -m unittest discover -s scripts/tests -p "test_*.py" -v
+
+  arabizi-eval-gate:
+    name: Arabizi coverage evaluation (Batch 001 smoke gate)
+    runs-on: ubuntu-latest
+    needs: validate-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Arabizi coverage evaluation
+        run: python scripts/evaluate_arabizi_coverage.py
+
+      - name: Upload evaluation artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arabizi-coverage-batch001
+          path: data/eval/arabizi_coverage_batch001.json
+
+  docker-build:
+    name: Build ${{ matrix.service.name }} image
+    runs-on: ubuntu-latest
+    needs:
+      - validate-and-test
+      - arabizi-eval-gate
+    strategy:
+      matrix:
+        service:
+          - { name: eep,  dockerfile: src/eep/Dockerfile }
+          - { name: iep1, dockerfile: src/iep1/Dockerfile }
+          - { name: iep2, dockerfile: src/iep2/Dockerfile }
+          - { name: iep3, dockerfile: src/iep3/Dockerfile }
+          - { name: iep4, dockerfile: src/iep4/Dockerfile }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Dockerfile exists for ${{ matrix.service.name }}
+        id: dockerfile-check
+        run: |
+          if [ -f "${{ matrix.service.dockerfile }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Dockerfile ${{ matrix.service.dockerfile }} not yet created — skipping build"
+          fi
+
+      - name: Build ${{ matrix.service.name }}
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        run: |
+          docker build -f ${{ matrix.service.dockerfile }} \
+            -t ghcr.io/${{ github.repository_owner }}/cedarfix-${{ matrix.service.name }}:${{ github.sha }} \
+            .
+
+      - name: Login to GHCR
+        if: steps.dockerfile-check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ${{ matrix.service.name }}
+        if: steps.dockerfile-check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag \
+            ghcr.io/${{ github.repository_owner }}/cedarfix-${{ matrix.service.name }}:${{ github.sha }} \
+            ghcr.io/${{ github.repository_owner }}/cedarfix-${{ matrix.service.name }}:latest
+          docker push ghcr.io/${{ github.repository_owner }}/cedarfix-${{ matrix.service.name }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository_owner }}/cedarfix-${{ matrix.service.name }}:latest

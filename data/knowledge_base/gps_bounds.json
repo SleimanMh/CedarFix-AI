@@ -1,0 +1,69 @@
+{
+  "description": "GPS bounding boxes for validating complaint coordinates. Used by EEP validation layer to reject coordinates outside Lebanon and to assign governorate context.",
+  "lebanon": {
+    "lat_min": 33.05,
+    "lat_max": 34.69,
+    "lon_min": 35.10,
+    "lon_max": 36.62,
+    "note": "Full country bounding box. Reject any complaint GPS outside this box."
+  },
+  "beirut_city": {
+    "lat_min": 33.8500,
+    "lat_max": 33.9100,
+    "lon_min": 35.4600,
+    "lon_max": 35.5600,
+    "note": "Beirut municipality proper. Water authority = BMLWE. Municipality = Beirut Municipality."
+  },
+  "greater_beirut": {
+    "lat_min": 33.7800,
+    "lat_max": 33.9600,
+    "lon_min": 35.4400,
+    "lon_max": 35.6800,
+    "note": "Greater Beirut including Mount Lebanon suburbs. Water authority = BMLWE for most areas."
+  },
+  "governorate_centroids": {
+    "Beirut": {"lat": 33.8886, "lon": 35.4955},
+    "Mount Lebanon": {"lat": 33.8500, "lon": 35.5800},
+    "North Lebanon": {"lat": 34.3500, "lon": 35.8500},
+    "South Lebanon": {"lat": 33.4500, "lon": 35.3700},
+    "Nabatieh": {"lat": 33.3500, "lon": 35.4800},
+    "Bekaa": {"lat": 33.8500, "lon": 35.9000},
+    "Baalbek-Hermel": {"lat": 34.0000, "lon": 36.2000},
+    "Akkar": {"lat": 34.5000, "lon": 36.0800}
+  },
+  "water_authority_by_governorate": {
+    "Beirut": "BMLWE",
+    "Mount Lebanon": "BMLWE",
+    "North Lebanon": "NLWE",
+    "South Lebanon": "SLWE",
+    "Nabatieh": "SLWE",
+    "Bekaa": "BWE",
+    "Baalbek-Hermel": "BWE",
+    "Akkar": "NLWE"
+  },
+  "water_authority_full_names": {
+    "BMLWE": {
+      "en": "Beirut and Mount Lebanon Water Establishment",
+      "ar": "مؤسسة مياه بيروت وجبل لبنان"
+    },
+    "NLWE": {
+      "en": "North Lebanon Water Establishment",
+      "ar": "مؤسسة مياه لبنان الشمالي"
+    },
+    "SLWE": {
+      "en": "South Lebanon Water Establishment",
+      "ar": "مؤسسة مياه لبنان الجنوبي"
+    },
+    "BWE": {
+      "en": "Bekaa Water Establishment",
+      "ar": "مؤسسة مياه البقاع"
+    }
+  },
+  "validation_rules": {
+    "reject_outside_lebanon": true,
+    "warn_outside_greater_beirut": true,
+    "max_gps_precision_digits": 6,
+    "min_gps_precision_digits": 3,
+    "note": "Reject complaints with GPS coordinates outside Lebanon bounding box. Issue a warning (not rejection) if GPS is outside greater Beirut but still in Lebanon — these are valid but may need different routing context."
+  }
+}

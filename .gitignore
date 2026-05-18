@@ -12,3 +12,14 @@ build/
 node_modules/
 *.parquet
 tmp_*.log
+
+# Virtual environment
+.venv*/
+
+# Local scratch / temp
+.tmp/
+
+# Archive and internal docs — not part of the CedarFix repo
+_archive/
+bin/
+Rubric/

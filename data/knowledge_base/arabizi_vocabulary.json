@@ -1,0 +1,555 @@
+{
+  "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
+  "version": "1.4.0",
+  "changelog": "v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "arabizi_notes": {
+    "common_substitutions": {
+      "ع": "3  — ALWAYS use 3; never omit",
+      "ح": "7  — ALWAYS use 7; never use plain h for this letter",
+      "خ": "5  — preferred in standalone seeds and word-initial position (5atar, 5tr). kh is acceptable mid-word only (dakhlet, mekshouf, dukhaan). NEVER use both forms for the same word in the same seed list",
+      "ق": "2  — preferred (ma2tou3, tari2, 7a2). q is acceptable in formal/MSA loanwords only",
+      "ص": "s or S  — lowercase s is standard; capital S is optional for disambiguation",
+      "ط": "t  — context usually distinguishes from ت",
+      "ض": "d",
+      "غ": "gh",
+      "ء / أ / إ / ئ": "2  — use for glottal stop in any position",
+      "ش": "sh",
+      "ج": "j",
+      "ث": "s or ss",
+      "ذ": "z or d",
+      "ظ": "z",
+      "ه": "h  — plain h is correct ONLY for ه, not for ح"
+    },
+    "transliteration_rules": {
+      "negation_مش": "ALWAYS write mish — never mesh",
+      "خطر_danger": "ALWAYS write 5atar (not khatar) in seed keywords. kh form only in sample complaints where mid-word position makes 5 awkward",
+      "حفرة_pothole": "Prefer 7ofra or 7afra in authored seeds. Keep hofra as a low-confidence wild variant because real users omit 7; never use hafra or hufra.",
+      "prepositions": "Avoid stacking more than two locational particles (fi/bi/3al) in a row. Use 3al as the default for 'on/at'; fi for 'inside/in a place'; bi for 'in/at' with proper nouns",
+      "verb_agreement": "Match verb number to subject: seyyarat (plural) → 2adroo / 2adret, not 2adra (singular feminine)",
+      "ma_fi_vs_ma_fiye": "ma fi = ما في (there is no / there isn't). ma fiye = ما فيّي (I cannot). Choose the correct form based on intended meaning",
+      "marker_chars_in_seeds": "Single-word seeds (e.g. jora, seyle, nnar) may not contain a marker character (3/7/2/5) — this is expected and does not make them invalid. The quality gate requiring at least one marker applies to full corpus REPORTS, not individual seed words. Short seeds without markers are fine as lookup tokens; the full complaint built from them must contain at least one marker character."
+    },
+    "common_connectors": {
+      "على": "3al",
+      "في": "fi  (place) or bi  (with proper nouns)",
+      "من": "men",
+      "إلى": "3a or la",
+      "هناك / هونيك": "hunike or honik",
+      "الـ": "l- (most common) or el- or al-",
+      "بيت": "bayt or bit",
+      "شارع": "share3",
+      "قرب / جنب": "jemb or 7add",
+      "منذ": "men  (e.g. men emes, men 2sbou3een)",
+      "كثير": "ktir",
+      "كبير": "kbir",
+      "صغير": "sgir or zghir",
+      "خطر": "5atar  (preferred in seeds); 5tr  (abbreviated panic form); khatar  (acceptable mid-word only)"
+    },
+    "complaint_starters": [
+      "fi",
+      "3enna",
+      "fi l 7ayye ta3ne",
+      "3al share3 ta3 baytna",
+      "fi mashetle bi",
+      "bedna nshki",
+      "3an jad",
+      "hay l moshetle bi",
+      "men zamaan w",
+      "la halla2 ma 7ada",
+      "shu yimken n3amel"
+    ]
+  },
+  "sectors": {
+    "ROADS": {
+      "issue_type_keywords": {
+        "pothole": [
+          "7ofra",
+          "7afra",
+          "7ofra kbire",
+          "7afra 3ameqe",
+          "jora",
+          "joura",
+          "joora",
+          "joura kbire",
+          "jorit",
+          "joret",
+          "hofra",
+          "jora bla ta7dir",
+          "7ofra bla isharet ta7dir",
+          "ma fi ta7dir 3al 7ofra"
+        ],
+        "road_collapse": [
+          "tari2 nkassar",
+          "tari2 3am yenkaser",
+          "5atar 3al tari2",
+          "tari2 2nhajar",
+          "nhajar l tari2"
+        ],
+        "road_blocked": [
+          "tari2 ma2tou3",
+          "tari2 masduud",
+          "sekke masduude",
+          "ma fi tari2 y3dde",
+          "tari2 msakkar"
+        ],
+        "road_crack": [
+          "tari2 metshe22a2",
+          "tashaddo2at bi l asphalt",
+          "shi22 bi l tari2",
+          "tari2 3endo tashroumaat",
+          "asphalt 3endo tashaddo2at"
+        ],
+        "missing_manhole": [
+          "ghata biar mafqoud",
+          "biar maftouh bla ghata",
+          "7afra bi l tari2 bla ghata",
+          "biar mkshouf",
+          "ghata l biar gha2eb"
+        ],
+        "broken_sidewalk": [
+          "rasif maksour",
+          "rasif ta3eb",
+          "ma fi rasif",
+          "rasif nkassar",
+          "balat l rasif mnkassar"
+        ],
+        "road_damage": [
+          "tari2 ta3eb",
+          "tari2 mish mnee7",
+          "asphalt nkassar",
+          "tarmim me7taj",
+          "tari2 me7teje siyane",
+          "matab nkassar",
+          "matab msh shoufe",
+          "kaser sur3a meksour",
+          "mukab3 nkassar"
+        ],
+        "road_closed": [
+          "tari2 msakkar",
+          "tari2 ma2foul",
+          "l tari2 msakkra",
+          "sakkaro l tari2",
+          "ma fi fout 3al tari2"
+        ]
+      },
+      "sample_complaints": [
+        "3al share3 l 7amra jemb l mabne l kbir fi 7ofra 3ameqe, l seyyarat 3am tin7arif la t2addar t3dde",
+        "tari2 l ashrafieh nkassar ba3d l matar, fi tlet 7afarat kbire bi nos l sekke w ma fi isharet",
+        "bi share3na men 2sbou3een w la 7ada 2eje yi3mel shi, l 7ofra 3am tikbar kell yom",
+        "ghata biar mafqoud 3al share3 bi jiwar bayti, fi 5atar ktir 3al nass bel leil",
+        "tari2 l jounieh 3am yenkaser men ta7t, fi tashaddo2at kbire bi l asphalt w 3am titshe22a2"
+      ],
+      "issue_type_aliases": {
+        "road_collapsed": "road_collapse",
+        "road_damaged": "road_damage",
+        "speed_bump_damaged": "road_damage"
+      }
+    },
+    "WATER": {
+      "issue_type_keywords": {
+        "water_cut": [
+          "ma fi may",
+          "may 2ata3et",
+          "may inkata3et",
+          "may ma rja3et",
+          "ma2tou3een men may",
+          "men 2 yom ma fi may",
+          "men emes ma fi may",
+          "3 iyem bdoun may",
+          "men 2sbou3 ma fi may",
+          "men 3 iyem may ma rja3et"
+        ],
+        "pipe_leak": [
+          "anboub 3am yesarrab",
+          "tasarroub l may",
+          "may 3am titba3",
+          "masroubet l may",
+          "may 3am titsarrab men l anboub"
+        ],
+        "sewage_overflow": [
+          "sarif sa77i",
+          "ri7et sarif",
+          "tasrif sa77i",
+          "biyar sarif mfatou7a",
+          "sarif 3am yetfa2ar",
+          "sarif 3am yetfayan 3al tari2"
+        ],
+        "dirty_water": [
+          "may lawanta",
+          "may wse5a",
+          "may mla2wate",
+          "may sawda",
+          "may bi ri7a",
+          "may wane l lawn"
+        ],
+        "low_pressure": [
+          "daght l may khafif",
+          "may 3am teje bi shwayy",
+          "may nazzalet ktir",
+          "ma fi daght may",
+          "l may mish 3am tit2alla3 la2al tabe2"
+        ],
+        "no_supply": [
+          "ma fi may bil mantiqa",
+          "may ma 3am tousal",
+          "l may ma 3am teje",
+          "ma 3enna may bil bayt",
+          "l 5azzan fadi w ma fi may"
+        ]
+      },
+      "sample_complaints": [
+        "men emes w la halla2 ma fi may bi l 7ayye, shu 3am yiseer w 7ada msh 3am yrud",
+        "fi tasarroub kbir 3al tari2 ta3 verdun, l may 3am titba3 men ta7t l ard men sa3at",
+        "ri7et sarif sa77i 3am 2ije men 2abi l bnayi, shi byikhzi, mumkin 7ada yji yshuf l biyar",
+        "l daght nazzal ktir men youm la tene, bi l tabe2 l ta7te l may ma btwassal w l nas 3am yish7atou"
+      ],
+      "issue_type_aliases": {
+        "water_leak": "pipe_leak",
+        "sewage": "sewage_overflow",
+        "no_water_days": "water_cut"
+      }
+    },
+    "ELECTRICITY": {
+      "issue_type_keywords": {
+        "exposed_wire": [
+          "silk kahraba mekshouf",
+          "silk mekshouf 3al ard",
+          "7abal kahraba 3al tari2",
+          "silk kahraba nkazal",
+          "7abal kahraba 2eta3 w nzal 3al ard",
+          "silk m7arrak",
+          "7abal kahraba m7arrak w mekshouf",
+          "silk mcharrak"
+        ],
+        "power_outage": [
+          "kahraba 2ata3et",
+          "kahraba ma fi",
+          "kahraba inkata3et",
+          "3atme",
+          "2ata3 kahraba",
+          "kahraba 2at3a men yom",
+          "men 2 yom ma fi kahraba",
+          "2ata3 kahraba ktir",
+          "kahraba 2at3a men l leil",
+          "la halla2 ma rja3et l kahraba"
+        ],
+        "street_light": [
+          "nour share3 ma shi3el",
+          "nour share3 mafi",
+          "share3 3atim",
+          "l ishara l daw2iye msh shi3le",
+          "nour l share3 ta3e men 2iyem"
+        ],
+        "transformer_fault": [
+          "muhawwel nkassar",
+          "muhawwel 3am yithal",
+          "sandou2 kahraba mashkle",
+          "muhawwel 3am yishhar w fi ri7a",
+          "nkassar l muhawwel w ma fi kahraba",
+          "transformateur nkassar",
+          "transformateur 3am yithal w fi ri7a",
+          "fi mashkle bel transformateur"
+        ],
+        "voltage_fluctuation": [
+          "kahraba 3am titba3 w troo7",
+          "fi tazabzob bi l kahraba",
+          "kahraba 3am tej w terja3",
+          "l volt msh tanbit",
+          "kahraba 3am titghayar ktir w 3am ti7re2 l ashye"
+        ]
+      },
+      "sample_complaints": [
+        "2ata3 kahraba men l ams bel leil w la halla2 ma rja3et, EDL msh 3am trud w l dawiye 3al battariyye",
+        "3al share3 ta3 l 2arnaout fi 7abal kahraba nzal 3al ard, la 7ada y2arab menno 5atar sa32",
+        "nour share3 l mazraa ma shi3el men tlet iyem, bel leil ma fi shi w l nass khayfin",
+        "l muhawwel bi jiwar l bnayi 3am yithal w fi ri7a 7arke, 3ajeele EDL tji tshuf abel ma ysar shi"
+      ],
+      "issue_type_aliases": {
+        "power_cut": "power_outage",
+        "power_long_cut": "power_outage",
+        "transformer": "transformer_fault"
+      }
+    },
+    "WASTE": {
+      "issue_type_keywords": {
+        "garbage_not_collected": [
+          "zbele ma jmaou",
+          "zbele ma taloo",
+          "ma ji 7ada yoshul zbele",
+          "shirket l zbele ma 2elet",
+          "men iyem w zbele ma t7arrak",
+          "l 7awiye 3am tita3abba w ma fi 7ada yoshul",
+          "l 2lebe 3am tita3abba w mish 3am yji 7ada"
+        ],
+        "illegal_dump": [
+          "zbele msoubet bi l ard",
+          "maska zbele ghalat",
+          "zbele bi l ard l 5ale",
+          "ramou nfayat bine bi l ard l 5ale",
+          "masabb zbele msh masmo7 honik",
+          "kuumeh nfayat bi l ard l 5ale",
+          "kuumeh zbele 3am tikbar w ma fi 7ada",
+          "ramou nkesh bne bi l ard l 5ale",
+          "nkesh bne maska honik men 2iyem",
+          "yroumo nfayat bi l ard l 5ale",
+          "3am yroumo zbele barra l 7awiye"
+        ],
+        "overflowing_bin": [
+          "2lebe tafane",
+          "zbele 3am tit3abba",
+          "2lebe mmtele w 3am tifout",
+          "l 7awiye tafanit",
+          "zbele 3am titbe3 men l 2lebe",
+          "zbele 3am tsedd tari2",
+          "kuumet zbele 3al tari2",
+          "zbele mfarrishe 3al sekke",
+          "zbele 3am t7ajjeb l mour",
+          "ma fi tari2 men l zbele"
+        ],
+        "burning_waste": [
+          "3am yi7arkou zbele",
+          "zbele 3am ti7tari2",
+          "ri7et 7ar2 zbele",
+          "dukhan men 7ar2 nfayat",
+          "nnar bi l zbele w dukhan 3am yidkhol"
+        ],
+        "damaged_bin": [
+          "2lebe maksour",
+          "sandou2 zbele nkassar",
+          "l 7awiye ta3be w msh 3am tinsedd",
+          "2lebe ta3eb w zbele 3am tifout menno",
+          "ghata l 2lebe nkassar"
+        ]
+      },
+      "sample_complaints": [
+        "men 5 iyem w la 7ada 2eje ya5od l zbele bi 7ayetna, l 7awiyat killa tafanit w fi ri7a msh mne7a",
+        "fi kuumet zbele kbire bi akhir share3 l verdun, 7ayawanat 3am tiji 3laya bel leil w l wad3 baye5",
+        "l shirke l jami3a ma 2elet toshul men tlet 2sabi3, keef nwassal l moshkle la meen?",
+        "3am yi7arkou nfayat bi l ard l 5ale 7add l madrase, dukhan 3am yidkhol 3al bayt w l 2awlad msh mne7 yistansheqou"
+      ],
+      "issue_type_aliases": {
+        "not_collected": "garbage_not_collected",
+        "overflowing": "overflowing_bin",
+        "blocking_road": "overflowing_bin",
+        "burning": "burning_waste"
+      }
+    },
+    "FLOODING": {
+      "issue_type_keywords": {
+        "road_flooded": [
+          "tari2 3am yetfayan",
+          "tari2 2arqa",
+          "3am yetfa2ar 3al tari2",
+          "may gharet tari2",
+          "may ghatat l sekke",
+          "tari2 ghare2",
+          "share3 ghare2 men l matar",
+          "l may 3am tetfa2ar 3al tari2"
+        ],
+        "house_flooded": [
+          "bayt 3am yetra2",
+          "may dakhlet 3al bayt",
+          "2abi tafyan",
+          "may 3am tete3abba jouwwa l dar",
+          "l bayt killo ma2leh may"
+        ],
+        "blocked_drain": [
+          "balou3a masduude",
+          "balo3a ma 3am tishrab",
+          "tasrif mashloum",
+          "l balou3a msdoude w may 3am tit3abba",
+          "ma fi tasrif w may 3am ta3baa"
+        ],
+        "flash_flood": [
+          "seyle",
+          "seyle kbire",
+          "may 3am tiji men fawq",
+          "seyle nzalat men l jabal",
+          "may 3am tiji bi sorr3a w ma fi wein trouh"
+        ],
+        "standing_water": [
+          "may wa2fe",
+          "may mish raye7a",
+          "birke may 3al tari2",
+          "may wa2fe men l matar",
+          "may 3am twa22ef bel nos w ma 3am ttenazzel"
+        ],
+        "basement_flooded": [
+          "2abi 3am yetra2",
+          "may dakhlet la 2abi",
+          "2abi tafyan men l matar",
+          "l 2abi ma2le may w msh 3am yinzal",
+          "ta7t l bnayi 3am yetra2"
+        ]
+      },
+      "sample_complaints": [
+        "tari2 l 7amra killo 3am yetfayan ba3d l matar, l seyyarat ma 2adroo t3dde w nass 3alqanin",
+        "l balou3a 2oddem baytna masduude w may 3am tit3abba 3al rasif, keef nwassal l moshkle la meen",
+        "seyle nzalet bi l share3 ta3 l jounieh w l may 3am tit2alla3 men l jabal bi sor3a w ma fi wein trouh",
+        "l 2abi ta7t l bnayi tafyan men l matar w l may msh 3am tenzel, l sakinin bi l ta7t msh 2adriin yid5olo"
+      ],
+      "issue_type_aliases": {
+        "drain_blocked": "blocked_drain"
+      }
+    },
+    "SAFETY": {
+      "issue_type_keywords": {
+        "structural_collapse": [
+          "bnayi bi 5atar",
+          "7iit 3am yenkaser",
+          "bnayi 3atiq bi 5atar",
+          "7aykal 3am yenkaser",
+          "l mabne 3endo tashaddo2at bi l 7iit w l sa2f",
+          "7eet 3am yenkaser",
+          "l 7eet bi 5atar",
+          "7eet mnkassar w nzal 3al tari2"
+        ],
+        "fire": [
+          "7ariki",
+          "7ariki bi l bnayi",
+          "bnayi 3am yi7tari2",
+          "nnar",
+          "fi nnar bi l mabne"
+        ],
+        "gas_leak": [
+          "ri7et ghaz",
+          "ghaz 3am yetfassal",
+          "masroubet ghaz",
+          "ri7a ghaz men l anboub",
+          "fi ri7et ghaz 2awiye bi l share3"
+        ],
+        "exposed_hazard": [
+          "fi shi 5atar 3al tari2",
+          "mawdou3 5atar w ma fi isharet",
+          "7ajar nkassar 3al tari2",
+          "fi 5atar w ma 7ada 7ata isharet",
+          "7afra kbire bla ghata bi nos l sekke",
+          "fi 5atar",
+          "5atar ktir",
+          "5tr",
+          "5trrr",
+          "mawdou3 5atar",
+          "wad3 5ater"
+        ],
+        "armed_incident": [
+          "fi 7ada masalla7",
+          "fi itar2 bi l 7ayye",
+          "fi 7arike bi l share3",
+          "mas2ale amnieh bi l mantiqa",
+          "fi 7ada 3endo sila7 bi l share3"
+        ],
+        "injury": [
+          "fi 2anje7",
+          "7ada waje3",
+          "7ada mje7",
+          "7ada bi 7ajit is3af",
+          "7ada waje3 bi l share3 w ma 7ada 3am ysa3do"
+        ],
+        "suspicious": [
+          "fi shi mshbouh",
+          "shi gharib 3am yiseer",
+          "fi 7ada mshbouh bi l bnayi",
+          "fi shi mshbouh mhoutout 7add l bayt",
+          "fi nass msh men l 7ayye 3am yi7ko bi sr"
+        ]
+      },
+      "sample_complaints": [
+        "7ariki bi l mabne l 2adim jemb l jam3iye, yalla is3afou w ib3atou CD 3ajeele",
+        "ri7et ghaz 2awiye 3al tari2 ta3 l ashrafieh men sa3a, mumkin masroubet bi l anboub ta7t l ard",
+        "bnayi 3atiq bi l jiwar bi 5atar ktir, l 7aykal 3am yenkaser w fi 3a2ilat sakine jouwwa w ma btehdab",
+        "7ada 2anje7 ba3d 7adit seer 3al tari2 l kbir, mehtal la is3af w la 7ada w2ef ysa3do"
+      ],
+      "issue_type_aliases": {
+        "collapse_risk": "structural_collapse",
+        "danger": "exposed_hazard",
+        "injured": "injury"
+      }
+    },
+    "OTHER": {
+      "catch_all_phrases": [
+        "fi mashkle bi l 7ayye",
+        "bedna nshki 3an wad3",
+        "wad3 mish mni7",
+        "l moshkle hayye men zamaan",
+        "ma 3arefna min yji yi3mel shi",
+        "ma 3arefna meen mas2oul",
+        "7ada msh 3am yrud 3al moshkle"
+      ],
+      "sample_complaints": [
+        "fi wad3 bi 7ayetna msh mni7 bass ma 3arefna l mas2uliyyet ta3 meen — mumkin ta3lamounna?",
+        "l infrastructure bi l mantiqa 3am tensarr men kell janab w ma 7ada 3am ya3mal shi 3laya"
+      ],
+      "issue_type_keywords": {
+        "unclassified": [
+          "fi mashkle bi l 7ayye",
+          "bedna nshki 3an wad3",
+          "wad3 mish mni7",
+          "l moshkle hayye men zamaan",
+          "ma 3arefna min yji yi3mel shi",
+          "ma 3arefna meen mas2oul",
+          "7ada msh 3am yrud 3al moshkle"
+        ]
+      },
+      "issue_type_aliases": {}
+    }
+  },
+  "lexicon_policy": {
+    "goal": "High-precision Lebanese municipal incident Arabizi seeds, not an exhaustive slang dictionary.",
+    "acceptance_rule": "Keep a seed only if it is Lebanese-plausible, useful for municipal incident reports, and either observed in corpus, confirmed by a Lebanese speaker, or anchored by public local usage.",
+    "do_not_use_as_final_labels": "The keys in issue_type_keywords must match annotation issue types; old local names live only in issue_type_aliases.",
+    "noise_handling": "Do not enumerate every repeated-character typo. Normalizer should collapse repeated trailing letters/digits, e.g. 5tr444444 -> 5tr.",
+    "adaptive_oov_policy": "Unknown meaningful Arabizi terms must be logged to data/corpus/arabizi_oov_review_queue_v1.csv and reviewed before vocabulary promotion. The fixed lexicon remains high-precision; raw text models and HITL handle long-tail language."
+  },
+  "source_notes": {
+    "jora_joura": "Public Lebanese pothole usage is anchored by the Ensa Joura road initiative and common local usage; keep jora/joura/joora as high-value variants.",
+    "balou3a_drain": "Lebanese drain usage is anchored by public Lebanese Arabic learning references that transliterate بالوعة as Balou3a; use balou3a/balo3a, not balioa.",
+    "may_water": "Lebanese/Levantine water is commonly may/mayy; keep may/maye style variants in WATER seeds.",
+    "kahraba": "kahraba/kahrabe variants are common Lebanese Arabic for electricity; keep both in electricity contexts.",
+    "code_switching": "Lebanese reports may code-switch Arabic, Arabizi, French, and English; corpus reports should preserve natural mixing rather than over-normalizing away real usage."
+  },
+  "term_metadata": {
+    "m7arrak": {
+      "arabizi_note": "Canonical form using 7 for ح (m7arrak = محرّك, live/energised wire). Variant mcharrak (ch for ح) is attested in corpus; both are accepted. Seeds use both; m7arrak is the canonical spelling.",
+      "sector": "ELECTRICITY",
+      "issue_type": "exposed_wire",
+      "variant_forms": ["mcharrak"]
+    },
+    "transformateur": {
+      "arabizi_note": "French loanword widely used in Lebanese vernacular for transformer (محوّل). Maps to ELECTRICITY/TRANSFORMER_FAULT, not EXPOSED_WIRE.",
+      "sector": "ELECTRICITY",
+      "issue_type": "transformer_fault",
+      "loanword_from": "fr"
+    },
+    "ghare2": {
+      "arabizi_note": "غارق — flooded/submerged. Standard Lebanese Arabic. Use with tari2/share3 for FLOODING/road_flooded context.",
+      "sector": "FLOODING",
+      "issue_type": "road_flooded"
+    },
+    "7eet": {
+      "arabizi_note": "Variant spelling of 7iit (حيط = wall). 7eet is a common phonetic alternative; both forms are accepted in seeds.",
+      "sector": "SAFETY",
+      "issue_type": "structural_collapse",
+      "variant_forms": ["7iit"]
+    },
+    "tita3abba": {
+      "arabizi_note": "تتعبّى — fills up (feminine/inanimate). Context-dependent: in WASTE means bin filling without collection (garbage_not_collected); in FLOODING means drain backing up (blocked_drain, via tit3abba). Disambiguation by sector.",
+      "sector": "WASTE",
+      "issue_type": "garbage_not_collected",
+      "context_disambiguation": "FLOODING/blocked_drain uses tit3abba (existing seed); WASTE/garbage_not_collected uses tita3abba"
+    },
+    "nkesh": {
+      "arabizi_note": "نكش / نكاش — construction rubble or demolition debris. Distinct from nfayat (household waste). Use in WASTE/illegal_dump when dumped material is building debris.",
+      "sector": "WASTE",
+      "issue_type": "illegal_dump"
+    },
+    "ta7dir": {
+      "arabizi_note": "تحذير — warning/marking. In ROADS/pothole context: absence of warning markers (jora bla ta7dir) is a severity amplifier. Single token ta7dir alone is not a pothole indicator; it must appear in negative phrasing (bla ta7dir, ma fi ta7dir).",
+      "sector": "ROADS",
+      "issue_type": "pothole"
+    },
+    "kasaret": {
+      "arabizi_note": "كسرت — broke/cracked (feminine past tense). Deferred to Batch 002 (NEEDS_MORE_EXAMPLES from OOV queue). Do not promote until ≥3 further corpus examples. Tentative sector: ROADS/pothole or ROADS/road_collapse.",
+      "status": "DEFERRED_BATCH_002"
+    }
+  }
+}
