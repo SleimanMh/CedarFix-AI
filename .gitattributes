@@ -1,0 +1,12 @@
+# Force LF line endings for all text files so SHA256 is consistent across OS
+* text=auto eol=lf
+
+# Binary files — no conversion
+*.joblib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
