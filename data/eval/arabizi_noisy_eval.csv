@@ -1,1 +1,3 @@
 report_id,text,language,noise_type,expected_sector,expected_issue_type,expected_severity,expected_route_entity,notes
+NOISY-0001,fi hofraaa kbire 3al tari2 w l wad3 m5atra,arabizi,TYPO;RUNON,ROADS,POTHOLE,HIGH,HITL,pack:AE0002; plain-h fallback + high-risk OOV m5atra
+NOISY-0002,zbele ktire w l 7awiye melyene men 3 iyem,arabizi,TYPO,WASTE,OVERFLOWING_BIN,MEDIUM,MUN,pack:AE0008; overflowing bin

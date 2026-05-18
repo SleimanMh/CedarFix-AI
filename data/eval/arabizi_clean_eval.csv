@@ -1,1 +1,5 @@
 report_id,text,language,expected_sector,expected_issue_type,expected_severity,expected_route_entity,notes
+CLEAN-0001,fi 7ofra kbire 3al tari2 bi hamra,arabizi,ROADS,POTHOLE,MEDIUM,CDR,pack:AE0001; clean pothole; 7=ha 2=hamza
+CLEAN-0002,ma fi may men mbere7 bi l bineye,arabizi,WATER,WATER_CUT,MEDIUM,BWE,pack:AE0003; water cut in building
+CLEAN-0003,fi selk kahraba makshouf 7ad l madrase,arabizi,ELECTRICITY,EXPOSED_WIRE,HIGH,HITL,pack:AE0004; exposed wire always HITL
+CLEAN-0004,ri7et ghaz bi l bineye 2awye ktir,arabizi,SAFETY,GAS_LEAK,CRITICAL,HITL,pack:AE0007; gas leak always HITL
