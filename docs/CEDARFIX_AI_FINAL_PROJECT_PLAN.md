@@ -774,7 +774,7 @@ Kubernetes YAML is useful but should not make the demo fragile.
 ### S5 - Deployment Architecture And Secrets
 
 - No secrets in code.
-- `.env.example` only.
+- `.env.cedarfix.example` only.
 - cloud secret manager documented.
 - cloud deployment diagram.
 - public EEP URL.
@@ -966,7 +966,7 @@ Scores reflect the plan-only state (no implementation evidence). Gate items do n
 | S2 | 3% | 1 ⚠️ | Pre-build: validation described, not implemented. Reaches 2 with Pydantic models enforced and boundary tests passing. |
 | S3 | 3% | 1 ⚠️ | Pre-build: fallback described, no retry library wired. Reaches 2 with tenacity/httpx retry configured and chaos test for IEP container kill. |
 | S4 | 3% | 1 | Build Docker image per service, Docker Compose with health checks for all infra. |
-| S5 | 3% | 1 | Cloud EEP deployment, .env.example, secret manager docs, deployment diagram, cost estimate table. |
+| S5 | 3% | 1 | Cloud EEP deployment, `.env.cedarfix.example`, secret manager docs, deployment diagram, cost estimate table. |
 | P1 | 2.5% | 2 | — |
 | P2 | 2.5% | 1 | Implement B1 keyword router and B2 exact-match dedup; run on held-out eval set; produce comparison table. |
 | P3 | 2.5% | 1 ⚠️ | Pre-build: 3 arguments exist on paper. Reaches 2 only with measured evidence: B1 routing accuracy < CedarFix on held-out set by ≥10pp. Arguments alone do not harden P3. |
@@ -1154,7 +1154,7 @@ Ranked by total rubric points recovered. Points recovered = sum of half-weights 
 | 3 | Human-authored corpus (stratum spec above) + B1/B2/B3 baselines implemented and measured | P2 +1.25, P3 +1.25, D3 +2, Q2 +1.25 = **5.75 pts** | — |
 | 4 | T5: run all 4 tradeoff experiments, produce number tables | T5 +2.5 | — |
 | 5 | T6 + Q1: edge case tests for all 7 scenarios | T6 +2.5, Q1 +1.25 = **3.75 pts** | — |
-| 6 | Cloud EEP deployment + .env.example + cost table + deployment diagram | S5 +1.5 | GT2 |
+| 6 | Cloud EEP deployment + `.env.cedarfix.example` + cost table + deployment diagram | S5 +1.5 | GT2 |
 | 7 | MLflow lifecycle: experiments, calibration artifact, model registry, champion/challenger promote | M1 +1.25, M2 +1.25 = **2.5 pts** | — |
 | 8 | Grafana: routing_confidence_mean drift panel, HITL rate, latency, fallback rate | M3 +1.25 | — |
 | 9 | Git discipline from day 1 + `prompts/` versioning system | G1 +1.25, G2 +1.25 = **2.5 free pts** | — |
