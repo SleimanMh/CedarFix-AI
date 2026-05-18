@@ -1,0 +1,24 @@
+report_id,text,language,expected_sector,expected_issue_type,expected_severity,expected_route_entity,notes
+# SCHEMA DOCUMENTATION — NO FAKE METRICS
+#
+# Purpose: Clean Arabizi evaluation set.
+#   Clean = native-speaker-written, no OCR errors, no typos, no code-switching.
+#   Used to measure best-case performance of the classification pipeline on well-formed Arabizi.
+#
+# Column definitions:
+#   report_id         — Unique identifier, format: CLEAN-NNNN
+#   text              — The Arabizi report text (free text, no Arabic script in this file)
+#   language          — Must be 'arabizi' (clean set only; mixed goes to arabizi_noisy_eval)
+#   expected_sector   — Ground-truth sector: ROADS | WATER | ELECTRICITY | WASTE | FLOODING | SAFETY | OTHER
+#   expected_issue_type — Ground-truth issue_type (UPPER_CASE, matches vocabulary enum)
+#   expected_severity — Ground-truth severity: LOW | MEDIUM | HIGH | CRITICAL
+#   expected_route_entity — Ground-truth route target: CDR | MUN | BMLWE | NLWE | SLWE | BWE | RWA | EDL | CD | ISF | MOE | MPWT | HITL
+#   notes             — Reviewer notes, dialect variant info, edge case flags
+#
+# Data status: PENDING — no examples yet.
+#   DO NOT fabricate examples. All rows must be real reports or
+#   native-speaker-written examples reviewed and approved by a native Lebanese speaker.
+#
+# To populate: collect via CedarFix submission interface, direct community
+#   collection, or supervised native speaker writing sessions.
+#   Save approved rows below this header block.

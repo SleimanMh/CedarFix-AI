@@ -1,0 +1,33 @@
+report_id,text,language,oov_tokens,expected_sector,expected_issue_type,expected_severity,expected_route_entity,notes
+# SCHEMA DOCUMENTATION — NO FAKE METRICS
+#
+# Purpose: Out-of-vocabulary (OOV) Arabizi evaluation set.
+#   OOV = reports containing at least one meaningful Arabizi token that is NOT in the
+#   production vocabulary. Used to measure:
+#     - OOV detection rate (can we flag unknown tokens?)
+#     - OOV routing accuracy (correct HITL escalation on HIGH-risk OOV?)
+#     - OOV false-positive rate (do harmless unknown tokens cause wrong sector?)
+#
+# Column definitions:
+#   report_id         — Unique identifier, format: OOV-NNNN
+#   text              — The report text (may contain unknown tokens)
+#   language          — 'arabizi' or 'mixed'
+#   oov_tokens        — Semicolon-separated list of tokens verified as OOV (not in vocab)
+#   expected_sector   — Ground-truth sector: ROADS | WATER | ELECTRICITY | WASTE | FLOODING | SAFETY | OTHER
+#   expected_issue_type — Ground-truth issue_type (UPPER_CASE)
+#   expected_severity — Ground-truth severity: LOW | MEDIUM | HIGH | CRITICAL
+#   expected_route_entity — Ground-truth route: CDR | MUN | BMLWE | NLWE | SLWE | BWE | RWA | EDL | CD | ISF | MOE | MPWT | HITL
+#                           Note: HIGH-risk OOV should typically route to HITL
+#   notes             — Reviewer notes, whether OOV token is high-risk, dialect, etc.
+#
+# Data status: PENDING — no examples yet.
+#   DO NOT fabricate OOV examples. All rows must be real or
+#   native-speaker-approved examples where the OOV tokens have been
+#   manually verified as absent from production vocabulary.
+#
+# To populate:
+#   1. Collect real reports with tokens flagged as unknown by the pipeline.
+#   2. Have a native Lebanese speaker confirm the token is meaningful (not a typo).
+#   3. Assign ground-truth labels.
+#   4. Check that oov_tokens are genuinely absent: grep vocab for each token.
+#   Save approved rows below this header block.

@@ -1,0 +1,27 @@
+report_id,text,language,noise_type,expected_sector,expected_issue_type,expected_severity,expected_route_entity,notes
+# SCHEMA DOCUMENTATION — NO FAKE METRICS
+#
+# Purpose: Noisy / real-world Arabizi evaluation set.
+#   Noisy = OCR errors, spelling inconsistency, code-switching (Arabizi + French + Arabic script),
+#   abbreviations, transliteration variation, emoji, run-on words, etc.
+#   This is the most realistic test of pipeline robustness.
+#
+# Column definitions:
+#   report_id         — Unique identifier, format: NOISY-NNNN
+#   text              — The raw noisy report text (may contain Arabic script, French, emoji)
+#   language          — 'arabizi' or 'mixed' (both allowed here)
+#   noise_type        — One or more of: OCR | TYPO | CODESW | ABBREV | EMOJI | RUNON | DIACRITICS
+#                       (semicolon-separated if multiple)
+#   expected_sector   — Ground-truth sector: ROADS | WATER | ELECTRICITY | WASTE | FLOODING | SAFETY | OTHER
+#   expected_issue_type — Ground-truth issue_type (UPPER_CASE)
+#   expected_severity — Ground-truth severity: LOW | MEDIUM | HIGH | CRITICAL
+#   expected_route_entity — Ground-truth route: CDR | MUN | BMLWE | NLWE | SLWE | BWE | RWA | EDL | CD | ISF | MOE | MPWT | HITL
+#   notes             — Reviewer notes, which noise types were present, OOV tokens
+#
+# Data status: PENDING — no examples yet.
+#   DO NOT fabricate examples. All rows must come from real user submissions
+#   or native-speaker-created adversarial examples, reviewed by a native Lebanese speaker.
+#
+# To populate: extract from CedarFix production logs (with consent),
+#   or run a structured noise injection exercise on arabizi_clean_eval rows.
+#   Save approved rows below this header block.
