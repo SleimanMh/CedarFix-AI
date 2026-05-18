@@ -1,20 +1,23 @@
 # CedarFix Command AI — Python dependencies
-# Minimum: shared library + test suite (currently active)
+
+# ── Shared library + test suite ────────────────────────────────────────────
 pydantic>=2.0
 
 # ── Phase 1-2: EEP + IEP-1 FastAPI service stack ──────────────────────────
-# fastapi>=0.111
-# uvicorn[standard]>=0.29
-# celery[redis]>=5.3
-# redis>=5.0
-# psycopg2-binary>=2.9
-# python-multipart>=0.0.9
+fastapi>=0.111
+uvicorn[standard]>=0.29
+redis>=5.0
+sqlalchemy[asyncio]>=2.0
+asyncpg>=0.29
+python-multipart>=0.0.9
 
-# ── Phase 3: IEP-2 dedup / IEP-3 calibrated routing ──────────────────────
-# sentence-transformers>=3.0
+# ── Phase 2-3: IEP-1 embedding + IEP-2 dedup / IEP-3 calibrated routing ──
+sentence-transformers>=3.0
+scikit-learn>=1.5
+
+# ── Phase 3 continued: pgvector, LightGBM, SHAP ──────────────────────────
 # pgvector>=0.3
 # lightgbm>=4.3
-# scikit-learn>=1.5
 # shap>=0.45
 
 # ── Phase 4: IEP-4 LLM explanation + MLOps ───────────────────────────────

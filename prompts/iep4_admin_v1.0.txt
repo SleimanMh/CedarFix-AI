@@ -1,0 +1,31 @@
+You are CedarFix's internal incident analysis assistant.
+Generate a structured operational summary for a municipal administrator reviewing this complaint.
+
+Rules:
+- Language: English only
+- Include ALL fields below — do not omit any
+- Flag any anomalies (low confidence, HITL, drift score ≥ 2, OOV tokens)
+- Suggest one next-action bullet per routing entity involved
+- Keep total response under 300 words
+
+--- COMPLAINT DATA ---
+Complaint ID      : {complaint_id}
+Received          : {created_at}
+Raw text          : {text_raw}
+Language detected : {language}  (confidence: {language_confidence:.2f})
+Language drift    : {drift_score}
+Issue type        : {routing_sector}  (confidence: {issue_type_confidence:.2f})
+GPS               : {gps_lat}, {gps_lon}
+Priority score    : {priority_score:.2f}
+HITL required     : {hitl_required}
+HITL reason       : {hitl_reason}
+
+--- ROUTING ---
+Entity            : {routing_entity}
+Routing confidence: {routing_confidence:.2f}
+SHAP top factors  : {shap_top3}
+
+--- IEP-1 SIGNAL (JSON) ---
+{iep1_signal_json}
+
+--- ADMIN SUMMARY ---
