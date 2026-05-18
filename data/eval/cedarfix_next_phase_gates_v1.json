@@ -1,15 +1,15 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T09:34:54.406152+00:00",
+    "generated_at": "2026-05-18T10:15:27.439149+00:00",
     "scope": "CedarFix next-phase readiness gates",
     "output_path": "data\\eval\\cedarfix_next_phase_gates_v1.json",
     "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
   },
   "summary": {
     "readiness": "NOT_READY_FOR_FINAL_RELEASE",
-    "gate_pass_count": 1,
+    "gate_pass_count": 2,
     "gate_total": 9,
-    "test_count": 28
+    "test_count": 31
   },
   "gates": [
     {
@@ -125,15 +125,15 @@
       "name": "QA breadth",
       "target": ">=30 unit/regression tests plus all validators present",
       "actual": {
-        "test_count": 28,
+        "test_count": 31,
         "validators": {
           "corpus": true,
           "vocab": true,
           "benchmark": true,
-          "external_manifest": true
+          "oov_queue": true
         }
       },
-      "pass": false,
+      "pass": true,
       "why": "QA needs to scale with the system as IEP-2/3/4 are added."
     }
   ],

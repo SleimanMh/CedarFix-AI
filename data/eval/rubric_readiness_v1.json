@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T09:34:42.846025+00:00",
+    "generated_at": "2026-05-18T10:15:27.700193+00:00",
     "scope": "Conservative implemented-evidence rubric readiness",
     "output_path": "data\\eval\\rubric_readiness_v1.json"
   },
@@ -254,7 +254,7 @@
       "wording": "Insightful design choices",
       "score": 2,
       "evidence": [
-        "OOV queue, stress lab, external data governance"
+        "OOV queue, stress lab, reliability certificate"
       ],
       "missing_for_2": ""
     },

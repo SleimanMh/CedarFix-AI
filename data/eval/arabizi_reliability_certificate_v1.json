@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T09:34:20.423342+00:00",
+    "generated_at": "2026-05-18T10:15:11.302060+00:00",
     "certificate_version": "1.0",
     "script": "scripts/certify_arabizi_input.py",
     "json_artifact": "data\\eval\\arabizi_reliability_certificate_v1.json",

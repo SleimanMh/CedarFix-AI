@@ -89,10 +89,20 @@
 "PAIR-B001-0088","RPT-B001-030","RPT-B001-017","UNRELATED","","Different sector — CLU-B001-008 Mar Mikhael SAFETY/STRUCTURAL_COLLAPSE vs CLU-B001-005 Raouche ROADS/ROAD_COLLAPSE; similar surface text but different routing targets (CD vs CDR)"
 "PAIR-B001-0089","RPT-B001-051","RPT-B001-009","DUPLICATE","CLU-B001-003","Mixed-language duplicate of ORIGINAL exposed-wire report; tests multilingual dedup with French technical term (transformateur)"
 "PAIR-B001-0090","RPT-B001-052","RPT-B001-005","DUPLICATE","CLU-B001-002","Mixed-language duplicate of ORIGINAL water-cut report; tests multilingual dedup with Arabizi+English+French code-switching"
-PAIR-B001-0091,RPT-B001-053,RPT-B001-003,HARD_NEGATIVE,,Arabizi SAFETY/FIRE (Hamra) vs arabizi ROADS/POTHOLE (Hamra); same district different sector — hard negative for dedup boundary
-PAIR-B001-0092,RPT-B001-061,RPT-B001-057,HARD_NEGATIVE,,Arabizi FLOODING/BLOCKED_DRAIN vs arabizi WASTE/GARBAGE; both Arabizi same city area different sector/route — hard negative for cross-sector boundary
+PAIR-B001-0091,RPT-B001-053,RPT-B001-003,UNRELATED,,Arabizi SAFETY/FIRE (Hamra) vs arabizi ROADS/POTHOLE (Hamra); same district different sector — unrelated cross-sector boundary
+PAIR-B001-0092,RPT-B001-061,RPT-B001-057,UNRELATED,,Arabizi FLOODING/BLOCKED_DRAIN vs arabizi WASTE/GARBAGE; both Arabizi same city area different sector/route — unrelated cross-sector boundary
 PAIR-B001-0093,RPT-B001-053,RPT-B001-006,UNRELATED,,Arabizi SAFETY/FIRE (Hamra) vs arabizi WATER/WATER_CUT (Achrafieh); cross-sector cross-district — truly unrelated
 PAIR-B001-0094,RPT-B001-057,RPT-B001-011,UNRELATED,,Arabizi WASTE/GARBAGE (Dahyeh) vs arabizi ELECTRICITY/EXPOSED_WIRE (Bourj Hammoud); cross-sector cross-district — truly unrelated
 PAIR-B001-0095,RPT-B001-061,RPT-B001-019,UNRELATED,,Arabizi FLOODING/BLOCKED_DRAIN (Ras Beirut) vs arabizi ROADS/ROAD_COLLAPSE (Ashrafieh); cross-sector cross-district — truly unrelated
 PAIR-B001-0096,RPT-B001-053,RPT-B001-044,UNRELATED,,Arabizi SAFETY/FIRE (Hamra) vs arabizi FLOODING/BLOCKED_DRAIN (Dahyeh); cross-sector cross-district — truly unrelated
 PAIR-B001-0097,RPT-B001-057,RPT-B001-032,UNRELATED,,Arabizi WASTE/GARBAGE (Dahyeh) vs arabizi SAFETY/STRUCTURAL_COLLAPSE (Bourj Hammoud); cross-sector cross-district — truly unrelated
+PAIR-B001-0098,RPT-B001-053,RPT-B001-054,DUPLICATE,CLU-B001-013,Same building fire in Hamra; Arabizi panic shorthand duplicate
+PAIR-B001-0099,RPT-B001-053,RPT-B001-055,DUPLICATE,CLU-B001-013,Same building fire in Hamra; French-mixed duplicate
+PAIR-B001-0100,RPT-B001-053,RPT-B001-056,HARD_NEGATIVE,CLU-B001-013,Same SAFETY sector but gas leak in Raouche is not the Hamra building fire
+PAIR-B001-0101,RPT-B001-057,RPT-B001-058,DUPLICATE,CLU-B001-014,Same Verdun waste incident; overflowing-bin wording duplicates garbage-not-collected complaint
+PAIR-B001-0102,RPT-B001-057,RPT-B001-059,DUPLICATE,CLU-B001-014,Same Verdun waste incident; French-Arabizi code-switch duplicate
+PAIR-B001-0103,RPT-B001-057,RPT-B001-060,HARD_NEGATIVE,CLU-B001-014,Same broad WASTE sector but illegal dump in Mazraa is not the Verdun collection incident
+PAIR-B001-0104,RPT-B001-061,RPT-B001-062,DUPLICATE,CLU-B001-015,Same Ras Beirut blocked-drain incident with panic shorthand and digit noise
+PAIR-B001-0105,RPT-B001-061,RPT-B001-063,DUPLICATE,CLU-B001-015,Same Ras Beirut blocked-drain incident with reordered Arabizi phrasing
+PAIR-B001-0106,RPT-B001-061,RPT-B001-064,RELATED,CLU-B001-015,Blocked drain creates adjacent road-flooding effect; related but not exact duplicate
+PAIR-B001-0107,RPT-B001-061,RPT-B001-065,HARD_NEGATIVE,CLU-B001-015,Nearby English blocked-drain report used as hard negative for cross-language boundary testing

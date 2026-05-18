@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T10:02:31.382969+00:00",
+    "generated_at": "2026-05-18T10:15:10.500967+00:00",
     "scope": "Arabizi next-phase excellence gate audit",
     "output_path": "data\\eval\\arabizi_excellence_gates_v1.json",
     "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
@@ -13,13 +13,14 @@
     "arabizi_mixed_by_batch": {
       "B001": 25
     },
-    "arabizi_pair_count": 47,
+    "arabizi_pair_count": 57,
     "pair_language_breakdown": {
-      "ar-arabizi": 15,
+      "ar-arabizi": 16,
       "ar-mixed": 2,
-      "arabizi-arabizi": 7,
-      "arabizi-en": 12,
-      "arabizi-fr": 11
+      "arabizi-arabizi": 12,
+      "arabizi-en": 13,
+      "arabizi-fr": 11,
+      "arabizi-mixed": 3
     }
   },
   "gates": [
@@ -43,7 +44,7 @@
       "gate_id": "ARZ-G03",
       "name": "Arabizi cross-language duplicate evidence",
       "target": ">=10 duplicate pairs where one side is Arabizi/mixed and languages differ",
-      "actual": 35,
+      "actual": 37,
       "pass": true,
       "why": "CedarFix's originality depends on multilingual incident fusion, not standalone text classification."
     },
@@ -51,7 +52,7 @@
       "gate_id": "ARZ-G04",
       "name": "Arabizi hard-negative coverage",
       "target": ">=5 HARD_NEGATIVE pairs involving Arabizi/mixed",
-      "actual": 5,
+      "actual": 6,
       "pass": true,
       "why": "Hard negatives prove the dedup model avoids false merges in realistic same-area cases."
     },
@@ -59,7 +60,7 @@
       "gate_id": "ARZ-G05",
       "name": "Arabizi unrelated-negative coverage",
       "target": ">=5 UNRELATED pairs involving Arabizi/mixed by Batch 002+",
-      "actual": 5,
+      "actual": 7,
       "pass": true,
       "why": "Cross-cluster unrelated pairs stop semantic similarity from becoming false duplicates."
     },
