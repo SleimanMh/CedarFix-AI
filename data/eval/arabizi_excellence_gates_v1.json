@@ -1,17 +1,17 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T10:40:36.492954+00:00",
+    "generated_at": "2026-05-18T12:37:30.669049+00:00",
     "scope": "Arabizi next-phase excellence gate audit",
     "output_path": "data\\eval\\arabizi_excellence_gates_v1.json",
     "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
   },
   "summary": {
     "readiness": "NOT_READY_FOR_FINAL_ARABIZI_CLAIM",
-    "gate_pass_count": 4,
+    "gate_pass_count": 5,
     "gate_total": 6,
-    "arabizi_mixed_report_count": 25,
+    "arabizi_mixed_report_count": 40,
     "arabizi_mixed_by_batch": {
-      "B001": 25
+      "B001": 40
     },
     "arabizi_pair_count": 57,
     "pair_language_breakdown": {
@@ -28,8 +28,8 @@
       "gate_id": "ARZ-G01",
       "name": "Batch 002+ Arabizi/mixed scale",
       "target": ">=40 Arabizi/mixed rows total before final Arabizi F1 claims",
-      "actual": 25,
-      "pass": false,
+      "actual": 40,
+      "pass": true,
       "why": "Small-N Batch 001 is regression evidence, not final model evidence."
     },
     {

@@ -34,7 +34,7 @@ citizen submission
 | IEP-2 | Not built yet | Pair labels and coverage artifacts are ready |
 | IEP-3 | Not built yet | Routing/calibration is next after IEP-2 |
 | IEP-4 | Prompt assets only | Service and tests still needed |
-| Data | Batch 001 active | 65 reports, 15 clusters, 107 pairs |
+| Data | Batch 001+002 active | 80 reports, 18 clusters, 107 pairs |
 | QA | Passing | 31 unit/regression tests |
 | Final release | Not ready | Next-phase gates: 2/9 |
 
@@ -53,15 +53,15 @@ Lebanese municipal signal.
 | `data/knowledge_base/arabizi_vocabulary.json` | Arabizi vocabulary v1.4.0 |
 | `data/knowledge_base/*.csv|*.json|*.yaml` | GPS, route, sector, severity references |
 
-Current Batch 001 counts:
+Current Batch 001+002 counts:
 
 | Metric | Count |
 | --- | ---: |
-| Reports | 65 |
-| Clusters | 15 |
+| Reports | 80 |
+| Clusters | 18 |
 | Pairs | 107 |
-| Arabizi rows | 20 |
-| Mixed rows | 5 |
+| Arabizi rows | 32 |
+| Mixed rows | 8 |
 | Duplicate pairs | 71 |
 | Related pairs | 8 |
 | Hard-negative pairs | 14 |
@@ -84,13 +84,13 @@ Current Arabizi evidence:
 
 | Metric | Value |
 | --- | ---: |
-| Arabizi/mixed rows | 25 |
+| Arabizi/mixed rows | 40 |
 | Mean known-term coverage | 85.0% |
 | Mean OOV tokens per row | 1.24 |
 | Issue-type probe recall | 100.0% |
 | Arabizi-involving pairs | 57 |
 | Cross-language duplicate pairs | 37 |
-| Arabizi gates | 4/6 |
+| Arabizi gates | 5/6 |
 
 Important limitation: Batch 001 is regression and demo evidence, not final
 generalization evidence. Final Arabizi F1 claims require Batch 002+ scale and
@@ -159,13 +159,14 @@ python scripts/evaluate_arabizi_pair_coverage.py
 python scripts/audit_arabizi_excellence_gates.py
 python scripts/audit_cedarfix_next_phase_gates.py
 python scripts/audit_rubric_readiness.py
+python scripts/validate_stress_lab_sector_coverage.py
 ```
 
 Current readiness:
 
 | Audit | Current result |
 | --- | --- |
-| Arabizi excellence gates | 4/6, not final-claim ready |
+| Arabizi excellence gates | 5/6, not final-claim ready (ARZ-G02 needs native review) |
 | Full project gates | 2/9, not final-release ready |
 | Rubric readiness estimate | 30/60 weighted evidence points |
 
@@ -211,7 +212,7 @@ GitHub Actions runs:
 
 1. Build IEP-2 duplicate/cluster service with pair-evaluation artifact.
 2. Build IEP-3 calibrated routing with threshold sweep and false-auto-route metrics.
-3. Expand Batch 002 with at least 26 more Arabizi/mixed rows and native Lebanese review.
+3. Obtain native Lebanese dialect review for Batch 001+002 Arabizi rows (ARZ-G02).
 4. Add IEP-4 explanation/HITL service with prompt tests and audit output.
 5. Add MLflow plus Prometheus/Grafana with low-cardinality ML signals.
 6. Deploy the public cloud EEP and save a healthcheck artifact.

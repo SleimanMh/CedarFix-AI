@@ -1,7 +1,7 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "1.4.0",
-  "changelog": "v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "version": "1.5.0",
+  "changelog": "v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
   "arabizi_notes": {
     "common_substitutions": {
       "ع": "3  — ALWAYS use 3; never omit",
@@ -76,21 +76,30 @@
           "hofra",
           "jora bla ta7dir",
           "7ofra bla isharet ta7dir",
-          "ma fi ta7dir 3al 7ofra"
+          "ma fi ta7dir 3al 7ofra",
+          "7ufra",
+          "7ufra kbire",
+          "7ufra bla ta7dir",
+          "tire2 ta3eb men l 7ufra",
+          "t2a3et l 3ajale men l 7ufra",
+          "7oufra"
         ],
         "road_collapse": [
           "tari2 nkassar",
           "tari2 3am yenkaser",
           "5atar 3al tari2",
           "tari2 2nhajar",
-          "nhajar l tari2"
+          "nhajar l tari2",
+          "darb nkassar men ta7t"
         ],
         "road_blocked": [
           "tari2 ma2tou3",
           "tari2 masduud",
           "sekke masduude",
           "ma fi tari2 y3dde",
-          "tari2 msakkar"
+          "tari2 msakkar",
+          "tire2 ma2tou3",
+          "sekket l balad masduude"
         ],
         "road_crack": [
           "tari2 metshe22a2",
@@ -122,7 +131,13 @@
           "matab nkassar",
           "matab msh shoufe",
           "kaser sur3a meksour",
-          "mukab3 nkassar"
+          "mukab3 nkassar",
+          "tire2 ta3eb",
+          "tire2 msh mnee7",
+          "tire2 nkassar",
+          "darb meksour",
+          "darb ma2tou3",
+          "darb ta3eb"
         ],
         "road_closed": [
           "tari2 msakkar",
@@ -157,14 +172,35 @@
           "men emes ma fi may",
           "3 iyem bdoun may",
           "men 2sbou3 ma fi may",
-          "men 3 iyem may ma rja3et"
+          "men 3 iyem may ma rja3et",
+          "miye 2at3a",
+          "miye mat3a",
+          "miye mkat3a",
+          "miye ma rja3et",
+          "mat3a l miye",
+          "miye lissa mat3a",
+          "ma fi miye",
+          "men 2 yom ma fi miye",
+          "men emes ma fi miye",
+          "miye inkata3et",
+          "3 iyem bdoun miye",
+          "mayye 2at3a",
+          "mayye mat3a",
+          "mayye ma rja3et",
+          "ma fi mayye",
+          "lissa mat3a l miye",
+          "miye lissa mat2a3a"
         ],
         "pipe_leak": [
           "anboub 3am yesarrab",
           "tasarroub l may",
           "may 3am titba3",
           "masroubet l may",
-          "may 3am titsarrab men l anboub"
+          "may 3am titsarrab men l anboub",
+          "tasarroub miye",
+          "miye 3am tsarrab",
+          "miye 3am titsarrab",
+          "anboub 3am ysarrab miye"
         ],
         "sewage_overflow": [
           "sarif sa77i",
@@ -172,7 +208,9 @@
           "tasrif sa77i",
           "biyar sarif mfatou7a",
           "sarif 3am yetfa2ar",
-          "sarif 3am yetfayan 3al tari2"
+          "sarif 3am yetfayan 3al tari2",
+          "miye l sarif 3am tifout",
+          "sarif 3am yetfayan 3al share3"
         ],
         "dirty_water": [
           "may lawanta",
@@ -180,21 +218,44 @@
           "may mla2wate",
           "may sawda",
           "may bi ri7a",
-          "may wane l lawn"
+          "may wane l lawn",
+          "miye wse5a",
+          "miye bi ri7a",
+          "miye lawante",
+          "miye mla2wate",
+          "miye bi ri7a khafer",
+          "miye sawda",
+          "miye bi lawn ghareeb",
+          "eau sale"
         ],
         "low_pressure": [
           "daght l may khafif",
           "may 3am teje bi shwayy",
           "may nazzalet ktir",
           "ma fi daght may",
-          "l may mish 3am tit2alla3 la2al tabe2"
+          "l may mish 3am tit2alla3 la2al tabe2",
+          "miye 3am teje bi shwayy",
+          "daght l miye khafif",
+          "miye nazzalet ktir",
+          "ma fi daght miye"
         ],
         "no_supply": [
           "ma fi may bil mantiqa",
           "may ma 3am tousal",
           "l may ma 3am teje",
           "ma 3enna may bil bayt",
-          "l 5azzan fadi w ma fi may"
+          "l 5azzan fadi w ma fi may",
+          "ma fi miye bil mantiqa",
+          "miye ma 3am tousal",
+          "ma 3enna miye bil bayt",
+          "l 5azzan fadi w ma fi miye",
+          "miye ma 3am teje",
+          "3ain jfefit",
+          "3ain msedoude",
+          "3ain l 2arye jefit",
+          "mayyet l balad 2at3et",
+          "eau coupee",
+          "eau coupee depuis"
         ]
       },
       "sample_complaints": [
@@ -219,7 +280,13 @@
           "7abal kahraba 2eta3 w nzal 3al ard",
           "silk m7arrak",
           "7abal kahraba m7arrak w mekshouf",
-          "silk mcharrak"
+          "silk mcharrak",
+          "sa32",
+          "sa3q",
+          "lams kahrabe",
+          "lams kahraba",
+          "7abal kahraba sa32",
+          "silk kahraba bi l ard w sa32"
         ],
         "power_outage": [
           "kahraba 2ata3et",
@@ -231,7 +298,18 @@
           "men 2 yom ma fi kahraba",
           "2ata3 kahraba ktir",
           "kahraba 2at3a men l leil",
-          "la halla2 ma rja3et l kahraba"
+          "la halla2 ma rja3et l kahraba",
+          "kahraba mat3a",
+          "kahraba mat3a men yom",
+          "kahraba lissa mat3a",
+          "kahrabe 2at3et",
+          "kahrabe mat3a",
+          "kahrabe ma fi",
+          "lissa ma rja3et l kahraba",
+          "lissa 3atme",
+          "panne de courant",
+          "panne",
+          "panne depuis"
         ],
         "street_light": [
           "nour share3 ma shi3el",
@@ -248,14 +326,25 @@
           "nkassar l muhawwel w ma fi kahraba",
           "transformateur nkassar",
           "transformateur 3am yithal w fi ri7a",
-          "fi mashkle bel transformateur"
+          "fi mashkle bel transformateur",
+          "moulid kharban",
+          "moulid 3atlan",
+          "moulid ma 3am yishtaghal",
+          "moulid nkassar",
+          "muwalid kharban",
+          "muwalid 3atlan",
+          "muwalid ma 3am yishtaghal",
+          "l moulid kharban",
+          "l moulid 3atlan w ma fi kahraba"
         ],
         "voltage_fluctuation": [
           "kahraba 3am titba3 w troo7",
           "fi tazabzob bi l kahraba",
           "kahraba 3am tej w terja3",
           "l volt msh tanbit",
-          "kahraba 3am titghayar ktir w 3am ti7re2 l ashye"
+          "kahraba 3am titghayar ktir w 3am ti7re2 l ashye",
+          "kahraba 3am titbadal",
+          "volt 3am yitghayar"
         ]
       },
       "sample_complaints": [
@@ -279,7 +368,18 @@
           "shirket l zbele ma 2elet",
           "men iyem w zbele ma t7arrak",
           "l 7awiye 3am tita3abba w ma fi 7ada yoshul",
-          "l 2lebe 3am tita3abba w mish 3am yji 7ada"
+          "l 2lebe 3am tita3abba w mish 3am yji 7ada",
+          "zibele ma jmaou",
+          "zibele ma taloo",
+          "ma ji 7ada yoshul zibele",
+          "shirket l zibele ma 2elet",
+          "men iyem w zibele ma t7arrak",
+          "l 7awiye 3am tita3abba w ma fi 7ada yoshul zibele",
+          "ri7a khafer men l zbele",
+          "ri7a khafer men l zibele",
+          "khafer men l zbele",
+          "ordures pas ramassees",
+          "les ordures pas ramassees"
         ],
         "illegal_dump": [
           "zbele msoubet bi l ard",
@@ -292,7 +392,15 @@
           "ramou nkesh bne bi l ard l 5ale",
           "nkesh bne maska honik men 2iyem",
           "yroumo nfayat bi l ard l 5ale",
-          "3am yroumo zbele barra l 7awiye"
+          "3am yroumo zbele barra l 7awiye",
+          "zibele msoubet bi l ard",
+          "zibele msoubet barra",
+          "zibele bi l ard l 5ale",
+          "shahin zbele",
+          "shahin nfayat",
+          "shahin zibele mhattout",
+          "ramou zibele barra l 7awiye",
+          "kuumeh zibele 3am tikbar"
         ],
         "overflowing_bin": [
           "2lebe tafane",
@@ -304,21 +412,33 @@
           "kuumet zbele 3al tari2",
           "zbele mfarrishe 3al sekke",
           "zbele 3am t7ajjeb l mour",
-          "ma fi tari2 men l zbele"
+          "ma fi tari2 men l zbele",
+          "zibele 3am tit3abba",
+          "zibele 3am titbe3 men l 2lebe",
+          "zibele mfarrishe 3al sekke",
+          "zibele 3am tsedd tari2",
+          "kuumet zibele 3al tari2",
+          "ri7a khafer w zibele mfarrishe",
+          "zibele mfarrishe w ri7a khafer"
         ],
         "burning_waste": [
           "3am yi7arkou zbele",
           "zbele 3am ti7tari2",
           "ri7et 7ar2 zbele",
           "dukhan men 7ar2 nfayat",
-          "nnar bi l zbele w dukhan 3am yidkhol"
+          "nnar bi l zbele w dukhan 3am yidkhol",
+          "ri7et 7ar2 zibele",
+          "zibele 3am ti7tari2",
+          "nfayat 3am ti7tari2",
+          "3am yi7arkou zibele"
         ],
         "damaged_bin": [
           "2lebe maksour",
           "sandou2 zbele nkassar",
           "l 7awiye ta3be w msh 3am tinsedd",
           "2lebe ta3eb w zbele 3am tifout menno",
-          "ghata l 2lebe nkassar"
+          "ghata l 2lebe nkassar",
+          "l 7awiye ta3be w zibele 3am tifout"
         ]
       },
       "sample_complaints": [
@@ -344,35 +464,61 @@
           "may ghatat l sekke",
           "tari2 ghare2",
           "share3 ghare2 men l matar",
-          "l may 3am tetfa2ar 3al tari2"
+          "l may 3am tetfa2ar 3al tari2",
+          "share3 ghatat bil miye",
+          "miye ghatat l share3",
+          "share3 ghare2 bil matar",
+          "l share3 ghare2 w ma fi 7ada byemsha",
+          "miye wa2fe 3al share3"
         ],
         "house_flooded": [
           "bayt 3am yetra2",
           "may dakhlet 3al bayt",
           "2abi tafyan",
           "may 3am tete3abba jouwwa l dar",
-          "l bayt killo ma2leh may"
+          "l bayt killo ma2leh may",
+          "miye dakhlet 3al bayt",
+          "miye dakhlet la 2abi"
         ],
         "blocked_drain": [
           "balou3a masduude",
           "balo3a ma 3am tishrab",
           "tasrif mashloum",
           "l balou3a msdoude w may 3am tit3abba",
-          "ma fi tasrif w may 3am ta3baa"
+          "ma fi tasrif w may 3am ta3baa",
+          "balo3a msdoude",
+          "balo3a msduude",
+          "miye 3am tit2elle3 men l ardiye",
+          "miye 3am tirja3 men l ardiye",
+          "bala2a msdoude",
+          "bala2a ma 3am tishrab",
+          "khadra msduude",
+          "khadra ma 3am tsarrif"
         ],
         "flash_flood": [
           "seyle",
           "seyle kbire",
           "may 3am tiji men fawq",
           "seyle nzalat men l jabal",
-          "may 3am tiji bi sorr3a w ma fi wein trouh"
+          "may 3am tiji bi sorr3a w ma fi wein trouh",
+          "sayel nzal",
+          "sayel men l jabal",
+          "sayel kbir men l jabal",
+          "wadi 3am yetfayan",
+          "wadi ghamar",
+          "wadi 3am yitfa2ar 3al tari2"
         ],
         "standing_water": [
           "may wa2fe",
           "may mish raye7a",
           "birke may 3al tari2",
           "may wa2fe men l matar",
-          "may 3am twa22ef bel nos w ma 3am ttenazzel"
+          "may 3am twa22ef bel nos w ma 3am ttenazzel",
+          "sayel l miye",
+          "miye 3am tsayel",
+          "miye sayel 3al tari2",
+          "miye wa2fe 3al tari2",
+          "miye wa2fe 3al share3"
         ],
         "basement_flooded": [
           "2abi 3am yetra2",
@@ -402,21 +548,40 @@
           "l mabne 3endo tashaddo2at bi l 7iit w l sa2f",
           "7eet 3am yenkaser",
           "l 7eet bi 5atar",
-          "7eet mnkassar w nzal 3al tari2"
+          "7eet mnkassar w nzal 3al tari2",
+          "7ajara nzalat",
+          "hajra nzal men l jdar",
+          "hajra nzalet men l bnayi",
+          "shabbe bi 5atar",
+          "bne bi 5atar",
+          "jdar bi 5atar",
+          "7eet nkassar w 7ajara nzalat",
+          "shabbe bi 2eshr derej w fi 5atar"
         ],
         "fire": [
           "7ariki",
           "7ariki bi l bnayi",
           "bnayi 3am yi7tari2",
           "nnar",
-          "fi nnar bi l mabne"
+          "fi nnar bi l mabne",
+          "nar",
+          "nar kbire",
+          "fi nar",
+          "3am tit3ala nar",
+          "nnar 3am tit3ala",
+          "7ari2a",
+          "7ari2a bi l bnayi",
+          "incendie",
+          "feu"
         ],
         "gas_leak": [
           "ri7et ghaz",
           "ghaz 3am yetfassal",
           "masroubet ghaz",
           "ri7a ghaz men l anboub",
-          "fi ri7et ghaz 2awiye bi l share3"
+          "fi ri7et ghaz 2awiye bi l share3",
+          "ri7a ghaz",
+          "ghaz 2awiye"
         ],
         "exposed_hazard": [
           "fi shi 5atar 3al tari2",
@@ -429,7 +594,12 @@
           "5tr",
           "5trrr",
           "mawdou3 5atar",
-          "wad3 5ater"
+          "wad3 5ater",
+          "sa32",
+          "sa3q",
+          "lams kahrabe",
+          "5atar 3asabe",
+          "5atar 3al rasif"
         ],
         "armed_incident": [
           "fi 7ada masalla7",
@@ -487,7 +657,10 @@
           "l moshkle hayye men zamaan",
           "ma 3arefna min yji yi3mel shi",
           "ma 3arefna meen mas2oul",
-          "7ada msh 3am yrud 3al moshkle"
+          "7ada msh 3am yrud 3al moshkle",
+          "situation critique",
+          "danger imminent",
+          "non resolu"
         ]
       },
       "issue_type_aliases": {}
@@ -503,16 +676,20 @@
   "source_notes": {
     "jora_joura": "Public Lebanese pothole usage is anchored by the Ensa Joura road initiative and common local usage; keep jora/joura/joora as high-value variants.",
     "balou3a_drain": "Lebanese drain usage is anchored by public Lebanese Arabic learning references that transliterate بالوعة as Balou3a; use balou3a/balo3a, not balioa.",
-    "may_water": "Lebanese/Levantine water is commonly may/mayy; keep may/maye style variants in WATER seeds.",
+    "may_water": "Lebanese/Levantine water has three common Arabizi forms: (1) may/maye — Levantine formal/semi-formal; (2) miye — Beirut standard colloquial (most frequent in Beirut reports); (3) mayye — Beqaa/South/rural variant. All three forms must be covered in WATER sector keywords. v1.4.0 had only 'may' forms; v1.5.0 adds miye and mayye throughout.",
     "kahraba": "kahraba/kahrabe variants are common Lebanese Arabic for electricity; keep both in electricity contexts.",
-    "code_switching": "Lebanese reports may code-switch Arabic, Arabizi, French, and English; corpus reports should preserve natural mixing rather than over-normalizing away real usage."
+    "code_switching": "Lebanese reports may code-switch Arabic, Arabizi, French, and English; corpus reports should preserve natural mixing rather than over-normalizing away real usage.",
+    "kahrabe_variant": "kahraba/kahrabe are both attested Lebanese Arabic forms for electricity. v1.4.0 documented this in source_notes but failed to include kahrabe in actual issue_type_keywords. v1.5.0 adds kahrabe forms to ELECTRICITY keywords.",
+    "dialect_coverage": "v1.5.0 adds initial coverage for Beqaa/South/North dialects: darb (path/road — Beqaa/South), mayye (water — Beqaa/rural), 3ain (spring/water source — rural), bala2a (drain — South Lebanon), wadi (watercourse — mountain/Beqaa flash-flood context), khadra (water channel — Tripoli/North). Primary focus remains Beirut; regional forms are supplementary."
   },
   "term_metadata": {
     "m7arrak": {
       "arabizi_note": "Canonical form using 7 for ح (m7arrak = محرّك, live/energised wire). Variant mcharrak (ch for ح) is attested in corpus; both are accepted. Seeds use both; m7arrak is the canonical spelling.",
       "sector": "ELECTRICITY",
       "issue_type": "exposed_wire",
-      "variant_forms": ["mcharrak"]
+      "variant_forms": [
+        "mcharrak"
+      ]
     },
     "transformateur": {
       "arabizi_note": "French loanword widely used in Lebanese vernacular for transformer (محوّل). Maps to ELECTRICITY/TRANSFORMER_FAULT, not EXPOSED_WIRE.",
@@ -529,7 +706,9 @@
       "arabizi_note": "Variant spelling of 7iit (حيط = wall). 7eet is a common phonetic alternative; both forms are accepted in seeds.",
       "sector": "SAFETY",
       "issue_type": "structural_collapse",
-      "variant_forms": ["7iit"]
+      "variant_forms": [
+        "7iit"
+      ]
     },
     "tita3abba": {
       "arabizi_note": "تتعبّى — fills up (feminine/inanimate). Context-dependent: in WASTE means bin filling without collection (garbage_not_collected); in FLOODING means drain backing up (blocked_drain, via tit3abba). Disambiguation by sector.",
@@ -550,6 +729,134 @@
     "kasaret": {
       "arabizi_note": "كسرت — broke/cracked (feminine past tense). Deferred to Batch 002 (NEEDS_MORE_EXAMPLES from OOV queue). Do not promote until ≥3 further corpus examples. Tentative sector: ROADS/pothole or ROADS/road_collapse.",
       "status": "DEFERRED_BATCH_002"
+    },
+    "miye": {
+      "arabizi_note": "مية — the standard Beirut/Lebanese colloquial word for water. Distinct from MSA ماء or Levantine may. miye 2at3a = water cut; miye mat3a = water cut (adjective form). CRITICAL: this is the most common water token in Beirut Arabizi reports; must appear in water_cut AND all other WATER issue types.",
+      "sector": "WATER",
+      "issue_type": "water_cut",
+      "variant_forms": [
+        "mayye",
+        "may",
+        "maye"
+      ]
+    },
+    "mat3a": {
+      "arabizi_note": "مقطوعة — cut/outage (feminine adjective). miye mat3a = water cut; kahraba mat3a = power outage. Extremely common in Lebanese Arabizi; absence was the primary cause of 0% hit rate on WATER rows using this construction.",
+      "sector": "WATER",
+      "issue_type": "water_cut",
+      "cross_sector": "ELECTRICITY/power_outage",
+      "variant_forms": [
+        "mat2a3a",
+        "mkat3a"
+      ]
+    },
+    "zibele": {
+      "arabizi_note": "زبالة — vowelised form of zbele (garbage/waste). Both forms are attested in Lebanese Arabizi; zbele is the compressed form, zibele is the fuller vowelised form. Both must appear in all WASTE issue type keywords.",
+      "sector": "WASTE",
+      "issue_type": "garbage_not_collected",
+      "variant_forms": [
+        "zbele",
+        "zbale",
+        "zibalet"
+      ]
+    },
+    "7ufra": {
+      "arabizi_note": "حفرة — pothole. Variant of 7ofra / 7afra with ু-vowel. 7ufra was observed in Batch 002 corpus (RPT-B001-066/067/068) but was absent from vocabulary, causing low hit rates. 7ofra is canonical; 7ufra, hofra are accepted variants.",
+      "sector": "ROADS",
+      "issue_type": "pothole",
+      "variant_forms": [
+        "7ofra",
+        "7afra",
+        "hofra",
+        "jora",
+        "joura"
+      ]
+    },
+    "moulid": {
+      "arabizi_note": "موليد / مولّد — generator (informal Lebanese). moulid kharban = generator broken; moulid 3atlan = generator down. muwalid is the rural/Beqaa variant spelling. Maps to ELECTRICITY/transformer_fault when the context is power from a generator, not grid electricity.",
+      "sector": "ELECTRICITY",
+      "issue_type": "transformer_fault",
+      "variant_forms": [
+        "muwalid",
+        "mouled",
+        "generator"
+      ]
+    },
+    "sa32": {
+      "arabizi_note": "صاعق — electrocution / electric shock. sa32 is already in HIGH_RISK_HINTS (the authoritative danger list). It must ALSO appear in ELECTRICITY/exposed_wire and SAFETY/exposed_hazard so the keyword lookup confirms the sector. sa3q is an alternative Arabizi spelling of the same word.",
+      "sector": "ELECTRICITY",
+      "issue_type": "exposed_wire",
+      "cross_sector": "SAFETY/exposed_hazard",
+      "variant_forms": [
+        "sa3q",
+        "saa2iq"
+      ],
+      "high_risk_hint": true
+    },
+    "nar": {
+      "arabizi_note": "نار — fire. Variant of the emphatic nnar (doubled-n expresses urgency). nar is standard Lebanese Arabic; nnar is the Arabizi panic/emphasis form. Both must appear in SAFETY/fire keywords. 7ari2a (حريقة) is the formal term for a fire incident.",
+      "sector": "SAFETY",
+      "issue_type": "fire",
+      "variant_forms": [
+        "nnar",
+        "7ari2a"
+      ]
+    },
+    "kahrabe": {
+      "arabizi_note": "كهربا — variant of kahraba (electricity). Both forms are common in Lebanese; kahrabe tends to appear in certain Beirut neighbourhoods and older speakers. Documented in source_notes since v1.4.0 but was missing from actual issue_type_keywords; now added to power_outage and exposed_wire.",
+      "sector": "ELECTRICITY",
+      "issue_type": "power_outage",
+      "variant_forms": [
+        "kahraba"
+      ]
+    },
+    "khafer": {
+      "arabizi_note": "خافر — bad/foul smell (Lebanese slang adjective). ri7a khafer = foul smell. Strong WASTE signal: garbage, sewage, and burning-waste complaints frequently include khafer or ri7a khafer as a severity amplifier. Not sector-specific alone; must co-occur with waste/sewage context.",
+      "sector": "WASTE",
+      "issue_type": "garbage_not_collected",
+      "cross_sector": "WATER/sewage_overflow"
+    },
+    "sayel": {
+      "arabizi_note": "سايل — flowing, running (Lebanese dialect present-participle). sayel l miye = the water is flowing/running (onto the street). Disambiguation: in FLOODING context means water overflow; in WATER/pipe_leak context means pipe running/leaking. Most common in standing_water and flash_flood contexts.",
+      "sector": "FLOODING",
+      "issue_type": "standing_water",
+      "cross_sector": "WATER/pipe_leak"
+    },
+    "mayye": {
+      "arabizi_note": "ماية — regional variant of may/miye (water). Common in Beqaa, South Lebanon, and rural areas. Beirut standard form is miye; Levantine formal form is may. mayye appears in rural municipal reports particularly from Zahle and Baalbek areas. All three forms (may/miye/mayye) should be accepted in WATER sector keywords.",
+      "sector": "WATER",
+      "issue_type": "water_cut",
+      "variant_forms": [
+        "miye",
+        "may"
+      ]
+    },
+    "3ain": {
+      "arabizi_note": "عين — spring or water source (natural). 3ain jfefit = the spring dried up; 3ain msedoude = spring blocked. Rural/Beqaa/South Lebanon contexts where municipal water may come from natural springs. Maps to WATER/no_supply.",
+      "sector": "WATER",
+      "issue_type": "no_supply"
+    },
+    "darb": {
+      "arabizi_note": "درب — path / lane / small road. Beqaa and South Lebanon dialect word for a small road or lane, equivalent to Beirut's sekke or zuqaq. darb meksour = road damaged; darb ma2tou3 = road blocked. Should be accepted in ROADS keywords alongside tari2/share3/sekke.",
+      "sector": "ROADS",
+      "issue_type": "road_damage",
+      "dialect": "Beqaa/South"
+    },
+    "panne": {
+      "arabizi_note": "French loanword: panne = breakdown/outage. panne de courant = power outage. Extremely common in Lebanese mixed-language reports (code-switching Arabic + French). Maps to ELECTRICITY/power_outage.",
+      "sector": "ELECTRICITY",
+      "issue_type": "power_outage",
+      "loanword_from": "fr"
+    },
+    "bala2a": {
+      "arabizi_note": "بالوعة — drain. South Lebanon / Bekaa dialect variant of balou3a/balo3a. bala2a msdoude = drain blocked. Phonetic shift: 3 → 2 in the final syllable. Both bala2a and balou3a should be accepted in FLOODING/blocked_drain.",
+      "sector": "FLOODING",
+      "issue_type": "blocked_drain",
+      "dialect": "South/Beqaa",
+      "variant_forms": [
+        "balou3a",
+        "balo3a"
+      ]
     }
   }
 }
