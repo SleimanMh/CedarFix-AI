@@ -1,0 +1,88 @@
+{
+  "id": null,
+  "title": "CedarFix AI — Drift Monitor",
+  "uid": "cedarfix-drift",
+  "tags": ["cedarfix", "mlops", "drift"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "7-Day Routing Accuracy",
+      "type": "gauge",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_routing_accuracy_7d", "legendFormat": "Accuracy"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 0.75},
+            {"color": "green", "value": 0.9}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 1
+      }
+    },
+    {
+      "id": 2,
+      "title": "Admin Correction Rate",
+      "type": "gauge",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_admin_correction_rate", "legendFormat": "Correction Rate"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 0.10},
+            {"color": "red", "value": 0.15}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 1
+      }
+    },
+    {
+      "id": 3,
+      "title": "Embedding Drift Score",
+      "type": "gauge",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_embedding_drift_score", "legendFormat": "Drift"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 0.10},
+            {"color": "red", "value": 0.15}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 1
+      }
+    },
+    {
+      "id": 4,
+      "title": "Routing Accuracy Trend (7d rolling)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 6, "w": 24, "h": 8},
+      "targets": [
+        {
+          "expr": "cedarfix_routing_accuracy_7d",
+          "legendFormat": "7d Routing Accuracy"
+        },
+        {
+          "expr": "1 - cedarfix_admin_correction_rate",
+          "legendFormat": "Implicit Accuracy (1 - correction rate)"
+        }
+      ]
+    }
+  ]
+}

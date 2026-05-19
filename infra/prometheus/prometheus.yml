@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:8000']
+    metrics_path: /metrics
+
+  - job_name: 'text-understanding'
+    static_configs:
+      - targets: ['text-understanding:8001']
+    metrics_path: /metrics
+
+  - job_name: 'image-understanding'
+    static_configs:
+      - targets: ['image-understanding:8002']
+    metrics_path: /metrics
+
+  - job_name: 'embedding-service'
+    static_configs:
+      - targets: ['embedding-service:8003']
+    metrics_path: /metrics
+
+  - job_name: 'clustering-service'
+    static_configs:
+      - targets: ['clustering-service:8004']
+    metrics_path: /metrics
+
+  - job_name: 'priority-engine'
+    static_configs:
+      - targets: ['priority-engine:8005']
+    metrics_path: /metrics
+
+  - job_name: 'routing-engine'
+    static_configs:
+      - targets: ['routing-engine:8006']
+    metrics_path: /metrics
+
+  - job_name: 'monitoring-service'
+    static_configs:
+      - targets: ['monitoring-service:8009']
+    metrics_path: /metrics

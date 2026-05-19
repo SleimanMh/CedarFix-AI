@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CedarFix AI — Track Complaint</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .track-container { max-width: 640px; margin: 48px auto; padding: 0 24px; }
+    .track-form { display: flex; gap: 12px; margin-bottom: 28px; }
+    .track-form input { flex: 1; }
+    .btn-track {
+      padding: 12px 24px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-track:hover { background: var(--green-mid); }
+    .track-result { display: none; }
+    .pipeline-steps { list-style: none; display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+    .pipeline-step {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .pipeline-step:last-child { border-bottom: none; }
+    .step-status { font-size: 20px; min-width: 28px; text-align: center; margin-top: 1px; }
+    .step-info strong { display: block; font-size: 14px; margin-bottom: 3px; }
+    .step-info span { font-size: 13px; color: var(--gray-600); }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🌲</span>
+        <div>
+          <span class="logo-name">CedarFix AI</span>
+          <span class="logo-sub">Lebanese Public Infrastructure Intelligence</span>
+        </div>
+      </div>
+      <nav class="header-links">
+        <a href="index.html">Report Issue</a>
+        <a href="track.html" class="active">Track Complaint</a>
+        <a href="http://localhost:3000" target="_blank">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Track Your Complaint</h1>
+    <p>Enter your complaint ID to see the AI's analysis, routing decision, and current status.</p>
+  </section>
+
+  <main class="main">
+    <div class="track-container">
+      <div class="card">
+        <h2 class="section-title">Lookup Complaint</h2>
+        <div class="track-form">
+          <input type="text" id="trackId" placeholder="Complaint ID (e.g. a3f7c2d1-...)" />
+          <button class="btn-track" id="trackBtn">Look up</button>
+        </div>
+
+        <div class="track-result card" id="trackResult" style="background:var(--gray-100)">
+          <div id="trackContent"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="ticker-bar" id="tickerBar">
+    <span class="ticker-label">Recent</span>
+    <div class="ticker-track" id="tickerTrack">Loading...</div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const GATEWAY = window.GATEWAY_URL || 'http://localhost:8000';
+
+    document.getElementById('trackBtn').addEventListener('click', async () => {
+      const id = document.getElementById('trackId').value.trim();
+      if (!id) return;
+      const box = document.getElementById('trackResult');
+      const content = document.getElementById('trackContent');
+      box.style.display = 'block';
+      content.innerHTML = '<p style="color:#6C757D;padding:12px">⏳ Loading...</p>';
+
+      try {
+        const resp = await fetch(`${GATEWAY}/complaints/${encodeURIComponent(id)}`);
+        if (!resp.ok) throw new Error(`Not found (${resp.status})`);
+        const d = await resp.json();
+        content.innerHTML = renderComplaint(d);
+      } catch (e) {
+        content.innerHTML = `<p style="color:#C1121F;padding:12px">❌ ${e.message}</p>`;
+      }
+    });
+
+    function renderComplaint(d) {
+      const sev = d.severity || '—';
+      const conf = Math.round((d.routing_confidence || 0) * 100);
+      const steps = [
+        { label: 'Text Understanding', done: !!d.text_analysis,
+          detail: d.text_analysis ? `${d.complaint_type?.replace(/_/g,' ')} — ${d.text_analysis.detected_language}` : 'Not processed' },
+        { label: 'Image Understanding', done: !!d.image_analysis?.image_available,
+          detail: d.image_analysis?.image_available ? d.image_analysis.scene_description : 'No image' },
+        { label: 'Embedding + Similarity', done: !!d.embedding,
+          detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}, Top similarity: ${(d.embedding.top_similarity_score*100).toFixed(1)}%` : 'Pending' },
+        { label: 'Duplicate Detection', done: !!d.clustering,
+          detail: d.clustering ? `${d.clustering.duplicate_status} · Cluster size: ${d.clustering.cluster_size}` : 'Pending' },
+        { label: 'Priority Engine', done: !!d.priority,
+          detail: d.priority ? `${sev} · Score: ${Math.round((d.priority_score||0)*100)}/100` : 'Pending' },
+        { label: 'Routing Engine', done: !!d.routing,
+          detail: d.routing ? `${d.assigned_entity} (${conf}% confidence)` : 'Pending' },
+        { label: 'Explanation', done: !!d.explanation,
+          detail: d.explanation?.explanation_text?.slice(0, 80) + '...' || 'Pending' },
+      ];
+
+      return `
+        <div style="margin-bottom:16px">
+          <h3 style="color:var(--green);font-size:16px">Complaint ${d.complaint_id?.slice(0,8)}...</h3>
+          <span style="font-size:12px;color:var(--gray-600)">${d.created_at || ''}</span>
+        </div>
+        <div style="background:white;border-radius:8px;padding:14px;margin-bottom:16px">
+          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-600)">Original Text</span>
+          <p style="font-size:14px;margin-top:6px;line-height:1.6">${d.original_text || ''}</p>
+        </div>
+        <ul class="pipeline-steps">
+          ${steps.map(s => `
+            <li class="pipeline-step">
+              <span class="step-status">${s.done ? '✅' : '⏸'}</span>
+              <div class="step-info">
+                <strong>${s.label}</strong>
+                <span>${s.detail}</span>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+    }
+  </script>
+</body>
+</html>

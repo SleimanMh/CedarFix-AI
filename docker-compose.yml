@@ -1,0 +1,356 @@
+version: "3.9"
+
+# =============================================================================
+# CedarFix AI — Full Stack Docker Compose
+# Each service maps to an IEP. Team members work independently per service.
+# =============================================================================
+
+networks:
+  cedarfix-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  mlflow_data:
+  uploads_data:
+  grafana_data:
+  prometheus_data:
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # INFRASTRUCTURE SERVICES
+  # ---------------------------------------------------------------------------
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: cedarfix-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cedarfix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cedarfix_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-cedarfix}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cedarfix-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cedarfix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: cedarfix-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - cedarfix-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    container_name: cedarfix-mlflow
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cedarfix-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cedarfix-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - cedarfix-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cedarfix-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-cedarfix_grafana}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # EEP — COMPLAINT GATEWAY (Team: Backend Engineer)
+  # ---------------------------------------------------------------------------
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: cedarfix-gateway
+    environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      TEXT_SERVICE_URL: http://text-understanding:8001
+      IMAGE_SERVICE_URL: http://image-understanding:8002
+      EMBEDDING_SERVICE_URL: http://embedding-service:8003
+      CLUSTERING_SERVICE_URL: http://clustering-service:8004
+      PRIORITY_SERVICE_URL: http://priority-engine:8005
+      ROUTING_SERVICE_URL: http://routing-engine:8006
+      EXPLANATION_SERVICE_URL: http://explanation-service:8007
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      UPLOADS_DIR: /data/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads_data:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # FRONTEND — Complaint Submission UI (nginx static)
+  # ---------------------------------------------------------------------------
+
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: cedarfix-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-1 — TEXT UNDERSTANDING (Team: AI Engineer 1 — NLP)
+  # ---------------------------------------------------------------------------
+
+  text-understanding:
+    build:
+      context: ./services/text_understanding
+      dockerfile: Dockerfile
+    container_name: cedarfix-text-understanding
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+      NER_MODEL_NAME: CAMeL-Lab/bert-base-arabic-camelbert-da-ner
+      PORT: "8001"
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data/models:/root/.cache/huggingface
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-2 — IMAGE UNDERSTANDING (Team: AI Engineer 2 — Vision)
+  # ---------------------------------------------------------------------------
+
+  image-understanding:
+    build:
+      context: ./services/image_understanding
+      dockerfile: Dockerfile
+    container_name: cedarfix-image-understanding
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      CLIP_MODEL_NAME: openai/clip-vit-base-patch32
+      PORT: "8002"
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./data/models:/root/.cache/huggingface
+      - uploads_data:/data/uploads
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-3 — EMBEDDING + SIMILARITY (Team: AI Engineer 2 — Vision/Multimodal)
+  # ---------------------------------------------------------------------------
+
+  embedding-service:
+    build:
+      context: ./services/embedding_service
+      dockerfile: Dockerfile
+    container_name: cedarfix-embedding-service
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_COLLECTION: complaints
+      TEXT_EMBEDDING_DIM: "768"
+      IMAGE_EMBEDDING_DIM: "512"
+      FUSED_EMBEDDING_DIM: "768"
+      PORT: "8003"
+    ports:
+      - "8003:8003"
+    depends_on:
+      - qdrant
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-4 — CLUSTERING + DUPLICATE DETECTION (Team: AI Engineer 1 — NLP)
+  # ---------------------------------------------------------------------------
+
+  clustering-service:
+    build:
+      context: ./services/clustering_service
+      dockerfile: Dockerfile
+    container_name: cedarfix-clustering-service
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      SIMILARITY_DUPLICATE_THRESHOLD: "0.92"
+      SIMILARITY_NEAR_DUPLICATE_THRESHOLD: "0.78"
+      HDBSCAN_MIN_CLUSTER_SIZE: "5"
+      PORT: "8004"
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-5 — PRIORITY ENGINE (Team: Backend Engineer)
+  # ---------------------------------------------------------------------------
+
+  priority-engine:
+    build:
+      context: ./services/priority_engine
+      dockerfile: Dockerfile
+    container_name: cedarfix-priority-engine
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_REGISTRY_NAME: cedarfix-priority
+      PORT: "8005"
+    ports:
+      - "8005:8005"
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-6 — ROUTING ENGINE (Team: Backend Engineer)
+  # ---------------------------------------------------------------------------
+
+  routing-engine:
+    build:
+      context: ./services/routing_engine
+      dockerfile: Dockerfile
+    container_name: cedarfix-routing-engine
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      MODEL_REGISTRY_NAME: cedarfix-routing
+      AUTO_ROUTE_THRESHOLD: "0.85"
+      REVIEW_THRESHOLD: "0.65"
+      PORT: "8006"
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-7 — EXPLANATION SERVICE (Team: AI Engineer 1 — Stretch)
+  # ---------------------------------------------------------------------------
+
+  explanation-service:
+    build:
+      context: ./services/explanation_service
+      dockerfile: Dockerfile
+    container_name: cedarfix-explanation-service
+    environment:
+      PORT: "8007"
+      MODE: template  # Set to "llm" to enable Qwen2.5 in stretch phase
+    ports:
+      - "8007:8007"
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-8 — HUMAN REVIEW + ACTIVE LEARNING (Team: Systems/Integration)
+  # ---------------------------------------------------------------------------
+
+  review-service:
+    build:
+      context: ./services/review_service
+      dockerfile: Dockerfile
+    container_name: cedarfix-review-service
+    environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      PORT: "8008"
+    ports:
+      - "8008:8008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cedarfix-net
+
+  # ---------------------------------------------------------------------------
+  # IEP-9 — MONITORING + DRIFT + RETRAINING (Team: MLOps Engineer)
+  # ---------------------------------------------------------------------------
+
+  monitoring-service:
+    build:
+      context: ./services/monitoring_service
+      dockerfile: Dockerfile
+    container_name: cedarfix-monitoring-service
+    environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      PROMETHEUS_URL: http://prometheus:9090
+      EMBEDDING_DRIFT_THRESHOLD: "0.15"
+      CORRECTION_RATE_ALERT_THRESHOLD: "0.15"
+      PORT: "8009"
+    ports:
+      - "8009:8009"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cedarfix-net

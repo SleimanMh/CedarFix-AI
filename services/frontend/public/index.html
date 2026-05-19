@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CedarFix AI — Report an Issue</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ───────────────── HEADER ───────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🌲</span>
+        <div>
+          <span class="logo-name">CedarFix AI</span>
+          <span class="logo-sub">Lebanese Public Infrastructure Intelligence</span>
+        </div>
+      </div>
+      <nav class="header-links">
+        <a href="index.html" class="active">Report Issue</a>
+        <a href="track.html">Track Complaint</a>
+        <a href="http://localhost:3000" target="_blank">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ───────────────── HERO ───────────────── -->
+  <section class="hero">
+    <h1>Report a Public Infrastructure Issue</h1>
+    <p>Describe the problem. Our AI will analyze it, detect duplicates, assess severity, and route it to the right authority automatically.</p>
+  </section>
+
+  <!-- ───────────────── MAIN CONTENT ───────────────── -->
+  <main class="main">
+    <div class="layout">
+
+      <!-- ── FORM PANEL ── -->
+      <section class="form-panel card">
+        <h2 class="section-title">New Complaint</h2>
+
+        <form id="complaintForm" novalidate>
+
+          <!-- Complaint Text -->
+          <div class="field">
+            <label for="text">
+              Describe the issue
+              <span class="lang-hint">Arabic · French · English supported</span>
+            </label>
+            <textarea
+              id="text"
+              name="text"
+              rows="5"
+              placeholder="e.g. There is a large pothole on the main road near Hamra supermarket, dangerous for cars.&#10;&#10;يوجد حفرة كبيرة في طريق الحمراء..."
+              required
+              minlength="10"
+              maxlength="2000"
+            ></textarea>
+            <div class="char-count"><span id="charCount">0</span> / 2000</div>
+            <div class="field-error" id="textError"></div>
+          </div>
+
+          <!-- Image Upload -->
+          <div class="field">
+            <label>Photo (optional)</label>
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" id="image" name="image" accept="image/*" hidden />
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <span class="upload-icon">📷</span>
+                <span>Click to upload or drag & drop</span>
+                <span class="upload-hint">JPG, PNG, WEBP — max 10MB</span>
+              </div>
+              <img id="imagePreview" class="image-preview hidden" alt="Preview" />
+              <button type="button" class="remove-image hidden" id="removeImage">✕ Remove</button>
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="field">
+            <label>Location</label>
+            <div class="location-row">
+              <input type="text" id="district" name="district" placeholder="District (e.g. Hamra, Jounieh)" />
+              <button type="button" class="btn-locate" id="detectLocation">
+                <span>📍</span> Use my location
+              </button>
+            </div>
+            <div class="coords-row hidden" id="coordsRow">
+              <span class="coords-badge" id="coordsDisplay"></span>
+            </div>
+            <input type="hidden" id="latitude" name="latitude" />
+            <input type="hidden" id="longitude" name="longitude" />
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span class="btn-text">Submit Complaint</span>
+            <span class="btn-spinner hidden" id="btnSpinner">⏳ Analyzing...</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- ── RESULT PANEL ── -->
+      <section class="result-panel" id="resultPanel" style="display:none">
+
+        <!-- SUCCESS -->
+        <div class="result-card card" id="resultSuccess">
+          <div class="result-header">
+            <span class="result-icon success-icon">✅</span>
+            <div>
+              <h3>Complaint Received</h3>
+              <span class="result-id" id="resultId"></span>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-item">
+              <span class="result-label">Type</span>
+              <span class="result-value" id="resType">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Language</span>
+              <span class="result-value" id="resLang">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Severity</span>
+              <span class="result-value" id="resSeverity">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Priority Score</span>
+              <span class="result-value" id="resPriority">—</span>
+            </div>
+            <div class="result-item full-width">
+              <span class="result-label">Routed To</span>
+              <span class="result-value entity-value" id="resEntity">—</span>
+            </div>
+            <div class="result-item full-width">
+              <span class="result-label">Routing Confidence</span>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar" id="resConfidenceBar"></div>
+              </div>
+              <span class="confidence-pct" id="resConfidencePct">—</span>
+            </div>
+          </div>
+
+          <!-- Duplicate Warning -->
+          <div class="duplicate-warning hidden" id="duplicateWarning">
+            <span>⚠️</span>
+            <span>This complaint may already be reported. Your submission was still recorded.</span>
+          </div>
+
+          <!-- Explanation -->
+          <div class="explanation-block" id="explanationBlock">
+            <span class="result-label">AI Explanation</span>
+            <p id="resExplanation"></p>
+          </div>
+
+          <!-- Review flag -->
+          <div class="review-flag hidden" id="reviewFlag">
+            <span>👁 Flagged for human review due to low routing confidence.</span>
+          </div>
+
+          <button class="btn-reset" id="btnReset">Submit Another Complaint</button>
+        </div>
+
+        <!-- ERROR -->
+        <div class="result-card card error-card hidden" id="resultError">
+          <div class="result-header">
+            <span class="result-icon">❌</span>
+            <div>
+              <h3>Submission Failed</h3>
+              <p id="errorMessage">Something went wrong. Please try again.</p>
+            </div>
+          </div>
+          <button class="btn-reset" id="btnErrorReset">Try Again</button>
+        </div>
+
+      </section>
+
+      <!-- ── HOW IT WORKS PANEL ── -->
+      <aside class="how-it-works card">
+        <h3>How it works</h3>
+        <ol class="steps">
+          <li>
+            <span class="step-num">1</span>
+            <div>
+              <strong>You describe the issue</strong>
+              <p>In Arabic, French, or English.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>
+              <strong>AI analyzes text + image</strong>
+              <p>Multilingual NLP + CLIP vision model extract structured information.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div>
+              <strong>Duplicate detection</strong>
+              <p>Vector similarity search checks if this was already reported.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <div>
+              <strong>Severity + routing</strong>
+              <p>The system scores urgency and routes to the correct authority.</p>
+            </div>
+          </li>
+        </ol>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- ───────────────── RECENT COMPLAINTS TICKER ───────────────── -->
+  <div class="ticker-bar" id="tickerBar">
+    <span class="ticker-label">Recent</span>
+    <div class="ticker-track" id="tickerTrack">Loading recent complaints...</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

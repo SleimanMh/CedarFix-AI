@@ -1,0 +1,100 @@
+{
+  "id": null,
+  "title": "CedarFix AI — AI Behavior",
+  "uid": "cedarfix-ai-behavior",
+  "tags": ["cedarfix", "ai", "models"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Severity Distribution",
+      "type": "piechart",
+      "gridPos": {"x": 0, "y": 0, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "cedarfix_severity_distribution_total",
+          "legendFormat": "{{level}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Routing Entity Distribution",
+      "type": "piechart",
+      "gridPos": {"x": 8, "y": 0, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "cedarfix_routing_entity_total",
+          "legendFormat": "{{entity}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Duplicate Detection Rate",
+      "type": "piechart",
+      "gridPos": {"x": 16, "y": 0, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "cedarfix_duplicate_detections_total",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Routing Confidence Distribution",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, rate(cedarfix_routing_confidence_bucket[10m]))",
+          "legendFormat": "Median confidence"
+        },
+        {
+          "expr": "histogram_quantile(0.1, rate(cedarfix_routing_confidence_bucket[10m]))",
+          "legendFormat": "P10 (low confidence)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Low Confidence Routing Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(cedarfix_low_confidence_routing_total[5m]) * 60",
+          "legendFormat": "Low confidence routes/min"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Priority Score Distribution",
+      "type": "histogram",
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(cedarfix_priority_score_bucket[10m])",
+          "legendFormat": "{{le}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Image Relevance Score Distribution",
+      "type": "histogram",
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(cedarfix_image_relevance_score_bucket[10m])",
+          "legendFormat": "{{le}}"
+        }
+      ]
+    }
+  ]
+}

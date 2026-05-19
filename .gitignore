@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.env
+.env.*
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Data & Models
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+*.onnx
+data/
+datasets/
+mlruns/
+mlartifacts/
+
+# Secrets & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+.secrets
+
+# Postgres / DB
+*.sql.bak
+*.dump
+
+# Prometheus / Grafana (local data)
+prometheus_data/
+grafana_data/
+
+# Qdrant (local data)
+qdrant_storage/
+
+# Coverage / Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Build artifacts
+*.whl
