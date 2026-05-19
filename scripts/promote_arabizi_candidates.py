@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BANK_PATH = ROOT / "data/knowledge_base/arabizi/arabizi_candidate_bank.csv"
-DEFAULT_STOPLIST_PATH = ROOT / "data/knowledge_base/arabizi/arabizi_stoplist.csv"
+DEFAULT_STOPLIST_PATH = ROOT / "data/knowledge_base/arabizi/arabizi_reliability_layer.json"
 DEFAULT_VOCAB_PATH = ROOT / "data/knowledge_base/arabizi_vocabulary.json"
 DEFAULT_AUDIT_PATH = ROOT / "data/knowledge_base/arabizi/arabizi_reviewed_changes.csv"
 VALIDATE_SCRIPT = ROOT / "scripts/validate_arabizi_vocabulary.py"
@@ -51,8 +51,21 @@ def read_text(path: Path) -> str:
 def load_stoplist(path: Path) -> frozenset[str]:
     if not path.exists():
         return frozenset()
+    if path.suffix.lower() == ".json":
+        data = json.loads(path.read_text(encoding="utf-8"))
+        terms: set[str] = set()
+        for row in data.get("stoplist", []):
+            terms.add((row.get("term") or "").strip().lower())
+            terms.add((row.get("normalized_term") or "").strip().lower())
+        terms.discard("")
+        return frozenset(terms)
     with open(path, encoding="utf-8") as f:
-        return frozenset((row.get("term") or "").strip().lower() for row in csv.DictReader(f))
+        terms = set()
+        for row in csv.DictReader(f):
+            terms.add((row.get("term") or "").strip().lower())
+            terms.add((row.get("normalized_term") or "").strip().lower())
+        terms.discard("")
+        return frozenset(terms)
 
 
 def load_candidates(path: Path) -> list[dict[str, str]]:

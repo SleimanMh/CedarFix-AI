@@ -1,5 +1,0 @@
-pair_id,report_a_text,report_b_text,lang_a,lang_b,expected_pair_label,expected_reason,difficulty
-AXP0001,fi 7ofra kbire 3al tari2 bi hamra,في حفرة كبيرة بشارع الحمرا,arabizi,ar,DUPLICATE,same pothole incident across scripts,MEDIUM
-AXP0002,ma fi may men mbere7 bi l bineye,No water in the same building since yesterday,arabizi,en,DUPLICATE,same water-cut incident cross-language,MEDIUM
-AXP0003,ri7et ghaz bi l bineye,odeur de gaz dans le bâtiment,arabizi,fr,DUPLICATE,same gas smell safety report,HIGH
-AXP0004,fi 7ofra 3al tari2,balou3a msadoude bi nafs l share3,arabizi,arabizi,UNRELATED,same street but different issue type/sector,HIGH

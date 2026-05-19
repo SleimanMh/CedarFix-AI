@@ -1,5 +1,0 @@
-reviewer_id,reviewer_profile_code,native_speaker_flag,native_dialect_region,sectors_authorized,active_flag,privacy_note,created_at_utc
-REV-LB-BEY-01,LB_BEIRUT_NATIVE_GENERAL,TRUE,BEIRUT,GENERAL;ROADS;WATER;WASTE,TRUE,pseudonymous ID; no personal data,2026-05-18T16:08:17Z
-REV-LB-ML-01,LB_MOUNT_LEBANON_NATIVE_GENERAL,TRUE,MOUNT_LEBANON,GENERAL;ELECTRICITY;FLOODING,TRUE,pseudonymous ID; no personal data,2026-05-18T16:08:17Z
-REV-LB-S-01,LB_SOUTH_NATIVE_SAFETY,TRUE,SOUTH,GENERAL;SAFETY;ELECTRICITY;FLOODING,TRUE,pseudonymous ID; no personal data,2026-05-18T16:08:17Z
-REV-OPS-01,CEDARFIX_OPS_QA,FALSE,UNKNOWN,STOPLIST;SCHEMA;PROVENANCE,TRUE,ops reviewer not native promotion approver,2026-05-18T16:08:17Z

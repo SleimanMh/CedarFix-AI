@@ -1,11 +1,13 @@
 # Arabizi Evaluation Report
 
-Status: PENDING REAL DATA
+Status: PENDING FULL EVAL DATA
 
 This report lists each evaluation metric, the required inputs, how to generate it,
 and the current blocker. No numeric results are claimed here except the measured
-coverage baseline. The eval CSV files are intentionally header-only until reviewed
-rows exist; their schemas live in `data/eval/arabizi_eval_schemas.md`.
+coverage baseline. The consolidated eval suite now contains a small number of
+pack-derived smoke-test rows, including pair and notation seeds; these rows are
+useful for regression checks but are below the threshold for reporting final
+metrics. Schemas live in `data/eval/arabizi_eval_schemas.md`.
 
 ---
 
@@ -37,12 +39,13 @@ excludes non-incident tokens. Run `--save` to persist full per-row detail.
 **Command to generate:** (integration runner not yet implemented)
 
 **Required inputs:**
-- `data/eval/arabizi_clean_eval.csv` — minimum 20 reviewed rows
-- `data/eval/arabizi_noisy_eval.csv` — minimum 20 reviewed rows
+- `data/eval/arabizi_eval_suite.csv` — minimum 20 reviewed `CLEAN` rows
+- `data/eval/arabizi_eval_suite.csv` — minimum 20 reviewed `NOISY` rows
 - Pipeline runner that outputs `sector` predictions per `report_id`
 
-**Current blocker:** Eval files have 0 reviewed rows. No rows may be fabricated.
-Requires native Lebanese speaker review session.
+**Current blocker:** Eval suite has 6 clean/noisy seed rows, below the reporting
+threshold. No rows may be fabricated. Requires native Lebanese speaker review
+session and additional rows.
 
 **Current result:** NOT MEASURED
 
@@ -53,7 +56,7 @@ Requires native Lebanese speaker review session.
 **Command to generate:** (integration runner not yet implemented)
 
 **Required inputs:**
-- `data/eval/arabizi_clean_eval.csv` — minimum 20 reviewed rows per issue_type present
+- `data/eval/arabizi_eval_suite.csv` — minimum 20 reviewed `CLEAN`/`NOISY` rows per issue_type present
 - Pipeline runner outputs with `issue_type` predictions
 
 **Current blocker:** Same as M2.
@@ -67,7 +70,7 @@ Requires native Lebanese speaker review session.
 **Command to generate:** (integration runner not yet implemented)
 
 **Required inputs:**
-- `data/eval/arabizi_clean_eval.csv` — minimum 20 reviewed rows
+- `data/eval/arabizi_eval_suite.csv` — minimum 20 reviewed `CLEAN`/`NOISY` rows
 - Pipeline runner outputs with `route_entity` predictions
 
 **Importance:** CRITICAL. Wrong routing = repair request sent to wrong authority.
@@ -83,7 +86,7 @@ Requires native Lebanese speaker review session.
 **Command to generate:** (integration runner not yet implemented)
 
 **Required inputs:**
-- `data/eval/arabizi_clean_eval.csv` — minimum 20 reviewed rows
+- `data/eval/arabizi_eval_suite.csv` — minimum 20 reviewed `CLEAN`/`NOISY` rows
 - Pipeline runner outputs with `severity` predictions
 
 **Failure threshold:** Any HIGH or CRITICAL row misclassified as LOW is a critical failure.
@@ -99,10 +102,10 @@ Requires native Lebanese speaker review session.
 **Command to generate:** (OOV detection module not yet implemented as standalone)
 
 **Required inputs:**
-- `data/eval/arabizi_oov_eval.csv` — minimum 10 reviewed rows
+- `data/eval/arabizi_eval_suite.csv` — minimum 10 reviewed `OOV` rows
 - Pipeline runner outputs with OOV flags per report
 
-**Current blocker:** Eval file has 0 reviewed rows.
+**Current blocker:** Eval suite has 1 OOV seed row, below the reporting threshold.
 
 **Current result:** NOT MEASURED
 
@@ -113,12 +116,12 @@ Requires native Lebanese speaker review session.
 **Command to generate:** (integration runner not yet implemented)
 
 **Required inputs:**
-- `data/eval/arabizi_oov_eval.csv` — rows where expected_severity=HIGH or CRITICAL
+- `data/eval/arabizi_eval_suite.csv` — `OOV` rows where expected_severity=HIGH or CRITICAL
 - Pipeline runner outputs confirming HITL escalation flag
 
 **Importance:** CRITICAL. Missed high-risk OOV = potential safety incident not escalated.
 
-**Current blocker:** Eval file has 0 reviewed rows.
+**Current blocker:** Eval suite has 1 OOV seed row, below the reporting threshold.
 
 **Current result:** NOT MEASURED
 
@@ -183,12 +186,17 @@ sector classification. The ablation must be run on real eval data only.
    - Correctness of sector assignment
    - Correctness of severity assignment
    - That no OOV token was misidentified as a known token
-4. Place reviewed rows in the appropriate eval file:
-   - Clean, no noise → `arabizi_clean_eval.csv`
-   - OCR errors, typos, code-switching → `arabizi_noisy_eval.csv`
-   - Contains meaningful unknown tokens → `arabizi_oov_eval.csv`
-5. Minimum 20 rows per eval file before reporting any metric.
-6. Never add the same report to multiple eval files (deduplication required).
+4. Place reviewed rows in `data/eval/arabizi_eval_suite.csv` using the
+   appropriate `row_type`:
+   - Clean, no noise → `CLEAN`
+   - OCR errors, typos, code-switching → `NOISY`
+   - Contains meaningful unknown tokens → `OOV`
+   - Cross-language pair checks → `PAIR`
+   - Notation-only checks → `NOTATION`
+5. Keep the current pack-derived rows as smoke-test seeds unless native review confirms them.
+6. Minimum 20 reviewed rows per relevant row type before reporting any metric.
+7. Never duplicate the same report text across eval rows unless the row is an explicit
+   `PAIR` duplicate/relatedness test.
 
 ---
 
@@ -206,6 +214,9 @@ python scripts/validate_arabizi_candidate_bank.py
 
 # Reliability (exits non-zero if required input is missing)
 python scripts/validate_arabizi_reliability.py
+
+# Absorbed reliability-pack eval/governance assets
+python scripts/validate_arabizi_pack_absorption.py
 ```
 
-All four must pass before promoting any new candidates or releasing a vocabulary update.
+All five must pass before promoting any new candidates or releasing a vocabulary update.

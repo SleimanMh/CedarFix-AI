@@ -1,52 +1,56 @@
-# Arabizi Evaluation File Schemas
+# Arabizi Evaluation Suite Schema
 
-The CSV files in this directory are intentionally header-only until reviewed
-evaluation rows exist. Keep schema documentation here, not inside the CSV files,
-so metric runners can safely treat each CSV as machine-readable data.
+The active Arabizi smoke/regression seed set is consolidated in
+`data/eval/arabizi_eval_suite.csv`.
 
-## `arabizi_clean_eval.csv`
+The suite is machine-readable and uses `row_type` to separate five cases:
 
-Purpose: clean Arabizi evaluation set. Clean means native-speaker-written, no OCR
-errors, no typos, and no code-switching. Use this to measure best-case
-classification performance on well-formed Arabizi.
+- `CLEAN`: clean Arabizi classification rows.
+- `NOISY`: typo/OCR/code-switching classification rows.
+- `OOV`: rows with meaningful unknown Arabizi tokens.
+- `PAIR`: cross-language duplicate, related, or unrelated pair rows.
+- `NOTATION`: notation-only rows that test romanization behavior without
+  creating routing claims.
 
-Columns:
+## Columns
 
-- `report_id`: unique identifier, format `CLEAN-NNNN`.
-- `text`: Arabizi report text; no Arabic script in this file.
-- `language`: must be `arabizi`.
-- `expected_sector`: `ROADS`, `WATER`, `ELECTRICITY`, `WASTE`, `FLOODING`, `SAFETY`, or `OTHER`.
-- `expected_issue_type`: official issue type from `docs/ANNOTATION_GUIDELINES.md`.
+- `suite_id`: unique row identifier.
+- `row_type`: `CLEAN`, `NOISY`, `OOV`, `PAIR`, or `NOTATION`.
+- `source_id`: source row identifier from the original seed.
+- `text`: single-report text for `CLEAN`, `NOISY`, `OOV`, and `NOTATION`.
+- `report_a_text`, `report_b_text`: pair texts for `PAIR`.
+- `language`: language for single-report rows.
+- `lang_a`, `lang_b`: pair languages for `PAIR`.
+- `noise_type`: semicolon-separated noise tags for `NOISY`.
+- `oov_tokens`: semicolon-separated unknown meaningful tokens for `OOV`.
+- `expected_normalized_ar`: expected Arabic-script output for `NOTATION`.
+- `expected_sector`: CedarFix sector or `ALL_SUPPORT` for notation-only rows.
+- `expected_issue_type`: official issue type or `ALL_SUPPORT`.
 - `expected_severity`: `LOW`, `MEDIUM`, `HIGH`, or `CRITICAL`.
-- `expected_route_entity`: `CDR`, `MUN`, `BMLWE`, `NLWE`, `SLWE`, `BWE`, `RWA`, `EDL`, `CD`, `ISF`, `MOE`, `MPWT`, or `HITL`.
-- `notes`: reviewer notes, dialect details, or edge-case flags.
-
-## `arabizi_noisy_eval.csv`
-
-Purpose: noisy and realistic Arabizi/mixed evaluation set. Noisy rows may contain
-OCR errors, spelling inconsistency, code-switching, abbreviations, emoji, or
-run-on words.
-
-Additional column:
-
-- `noise_type`: semicolon-separated values from `OCR`, `TYPO`, `CODESW`, `ABBREV`, `EMOJI`, `RUNON`, `DIACRITICS`.
-
-## `arabizi_oov_eval.csv`
-
-Purpose: out-of-vocabulary evaluation set. Every row must contain at least one
-meaningful Arabizi token that is absent from production vocabulary.
-
-Additional column:
-
-- `oov_tokens`: semicolon-separated unknown tokens verified as meaningful and absent from production vocabulary.
+- `expected_route_entity`: expected routing target for classification rows.
+- `expected_hitl`: `TRUE` or `FALSE` for notation rows.
+- `expected_pair_label`: `DUPLICATE`, `RELATED`, or `UNRELATED`.
+- `expected_reason`: concise pair-label rationale.
+- `expected_notation_rules`: semicolon-separated notation rule IDs.
+- `difficulty`: `LOW`, `MEDIUM`, or `HIGH` for pair rows.
+- `notes`: source and reviewer notes.
 
 ## Data Status
 
-All three CSVs currently have zero reviewed rows. Do not fabricate examples.
-Rows must be real reports or native-Lebanese-speaker-approved authored examples.
+Current seed counts:
 
-Minimum reporting threshold:
+- `CLEAN`: 4 rows
+- `NOISY`: 2 rows
+- `OOV`: 1 row
+- `PAIR`: 5 rows
+- `NOTATION`: 1 row
 
-- at least 20 reviewed rows before reporting clean/noisy sector or issue metrics
-- at least 10 reviewed rows before reporting OOV metrics
+These rows are useful for smoke tests and regression checks, but they are not
+enough to report final classification metrics. Final metrics require real
+reports or native-Lebanese-speaker-approved authored examples.
+
+Minimum reporting thresholds:
+
+- at least 20 reviewed `CLEAN`/`NOISY` rows before reporting sector or issue metrics
+- at least 10 reviewed `OOV` rows before reporting OOV metrics
 - high-risk OOV recall must be reported separately from overall OOV recall
