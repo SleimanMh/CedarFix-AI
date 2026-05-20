@@ -1,0 +1,18 @@
+﻿source_term_id,arabic_script,english_gloss,category,subcategory,canonical_arabizi,safe_unique_variants_pipe,reliable_alt_review_variants_pipe,context_only_variants_pipe,operational_variants_pipe,review_status,must_not_auto_promote,destination_asset,notes
+ARZ-V10-00001,غ,gh,internet_notation,ghayn,gh,gh,,gh,gh,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00002,خ,5,internet_notation,kha,5,,,kh,kh,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00003,ا / long a,a/e/a vowel,internet_notation,letter_or_prefix_rule,a,,,aa,aa,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00004,ة,a/e/eh ending,internet_notation,letter_or_prefix_rule,e,,,eh|ah,eh|ah,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00005,ي / long i,i/ee/y vowel,internet_notation,letter_or_prefix_rule,i,,,ee|ii|ei,ee|ii|ei,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00006,و / long o/u,o/u/w/ou vowel,internet_notation,letter_or_prefix_rule,ou,,,ou|w|oo,ou|w|oo,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00007,ث,th/s/t,internet_notation,letter_or_prefix_rule,s,,,th,th,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00008,ذ,z/dh/d,internet_notation,letter_or_prefix_rule,z,,,dh,dh,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00009,ظ,z/dh/6',internet_notation,letter_or_prefix_rule,z,,,dh,dh,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00010,long vowel,aa,internet_notation,long a / omitted 3 fallback,aa,,,aa,aa,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00011,long vowel,ee,internet_notation,long e/i,ee,,,ee|ii,ee|ii,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00012,long vowel,ou,internet_notation,long o/u,ou,,,ou|oo,ou|oo,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00013,ب,in/with prefix,internet_notation,prefix_rule,b,,,b|bi,b|bi,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00014,ال,definite article,internet_notation,prefix_rule,l,,,l|el|al|il,l|el|al|il,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00015,ل,to/for prefix,internet_notation,prefix_rule,l,,,l|la,l|la,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00016,و,and prefix,internet_notation,prefix_rule,w,,,w|wa,w|wa,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
+ARZ-V10-00017,ش,sh,internet_notation,shin,sh,sh,,sh|ch,sh|ch,PENDING_NATIVE_REVIEW,TRUE,arabizi_internet_notation_rules,Export to notation rules asset; no blind replacement.
