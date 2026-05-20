@@ -1,7 +1,0 @@
-﻿﻿rule_id,rule,enforced_by,why
-POL-001,No row routes complaints directly before review,all *_now fields FALSE,prevents dictionary-as-model overclaim
-POL-002,P0 rows must be fixed or rejected before import,quarantine file,blocks semantic false friends
-POL-003,Safety/electricity/flooding rows require second review,second_reviewer_required=TRUE,high-stakes sectors require HITL
-POL-004,Support-only ALL rows are not issue labels,general_support_review file,prevents connectors/location terms from biasing routing
-POL-005,C-tier variants are stress-test/OOV only unless reviewed,LOW_TIER_REVIEW_ONLY,reduces noisy false positives
-POL-006,Candidate bank is not core vocabulary,must_not_auto_promote=TRUE,protects professor defense
