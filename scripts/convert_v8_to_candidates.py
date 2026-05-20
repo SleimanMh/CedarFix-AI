@@ -7,7 +7,7 @@ project's arabizi_candidate_bank.csv.
 Rules:
   - Only rows with v8_merge_target == 'arabizi_candidate_bank_or_variant_lookup'
   - Skip D_REVIEW_OR_QUARANTINE trust class
-  - Deduplicate on arabic_script (skip if already in bank)
+  - Deduplicate on arabic_script OR canonical_arabizi matching any existing variant (skip if either hits)
   - Build variants: canonical_arabizi + safe_unique + context_only (pipe→semicolon, dedup, ordered)
   - Tier per variant: canonical=A(B_RELIABLE)/B(C_ONLY), safe_unique=A, context_only=B
   - Sector: infra_* prefix mapping
@@ -117,10 +117,18 @@ def main():
     with open(EXISTING_BANK, encoding='utf-8-sig') as f:
         existing_rows = list(csv.DictReader(f))
     existing_scripts = {r['arabic_script'].strip() for r in existing_rows}
+    # build full variant token pool (lowercase) for canonical-level dedup
+    existing_variants: set[str] = set()
+    for r in existing_rows:
+        for v in r['variants'].split(';'):
+            tok = v.strip().lower()
+            if tok:
+                existing_variants.add(tok)
     existing_max_id = max(
         int(r['candidate_id'].split('-')[-1]) for r in existing_rows
     )
-    print(f'  Existing bank: {len(existing_scripts)} entries, last ID ARZ-CAND-{existing_max_id:04d}')
+    print(f'  Existing bank: {len(existing_rows)} entries, last ID ARZ-CAND-{existing_max_id:04d}')
+    print(f'  Existing variant tokens: {len(existing_variants)}')
 
     # load v8 source
     with open(V8_SOURCE, encoding='utf-8-sig') as f:
@@ -146,6 +154,10 @@ def main():
             skipped_empty.append(r['term_id'])
             continue
         if arabic in existing_scripts:
+            skipped_dup.append(arabic)
+            continue
+        canonical = r['canonical_arabizi'].strip().lower()
+        if canonical and canonical in existing_variants:
             skipped_dup.append(arabic)
             continue
 
@@ -184,6 +196,9 @@ def main():
         })
 
         existing_scripts.add(arabic)
+        # register new variants so later rows in same batch also dedup correctly
+        for v in variants_str.split(';'):
+            existing_variants.add(v.strip().lower())
         next_id += 1
 
     # write intake

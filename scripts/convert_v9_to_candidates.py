@@ -14,15 +14,24 @@ V9SRC = 'lebanese_arabizi_must_have_word_bank_v9_individual_terms_max.csv'
 existing   = list(csv.DictReader(open(BANK,  encoding='utf-8-sig')))
 fieldnames = list(existing[0].keys())
 existing_arabic = {r['arabic_script'].strip() for r in existing}
+# full variant token pool for canonical-level dedup
+existing_variants = set()
+for _r in existing:
+    for _v in _r['variants'].split(';'):
+        _tok = _v.strip().lower()
+        if _tok:
+            existing_variants.add(_tok)
 last_id    = max(int(r['candidate_id'].split('-')[-1]) for r in existing)
 print(f'Existing bank: {len(existing)} entries | Last ID: ARZ-CAND-{last_id:04d}')
+print(f'Existing variant tokens: {len(existing_variants)}')
 
-src     = list(csv.DictReader(open(V9SRC, encoding='utf-8-sig')))
+src  = list(csv.DictReader(open(V9SRC, encoding='utf-8-sig')))
 targets = [r for r in src
            if r['v8_merge_target'] == 'arabizi_candidate_bank_or_variant_lookup'
            and r['v8_trust_class'] != 'D_REVIEW_OR_QUARANTINE'
-           and r['arabic_script'].strip() not in existing_arabic]
-print(f'Net-new targets: {len(targets)}')
+           and r['arabic_script'].strip() not in existing_arabic
+           and r['canonical_arabizi'].strip().lower() not in existing_variants]
+print(f'Net-new targets (after variant dedup): {len(targets)}')
 
 now     = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 counter = last_id + 1
@@ -47,6 +56,11 @@ for r in targets:
     risk   = ('CRITICAL' if sector == 'SAFETY'
               else 'HIGH'  if any(v.lower() in HIGH_RISK_HINTS for v in variant_list)
               else 'LOW')
+
+    # register new variants so later rows in same batch also dedup correctly
+    for _v in variant_list:
+        existing_variants.add(_v.lower())
+    existing_arabic.add(r['arabic_script'].strip())
 
     new_rows.append({
         'candidate_id':    f'ARZ-CAND-{counter:04d}',
