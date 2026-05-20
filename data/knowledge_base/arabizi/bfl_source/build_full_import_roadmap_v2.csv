@@ -1,0 +1,7 @@
+﻿﻿phase,name,input_file,goal,exit_criteria
+0,Fix syntax and quarantine false friends,build_full_quarantine_rewrite_required_v2.csv,Remove/repair P0 variants before any merge,0 unresolved P0 rows
+1,Native review high-confidence core,build_full_core_review_candidates_v2.csv,Approve strongest A-tier low-risk issue terms,review_status=APPROVED + reviewer_id
+2,Second-review high-risk terms,build_full_high_risk_hitl_review_v2.csv,Approve safety/grid/flood terms as HITL features only,two reviewers + decision=APPROVE_HITL_ONLY or APPROVE_CORE_WITH_SECOND_REVIEW
+3,General support and stoplist review,build_full_general_support_review_v2.csv,"Use support-only terms for normalization/OOV, not routing",APPROVE_GENERAL or STOPLIST
+4,Variant lookup expansion,build_full_b_tier_variant_review_v2.csv,Add safe B-tier variants to fuzzy lookup,ambiguity resolved + no route permission
+5,High-impact missing additions,build_full_high_impact_additions_v2.csv,Review terms that improve duplicate/severity/evidence/demo coverage,approved additions added to candidate bank/eval set

@@ -1,0 +1,4 @@
+﻿﻿check_id,status,severity,details
+V2-001,PASS,INFO,blocking_errors=0
+V2-002,PASS,INFO,all rows kept non-production: routing_now=FALSE auto_promotion=FALSE
+V2-003,PASS,INFO,review batches generated
