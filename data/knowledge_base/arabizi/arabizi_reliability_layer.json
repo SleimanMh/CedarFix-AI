@@ -1,8 +1,8 @@
 {
   "metadata": {
     "name": "CedarFix Arabizi reliability layer",
-    "version": "v1.1-layered-architecture",
-    "generated_at_utc": "2026-05-19T11:00:28Z",
+    "version": "v1.3-v13.1-candidate-bank-domain-cleanup",
+    "generated_at_utc": "2026-05-21T14:30:06Z",
     "purpose": "Review-only Arabizi support assets. Production routing vocabulary remains data/knowledge_base/arabizi_vocabulary.json.",
     "guardrails": [
       "No section in this file may directly promote production routing terms.",
@@ -22,31 +22,35 @@
       "variant_lookup": 396,
       "internet_notation_rules": 20,
       "oov_seed_queue": 4,
-      "protected_combos_csv": 75,
-      "general_word_bank_csv": 200
+      "protected_combos_csv": 78,
+      "general_word_bank_csv": 252,
+      "candidate_bank_csv": 449,
+      "candidate_bank_quarantine_csv": 929
     },
-    "updated_at_utc": "2026-05-19T00:00:00Z",
+    "updated_at_utc": "2026-05-21T14:37:40Z",
     "architecture_note": "V12 architecture overhaul: general_word_bank and protected_combos have been materialised as reviewable CSV files. The JSON sections remain the authoritative consolidated source; CSV files are the human-review-ergonomic projection. Central rule: domain vocab votes on routing; generic vocab provides context only; protected combos override naive token splitting.",
     "csv_file_registry": {
       "arabizi_general_word_bank.csv": {
         "path": "data/knowledge_base/arabizi/arabizi_general_word_bank.csv",
-        "row_count": 200,
+        "row_count": 419,
         "sources": [
           "reliability_layer_v1_export (111)",
-          "V12_LEBANON_NATIVE (89)"
+          "V12_LEBANON_NATIVE (89)",
+          "V13_TRUSTED_GENERIC_EXPANSION (52)"
         ],
         "tier_values": [
           "T3_GENERIC_SUPPORT",
           "T4_VARIANT_LOOKUP"
         ],
-        "rule": "blocked_uses always contains routing|severity_assignment|sector_classification"
+        "rule": "blocked_uses always contains routing|severity_assignment|sector_classification|issue_type_decision"
       },
       "arabizi_protected_combos.csv": {
         "path": "data/knowledge_base/arabizi/arabizi_protected_combos.csv",
-        "row_count": 75,
+        "row_count": 109,
         "sources": [
           "candidate_bank protected_combo (50 remapped)",
-          "V12_ISSUE_LEVEL_NEW (25)"
+          "V12_ISSUE_LEVEL_NEW (25)",
+          "V13_TRUSTED_GENERIC_EXPANSION (3)"
         ],
         "sector_distribution": {
           "ALL": 34,
@@ -59,7 +63,42 @@
           "OTHER": 5
         },
         "rule": "Phrase locks — combined meaning is lost if tokens are split. Overrides naive tokenisation."
+      },
+      "arabizi_candidate_bank.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_candidate_bank.csv",
+        "row_count": 449,
+        "rule": "domain-sector candidate terms only; generic/support/protected rows are quarantined",
+        "cleanup_version": "v13.1-candidate-bank-domain-cleanup"
+      },
+      "arabizi_candidate_bank_quarantine.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_candidate_bank_quarantine.csv",
+        "row_count": 929,
+        "rule": "review-only archive of rows removed from the production promotion queue",
+        "cleanup_version": "v13.1-candidate-bank-domain-cleanup"
       }
+    },
+    "v13_trusted_generic_expansion": {
+      "source_zip": "arabizi_v13_trusted_generic_expansion_pack.zip",
+      "new_general_word_bank_rows": 52,
+      "new_protected_combo_rows": 3,
+      "rejected_or_deferred_candidates_in_pack": 225,
+      "guardrail": "generic support rows remain PENDING_NATIVE_REVIEW and must_not_auto_promote=true; no direct routing/severity/sector/issue decisions"
+    },
+    "v13_1_candidate_bank_cleanup": {
+      "cleanup_version": "v13.1-candidate-bank-domain-cleanup",
+      "kept_domain_candidates": 449,
+      "quarantined_rows": 929,
+      "quarantine_reason_counts": {
+        "non_domain_sector:ALL": 184,
+        "non_domain_sector:ALL_SUPPORT": 90,
+        "non_domain_sector:OTHER": 598,
+        "support_category:institution": 3,
+        "support_category:noun_location": 3,
+        "support_category:noun_person": 8,
+        "support_category:noun_quality": 4,
+        "support_issue_type:ALL_SUPPORT": 39
+      },
+      "guardrail": "Only domain-sector rows remain in arabizi_candidate_bank.csv. Quarantined rows are not eligible for core-vocabulary promotion until they are manually reclassified into a valid support layer or a domain issue target."
     }
   },
   "external_resources": [
@@ -11160,5 +11199,23 @@
       "updated_at_utc": "2026-05-18T16:08:17Z",
       "notes": "General location word / fallback h form, not issue vocab."
     }
-  ]
+  ],
+  "version": "v1.4-v14-mega-expansion",
+  "updated_at_utc": "2026-05-21T14:55:16Z",
+  "section_row_counts": {
+    "general_word_bank_csv": 419,
+    "protected_combos_csv": 109,
+    "stoplist": 77
+  },
+  "v14_mega_expansion": {
+    "absorbed_at_utc": "2026-05-21T14:55:16Z",
+    "prior_version": "",
+    "gwb_rows_added": 167,
+    "pc_rows_added": 31,
+    "stoplist_rows_added": 41,
+    "false_friends_file": "arabizi_false_friends_v14_review_only.csv (review only, not merged)",
+    "morphology_file": "arabizi_morphology_notation_rules_v14_review_only.csv (review only, not merged)",
+    "collision_queue_file": "arabizi_candidate_collision_review_queue_v14.csv (114 items, separate review needed)",
+    "notes": "Absorbed via absorb_v14_expansion_pack.py. Duplicate detection: 0 GWB dupes, 2 PC dupes skipped, 0 stoplist dupes."
+  }
 }

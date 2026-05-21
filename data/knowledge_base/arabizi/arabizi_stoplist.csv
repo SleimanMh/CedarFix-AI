@@ -35,3 +35,44 @@ hassan,hassan,PERSON_NAME_NOISE — common Lebanese person name; never an issue 
 whatsapp,whatsapp,PLATFORM_NOISE — WhatsApp social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
 facebook,facebook,PLATFORM_NOISE — Facebook social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
 tiktok,tiktok,PLATFORM_NOISE — TikTok social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+instagram,instagram,"V14_SUPPORT_NOISE — platform/noise token, not municipal issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+youtube,youtube,"V14_SUPPORT_NOISE — platform/noise token, not municipal issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+x,x,"V14_SUPPORT_NOISE — single-letter/platform ambiguity, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+twitter,twitter,"V14_SUPPORT_NOISE — platform/noise token, not municipal issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+telegram,telegram,"V14_SUPPORT_NOISE — platform/noise token, not municipal issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+snapchat,snapchat,"V14_SUPPORT_NOISE — platform/noise token, not municipal issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+hey,hey,V14_SUPPORT_NOISE — greeting noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+bonjour,bonjour,V14_SUPPORT_NOISE — French greeting noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+bonsoir,bonsoir,V14_SUPPORT_NOISE — French greeting noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+thank you,thank you,V14_SUPPORT_NOISE — English politeness noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+ok,ok,V14_SUPPORT_NOISE — acknowledgment noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+okay,okay,V14_SUPPORT_NOISE — acknowledgment noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+lol,lol,V14_SUPPORT_NOISE — chat filler noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+haha,haha,V14_SUPPORT_NOISE — chat filler noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+hahaha,hahaha,V14_SUPPORT_NOISE — chat filler noise; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+mohammed,mohammed,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+hussein,hussein,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+fatima,fatima,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+mariam,mariam,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+rima,rima,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+sara,sara,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+georges,georges,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+elias,elias,"V14_SUPPORT_NOISE — common person name, not issue; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+verdun,verdun,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+trablos,trablos,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+sayda,sayda,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+sour,sour,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+jounieh,jounieh,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+jbeil,jbeil,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+byblos,byblos,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+metn,metn,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+keserwan,keserwan,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+chouf,chouf,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+bekaa,bekaa,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+dekwaneh,dekwaneh,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+hazmieh,hazmieh,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+gemmayze,gemmayze,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+mar mikhael,mar mikhael,"V14_SUPPORT_NOISE — location token, support only; may support location/entity context but must not route or set severity.",LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+edl,edl,V14_SUPPORT_NOISE — institution token; not issue by itself; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+alfa,alfa,V14_SUPPORT_NOISE — telecom brand token; not issue by itself; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true
+touch,touch,V14_SUPPORT_NOISE — telecom brand token; not issue by itself; may support location/entity context but must not route or set severity.,LOW,V14_MEGA_TRUSTED_EXPANSION,UNASSIGNED,2026-05-21,true

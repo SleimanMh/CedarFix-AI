@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T14:07:34.381808+00:00",
+    "generated_at": "2026-05-21T14:38:37.423209+00:00",
     "scope": "Arabizi next-phase excellence gate audit",
     "output_path": "data\\eval\\arabizi_excellence_gates_v1.json",
     "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
