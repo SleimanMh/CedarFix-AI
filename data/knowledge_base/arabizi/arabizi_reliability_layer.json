@@ -29,10 +29,10 @@
       "candidate_bank_quarantine_csv": 929,
       "surface_forms_v15_csv": 10000,
       "stoplist_csv": 77,
-      "external_source_ledger_csv": 6,
+      "external_source_ledger_csv": 14,
       "lebanese_external_oov_candidates_csv": 2000
     },
-    "updated_at_utc": "2026-05-21T16:07:20Z",
+    "updated_at_utc": "2026-05-21T17:20:23Z",
     "architecture_note": "V12 architecture overhaul: general_word_bank and protected_combos have been materialised as reviewable CSV files. The JSON sections remain the authoritative consolidated source; CSV files are the human-review-ergonomic projection. Central rule: domain vocab votes on routing; generic vocab provides context only; protected combos override naive token splitting.",
     "csv_file_registry": {
       "arabizi_general_word_bank.csv": {
@@ -102,7 +102,7 @@
       },
       "external_source_ledger.csv": {
         "path": "data/knowledge_base/arabizi/external_source_ledger.csv",
-        "row_count": 6,
+        "row_count": 14,
         "rule": "External source provenance and license/access gate. Does not imply import permission."
       },
       "lebanese_external_oov_candidates.csv": {

@@ -5,102 +5,111 @@ Audit date: 2026-05-21
 Purpose: identify external Arabizi / Lebanese / Levantine resources that can
 improve CedarFix without weakening the reviewed-vocabulary governance model.
 
-No external raw dataset was imported during this audit.
+## Absorption Status
+
+Project RBZ/SenZi, SenZi-Large, the Project RBZ thesis resources, and the Maria
+Raïdy Kaggle Lebanese Arabizi dataset were downloaded or inspected from
+quarantined `data/external_sources/` folders and mined into a review-only OOV
+queue.
+
+Generated artefacts:
+
+- `data/knowledge_base/arabizi/external_source_ledger.csv`
+- `data/knowledge_base/arabizi/lebanese_external_oov_candidates.csv`
+- `docs/ARABIZI_EXTERNAL_ABSORPTION_REPORT.md`
+
+No raw external text was copied into trusted vocabulary, and no external row was
+promoted. The absorbed OOV rows remain blocked from routing, severity
+assignment, and production promotion until native review. The current ledger
+contains 14 source records, including sources intentionally not absorbed because
+they are gated, license-unclear, tweet-ID-only, or Arabic-script rather than
+Arabizi.
 
 ## Decision Summary
 
-The best next data sources are not more generic Hugging Face rows. The best
-sources are:
+The best Lebanese-priority sources are:
 
-1. Project RBZ / SenZi, because it is Lebanese Arabizi and contains lexicons,
-   Arabizi identification data, sentiment data, a large Facebook corpus, and
-   expansion methodology.
-2. Maria Raïdy Lebanese Arabizi Kaggle dataset, because it is explicitly
-   Lebanese Arabizi Twitter data.
-3. AladdinBench, because it contains real Arabizi messages from Lebanon, Egypt,
-   and Algeria with professional MSA and English translations, but it is gated.
+1. **Project RBZ / SenZi / SenZi-Large / thesis resources**: deepest Lebanese
+   Arabizi source family found. Contains Arabizi identification data, sentiment
+   data, lexicons, expansion methodology, transliteration matrices, negation
+   terms, and support lists.
+2. **Maria Raïdy Kaggle Lebanese Arabizi tweets**: explicit Lebanese Arabizi
+   Twitter dataset with CC0 metadata on Kaggle.
+3. **AladdinBench**: real Arabizi messages from Lebanon, Egypt, and Algeria with
+   MSA/English translations, but gated.
+4. **Shami and ArSenTD-LEV**: useful Lebanese/Levantine Arabic-script resources,
+   not Arabizi resources.
 
-All three require license/access review before ingestion.
+Professor-safe framing: CedarFix uses external sources through a provenance
+ledger, license gate, reviewer queue, and non-routing support layers. External
+data strengthens coverage and evaluation; it does not become trusted routing
+vocabulary automatically.
 
 ## Priority Sources
 
 | Priority | Source | Lebanese? | Size / Content | License / Access | CedarFix Use | Decision |
 |---|---|---:|---|---|---|---|
-| P0 | Project RBZ / SenZi | Yes | SenZi 2K sentiment words, 25K expanded words, 4.4K Arabizi/not-Arabizi tweets, 1.6K sentiment tweets, 1M Facebook Arabizi comments, 171K SenZi-Large expansion | Download links public, but no explicit machine-readable license found on page. Contact/permission recommended before raw import. | Best source for Lebanese Arabizi lexicon expansion methodology, spelling variants, language-ID examples, sentiment terms that can become non-routing support features. | Use as reference now. Import only after license/permission check. |
-| P0 | Kaggle: Datasets for Sentiment Analysis of Arabizi Tweets, Maria J. M. Raïdy | Yes | Labeled Lebanese Arabizi tweets; collected 2017-2020; geotagging in Lebanon; columns include Text, sentiment, highlight | Kaggle page exposes a license section, but license text was not visible in browser audit. Must verify on Kaggle before import. Twitter/X reuse terms also matter if raw tweet text is included. | Strong candidate for Lebanese Arabizi evaluation, OOV mining, and synthetic infrastructure complaint style transfer. | Verify Kaggle license, then import a small audited subset if allowed. |
-| P0 | AladdinBench, Hugging Face `palmaoui/AladdinBench` | Partial | Real Arabizi messages from Lebanon, Egypt, and Algeria; translated into MSA and English by a professional translator | Gated Hugging Face dataset; requires login and sharing contact info / accepting conditions. | Excellent benchmark for Arabizi normalization/translation robustness, especially Lebanese subset if exposed. | Request access. Use as evaluation/reference, not routing training. |
-| P1 | QADI, GitHub `qcri/QADI` | Yes country label | 540,590 tweet IDs across 18 countries, including 38,386 LB train IDs and 194 LB test IDs | Tweet IDs only; hydration via Twitter/X tooling required; subject to Twitter/X terms and tweet availability. | Lebanese dialect-ID stress test; not Arabizi-specific. | Use only if hydration is feasible/legal. Do not depend on it. |
-| P1 | Levanti, Hugging Face `guymorlan/levanti` | Includes Lebanese/Levantine | 500K Levantine colloquial Arabic sentences with English/Hebrew translations and transliteration fields | CC-BY-NC-4.0. Non-commercial only. | Useful for Lebanese/Levantine Arabic-script lexical grounding and transliteration comparison; not natural Arabizi. | Use only for non-commercial research/eval; cite. |
-| P1 | Alexandria, Hugging Face `UBC-NLP/alexandria` | Yes LB subset | 107K English↔dialectal Arabic conversation turns across 13 countries with country/city/domain metadata | CC BY-NC-ND 4.0. Non-commercial, no derivatives. | Useful as reference/evaluation for Lebanese dialectal Arabic domains, not for fine-tuning or derivative training. | Use as benchmark/reference only. |
-| P1 | ArSyra Levantine, Hugging Face `ArSyra/arsyra-levantine` | Includes Lebanon | 50-row free preview; 57,663 full records after purchase | Preview CC-BY-NC-SA-4.0; full dataset requires paid academic/commercial license. | Useful if purchased/licensed; not specifically Arabizi. | Do not import full dataset without paid license. |
+| P0 | Project RBZ / SenZi / SenZi-Large / thesis resources | Yes | Identification data, 1.6K sentiment tweets, 4.4K Arabizi/not-Arabizi tweets, sentiment lexicons, large induced lexicons, translation matrices, negation/stopword support lists | Included disclaimers say non-commercial research use only and citation required | Best Lebanese Arabizi lexicon expansion and OOV source | Absorbed into review-only OOV queue; no production promotion |
+| P0 | Kaggle: Datasets for Sentiment Analysis of Arabizi Tweets, Maria J. M. Raïdy | Yes | Lebanese Arabizi tweets, collected 2017-2020, geotagged in Lebanon; sentiment + highlight labels | Kaggle metadata shows CC0 Public Domain | Lebanese OOV mining, evaluation candidates, style reference | Absorbed into review-only OOV queue; sensitive raw text stays quarantined |
+| P0 | AladdinBench, Hugging Face `palmaoui/AladdinBench` | Partial | Real Arabizi messages from Lebanon, Egypt, and Algeria; professional MSA/English translations | Gated Hugging Face dataset; must accept conditions | Excellent normalization/translation benchmark if access granted | Request access; do not import yet |
+| P1 | Shami Dialect Corpus, GitHub `GU-CLASP/shami-corpus` | Yes | 117,805 Levantine Arabic-script sentences; Masader reports 16,304 Lebanese subset sentences | Apache-2.0 | Lebanese Arabic-script grounding and dialect-ID reference | Register as related source; not Arabizi |
+| P1 | ArSenTD-LEV, Hugging Face `ramybaly/arsentd_lev` | Yes | 4,000 Arabic-script Levantine tweets equally from Jordan, Lebanon, Syria, Palestine | License marked "other"; card says to read/agree to OMA license | Lebanese/Levantine sentiment reference after license review | Register only; do not import until license checked |
+| P1 | QADI, GitHub `qcri/QADI` | Yes country label | 540,590 tweet IDs across 18 countries; Lebanon subset exists | Tweet IDs only; hydration and Twitter/X compliance required | Lebanese dialect-ID stress test | Register only; do not depend on it |
+| P1 | Levanti, Hugging Face `guymorlan/levanti` | Includes Lebanese/Levantine | 500K Levantine colloquial Arabic sentences with translations and transliteration fields | CC-BY-NC-4.0 | Non-commercial dialect grounding / transliteration comparison | Reference/eval only |
+| P1 | Alexandria, Hugging Face `UBC-NLP/alexandria` | Yes LB subset | 107K English↔dialectal Arabic conversation turns | CC BY-NC-ND 4.0 | Reference only; no derivative training | Do not fine-tune on it |
+| P1 | ArSyra Levantine, Hugging Face `ArSyra/arsyra-levantine` | Includes Lebanon | 50-row preview; 57,663 full records after purchase | Preview CC-BY-NC-SA; full set paid/licensed | Useful if licensed; not Arabizi-specific | Do not import full set without license |
 
 ## Broader Arabizi / Transliteration Sources
 
 | Source | Region | Size / Content | License / Access | CedarFix Use | Decision |
 |---|---|---|---|---|---|
-| Hugging Face `arbml/Arabizi_Transliteration` | Mixed / unclear | 21,499 Arabizi↔Arabic token pairs | No dataset card/license visible during audit. | Good for notation/variant stress tests, but not Lebanese and not issue-domain specific. | Do not ingest until license is clarified. |
-| Hugging Face `akhanafer/arabic-to-arabizi` | Levantine-ish examples | 433 Arabic↔Arabizi sentence pairs | README empty; no license visible. | Small useful sanity set for Arabic→Arabizi variants. | Do not ingest until license is clarified. |
-| GitHub `HaifaCLG/Arabizi` | Mixed social media | Arabizi code-switching dataset, Reddit zip, tweet IDs, annotated word/sentence CSVs | No license visible during audit; tweet IDs/raw social data need caution. | Useful for language-ID/code-switching, not routing. | Use as methodology/reference; raw import requires license check. |
-| GitHub `SamiaTouileb/NArabizi` | Algerian | NArabizi corpus with sentiment/topic annotations on top of treebank | No license visible on repo page during audit. | Useful for code-switching/parsing ideas; low Lebanese relevance. | Reference only unless license clarified. |
-| GitHub `iCompass-ai/TUNIZI` | Tunisian | 9,210 V1 and 100K V2 Tunisian Arabizi sentiment sentences | MIT license. | Good for non-Lebanese stress tests and tokenizer robustness, not Lebanese training. | Safe to use with citation, but keep separate from Lebanese claims. |
-| GitHub `eligugliotta/tarc` | Tunisian | 4,797 sentences / 43,327 tokens with token class, CODA, POS, metadata | CC BY-NC-SA 4.0. | Strong methodology source for token-level annotation and Arabizi classification. | Use for non-commercial methodology/stress tests, not Lebanese training. |
-| ELRA W0126 | Mixed | Arabizi detection/transliteration train/test; 3,452 token transliterations and 127 tweet transliterations | ELRA license; registration/license required. | Useful formal transliteration benchmark. | Only use after ELRA license process. |
-| ELRA W0323 | Morocco/Tunisia/Algeria | 17,103 annotated sequences; 495 Arabizi sequences / 21,216 tweets; tweet IDs + annotations | ELRA END USER / VAR licenses; commercial fees apply; tweets require API hydration. | Not Lebanese, but useful for hate/offense/code-switching stress tests. | Only use after ELRA license process. |
+| Hugging Face `arbml/Arabizi_Transliteration` | Mixed / unclear | 21,499 Arabizi↔Arabic token pairs; local manual drop exists | License field blank in `dataset_infos.json` | Good transliteration stress-test candidate | Blocked until license is clarified |
+| Hugging Face `akhanafer/arabic-to-arabizi` | Levantine-ish examples | 433 Arabic↔Arabizi sentence pairs | README/license unclear | Small sanity set if license appears | Do not ingest yet |
+| GitHub `HaifaCLG/Arabizi` | Mixed social media | Code-switching dataset, Reddit zip, tweet IDs, annotated word/sentence CSVs; local ZIP exists | No explicit license found in downloaded README | Useful methodology reference for code-switching | Do not import raw data yet |
+| GitHub `iCompass-ai/TUNIZI` | Tunisian | 9,210 V1 and 100K V2 Tunisian Arabizi sentiment sentences | MIT | Tokenizer / stress-test source, not Lebanese training | Keep separate from Lebanese claims |
+| GitHub `eligugliotta/tarc` | Tunisian | 4,797 sentences / 43,327 tokens with token class, CODA, POS, metadata | CC BY-NC-SA 4.0 | Methodology and non-Lebanese robustness | Reference/stress only |
+| ELRA W0126 | Mixed | Arabizi detection/transliteration data | ELRA license required | Formal benchmark if licensed | Do not use without ELRA access |
+| ELRA W0323 | Maghrebi | Annotated Arabizi/offense sequences and tweet IDs | ELRA license + tweet hydration constraints | Non-Lebanese stress if licensed | Do not use without ELRA access |
 
-## Related Dialect Resources
+## Related Models
 
 | Source | License / Access | Use | Decision |
 |---|---|---|---|
-| `dataflare/arabic-dialect-corpus` | MIT | Large Arabic-script dialect corpus with Levantine category. | Use only for broad dialect pretraining/evaluation; not Arabizi. |
-| `arbml/Arabic_Dialects_Dataset` | No license verified during audit | Arabic-script dialect text classification. | Low priority. |
-| `assix-research/lebanese-llama-3.1-8b` | MIT model, not dataset | Lebanese Arabizi-capable model. | Can be used as a teacher for synthetic augmentation only; never as evaluation ground truth. |
-| `alger-ia/dziribert` | Apache-2.0 model/code | Algerian Arabic + Latin-script model. | Useful methodological reference only. |
+| `assix-research/lebanese-llama-3.1-8b` | MIT model, not dataset | Lebanese/Arabizi teacher for synthetic examples | Never use as evaluation ground truth |
+| `mradermacher/lebanese-llama-3.1-8b-GGUF` | MIT quantized model derivative | Local inference option | Model only, not corpus evidence |
+| LebEval paper / benchmark lead | Dataset availability not verified | Track future Lebanese benchmark | Do not claim as available dataset |
 
 ## What Requires Access, License, Or Permission
 
 | Source | Requirement |
 |---|---|
-| AladdinBench | Hugging Face gated access; accept conditions and share contact info. |
-| Project RBZ / SenZi | No explicit license found on project page; contact author or inspect downloaded ZIP license before import. |
-| Raïdy Kaggle Lebanese Arabizi | Verify Kaggle license field and Twitter/X text reuse constraints before importing raw tweets. |
-| QADI | Requires Twitter/X hydration; only tweet IDs are distributed. |
-| ELRA W0126 / W0323 | ELRA registration/license. Commercial use may require fees. |
-| ArSyra full Levantine | Paid academic or commercial license. |
-| Alexandria | CC BY-NC-ND: no derivatives; avoid fine-tuning or transformed training outputs. |
-| Levanti | CC-BY-NC: non-commercial only. |
-| TArC | CC-BY-NC-SA: non-commercial and share-alike. |
-| `arbml/Arabizi_Transliteration`, `akhanafer/arabic-to-arabizi`, `HaifaCLG/Arabizi`, `NArabizi` | License not visible/clear during audit; clarify before raw import. |
+| AladdinBench | Hugging Face gated access; accept conditions and share contact info |
+| Project RBZ / SenZi / SenZi-Large / thesis | Non-commercial research use only; citation required |
+| Raïdy Kaggle Lebanese Arabizi | CC0 metadata, but raw social text still needs sensitivity filtering before demo/public exposure |
+| QADI | Twitter/X hydration and compliance |
+| ArSenTD-LEV | License is "other"; read and agree to OMA license before import |
+| ELRA W0126 / W0323 | ELRA registration/license; commercial fees may apply |
+| ArSyra full Levantine | Paid academic or commercial license |
+| Alexandria | CC BY-NC-ND: no derivatives |
+| Levanti | CC-BY-NC: non-commercial only |
+| TArC | CC-BY-NC-SA: non-commercial and share-alike |
+| `arbml/Arabizi_Transliteration`, `akhanafer/arabic-to-arabizi`, `HaifaCLG/Arabizi`, `NArabizi` | License unclear; clarify before raw import |
 
 ## Recommended Next Actions
 
-1. Request/verify access to AladdinBench.
-2. Open the Project RBZ ZIPs and check for an included license file before using
-   any rows.
-3. Check the Kaggle license for the Raïdy Lebanese Arabizi dataset from a logged
-   in browser. If permissive, import a small audited subset into a separate
-   `external_raw/` or `licensed_sources/` area, not directly into production
-   vocab.
-4. Create a source ledger CSV:
+1. Request access to AladdinBench.
+2. Clarify the license for `arbml/Arabizi_Transliteration`; if permissive, use
+   it only for transliteration stress tests, not Lebanese claims.
+3. Review the top 200 rows of `lebanese_external_oov_candidates.csv` with a
+   native Lebanese reviewer and move only approved rows into GWB, stoplist, or
+   domain candidate layers.
+4. Keep the source ledger current:
 
 ```text
 data/knowledge_base/arabizi/external_source_ledger.csv
 ```
 
-Required columns:
-
-```text
-source_id,source_name,url,region,license,access_requirement,allowed_uses,
-blocked_uses,raw_import_allowed,notes,verified_by,verified_at
-```
-
-5. Only after license verification, create derived review queues:
-
-```text
-data/knowledge_base/arabizi/external_oov_candidates.csv
-data/eval/arabizi_external_eval_candidates.csv
-```
-
-No external source should write directly to:
+5. Never write external source rows directly to:
 
 ```text
 data/knowledge_base/arabizi_vocabulary.json

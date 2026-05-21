@@ -18,6 +18,7 @@ tmp_*.log
 
 # Local scratch / temp
 .tmp/
+data/external_sources/
 
 # Archive and internal docs — not part of the CedarFix repo
 _archive/

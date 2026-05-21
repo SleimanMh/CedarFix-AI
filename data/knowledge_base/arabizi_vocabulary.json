@@ -1,7 +1,7 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "1.5.3",
-  "changelog": "1.5.3 (2026-05-21): V17 OOV quick patch — 17 new, 1 updated term_metadata entries. Addresses remaining B001 OOV tokens: tire, 3jelatna, sursok/armeniye (location standalone forms), abimee/completement (FR), khafer, bada, bala, fil, haje, nahr, 3la, app, arc, jeanne, makdissi, masliye. Previous: 1.5.2. 1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "version": "1.5.6",
+  "changelog": "1.5.6 (2026-05-21): V18c transliteration civic patch — 6 new entries, 7 updated from clean digit-variant mining. 1.5.5 (2026-05-21): V18b external OOV → GWB — 34 new civic discourse terms from 2000-candidate external review. 1.5.3 (2026-05-21): V17 OOV quick patch — 17 new, 1 updated term_metadata entries. Addresses remaining B001 OOV tokens: tire, 3jelatna, sursok/armeniye (location standalone forms), abimee/completement (FR), khafer, bada, bala, fil, haje, nahr, 3la, app, arc, jeanne, makdissi, masliye. Previous: 1.5.2. 1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
   "arabizi_notes": {
     "common_substitutions": {
       "ع": "3  — ALWAYS use 3; never omit",
@@ -674,7 +674,13 @@
     "ghare2": {
       "arabizi_note": "غارق — flooded/submerged. Standard Lebanese Arabic. Use with tari2/share3 for FLOODING/road_flooded context.",
       "sector": "FLOODING",
-      "issue_type": "road_flooded"
+      "issue_type": "road_flooded",
+      "variant_forms": [
+        "ghare2",
+        "ghare2na",
+        "ghre2",
+        "ghri2na"
+      ]
     },
     "7eet": {
       "arabizi_note": "Variant spelling of 7iit (حيط = wall). 7eet is a common phonetic alternative; both forms are accepted in seeds.",
@@ -719,8 +725,11 @@
       "sector": "WASTE",
       "issue_type": "garbage_not_collected",
       "variant_forms": [
-        "zbele",
+        "nefayat",
+        "nofayat",
         "zbale",
+        "zbalh",
+        "zbele",
         "zibalet"
       ]
     },
@@ -729,8 +738,13 @@
       "sector": "ROADS",
       "issue_type": "pothole",
       "variant_forms": [
-        "7ofra",
         "7afra",
+        "7far",
+        "7fre",
+        "7ofar",
+        "7ofra",
+        "7ofret",
+        "7ufra",
         "hofra",
         "jora",
         "joura"
@@ -762,8 +776,13 @@
       "sector": "SAFETY",
       "issue_type": "fire",
       "variant_forms": [
-        "nnar",
-        "7ari2a"
+        "7are8ah",
+        "7areg",
+        "7arg",
+        "7ari2a",
+        "7r8ha",
+        "l7are8",
+        "nnar"
       ]
     },
     "kahrabe": {
@@ -771,7 +790,9 @@
       "sector": "ELECTRICITY",
       "issue_type": "power_outage",
       "variant_forms": [
-        "kahraba"
+        "elkahraba",
+        "kahraba",
+        "lkahraba"
       ]
     },
     "sayel": {
@@ -839,11 +860,17 @@
       "issue_type": "garbage_not_collected",
       "cross_sector": "WATER/sewage_overflow",
       "variant_forms": [
+        "l ri7a",
+        "re7a",
+        "re7et",
+        "ri7a",
         "ri7a besh3a",
         "ri7a bish3a",
         "ri7a mesh taybe",
         "ri7a mish taybe",
-        "ri7a msh mni7a"
+        "ri7a msh mni7a",
+        "ri7et",
+        "ri7tna"
       ]
     },
     "beer_may": {
@@ -1046,6 +1073,14 @@
     },
     "tarik": {
       "variant_forms": [
+        "6are8",
+        "6are8a",
+        "6areget",
+        "6areqt",
+        "6re8",
+        "6re8a",
+        "6re8t",
+        "6req",
         "tarik",
         "tire",
         "tire2"
@@ -1344,6 +1379,697 @@
       "arabizi_note": "نهر — river; el nahr = the river; appears in WASTE reports about illegal dump near rivers; also FLOODING context",
       "added_by": "update_vocab_gwb_support_v17_oov_patch",
       "added_at": "2026-05-21T16:30:27Z"
+    },
+    "la2": {
+      "variant_forms": [
+        "la",
+        "la2",
+        "la2a"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "لأ — no (Lebanese); la2 is the Arabizi negation response",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "khalas": {
+      "variant_forms": [
+        "5alas",
+        "5las",
+        "khalas"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "خلص — done/finished/enough; khalas mish mnekhdo = we're done waiting",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "kamen": {
+      "variant_forms": [
+        "kamen",
+        "kem",
+        "kman"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "كمان — also/too; common connector in complaint description",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "leh": {
+      "variant_forms": [
+        "leh",
+        "leish",
+        "lesh"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "ليش — why; leh mish bi tishtaghal = why isn't it working",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "3m": {
+      "variant_forms": [
+        "3am",
+        "3em",
+        "3m"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "عم — progressive aspect marker (Lebanese); 3am biji = it's coming",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "ba3ed": {
+      "variant_forms": [
+        "ba3d",
+        "ba3ed",
+        "baa3d"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بعد — after/still; ba3ed mat3a = still cut off",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "badde": {
+      "variant_forms": [
+        "badde",
+        "bade",
+        "bidi"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بدي — I want/I need (1sg Lebanese); badde 7all = I need a solution",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "hayde": {
+      "variant_forms": [
+        "hayde",
+        "haydi",
+        "heydi"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "هيدي — this (fem. demonstrative Lebanese); hayde l moshkle = this problem",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "lezim": {
+      "variant_forms": [
+        "lazem",
+        "lazmeh",
+        "lezim"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "لازم — must/necessary; lezim yiji 7ada = someone must come",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "ysir": {
+      "variant_forms": [
+        "byisir",
+        "yiseer",
+        "ysir"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "يصير — it's possible/happens; ysir ykun = it could be",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "ma3o": {
+      "variant_forms": [
+        "ma3e",
+        "ma3o",
+        "ma3u"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "معه — with him/it; ma3o 7all = with a solution",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "ghalat": {
+      "variant_forms": [
+        "3alat",
+        "ghalat",
+        "ghalet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "غلط — wrong/mistake; hada ghalat = this is wrong",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "aal": {
+      "variant_forms": [
+        "2al",
+        "a2al",
+        "aal"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "قال — said/they said; aal 3anna = they said about us",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "sene": {
+      "variant_forms": [
+        "sene",
+        "seneh",
+        "sine"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "سنة — year; min sene = for a year; sene kell yom = every day for a year",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "lama": {
+      "variant_forms": [
+        "lama",
+        "lamma",
+        "lamman"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "لما — when (conjunction); lama byiji mtar = when it rains",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "aktar": {
+      "variant_forms": [
+        "aktar",
+        "ektar"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "أكتر — more/most; aktar min sene = more than a year",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "balad": {
+      "variant_forms": [
+        "balad",
+        "balade",
+        "beled"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بلد — country/town/municipality; baladiye l balad = the town municipality",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "3alam": {
+      "variant_forms": [
+        "3alam",
+        "3alim",
+        "3lam"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "عالم — people/world; l 3alam = the people; common in complaints",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "bet": {
+      "variant_forms": [
+        "beit",
+        "bet",
+        "byet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بيت — house/home; bet = house (short form); context: near my house",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "mnel": {
+      "variant_forms": [
+        "min el",
+        "mnel"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "من ال — from the (contracted Lebanese); mnel share3 = from the road",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "walla": {
+      "variant_forms": [
+        "wala",
+        "walla"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "والله — by God (discourse particle); walla ma 3arif = I honestly don't know",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "tab": {
+      "variant_forms": [
+        "tab",
+        "tayb",
+        "tayyib"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "طيب — okay then/well (discourse); tab shu byisawwou = so what are they doing",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "habibi": {
+      "variant_forms": [
+        "7abibi",
+        "habibe",
+        "habibi"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "حبيبي — dear/friend (Lebanese address term); used in complaint framing",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "z3elet": {
+      "variant_forms": [
+        "inz3al",
+        "z3al",
+        "z3elet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "زعل — upset/angry; z3elet ktir = very upset; high-frequency complaint verb",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "meshe": {
+      "variant_forms": [
+        "mashe",
+        "mashi",
+        "meshe"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "مشي — went/walked/worked; meshe = it worked (passed); ma meshe = didn't work",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "kenet": {
+      "variant_forms": [
+        "kanet",
+        "kant",
+        "kenet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "كانت — was (3sg fem past); kenet mat3a = it was cut off",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "tkoun": {
+      "variant_forms": [
+        "takoun",
+        "tkoun",
+        "tkun"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "تكون — to be (subjunctive); lazem tkoun = it should be",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "jem3a": {
+      "variant_forms": [
+        "jama3a",
+        "jem3a",
+        "jma3a"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "جماعة — group/guys/crew; jem3a = the team/guys (civic workers reference)",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "khaye": {
+      "variant_forms": [
+        "5aye",
+        "5ayye",
+        "khaye"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "خيّ — brother (Lebanese address); used in complaint openers",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "haram": {
+      "variant_forms": [
+        "7aram",
+        "haram",
+        "hram"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "حرام — shame/forbidden; haram 3enna = a shame upon us; complaint expression",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "balat": {
+      "variant_forms": [
+        "balat",
+        "balate",
+        "balet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بلاط — pavement/tiles; balat l share3 = road paving; ROADS context",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "t3ebet": {
+      "variant_forms": [
+        "t3bt",
+        "t3ebet",
+        "twa3bet"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "تعبت — exhausted/tired; t3ebet min l moshkle = I'm tired of this problem",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "wel": {
+      "variant_forms": [
+        "w el",
+        "w l",
+        "wel"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "وال — and the (contracted Lebanese); wel baladiye = and the municipality",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "thawra": {
+      "variant_forms": [
+        "sawra",
+        "tawra",
+        "thawra"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "ثورة — revolution; thawra context in civic frustration; 2019 Lebanon protests ref",
+      "tier": "T3_GENERIC_SUPPORT",
+      "allowed_uses": "normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "promote_external_oov_to_gwb",
+      "added_at": "2026-05-21T17:25:24Z"
+    },
+    "3atal": {
+      "variant_forms": [
+        "36li",
+        "36lto",
+        "3a6le",
+        "3o6leh",
+        "3o6lete",
+        "3otla",
+        "3otleh",
+        "3otlet"
+      ],
+      "loanword_from": "",
+      "sector": "ELECTRICITY",
+      "arabizi_note": "Breakdown/outage variants — عطل; all contain digit markers 3 or 6",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
+    },
+    "zeft": {
+      "variant_forms": [
+        "alzeft",
+        "zafteh",
+        "zeft",
+        "zfet"
+      ],
+      "loanword_from": "",
+      "sector": "ROADS",
+      "arabizi_note": "Asphalt/bitumen — زفت; Lebanese road infrastructure term",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
+    },
+    "silk_el_kahraba": {
+      "variant_forms": [
+        "salk",
+        "silk",
+        "slk",
+        "slket",
+        "sulk"
+      ],
+      "loanword_from": "",
+      "sector": "ELECTRICITY",
+      "arabizi_note": "Electrical wire — سلك; silk/sulk el kahraba = electrical wire",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
+    },
+    "fayadan": {
+      "variant_forms": [
+        "fayad",
+        "fayadan",
+        "fayd",
+        "fayde",
+        "tafyid"
+      ],
+      "loanword_from": "",
+      "sector": "FLOODING",
+      "arabizi_note": "Flood overflow variants — فيضان; common FLOODING sector term",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
+    },
+    "matar": {
+      "variant_forms": [
+        "l mtar",
+        "lmtar",
+        "matar",
+        "matara",
+        "mtr"
+      ],
+      "loanword_from": "",
+      "sector": "FLOODING",
+      "arabizi_note": "Rain variants — مطر; matar ktir = heavy rain; FLOODING context",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
+    },
+    "sakef": {
+      "variant_forms": [
+        "sa2ef",
+        "sa8ef",
+        "sakef",
+        "sakf",
+        "saqef"
+      ],
+      "loanword_from": "",
+      "sector": "SAFETY",
+      "arabizi_note": "Ceiling/roof variants — سقف; sakef 3am yinzer = ceiling cracking",
+      "tier": "T2_SECTOR_SUPPORT",
+      "allowed_uses": "routing_support,normalization_support",
+      "must_not_auto_promote": "true",
+      "false_friend_risk": "false",
+      "reviewer_id": "SYSTEM-V18",
+      "added_by": "apply_transliteration_civic_patch_v18",
+      "added_at": "2026-05-21T17:26:51Z"
     }
   },
   "stoplist_notes": {

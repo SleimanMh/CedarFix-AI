@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-18T10:40:36.636293+00:00",
+    "generated_at": "2026-05-21T16:01:47.680935+00:00",
     "scope": "CedarFix next-phase readiness gates",
     "output_path": "data\\eval\\cedarfix_next_phase_gates_v1.json",
     "strict_mode_note": "Default mode reports honestly and exits 0; --strict exits 1 if any gate fails."
