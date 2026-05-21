@@ -12,6 +12,8 @@ build/
 node_modules/
 *.parquet
 tmp_*.log
+*.bak.json
+arabizi_v*.zip
 
 # Virtual environment
 .venv*/
