@@ -1,37 +1,37 @@
-term,normalized_term,reason,risk_level,source_reference,reviewer_id,created_at
-miye,miye,WRONG_FORM — not a standard Lebanese Arabizi word for water. Use 'may' (standard Beirut/Levant form). miye was mistakenly added in v1.5.0 expansion.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18
-mat3a,mat3a,WRONG_FORM — does not correspond to any Lebanese Arabic word. The correct adjective for 'cut' is 2at3a (قطعة) or the verb 2ata3et. Forms like 'kahraba mat3a' and 'may mat3a' were removed in v1.5.1.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18
-tire2,tire2,WRONG_FORM — not a valid Lebanese Arabizi spelling for طريق (road). The correct form is tari2 (already in production vocabulary since v1.4.0).,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18
-khafer,khafer,NON_WORD — does not exist in Lebanese Arabic. No equivalent. For bad/foul smell use: ri7a besh3a / ri7a bish3a / ri7a mish taybe / ri7a msh mni7a. Added to v1.5.1.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18
-mayyet,mayyet,WRONG_FORM — 'mayyet' (ميت) means 'dead' in Arabic. NOT a word for water. Possibly confused with 'may' (water) or 'mayye' (regional variant). Always reject.,MEDIUM,native_review_2026-05-18,system,2026-05-18
-3ain,3ain,FALSE_FRIEND — '3ain' (عين) means 'eye' and also 'spring/source' depending on context. In CedarFix's Lebanese municipal context prefer nab3 (spring) or beer may (well) for water source. 3ain without context may trigger false positives or misroute. Reject as standalone production keyword.,LOW,native_review_2026-05-18,system,2026-05-18
-mayye,mayye,CANDIDATE_ONLY — regional spelling variant heard in Beqaa and South Lebanon. NOT the Beirut standard. Do not promote to production core. Keep in candidate bank only if evidence from those regions is needed.,LOW,native_review_2026-05-18,system,2026-05-18
-beirut,beirut,LOCATION_NOISE — Beirut city name; never an infrastructure issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-hamra,hamra,LOCATION_NOISE — Hamra district in Beirut; place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-achrafieh,achrafieh,LOCATION_NOISE — Achrafieh district Beirut; place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-ashrafieh,ashrafieh,LOCATION_NOISE — alternate spelling of Achrafieh; place name. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-tripoli,tripoli,LOCATION_NOISE — Tripoli city (north Lebanon); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-saida,saida,LOCATION_NOISE — Saida city (south Lebanon); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-tyre,tyre,LOCATION_NOISE — Tyre city (south Lebanon); place name not issue keyword. Distinct from tire2 (wrong-form already in stoplist). Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-zahle,zahle,LOCATION_NOISE — Zahle city (Beqaa); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-baalbek,baalbek,LOCATION_NOISE — Baalbek city (Beqaa); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-ogero,ogero,INSTITUTION_NOISE — OGERO telecom provider name; institution reference not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-baladiye,baladiye,INSTITUTION_NOISE — Lebanese Arabic for municipality; institution reference not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-municipality,municipality,INSTITUTION_NOISE — English for municipality; institution reference not an Arabizi issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-bwa,bwa,INSTITUTION_NOISE — Beirut Water Authority acronym; routing handled by routing layer not vocabulary. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-ya3ne,ya3ne,FILLER_NOISE — Lebanese Arabic discourse filler (ya3ne = I mean / you know); no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-yane,yane,FILLER_NOISE — alternate spelling of ya3ne; discourse filler with no issue signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-please,please,FILLER_NOISE — English politeness term; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-pls,pls,FILLER_NOISE — abbreviated English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-plz,plz,FILLER_NOISE — abbreviated English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-hello,hello,FILLER_NOISE — English greeting; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-hi,hi,FILLER_NOISE — English greeting; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-thanks,thanks,FILLER_NOISE — English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-merci,merci,FILLER_NOISE — French politeness term common in Lebanese speech; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-ali,ali,PERSON_NAME_NOISE — common Lebanese/Arabic person name; never an infrastructure issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-mohamad,mohamad,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-ahmad,ahmad,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-hassan,hassan,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-whatsapp,whatsapp,PLATFORM_NOISE — WhatsApp social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-facebook,facebook,PLATFORM_NOISE — Facebook social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
-tiktok,tiktok,PLATFORM_NOISE — TikTok social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18
+term,normalized_term,reason,risk_level,source_reference,reviewer_id,created_at,must_not_auto_promote
+miye,miye,WRONG_FORM — not a standard Lebanese Arabizi word for water. Use 'may' (standard Beirut/Levant form). miye was mistakenly added in v1.5.0 expansion.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18,true
+mat3a,mat3a,WRONG_FORM — does not correspond to any Lebanese Arabic word. The correct adjective for 'cut' is 2at3a (قطعة) or the verb 2ata3et. Forms like 'kahraba mat3a' and 'may mat3a' were removed in v1.5.1.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18,true
+tire2,tire2,WRONG_FORM — not a valid Lebanese Arabizi spelling for طريق (road). The correct form is tari2 (already in production vocabulary since v1.4.0).,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18,true
+khafer,khafer,NON_WORD — does not exist in Lebanese Arabic. No equivalent. For bad/foul smell use: ri7a besh3a / ri7a bish3a / ri7a mish taybe / ri7a msh mni7a. Added to v1.5.1.,LOW,correct_arabizi_vocabulary.py v1.5.1,system,2026-05-18,true
+mayyet,mayyet,WRONG_FORM — 'mayyet' (ميت) means 'dead' in Arabic. NOT a word for water. Possibly confused with 'may' (water) or 'mayye' (regional variant). Always reject.,MEDIUM,native_review_2026-05-18,system,2026-05-18,true
+3ain,3ain,FALSE_FRIEND — '3ain' (عين) means 'eye' and also 'spring/source' depending on context. In CedarFix's Lebanese municipal context prefer nab3 (spring) or beer may (well) for water source. 3ain without context may trigger false positives or misroute. Reject as standalone production keyword.,LOW,native_review_2026-05-18,system,2026-05-18,true
+mayye,mayye,CANDIDATE_ONLY — regional spelling variant heard in Beqaa and South Lebanon. NOT the Beirut standard. Do not promote to production core. Keep in candidate bank only if evidence from those regions is needed.,LOW,native_review_2026-05-18,system,2026-05-18,true
+beirut,beirut,LOCATION_NOISE — Beirut city name; never an infrastructure issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+hamra,hamra,LOCATION_NOISE — Hamra district in Beirut; place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+achrafieh,achrafieh,LOCATION_NOISE — Achrafieh district Beirut; place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+ashrafieh,ashrafieh,LOCATION_NOISE — alternate spelling of Achrafieh; place name. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+tripoli,tripoli,LOCATION_NOISE — Tripoli city (north Lebanon); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+saida,saida,LOCATION_NOISE — Saida city (south Lebanon); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+tyre,tyre,LOCATION_NOISE — Tyre city (south Lebanon); place name not issue keyword. Distinct from tire2 (wrong-form already in stoplist). Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+zahle,zahle,LOCATION_NOISE — Zahle city (Beqaa); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+baalbek,baalbek,LOCATION_NOISE — Baalbek city (Beqaa); place name not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+ogero,ogero,INSTITUTION_NOISE — OGERO telecom provider name; institution reference not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+baladiye,baladiye,INSTITUTION_NOISE — Lebanese Arabic for municipality; institution reference not issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+municipality,municipality,INSTITUTION_NOISE — English for municipality; institution reference not an Arabizi issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+bwa,bwa,INSTITUTION_NOISE — Beirut Water Authority acronym; routing handled by routing layer not vocabulary. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+ya3ne,ya3ne,FILLER_NOISE — Lebanese Arabic discourse filler (ya3ne = I mean / you know); no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+yane,yane,FILLER_NOISE — alternate spelling of ya3ne; discourse filler with no issue signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+please,please,FILLER_NOISE — English politeness term; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+pls,pls,FILLER_NOISE — abbreviated English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+plz,plz,FILLER_NOISE — abbreviated English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+hello,hello,FILLER_NOISE — English greeting; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+hi,hi,FILLER_NOISE — English greeting; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+thanks,thanks,FILLER_NOISE — English politeness; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+merci,merci,FILLER_NOISE — French politeness term common in Lebanese speech; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+ali,ali,PERSON_NAME_NOISE — common Lebanese/Arabic person name; never an infrastructure issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+mohamad,mohamad,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+ahmad,ahmad,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+hassan,hassan,PERSON_NAME_NOISE — common Lebanese person name; never an issue keyword. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+whatsapp,whatsapp,PLATFORM_NOISE — WhatsApp social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+facebook,facebook,PLATFORM_NOISE — Facebook social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true
+tiktok,tiktok,PLATFORM_NOISE — TikTok social platform; no issue or routing signal. Added from arabizi_reliability_pack_v1.,LOW,arabizi_reliability_pack_v1,UNASSIGNED,2026-05-18,true

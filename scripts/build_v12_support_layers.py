@@ -22,13 +22,33 @@ Central rule materialised here:
   - Generic vocabulary (general_word_bank) can ONLY provide context.
   - Protected combos override naive token splitting.
 
-One-shot script — delete after commit.
+Idempotent build script — safe to re-run.
+
+Default behaviour: exits with an error if output CSV files already exist
+(preventing accidental overwrites of manually-curated data).
+
+Flags:
+  --force     overwrite output files even when they already exist
+  --dry-run   print what would be written without touching disk
 """
 
+import argparse
 import csv
 import json
+import os
 import re
+import sys
 from datetime import datetime
+
+
+def normalize_ff(val):
+    """Normalize false_friend_risk to canonical 'true'/'false' boolean strings."""
+    v = str(val).strip().lower()
+    if v in ('true', '1', 'yes'):  return 'true'
+    if v in ('false', '0', 'no'): return 'false'
+    if v == 'low':                 return 'false'
+    if v in ('medium', 'high'):    return 'true'
+    return 'false'  # unknown values default to safe false
 
 BASE = r"C:\Users\HP\Desktop\Project 503N\data\knowledge_base"
 ARABIZI = rf"{BASE}\arabizi"
@@ -47,7 +67,8 @@ GWB_COLS = [
     "word_id","arabic_script","english_gloss","romanized_canonical",
     "variants","tier","category","allowed_uses","blocked_uses",
     "dialect_region","confidence_level","false_friend_risk",
-    "usage_notes","source_reference","review_status","created_at"
+    "usage_notes","source_reference","review_status","created_at",
+    "reviewer_id","must_not_auto_promote"
 ]
 
 BLOCKED = "routing|severity_assignment|sector_classification|issue_type_decision"
@@ -56,7 +77,8 @@ ALLOWED_CONTEXT = "context_enrichment|duration_context|evidence_support"
 def gwb_row(word_id, arabic_script, english_gloss, romanized_canonical,
             variants, tier, category, allowed_uses, blocked_uses,
             dialect_region, confidence_level, false_friend_risk,
-            usage_notes, source_reference, review_status, created_at):
+            usage_notes, source_reference, review_status, created_at,
+            reviewer_id="UNASSIGNED", must_not_auto_promote="true"):
     return {
         "word_id": word_id,
         "arabic_script": arabic_script,
@@ -69,11 +91,13 @@ def gwb_row(word_id, arabic_script, english_gloss, romanized_canonical,
         "blocked_uses": blocked_uses,
         "dialect_region": dialect_region,
         "confidence_level": confidence_level,
-        "false_friend_risk": false_friend_risk,
+        "false_friend_risk": normalize_ff(false_friend_risk),
         "usage_notes": usage_notes,
         "source_reference": source_reference,
         "review_status": review_status,
-        "created_at": created_at
+        "created_at": created_at,
+        "reviewer_id": reviewer_id,
+        "must_not_auto_promote": must_not_auto_promote,
     }
 
 
@@ -112,7 +136,9 @@ def export_gwb_from_json():
             usage_notes        = notes,
             source_reference   = "reliability_layer_v1_export",
             review_status      = e.get("review_status", "APPROVED"),
-            created_at         = e.get("created_at_utc", TODAY)
+            created_at         = e.get("created_at_utc", TODAY),
+            reviewer_id        = "SYSTEM-V11",
+            must_not_auto_promote = "true",
         )
         rows.append(row)
 
@@ -694,14 +720,16 @@ PC_COLS = [
     "combo_id","arabic_phrase","romanized_canonical","english_gloss",
     "component_tokens","combined_sector","combined_issue_type","combined_severity_hint",
     "override_type","override_reason","false_friend_risk","confidence_level",
-    "source_reference","review_status","reviewer_id","created_at"
+    "source_reference","review_status","reviewer_id","created_at",
+    "must_not_auto_promote"
 ]
 
 def pc_row(combo_id, arabic_phrase, romanized_canonical, english_gloss,
            component_tokens, combined_sector, combined_issue_type,
            combined_severity_hint, override_type, override_reason,
            false_friend_risk, confidence_level, source_reference,
-           review_status, reviewer_id, created_at):
+           review_status, reviewer_id, created_at,
+           must_not_auto_promote="true"):
     return {
         "combo_id": combo_id,
         "arabic_phrase": arabic_phrase,
@@ -713,12 +741,13 @@ def pc_row(combo_id, arabic_phrase, romanized_canonical, english_gloss,
         "combined_severity_hint": combined_severity_hint,
         "override_type": override_type,
         "override_reason": override_reason,
-        "false_friend_risk": false_friend_risk,
+        "false_friend_risk": normalize_ff(false_friend_risk),
         "confidence_level": confidence_level,
         "source_reference": source_reference,
         "review_status": review_status,
         "reviewer_id": reviewer_id,
-        "created_at": created_at
+        "created_at": created_at,
+        "must_not_auto_promote": must_not_auto_promote,
     }
 
 
@@ -823,12 +852,13 @@ def extract_pc_from_bank():
             combined_severity_hint= combined_severity_hint,
             override_type      = override_type,
             override_reason    = override_reason,
-            false_friend_risk  = r.get("false_friend_risk", "FALSE"),
+            false_friend_risk  = normalize_ff(r.get("false_friend_risk", "false")),
             confidence_level   = r.get("confidence_level", "HIGH"),
             source_reference   = f"candidate_bank:{bid}",
             review_status      = "APPROVED",
-            reviewer_id        = "UNASSIGNED",
-            created_at         = r.get("created_at", TODAY)
+            reviewer_id        = "SYSTEM-V12",
+            created_at         = r.get("created_at", TODAY),
+            must_not_auto_promote = "false",
         ))
         counter += 1
 
@@ -862,7 +892,8 @@ def new_pc_rows(start_counter):
             source_reference   = "V12_ISSUE_LEVEL_NEW",
             review_status      = "PENDING_NATIVE_REVIEW",
             reviewer_id        = "UNASSIGNED",
-            created_at         = TODAY
+            created_at         = TODAY,
+            must_not_auto_promote = "true",
         ))
         c += 1
 
@@ -935,7 +966,10 @@ def new_pc_rows(start_counter):
 # MAIN
 # ─────────────────────────────────────────────────────────────────
 
-def write_csv(path, cols, rows):
+def write_csv(path, cols, rows, dry_run=False):
+    if dry_run:
+        print(f"   [dry-run] would write {len(rows)} rows → {path}")
+        return len(rows)
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
@@ -944,6 +978,27 @@ def write_csv(path, cols, rows):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Build V12 Arabizi support layer CSVs."
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Overwrite output files even if they already exist."
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Print what would be written without touching disk."
+    )
+    args = parser.parse_args()
+
+    if not args.force and not args.dry_run:
+        existing = [p for p in (GWB_OUT, PC_OUT) if os.path.exists(p)]
+        if existing:
+            for p in existing:
+                print(f"[ABORT] File already exists: {p}")
+            print("Use --force to overwrite or --dry-run to preview.")
+            sys.exit(1)
+
     print("=== Build V12 Support Layers ===\n")
 
     # ── General Word Bank ──────────────────────────────────────
@@ -953,8 +1008,8 @@ def main():
 
     print(f"② Adding {len(NEW_GWB)} new Lebanon-native entries…")
     gwb_rows = json_rows + NEW_GWB
-    n_gwb = write_csv(GWB_OUT, GWB_COLS, gwb_rows)
-    print(f"   ✅ Wrote {n_gwb} total rows → {GWB_OUT}\n")
+    n_gwb = write_csv(GWB_OUT, GWB_COLS, gwb_rows, dry_run=args.dry_run)
+    print(f"   Wrote {n_gwb} total rows → {GWB_OUT}\n")
 
     # ── Protected Combos ───────────────────────────────────────
     print("③ Extracting protected_combo entries from candidate bank…")
@@ -966,8 +1021,8 @@ def main():
     print(f"   Added {len(new_pc)} new entries")
 
     pc_rows = bank_pc + new_pc
-    n_pc = write_csv(PC_OUT, PC_COLS, pc_rows)
-    print(f"   ✅ Wrote {n_pc} total rows → {PC_OUT}\n")
+    n_pc = write_csv(PC_OUT, PC_COLS, pc_rows, dry_run=args.dry_run)
+    print(f"   Wrote {n_pc} total rows → {PC_OUT}\n")
 
     # ── Summary ───────────────────────────────────────────────
     print("─" * 60)
@@ -980,10 +1035,11 @@ def main():
     print(f"  • {len(new_pc)} new issue-level phrase locks")
     print()
     print("Central rule materialised:")
-    print("  Generic word bank → context only (BLOCKED: routing|severity|sector)")
-    print("  Protected combos  → phrase locks, override naive tokenisation")
-    print("─" * 60)
-    print("Done. Delete this script after reviewing and committing.")
+    print("  Generic word bank   -> context only (BLOCKED: routing|severity|sector)")
+    print("  Protected combos    -> phrase locks, override naive tokenisation")
+    print("-" * 60)
+    action = "Dry-run complete (no files written)." if args.dry_run else "Done."
+    print(action)
 
 
 if __name__ == "__main__":

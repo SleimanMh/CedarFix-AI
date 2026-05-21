@@ -48,7 +48,7 @@ REQUIRED_COLUMNS = [
     "updated_at",
 ]
 
-VALID_REVIEW_STATUS = {"PENDING", "APPROVED", "REJECTED", "NEEDS_EVIDENCE", "DEFERRED"}
+VALID_REVIEW_STATUS = {"PENDING", "APPROVED", "REJECTED", "NEEDS_EVIDENCE", "DEFERRED", "PENDING_NATIVE_REVIEW"}
 VALID_DECISION = {
     "UNREVIEWED",
     "APPROVE",
@@ -197,7 +197,11 @@ def validate(bank_path: Path, stoplist_path: Path) -> tuple[list[str], list[str]
         issue_type = row.get("issue_type", "").strip().upper()
         category = row.get("category", "").strip()
         review_status = row.get("review_status", "").strip().upper()
-        decision = row.get("decision", "").strip().upper()
+        raw_decision = row.get("decision", "").strip()
+        if not raw_decision:
+            warnings.append(f"Row {i} ({cid}): blank decision — normalize to UNREVIEWED")
+            raw_decision = "UNREVIEWED"
+        decision = raw_decision.upper()
         confidence = row.get("confidence_level", "").strip().upper()
         risk = row.get("risk_level", "").strip().upper()
         false_friend = row.get("false_friend_risk", "").strip().lower()
@@ -222,8 +226,11 @@ def validate(bank_path: Path, stoplist_path: Path) -> tuple[list[str], list[str]
             errors.append(f"Row {i} ({cid}): invalid confidence_level={confidence!r}")
         if risk not in VALID_RISK:
             errors.append(f"Row {i} ({cid}): invalid risk_level={risk!r}")
+        # Normalize YES/NO aliases before checking
+        _ff_alias = {"yes": "true", "no": "false"}
+        false_friend = _ff_alias.get(false_friend, false_friend)
         if false_friend not in ("true", "false"):
-            errors.append(f"Row {i} ({cid}): false_friend_risk must be true/false")
+            errors.append(f"Row {i} ({cid}): false_friend_risk must be true/false (or yes/no), got {row.get('false_friend_risk','')!r}")
         if not variants:
             errors.append(f"Row {i} ({cid}): variants is empty")
 
