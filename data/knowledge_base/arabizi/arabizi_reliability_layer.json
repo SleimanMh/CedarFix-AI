@@ -1,7 +1,7 @@
 {
   "metadata": {
     "name": "CedarFix Arabizi reliability layer",
-    "version": "v1.0-consolidated",
+    "version": "v1.1-layered-architecture",
     "generated_at_utc": "2026-05-19T11:00:28Z",
     "purpose": "Review-only Arabizi support assets. Production routing vocabulary remains data/knowledge_base/arabizi_vocabulary.json.",
     "guardrails": [
@@ -9,7 +9,8 @@
       "general_word_bank blocks routing_prediction, severity_decision, and issue_type_decision.",
       "variant_lookup must keep use_for_routing_prediction_now=FALSE until explicit review.",
       "internet_notation_rules are notation support, not issue labels.",
-      "oov_seed_queue rows are review seeds, not production corpus evidence."
+      "oov_seed_queue rows are review seeds, not production corpus evidence.",
+      "arabizi_protected_combos.csv defines phrase locks that must be matched BEFORE single-token lookup — prevents false positive routing from component tokens."
     ],
     "section_row_counts": {
       "external_resources": 10,
@@ -20,7 +21,45 @@
       "general_word_bank": 111,
       "variant_lookup": 396,
       "internet_notation_rules": 20,
-      "oov_seed_queue": 4
+      "oov_seed_queue": 4,
+      "protected_combos_csv": 75,
+      "general_word_bank_csv": 200
+    },
+    "updated_at_utc": "2026-05-19T00:00:00Z",
+    "architecture_note": "V12 architecture overhaul: general_word_bank and protected_combos have been materialised as reviewable CSV files. The JSON sections remain the authoritative consolidated source; CSV files are the human-review-ergonomic projection. Central rule: domain vocab votes on routing; generic vocab provides context only; protected combos override naive token splitting.",
+    "csv_file_registry": {
+      "arabizi_general_word_bank.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_general_word_bank.csv",
+        "row_count": 200,
+        "sources": [
+          "reliability_layer_v1_export (111)",
+          "V12_LEBANON_NATIVE (89)"
+        ],
+        "tier_values": [
+          "T3_GENERIC_SUPPORT",
+          "T4_VARIANT_LOOKUP"
+        ],
+        "rule": "blocked_uses always contains routing|severity_assignment|sector_classification"
+      },
+      "arabizi_protected_combos.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_protected_combos.csv",
+        "row_count": 75,
+        "sources": [
+          "candidate_bank protected_combo (50 remapped)",
+          "V12_ISSUE_LEVEL_NEW (25)"
+        ],
+        "sector_distribution": {
+          "ALL": 34,
+          "SAFETY": 9,
+          "ROADS": 8,
+          "WATER": 7,
+          "ELECTRICITY": 4,
+          "WASTE": 4,
+          "FLOODING": 4,
+          "OTHER": 5
+        },
+        "rule": "Phrase locks — combined meaning is lost if tokens are split. Overrides naive tokenisation."
+      }
     }
   },
   "external_resources": [
