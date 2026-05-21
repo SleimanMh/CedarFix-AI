@@ -4,7 +4,7 @@
   "changelog": [
     "1.8.0 (2026-05-22): V20c complete OOV closure — 44 new term_metadata entries + 6 variant-form patches. Covers ALL 51 remaining OOV English-mapped Arabizi words from corpus audit. Reviewer: SYSTEM-V20c.",
     "1.7.0 (2026-05-22): V20b comprehensive OOV absorption — 43 new term_metadata entries (civic infrastructure, weather, governance, discourse) + 6 variant-form patches. Reviewer: SYSTEM-V20b.",
-    "1.9.0 (2026-05-22): V20d full-corpus OOV closure -- 34 new term_metadata entries (34 planned) + 2 entry patches. Includes 5 polysemous pairs: ma_neg/ma_excl, fi_prep/fi_exist, ra3is_political/ra3is_general, ba3da_temporal/ba3da_possessive, ma3na_noun. Source: 64K-tweet Lebanon corpus scan."
+    "1.9.0 (2026-05-22): V20d full-corpus OOV closure -- 34 new term_metadata entries (34 planned) + 2 entry patches. Includes 5 polysemous pairs: ma_neg/ma_excl, fi_prep/fi_exist, ra2is_political/ra2is_general, ba3da_temporal/ba3da_possessive, ma3na_noun. Source: 64K-tweet Lebanon corpus scan."
   ],
   "arabizi_notes": {
     "common_substitutions": {
@@ -5797,8 +5797,8 @@
       "notes": "Lebanese Arabizi discourse intensifier: 'seriously, really, for real'. 3=3ayn digit. Used to emphasise sincerity or disbelief (3anjad? = seriously? / 3anjad ktir = really a lot). Distinctly Lebanese; not used in other Arabic dialects.",
       "added_at": "20260521T232354Z"
     },
-    "ra3is_political": {
-      "canonical_form": "ra3is",
+    "ra2is_political": {
+      "canonical_form": "ra2is",
       "arabic_equivalent": "رئيس",
       "semantic_type": "T2_SECTOR_SUPPORT",
       "sector_relevance": [
@@ -5822,11 +5822,11 @@
       "reviewer_id": "SYSTEM-V20d",
       "review_date": "2026-05-22",
       "confidence": "HIGH",
-      "notes": "Lebanese Arabizi: president (political leader). 3=3ayn digit. POLYSEMY: see ra3is_general for boss/chief (non-political). Context: ra3is el jomhoriye = president of the republic. Political domain; relevant for government accountability tweets.",
+      "notes": "Lebanese Arabizi: president (political leader). 2=hamza digit. POLYSEMY: see ra2is_general for boss/chief (non-political). Context: ra2is el jomhoriye = president of the republic. Political domain; relevant for government accountability tweets.",
       "added_at": "20260521T232354Z"
     },
-    "ra3is_general": {
-      "canonical_form": "ra3is",
+    "ra2is_general": {
+      "canonical_form": "ra2is",
       "arabic_equivalent": "رئيس",
       "semantic_type": "T3_GENERIC_SUPPORT",
       "sector_relevance": [
@@ -5848,7 +5848,7 @@
       "reviewer_id": "SYSTEM-V20d",
       "review_date": "2026-05-22",
       "confidence": "HIGH",
-      "notes": "Lebanese Arabizi: boss, head, chief, manager (general leadership). 3=3ayn digit. POLYSEMY: same surface 'ra3is' as ra3is_political (president). Context distinguishes: general leadership use (ra3is el shirkeh = company head). Also ra3is baladiye = mayor (municipality head) -- between both senses.",
+      "notes": "Lebanese Arabizi: boss, head, chief, manager (general leadership). 2=hamza digit. POLYSEMY: same surface 'ra2is' as ra2is_political (president). Context distinguishes: general leadership use (ra2is el shirkeh = company head). Also ra2is baladiye = mayor (municipality head) -- between both senses.",
       "added_at": "20260521T232354Z"
     },
     "wa2t_noun": {
