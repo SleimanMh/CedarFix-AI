@@ -1,7 +1,9 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "1.6.0",
-  "changelog": "1.6.0 (2026-05-21): V20a tweet-corpus connector absorption — 13 new groups, 17 forms from lebanon.csv mining. | 1.5.8 (20260521T1): V19b rbz-ar civic mining — 11 new variant forms across 5 keys. 1.5.7 (20260521T1): V19a thesis negation absorption — 10 new groups, 0 updated, ~283 forms total. 1.5.6 (2026-05-21): V18c transliteration civic patch — 6 new entries, 7 updated from clean digit-variant mining. 1.5.5 (2026-05-21): V18b external OOV → GWB — 34 new civic discourse terms from 2000-candidate external review. 1.5.3 (2026-05-21): V17 OOV quick patch — 17 new, 1 updated term_metadata entries. Addresses remaining B001 OOV tokens: tire, 3jelatna, sursok/armeniye (location standalone forms), abimee/completement (FR), khafer, bada, bala, fil, haje, nahr, 3la, app, arc, jeanne, makdissi, masliye. Previous: 1.5.2. 1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "version": "1.7.0",
+  "changelog": [
+    "1.7.0 (2026-05-22): V20b comprehensive OOV absorption — 43 new term_metadata entries (civic infrastructure, weather, governance, discourse) + 6 variant-form patches. Reviewer: SYSTEM-V20b."
+  ],
   "arabizi_notes": {
     "common_substitutions": {
       "ع": "3  — ALWAYS use 3; never omit",
@@ -801,6 +803,10 @@
       "variant_forms": [
         "elkahraba",
         "kahraba",
+        "kahrabeh",
+        "kahrbe",
+        "kehraba",
+        "kharbaa",
         "lkahraba"
       ]
     },
@@ -1096,7 +1102,10 @@
         "share3",
         "tarik",
         "tire",
-        "tire2"
+        "tire2",
+        "trok",
+        "trouk",
+        "turuk"
       ],
       "loanword_from": "",
       "sector": "ROADS",
@@ -1132,10 +1141,11 @@
     },
     "jdide": {
       "variant_forms": [
-        "jdide",
-        "jdidi",
         "jdeed",
-        "jdeedeh"
+        "jdeedeh",
+        "jdid",
+        "jdide",
+        "jdidi"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -1619,7 +1629,9 @@
       "variant_forms": [
         "sene",
         "seneh",
-        "sine"
+        "sine",
+        "sneh",
+        "snit"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -1634,9 +1646,12 @@
     },
     "lama": {
       "variant_forms": [
+        "ama",
+        "amma",
         "lama",
         "lamma",
-        "lamman"
+        "lamman",
+        "lma"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -2051,11 +2066,17 @@
     },
     "matar": {
       "variant_forms": [
+        "2amtar",
+        "amtar",
         "l mtar",
         "lmtar",
         "matar",
         "matara",
-        "mtr"
+        "mtar",
+        "mtara",
+        "mtr",
+        "shita",
+        "shta"
       ],
       "loanword_from": "",
       "sector": "FLOODING",
@@ -2786,6 +2807,1143 @@
       "review_date": "2026-05-21",
       "confidence": "HIGH",
       "notes": "Lebanese Arabizi: 'then/so/already' (discourse marker). civic_ratio=0.60; used in complaint conclusions. '2' = glottal stop."
+    },
+    "masdoud": {
+      "canonical_form": "masdoud",
+      "arabic_equivalent": "مسدود",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ROADS",
+        "WATER"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "masdoud",
+        "masda",
+        "msdoud",
+        "masdude",
+        "msakkar",
+        "sakker"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'blocked/closed' (adj). tari2 masdoud = road blocked; biar masdoud = manhole blocked; msakkar/sakker also used. Corpus: cr=0.42, freq=12.",
+      "added_at": "20260521T222214Z"
+    },
+    "jisr": {
+      "canonical_form": "jisr",
+      "arabic_equivalent": "جسر",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ROADS"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "jisr",
+        "jsr",
+        "jusr",
+        "jesir"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'bridge' (noun). jisr meksour = broken bridge; l jisr sedd = bridge blocked. ROADS infrastructure. Corpus: cr=0.67, freq=6.",
+      "added_at": "20260521T222214Z"
+    },
+    "3emara": {
+      "canonical_form": "3emara",
+      "arabic_equivalent": "عمارة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "ROADS"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3emara",
+        "3imara",
+        "3amara",
+        "3mare",
+        "3amaret"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'building' (noun). 3=3ayn digit. 3emara 2adime = old building (structural risk). SAFETY/ROADS. Corpus: cr=0.29, freq=14.",
+      "added_at": "20260521T222214Z"
+    },
+    "mustashfa": {
+      "canonical_form": "mustashfa",
+      "arabic_equivalent": "مستشفى",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mustashfa",
+        "mstashfa",
+        "mostashfa",
+        "moustashfa"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'hospital' (noun). Road-to-hospital blocked; ambulance access issues. SAFETY sector. Corpus: cr=0.36, freq=25.",
+      "added_at": "20260521T222214Z"
+    },
+    "sayyara": {
+      "canonical_form": "sayyara",
+      "arabic_equivalent": "سيارة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ROADS",
+        "SAFETY"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sayyara",
+        "sayara",
+        "siyara",
+        "sayyaret",
+        "sayyarat"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'car/vehicle' (noun). Common in road-condition and accident context. Corpus: cr=0.08, freq=39.",
+      "added_at": "20260521T222214Z"
+    },
+    "azme": {
+      "canonical_form": "azme",
+      "arabic_equivalent": "أزمة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "azme",
+        "2azme",
+        "azma",
+        "azmet",
+        "2azmet"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'crisis' (noun). hal azme = this crisis; 2azme is Arabizi digit form (2=glottal). Civic discourse noun. Corpus: cr=0.59, freq=22.",
+      "added_at": "20260521T222214Z"
+    },
+    "fasad": {
+      "canonical_form": "fasad",
+      "arabic_equivalent": "فساد",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "fasad",
+        "fased",
+        "fesad",
+        "fasaad"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'corruption' (noun). Civic accountability / protest context. must_not_auto_promote=true — needs sector context to avoid false positives. Corpus: cr=0.39, freq=14.",
+      "added_at": "20260521T222214Z"
+    },
+    "dawle": {
+      "canonical_form": "dawle",
+      "arabic_equivalent": "دولة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "dawle",
+        "dawla",
+        "hkoume",
+        "hukume",
+        "hukuma",
+        "douleh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'government/state' (noun). l dawle ma btiji = the government doesn't come. hkoume/hukume are colloquial government variants. must_not_auto_promote=true. Corpus: cr=0.25, freq=20.",
+      "added_at": "20260521T222214Z"
+    },
+    "2anoun": {
+      "canonical_form": "2anoun",
+      "arabic_equivalent": "قانون",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "2anoun",
+        "2anun",
+        "qanun",
+        "kanoun",
+        "2anoon"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'law' (noun). 2=glottal stop. Civic accountability discourse: fi 2anoun? = is there a law? Corpus: cr=0.20, freq=94.",
+      "added_at": "20260521T222214Z"
+    },
+    "7o2oq": {
+      "canonical_form": "7o2oq",
+      "arabic_equivalent": "حقوق",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "7o2oq",
+        "7u2u2",
+        "7u2ou2",
+        "7a2",
+        "7a22"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'rights' (pl. noun). 7=ح, 2=ق digits. wein 7o2o2na? = where are our rights? Civic demand context. Corpus: cr=0.19, freq=29.",
+      "added_at": "20260521T222214Z"
+    },
+    "7urriye": {
+      "canonical_form": "7urriye",
+      "arabic_equivalent": "حرية",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "7urriye",
+        "7urriyye",
+        "7uriye",
+        "7orie"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'freedom' (noun). 7=ح digit. Protest / civic-rights context. Corpus: cr=0.18, freq=18.",
+      "added_at": "20260521T222214Z"
+    },
+    "wazara": {
+      "canonical_form": "wazara",
+      "arabic_equivalent": "وزارة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "wazara",
+        "wazare",
+        "wazaret",
+        "wezara"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'ministry' (noun). Civic accountability: wazaret l ashghal = ministry of public works. Corpus: cr=0.33, freq=9.",
+      "added_at": "20260521T222214Z"
+    },
+    "mashroo3": {
+      "canonical_form": "mashroo3",
+      "arabic_equivalent": "مشروع",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mashroo3",
+        "mashru3",
+        "mashrouA",
+        "mashrou3"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'project/plan' (noun). 3=3ayn digit. Infrastructure project discourse. Corpus: cr=0.15, freq=27.",
+      "added_at": "20260521T222214Z"
+    },
+    "7arb": {
+      "canonical_form": "7arb",
+      "arabic_equivalent": "حرب",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "7arb",
+        "7arbe",
+        "7rb",
+        "7erb"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'war' (noun). 7=ح digit. Safety/crisis context. must_not_auto_promote=true. Corpus: cr=0.21, freq=58.",
+      "added_at": "20260521T222214Z"
+    },
+    "jaysh": {
+      "canonical_form": "jaysh",
+      "arabic_equivalent": "جيش",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "jaysh",
+        "jeish",
+        "jesh",
+        "jayche"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'army' (noun). Civic safety context. must_not_auto_promote=true. Corpus: cr=0.18, freq=12.",
+      "added_at": "20260521T222214Z"
+    },
+    "ma7kame": {
+      "canonical_form": "ma7kame",
+      "arabic_equivalent": "محكمة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "ma7kame",
+        "ma7kme",
+        "ma7kama"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'court/tribunal' (noun). 7=ح digit. Civic legal accountability context. Corpus: cr=0.29, freq=7.",
+      "added_at": "20260521T222214Z"
+    },
+    "mzahara": {
+      "canonical_form": "mzahara",
+      "arabic_equivalent": "مظاهرة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "mzahara",
+        "mzaahara",
+        "ithtiaj",
+        "2ihtijaj",
+        "i7tijaaj"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'protest/demonstration' (noun). ithtiaj/2ihtijaj are MSA variants common in Arabizi. must_not_auto_promote=true. Corpus: cr=0.07, freq=31.",
+      "added_at": "20260521T222214Z"
+    },
+    "7adse": {
+      "canonical_form": "7adse",
+      "arabic_equivalent": "حادثة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "ROADS"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "7adse",
+        "7adise",
+        "7adtha",
+        "7adsa",
+        "7ades"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'incident/accident' (noun). 7=ح digit. fi 7adse 3al tari2 = there's an accident on the road. Corpus: cr=0.33, freq=3.",
+      "added_at": "20260521T222214Z"
+    },
+    "7arr": {
+      "canonical_form": "7arr",
+      "arabic_equivalent": "حار",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "7arr",
+        "7ar",
+        "sukhn",
+        "sukhne",
+        "sa5n",
+        "sa5ne"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'hot/scorching heat' (adj/noun). 7=ح digit. Extreme heat safety context; fire adjacency. Corpus: cr=0.19, freq=38.",
+      "added_at": "20260521T222214Z"
+    },
+    "ossa": {
+      "canonical_form": "ossa",
+      "arabic_equivalent": "قصة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ossa",
+        "2esse",
+        "2ossa",
+        "isse",
+        "osset"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'story/situation/issue' (noun). hal ossa = this situation; ossa ktire = big problem. Civic discourse. Corpus: cr=0.32, freq=68.",
+      "added_at": "20260521T222214Z"
+    },
+    "soura": {
+      "canonical_form": "soura",
+      "arabic_equivalent": "صورة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "soura",
+        "sura",
+        "soure",
+        "suwar",
+        "sowar",
+        "swar"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'picture/photo' (noun). Civic reporter: attaching evidence photo to complaint. suwar = plural. Corpus (photo+picture combined): cr=0.30, freq=229.",
+      "added_at": "20260521T222214Z"
+    },
+    "shefet": {
+      "canonical_form": "shefet",
+      "arabic_equivalent": "شفت",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "shefet",
+        "shift",
+        "shfit",
+        "shuft",
+        "shofet",
+        "shooft"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'I saw / I noticed' (verb, 1sg past). Civic eyewitness marker: shefet hal 7adse = I saw this incident. Corpus: cr=0.23, freq=31.",
+      "added_at": "20260521T222214Z"
+    },
+    "mafroud": {
+      "canonical_form": "mafroud",
+      "arabic_equivalent": "مفروض",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mafroud",
+        "mafruod",
+        "mafrod",
+        "mafroodeh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'should be / supposed to' (modal). Civic demand phrasing: mafroud yiji 7ada = someone is supposed to come. Corpus: cr=0.17, freq=162.",
+      "added_at": "20260521T222214Z"
+    },
+    "sobe7": {
+      "canonical_form": "sobe7",
+      "arabic_equivalent": "صبح",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sobe7",
+        "subeh",
+        "sube7",
+        "sobe7",
+        "sbeh",
+        "sobeh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'morning' (noun/adverb). Temporal marker in civic complaints (power off since morning). Corpus: cr=0.16, freq=235.",
+      "added_at": "20260521T222214Z"
+    },
+    "lyom": {
+      "canonical_form": "lyom",
+      "arabic_equivalent": "اليوم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "lyom",
+        "alyom",
+        "el yom",
+        "elyom",
+        "nharda"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'today' (temporal adverb). lyom = contracted Lebanese 'today'; alyom = MSA form. Temporal anchor in civic reports. Corpus: cr=0.28, freq=239.",
+      "added_at": "20260521T222214Z"
+    },
+    "shughel": {
+      "canonical_form": "shughel",
+      "arabic_equivalent": "شغل",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "shughel",
+        "shghl",
+        "shughl",
+        "shoughel",
+        "shaghel"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'work/job/function' (noun). Civic utility context: khraba ma 3am tishtaghal = electricity not working. Corpus: cr=0.23, freq=138.",
+      "added_at": "20260521T222214Z"
+    },
+    "befham": {
+      "canonical_form": "befham",
+      "arabic_equivalent": "بفهم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "befham",
+        "bfhem",
+        "bfhm",
+        "ma bfhm"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'I understand / I get it' (verb, 1sg). Used in civic complaint rhetorical questions. Corpus: cr=0.24, freq=38.",
+      "added_at": "20260521T222214Z"
+    },
+    "ba3rif": {
+      "canonical_form": "ba3rif",
+      "arabic_equivalent": "بعرف",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ba3rif",
+        "3arif",
+        "ba3ref",
+        "3aref",
+        "b3rif"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'I know / know' (verb). 3=3ayn digit. ma ba3rif = I don't know. Discourse marker in complaints. Corpus: cr=0.17, freq=321.",
+      "added_at": "20260521T222214Z"
+    },
+    "masari": {
+      "canonical_form": "masari",
+      "arabic_equivalent": "مصاري",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "masari",
+        "msari",
+        "fles",
+        "flis"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'money' (noun). fles/flis = coins/change (alt. colloquial). Economic civic context. Corpus: cr=0.17, freq=24.",
+      "added_at": "20260521T222214Z"
+    },
+    "7obb": {
+      "canonical_form": "7obb",
+      "arabic_equivalent": "حب",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "7obb",
+        "7ubb",
+        "bheb",
+        "b7eb",
+        "7ob"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'love / like' (noun/verb). 7=ح digit. High-freq discourse in civic social media. Corpus: cr=0.11, freq=944.",
+      "added_at": "20260521T222214Z"
+    },
+    "7ayat": {
+      "canonical_form": "7ayat",
+      "arabic_equivalent": "حياة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "7ayat",
+        "7aye",
+        "7yat",
+        "7yeh",
+        "hayat"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'life' (noun). 7=ح digit. Civic discourse: 7ayatna saret sab3a = our life has become difficult. Corpus: cr=0.14, freq=302.",
+      "added_at": "20260521T222214Z"
+    },
+    "mdine": {
+      "canonical_form": "mdine",
+      "arabic_equivalent": "مدينة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mdine",
+        "madine",
+        "madina",
+        "medine",
+        "mdeneh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'city' (noun). Location reference in civic complaints. Corpus: cr=0.13, freq=62.",
+      "added_at": "20260521T222214Z"
+    },
+    "ta3a": {
+      "canonical_form": "ta3a",
+      "arabic_equivalent": "تعا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ta3a",
+        "ta3i",
+        "t3a",
+        "ta3aw"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'come! / come here' (verb, imperative). 3=3ayn digit. Civic urgency: ta3a shouf = come and see. Corpus: cr=0.14, freq=126.",
+      "added_at": "20260521T222214Z"
+    },
+    "day3a": {
+      "canonical_form": "day3a",
+      "arabic_equivalent": "ضيعة",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "day3a",
+        "day3e",
+        "belde",
+        "belda",
+        "dayi3"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'village/town' (noun). 3=3ayn digit. belde/belda = district. Location in civic complaints. Corpus: cr=0.12, freq=17.",
+      "added_at": "20260521T222214Z"
+    },
+    "7arara": {
+      "canonical_form": "7arara",
+      "arabic_equivalent": "حرارة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "7arara",
+        "7ararit",
+        "7arareh",
+        "7ararti",
+        "darajt l7arara"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'temperature/heat' (noun). 7=ح digit. darajt l7arara = the temperature degree. Civic safety: extreme-heat warnings, fire conditions. Corpus: cr=0.43, freq=86.",
+      "added_at": "20260521T222214Z"
+    },
+    "rotobe": {
+      "canonical_form": "rotobe",
+      "arabic_equivalent": "رطوبة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "rotobe",
+        "rtube",
+        "rotoba",
+        "rtoobe",
+        "rutube"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'humidity' (noun). rotobe 3aliye = high humidity. Structural damp / flooding context. Corpus: cr=0.38, freq=139.",
+      "added_at": "20260521T222214Z"
+    },
+    "riye7": {
+      "canonical_form": "riye7",
+      "arabic_equivalent": "ريح",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "MEDIUM",
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "riye7",
+        "riyah",
+        "rye7",
+        "reh",
+        "hawa",
+        "riyeh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'wind' (noun). 7=ح digit. riye7 2awiye = strong wind. hawa = colloquial variant. SAFETY/FLOODING trigger: wind damage, flooding. Corpus: cr=0.35, freq=153.",
+      "added_at": "20260521T222214Z"
+    },
+    "3aasfe": {
+      "canonical_form": "3aasfe",
+      "arabic_equivalent": "عاصفة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3aasfe",
+        "3asfe",
+        "3asifa",
+        "3asifeh",
+        "3awasif"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'storm/gale' (noun). 3=3ayn digit. 3aasfe jayye = storm coming. SAFETY/FLOODING trigger. Corpus note: cr=0.0 (weather-account tweets; word is genuine). freq=12.",
+      "added_at": "20260521T222214Z"
+    },
+    "8ayem": {
+      "canonical_form": "8ayem",
+      "arabic_equivalent": "غيم",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "8ayem",
+        "8ayme",
+        "3im",
+        "ghaym",
+        "ghayim",
+        "ghyem"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "MEDIUM",
+      "notes": "Lebanese Arabizi: 'cloudy' (adj). 8=غ digit. Flooding precursor. 3im is alt digit rendering. must_not_auto_promote=true — weather-account-heavy signal. Corpus: cr=0.41, freq=85.",
+      "added_at": "20260521T222214Z"
+    },
+    "shamse": {
+      "canonical_form": "shamse",
+      "arabic_equivalent": "شمس",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "shamse",
+        "shams",
+        "mshammas",
+        "mshammes"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'sun/sunny' (noun/adj). mshammas = sunny (adj form). Weather context. Corpus: cr=0.62, freq=23.",
+      "added_at": "20260521T222214Z"
+    },
+    "dabab": {
+      "canonical_form": "dabab",
+      "arabic_equivalent": "ضباب",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SAFETY",
+        "ROADS"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "dabab",
+        "7abab",
+        "dababe",
+        "dababeh"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese Arabizi: 'fog' (noun). 7abab is variant (7=ح). SAFETY/ROADS: fog reduces visibility. Corpus: cr=0.25, freq=4.",
+      "added_at": "20260521T222214Z"
+    },
+    "mfarre2": {
+      "canonical_form": "mfarre2",
+      "arabic_equivalent": "مفرق",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mfarre2",
+        "mfarra2",
+        "mfarea",
+        "mfarek"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "MEDIUM",
+      "notes": "Lebanese Arabizi: 'scattered/spread out/dispersed' (adj). 2=glottal digit. Weather: rain scattered; civic: scattered damage. Corpus: cr=1.0, freq=6.",
+      "added_at": "20260521T222214Z"
+    },
+    "tawa2o3": {
+      "canonical_form": "tawa2o3",
+      "arabic_equivalent": "توقع",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "tawa2o3",
+        "taqaqqo3",
+        "tawa2u3",
+        "tawaqo3"
+      ],
+      "reviewer_id": "SYSTEM-V20b",
+      "review_date": "2026-05-22",
+      "confidence": "MEDIUM",
+      "notes": "Lebanese Arabizi: 'forecast/prediction' (noun). 2=glottal, 3=3ayn digits. taqaqqo3 = anticipation variant. Weather forecast context. Corpus: cr=1.0, freq=36.",
+      "added_at": "20260521T222214Z"
     }
   },
   "stoplist_notes": {
