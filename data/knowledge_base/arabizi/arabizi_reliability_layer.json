@@ -1,7 +1,7 @@
 {
   "metadata": {
     "name": "CedarFix Arabizi reliability layer",
-    "version": "v1.3-v13.1-candidate-bank-domain-cleanup",
+    "version": "v1.5-v15-surface-form-expansion",
     "generated_at_utc": "2026-05-21T14:30:06Z",
     "purpose": "Review-only Arabizi support assets. Production routing vocabulary remains data/knowledge_base/arabizi_vocabulary.json.",
     "guardrails": [
@@ -22,12 +22,14 @@
       "variant_lookup": 396,
       "internet_notation_rules": 20,
       "oov_seed_queue": 4,
-      "protected_combos_csv": 78,
-      "general_word_bank_csv": 252,
+      "protected_combos_csv": 109,
+      "general_word_bank_csv": 419,
       "candidate_bank_csv": 449,
-      "candidate_bank_quarantine_csv": 929
+      "candidate_bank_quarantine_csv": 929,
+      "surface_forms_v15_csv": 10000,
+      "stoplist_csv": 77
     },
-    "updated_at_utc": "2026-05-21T14:37:40Z",
+    "updated_at_utc": "2026-05-21T15:07:54Z",
     "architecture_note": "V12 architecture overhaul: general_word_bank and protected_combos have been materialised as reviewable CSV files. The JSON sections remain the authoritative consolidated source; CSV files are the human-review-ergonomic projection. Central rule: domain vocab votes on routing; generic vocab provides context only; protected combos override naive token splitting.",
     "csv_file_registry": {
       "arabizi_general_word_bank.csv": {
@@ -75,6 +77,25 @@
         "row_count": 929,
         "rule": "review-only archive of rows removed from the production promotion queue",
         "cleanup_version": "v13.1-candidate-bank-domain-cleanup"
+      },
+      "arabizi_surface_forms_v15.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_surface_forms_v15.csv",
+        "row_count": 10000,
+        "sources": [
+          "arabizi_general_word_bank.csv",
+          "arabizi_candidate_bank.csv",
+          "arabizi_candidate_bank_quarantine.csv",
+          "arabizi_protected_combos.csv",
+          "arabizi_stoplist.csv"
+        ],
+        "rule": "review-only generated surface forms; blocked from routing, severity, sector, issue, and core vocabulary promotion",
+        "version": "V15_SURFACE_FORM_EXPANSION"
+      },
+      "arabizi_stoplist.csv": {
+        "path": "data/knowledge_base/arabizi/arabizi_stoplist.csv",
+        "row_count": 77,
+        "rule": "terms that suppress false positives and must_not_auto_promote; all rows must_not_auto_promote=true",
+        "version": "V14_MEGA_EXPANSION_ABSORBED"
       }
     },
     "v13_trusted_generic_expansion": {
@@ -99,6 +120,12 @@
         "support_issue_type:ALL_SUPPORT": 39
       },
       "guardrail": "Only domain-sector rows remain in arabizi_candidate_bank.csv. Quarantined rows are not eligible for core-vocabulary promotion until they are manually reclassified into a valid support layer or a domain issue target."
+    },
+    "v15_surface_form_expansion": {
+      "row_count": 10000,
+      "target_use": "normalization, OOV detection, duplicate matching support, language detection features, stress tests",
+      "guardrail": "No row may directly drive routing/severity/sector/issue decisions or core vocabulary promotion.",
+      "internet_research_policy": "External Arabizi resources are documented for future licensed ingestion; V15 itself derives variants only from existing CedarFix assets."
     }
   },
   "external_resources": [

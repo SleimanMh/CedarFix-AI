@@ -18,6 +18,7 @@ arabizi/
 ├── arabizi_protected_combos.csv           # phrase locks where token splitting changes meaning
 ├── arabizi_reliability_layer.json         # support, stoplist, provenance, reviewers, notation, OOV seeds
 ├── arabizi_reviewed_changes.csv           # append-only promotion/change audit log
+├── arabizi_surface_forms_v15.csv          # generated review-only spelling variants / OOV surface forms
 └── arabizi_stoplist.csv                   # terms blocked from promotion
 ```
 
@@ -56,6 +57,12 @@ support-only rows do not enter this promotion path. They remain in support
 layers or `arabizi_candidate_bank_quarantine.csv` until a reviewer explicitly
 reclassifies them.
 
+`arabizi_surface_forms_v15.csv` is a high-volume generated layer for spelling
+coverage. It supports normalization, OOV review, language detection features,
+duplicate matching support, and stress tests. It is blocked from routing,
+severity assignment, sector classification, issue-type decisions, and core
+vocabulary promotion.
+
 The promotion script reads the `stoplist` section of
 `arabizi_reliability_layer.json`; a stopped term is never promoted.
 
@@ -68,6 +75,8 @@ The promotion script reads the `stoplist` section of
 | `scripts/validate_arabizi_reliability.py` | Measure production-vocab coverage on the corpus |
 | `scripts/validate_arabizi_pack_absorption.py` | Validate consolidated reliability layer and eval suite |
 | `scripts/cleanup_arabizi_candidate_bank_v13_1.py` | Reproduce the v13.1 domain-only candidate-bank cleanup |
+| `scripts/build_arabizi_surface_forms_v15.py` | Generate the v15 high-volume surface-form layer |
+| `scripts/validate_arabizi_surface_forms.py` | Validate that generated surface forms remain review-only and non-routing |
 
 ## Protected Constants
 
