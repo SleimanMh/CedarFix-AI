@@ -7,14 +7,18 @@ Production vocabulary lives in:
 
 - `data/knowledge_base/arabizi_vocabulary.json`
 
-Active review assets in this directory are intentionally minimal:
+Active review assets in this directory are intentionally separated by risk:
 
 ```text
 arabizi/
 ├── README.md
-├── arabizi_candidate_bank.csv        # candidate routing terms pending review
-├── arabizi_reliability_layer.json    # support, stoplist, provenance, reviewers, notation, OOV seeds
-└── arabizi_reviewed_changes.csv      # append-only promotion/change audit log
+├── arabizi_candidate_bank.csv             # domain-sector candidate routing terms pending review
+├── arabizi_candidate_bank_quarantine.csv  # non-domain/support rows removed from promotion queue
+├── arabizi_general_word_bank.csv          # generic support words; routing/severity blocked
+├── arabizi_protected_combos.csv           # phrase locks where token splitting changes meaning
+├── arabizi_reliability_layer.json         # support, stoplist, provenance, reviewers, notation, OOV seeds
+├── arabizi_reviewed_changes.csv           # append-only promotion/change audit log
+└── arabizi_stoplist.csv                   # terms blocked from promotion
 ```
 
 Historical source files and the raw external pack are archived under `_archive/`.
@@ -38,14 +42,19 @@ reviewed, and routed to HITL when risk or uncertainty is high.
 ## Workflow
 
 ```text
-Candidate terms / OOV observations
+Domain candidate terms / OOV observations
         ↓
-arabizi_candidate_bank.csv  (review_status=PENDING)
+arabizi_candidate_bank.csv  (domain sectors only, review_status=PENDING)
         ↓ native-speaker + engineer review
 review_status=APPROVED / REJECTED / DEFERRED
         ↓ scripts/promote_arabizi_candidates.py --apply
 arabizi_vocabulary.json + arabizi_reviewed_changes.csv
 ```
+
+Generic words, protected phrases, place names, discourse terms, and other
+support-only rows do not enter this promotion path. They remain in support
+layers or `arabizi_candidate_bank_quarantine.csv` until a reviewer explicitly
+reclassifies them.
 
 The promotion script reads the `stoplist` section of
 `arabizi_reliability_layer.json`; a stopped term is never promoted.
@@ -58,6 +67,7 @@ The promotion script reads the `stoplist` section of
 | `scripts/promote_arabizi_candidates.py` | Promote approved rows into production vocab |
 | `scripts/validate_arabizi_reliability.py` | Measure production-vocab coverage on the corpus |
 | `scripts/validate_arabizi_pack_absorption.py` | Validate consolidated reliability layer and eval suite |
+| `scripts/cleanup_arabizi_candidate_bank_v13_1.py` | Reproduce the v13.1 domain-only candidate-bank cleanup |
 
 ## Protected Constants
 
