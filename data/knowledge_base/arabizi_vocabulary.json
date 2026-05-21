@@ -1,7 +1,7 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "1.5.2",
-  "changelog": "1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "version": "1.5.3",
+  "changelog": "1.5.3 (2026-05-21): V17 OOV quick patch — 17 new, 1 updated term_metadata entries. Addresses remaining B001 OOV tokens: tire, 3jelatna, sursok/armeniye (location standalone forms), abimee/completement (FR), khafer, bada, bala, fil, haje, nahr, 3la, app, arc, jeanne, makdissi, masliye. Previous: 1.5.2. 1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
   "arabizi_notes": {
     "common_substitutions": {
       "ع": "3  — ALWAYS use 3; never omit",
@@ -1047,6 +1047,7 @@
     "tarik": {
       "variant_forms": [
         "tarik",
+        "tire",
         "tire2"
       ],
       "loanword_from": "",
@@ -1136,6 +1137,213 @@
       "arabizi_note": "English 'schedule'; schedule l kahraba = power cut schedule; common English code-switch for EDL electricity schedules",
       "added_by": "update_vocab_gwb_support_v16",
       "added_at": "2026-05-21T16:24:24Z"
+    },
+    "3jelet": {
+      "variant_forms": [
+        "3jelet",
+        "3jelatna",
+        "3jalo",
+        "3jalt",
+        "3jeltak"
+      ],
+      "loanword_from": "",
+      "sector": "ROADS",
+      "arabizi_note": "عجلة/عجلتنا — wheel(s); 3jelatna = our wheels; common in ROADS reports about damage to vehicles from potholes",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "sursok": {
+      "variant_forms": [
+        "sursok",
+        "sursuk",
+        "sarsok"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "سرسق — Sursok: Beirut neighbourhood/street name; appears in PC-0112 (share3 sursok); standalone token also needs to be known",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "armeniye": {
+      "variant_forms": [
+        "armeniye",
+        "armeniyi",
+        "armeni"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "الأرمن/الأرمنية — Armenian quarter reference; Beirut street name in PC-0113 (share3 armeniye); standalone token also needs to be known",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "abimee": {
+      "variant_forms": [
+        "abimee",
+        "abime",
+        "abimee",
+        "abimeh"
+      ],
+      "loanword_from": "fr",
+      "sector": "ROADS",
+      "arabizi_note": "French 'abîmée' — damaged/destroyed (fem.); route completement abimee = road completely destroyed; French code-switch in ROADS reports",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "completement": {
+      "variant_forms": [
+        "completement",
+        "totalement",
+        "entierement"
+      ],
+      "loanword_from": "fr",
+      "sector": "ROADS",
+      "arabizi_note": "French 'complètement' — completely; route completement abimee = road completely destroyed; French intensifier code-switch",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "3la": {
+      "variant_forms": [
+        "3la",
+        "3ala",
+        "3al"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "على — on/at/to (Lebanese colloquial prep); 3la (no internal vowel) is a common condensed form; 3ala and 3al are more common but 3la is unregistered",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "app": {
+      "variant_forms": [
+        "app",
+        "application",
+        "appli"
+      ],
+      "loanword_from": "en",
+      "sector": "ALL",
+      "arabizi_note": "English 'app' — mobile application; common in Lebanese civic tech complaints; app EDL = EDL app, app l baladiye = municipality app",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "makdissi": {
+      "variant_forms": [
+        "makdissi",
+        "maqdessy",
+        "makdessy"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "مقدسي — Makdissi: Beirut street name in Hamra; appears in PC-0114 (share3 makdissi); standalone token also needs to be known",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "arc": {
+      "variant_forms": [
+        "arc",
+        "arc electrique",
+        "arc_electrique"
+      ],
+      "loanword_from": "fr",
+      "sector": "ELECTRICITY",
+      "arabizi_note": "French 'arc électrique' — electric arc/flashover; arc 3al transformer = arc on transformer; ELECTRICITY safety signal",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "jeanne": {
+      "variant_forms": [
+        "jeanne",
+        "jeanne d arc"
+      ],
+      "loanword_from": "fr",
+      "sector": "ALL",
+      "arabizi_note": "Jeanne — part of 'share3 jeanne d arc' (Rue Jeanne d'Arc); Beirut street name in Hamra area (PC-0115); French loanword for the street proper name",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "masliye": {
+      "variant_forms": [
+        "masliye",
+        "masliyi",
+        "maslieh"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "المصيلحية — Maslieh: Beirut/Hamra area street name; appears in ELECTRICITY reports referencing the neighbourhood",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "khafer": {
+      "variant_forms": [
+        "khafer",
+        "khfer",
+        "5afer"
+      ],
+      "loanword_from": "",
+      "sector": "WASTE",
+      "arabizi_note": "خفر — putrid/foul smell emanating from waste; WASTE/OVERFLOWING_BIN signal; 5=خ alternative Arabizi encoding; khafer ktir = very foul smell",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "bada": {
+      "variant_forms": [
+        "bada",
+        "bada2",
+        "bedo",
+        "b2ida"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بدا — wants/is going to (3sg masc Lebanese future/desire); ma bada 7ada yiji = nobody comes; common complaint discourse modal verb",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "bala": {
+      "variant_forms": [
+        "bala",
+        "bila",
+        "bidoun"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بلا — without (Lebanese preposition); bala may = without water; bala kahraba = without electricity; high-frequency generic Lebanese prep",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "fil": {
+      "variant_forms": [
+        "fil",
+        "fil2",
+        "fill"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "في ال — in the (contracted prep + definite article); fil share3 = in the road; fil 7aret = in the alley; tokenized as single unit in Arabizi",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "haje": {
+      "variant_forms": [
+        "haje",
+        "haja",
+        "hajeh"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "حاجة — thing/something (Lebanese); ma fi haje = there's nothing; common discourse noun; high frequency in complaint reports",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
+    },
+    "nahr": {
+      "variant_forms": [
+        "nahr",
+        "naher",
+        "el nahr"
+      ],
+      "loanword_from": "",
+      "sector": "WASTE,FLOODING",
+      "arabizi_note": "نهر — river; el nahr = the river; appears in WASTE reports about illegal dump near rivers; also FLOODING context",
+      "added_by": "update_vocab_gwb_support_v17_oov_patch",
+      "added_at": "2026-05-21T16:30:27Z"
     }
   },
   "stoplist_notes": {

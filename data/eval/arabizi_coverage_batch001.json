@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generated_at": "2026-05-21T16:24:48.906943+00:00",
+    "generated_at": "2026-05-21T16:30:35.621376+00:00",
     "corpus_path": "data\\corpus\\cedarfix_reports_v1.csv",
-    "vocab_version": "1.5.2",
+    "vocab_version": "1.5.3",
     "route_confidence_threshold": 0.65,
     "batch": "B001",
     "arabizi_mixed_row_count": 40,
@@ -15,21 +15,21 @@
   },
   "summary": {
     "total_arabizi_mixed_rows": 40,
-    "mean_coverage": 0.8925,
-    "mean_oov_count": 0.9,
+    "mean_coverage": 0.9537,
+    "mean_oov_count": 0.38,
     "drift_distribution": {
-      "score_0": 13,
-      "score_1": 10,
-      "score_2": 16,
-      "score_3": 1
+      "score_0": 20,
+      "score_1": 11,
+      "score_2": 9,
+      "score_3": 0
     },
     "hitl_labeled_rate": 0.3,
-    "hitl_drift_trigger_rate": 0.425,
+    "hitl_drift_trigger_rate": 0.225,
     "drift_vs_hitl_policy_diagnostic": {
       "true_positive_count": 8,
-      "false_positive_count": 9,
+      "false_positive_count": 1,
       "false_negative_count": 4,
-      "precision": 0.4706,
+      "precision": 0.8889,
       "recall": 0.6667,
       "interpretation": "Diagnostic only: language drift is one HITL guard, not the full HITL policy."
     },
@@ -42,29 +42,29 @@
   "sector_breakdown": {
     "ELECTRICITY": {
       "count": 6,
-      "mean_coverage": 0.8528,
+      "mean_coverage": 0.9762,
       "drift_distribution": [
+        3,
         1,
-        0,
-        5,
+        2,
         0
       ],
-      "mean_oov_count": 1.17,
+      "mean_oov_count": 0.17,
       "hitl_ground_truth_rate": 0.5,
-      "hitl_drift_trigger_rate": 0.8333,
+      "hitl_drift_trigger_rate": 0.3333,
       "recall_probe": 1.0,
       "recall_b1_raw": 1.0
     },
     "FLOODING": {
       "count": 8,
-      "mean_coverage": 0.8966,
+      "mean_coverage": 0.9122,
       "drift_distribution": [
-        2,
-        5,
+        3,
+        4,
         1,
         0
       ],
-      "mean_oov_count": 0.75,
+      "mean_oov_count": 0.62,
       "hitl_ground_truth_rate": 0.0,
       "hitl_drift_trigger_rate": 0.125,
       "recall_probe": 1.0,
@@ -72,16 +72,16 @@
     },
     "ROADS": {
       "count": 6,
-      "mean_coverage": 0.7822,
+      "mean_coverage": 0.9372,
       "drift_distribution": [
-        1,
-        2,
         3,
+        3,
+        0,
         0
       ],
-      "mean_oov_count": 1.67,
+      "mean_oov_count": 0.5,
       "hitl_ground_truth_rate": 0.1667,
-      "hitl_drift_trigger_rate": 0.5,
+      "hitl_drift_trigger_rate": 0.0,
       "recall_probe": 0.8333,
       "recall_b1_raw": 0.8333
     },
@@ -102,16 +102,16 @@
     },
     "WASTE": {
       "count": 7,
-      "mean_coverage": 0.8929,
+      "mean_coverage": 0.9857,
       "drift_distribution": [
-        3,
+        5,
         2,
-        1,
-        1
+        0,
+        0
       ],
-      "mean_oov_count": 1.29,
+      "mean_oov_count": 0.29,
       "hitl_ground_truth_rate": 0.0,
-      "hitl_drift_trigger_rate": 0.2857,
+      "hitl_drift_trigger_rate": 0.0,
       "recall_probe": 1.0,
       "recall_b1_raw": 1.0
     },
@@ -502,13 +502,12 @@
       "language": "arabizi",
       "sector": "ROADS",
       "issue_type": "POTHOLE",
-      "coverage": 0.8182,
-      "oov_token_count": 2,
+      "coverage": 0.9091,
+      "oov_token_count": 1,
       "oov_tokens": [
-        "kasaret",
-        "tire"
+        "kasaret"
       ],
-      "drift_score": 2,
+      "drift_score": 1,
       "known_terms": [
         "3al",
         "3ameqe",
@@ -524,12 +523,13 @@
         "seyyara",
         "ta7dir",
         "tari2",
+        "tire",
         "w"
       ],
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -748,14 +748,13 @@
       "sector": "WASTE",
       "issue_type": "OVERFLOWING_BIN",
       "coverage": 1.0,
-      "oov_token_count": 1,
-      "oov_tokens": [
-        "khafer"
-      ],
-      "drift_score": 1,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
         "3al",
         "bi",
+        "khafer",
         "ktir",
         "kuumet",
         "rasif",
@@ -923,14 +922,13 @@
       "language": "arabizi",
       "sector": "ROADS",
       "issue_type": "POTHOLE",
-      "coverage": 0.875,
-      "oov_token_count": 1,
-      "oov_tokens": [
-        "armeniye"
-      ],
-      "drift_score": 1,
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
         "7ufra",
+        "armeniye",
         "bi",
         "fi",
         "ghayet",
@@ -954,15 +952,14 @@
       "language": "arabizi",
       "sector": "ROADS",
       "issue_type": "POTHOLE",
-      "coverage": 0.7143,
-      "oov_token_count": 2,
-      "oov_tokens": [
-        "3jelatna",
-        "armeniye"
-      ],
-      "drift_score": 2,
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
+        "3jelatna",
         "7ufra",
+        "armeniye",
         "bi",
         "kbire",
         "ktir",
@@ -974,7 +971,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -983,26 +980,26 @@
       "language": "mixed",
       "sector": "ROADS",
       "issue_type": "ROAD_DAMAGED",
-      "coverage": 0.4286,
-      "oov_token_count": 4,
+      "coverage": 0.8571,
+      "oov_token_count": 1,
       "oov_tokens": [
-        "abimee",
-        "completement",
-        "kasaret",
-        "sursok"
+        "kasaret"
       ],
-      "drift_score": 2,
+      "drift_score": 1,
       "known_terms": [
         "7ufra",
+        "abimee",
         "bi",
+        "completement",
         "route",
         "share3",
+        "sursok",
         "w"
       ],
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": false,
       "recall_b1_raw": false
     },
@@ -1108,21 +1105,20 @@
       "language": "arabizi",
       "sector": "ELECTRICITY",
       "issue_type": "POWER_OUTAGE",
-      "coverage": 0.625,
-      "oov_token_count": 3,
-      "oov_tokens": [
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
+      "known_terms": [
         "3la",
         "app",
-        "makdissi"
-      ],
-      "drift_score": 2,
-      "known_terms": [
         "bi",
         "fi",
         "imbere7",
         "kahraba",
         "l",
         "ma",
+        "makdissi",
         "mat3a",
         "men",
         "schedule",
@@ -1132,7 +1128,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -1141,17 +1137,16 @@
       "language": "arabizi",
       "sector": "ELECTRICITY",
       "issue_type": "POWER_OUTAGE",
-      "coverage": 0.7778,
-      "oov_token_count": 2,
-      "oov_tokens": [
-        "arc",
-        "jeanne"
-      ],
-      "drift_score": 2,
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
         "3enna",
+        "arc",
         "bi",
         "d",
+        "jeanne",
         "kahraba",
         "kharban",
         "l",
@@ -1163,7 +1158,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -1172,19 +1167,19 @@
       "language": "mixed",
       "sector": "ELECTRICITY",
       "issue_type": "POWER_OUTAGE",
-      "coverage": 0.7143,
-      "oov_token_count": 2,
+      "coverage": 0.8571,
+      "oov_token_count": 1,
       "oov_tokens": [
-        "20h",
-        "masliye"
+        "20h"
       ],
-      "drift_score": 2,
+      "drift_score": 1,
       "known_terms": [
         "bi",
         "depuis",
         "fi",
         "kahraba",
         "ma",
+        "masliye",
         "mat3a",
         "panne",
         "share3",
@@ -1193,7 +1188,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -1202,19 +1197,19 @@
       "language": "arabizi",
       "sector": "WASTE",
       "issue_type": "GARBAGE_NOT_COLLECTED",
-      "coverage": 0.5,
-      "oov_token_count": 5,
+      "coverage": 0.9,
+      "oov_token_count": 1,
       "oov_tokens": [
-        "bada",
-        "bala",
-        "fil",
-        "haje",
         "sin"
       ],
-      "drift_score": 3,
+      "drift_score": 1,
       "known_terms": [
+        "bada",
+        "bala",
         "bi",
         "el",
+        "fil",
+        "haje",
         "jmaou",
         "l",
         "ma",
@@ -1227,7 +1222,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -1236,20 +1231,19 @@
       "language": "arabizi",
       "sector": "WASTE",
       "issue_type": "OVERFLOWING_BIN",
-      "coverage": 0.75,
-      "oov_token_count": 2,
-      "oov_tokens": [
-        "khafer",
-        "nahr"
-      ],
-      "drift_score": 2,
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
         "7aret",
         "bi",
         "el",
         "fi",
+        "khafer",
         "ktir",
         "mhattout",
+        "nahr",
         "ri7a",
         "shahin",
         "w",
@@ -1258,7 +1252,7 @@
       "orthographic_noise_count": 0,
       "semantic_ambiguity": false,
       "hitl_labeled": false,
-      "hitl_drift_triggered": true,
+      "hitl_drift_triggered": false,
       "recall_probe": true,
       "recall_b1_raw": true
     },
@@ -1267,12 +1261,10 @@
       "language": "arabizi",
       "sector": "FLOODING",
       "issue_type": "BLOCKED_DRAIN",
-      "coverage": 0.875,
-      "oov_token_count": 1,
-      "oov_tokens": [
-        "sursok"
-      ],
-      "drift_score": 1,
+      "coverage": 1.0,
+      "oov_token_count": 0,
+      "oov_tokens": [],
+      "drift_score": 0,
       "known_terms": [
         "3am",
         "ardiye",
@@ -1283,6 +1275,7 @@
         "miye",
         "msdoude",
         "share3",
+        "sursok",
         "tit2elle3",
         "w"
       ],
