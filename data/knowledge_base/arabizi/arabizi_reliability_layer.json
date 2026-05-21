@@ -10,7 +10,8 @@
       "variant_lookup must keep use_for_routing_prediction_now=FALSE until explicit review.",
       "internet_notation_rules are notation support, not issue labels.",
       "oov_seed_queue rows are review seeds, not production corpus evidence.",
-      "arabizi_protected_combos.csv defines phrase locks that must be matched BEFORE single-token lookup — prevents false positive routing from component tokens."
+      "arabizi_protected_combos.csv defines phrase locks that must be matched BEFORE single-token lookup — prevents false positive routing from component tokens.",
+      "External Lebanese OOV candidates are review-only and cannot be promoted without native review, source permission compatibility, and layer-specific validators."
     ],
     "section_row_counts": {
       "external_resources": 10,
@@ -22,19 +23,21 @@
       "variant_lookup": 396,
       "internet_notation_rules": 20,
       "oov_seed_queue": 4,
-      "protected_combos_csv": 109,
-      "general_word_bank_csv": 419,
-      "candidate_bank_csv": 449,
+      "protected_combos_csv": 118,
+      "general_word_bank_csv": 444,
+      "candidate_bank_csv": 460,
       "candidate_bank_quarantine_csv": 929,
       "surface_forms_v15_csv": 10000,
-      "stoplist_csv": 77
+      "stoplist_csv": 77,
+      "external_source_ledger_csv": 6,
+      "lebanese_external_oov_candidates_csv": 2000
     },
-    "updated_at_utc": "2026-05-21T15:07:54Z",
+    "updated_at_utc": "2026-05-21T16:07:20Z",
     "architecture_note": "V12 architecture overhaul: general_word_bank and protected_combos have been materialised as reviewable CSV files. The JSON sections remain the authoritative consolidated source; CSV files are the human-review-ergonomic projection. Central rule: domain vocab votes on routing; generic vocab provides context only; protected combos override naive token splitting.",
     "csv_file_registry": {
       "arabizi_general_word_bank.csv": {
         "path": "data/knowledge_base/arabizi/arabizi_general_word_bank.csv",
-        "row_count": 419,
+        "row_count": 444,
         "sources": [
           "reliability_layer_v1_export (111)",
           "V12_LEBANON_NATIVE (89)",
@@ -48,7 +51,7 @@
       },
       "arabizi_protected_combos.csv": {
         "path": "data/knowledge_base/arabizi/arabizi_protected_combos.csv",
-        "row_count": 109,
+        "row_count": 118,
         "sources": [
           "candidate_bank protected_combo (50 remapped)",
           "V12_ISSUE_LEVEL_NEW (25)",
@@ -68,7 +71,7 @@
       },
       "arabizi_candidate_bank.csv": {
         "path": "data/knowledge_base/arabizi/arabizi_candidate_bank.csv",
-        "row_count": 449,
+        "row_count": 460,
         "rule": "domain-sector candidate terms only; generic/support/protected rows are quarantined",
         "cleanup_version": "v13.1-candidate-bank-domain-cleanup"
       },
@@ -96,6 +99,16 @@
         "row_count": 77,
         "rule": "terms that suppress false positives and must_not_auto_promote; all rows must_not_auto_promote=true",
         "version": "V14_MEGA_EXPANSION_ABSORBED"
+      },
+      "external_source_ledger.csv": {
+        "path": "data/knowledge_base/arabizi/external_source_ledger.csv",
+        "row_count": 6,
+        "rule": "External source provenance and license/access gate. Does not imply import permission."
+      },
+      "lebanese_external_oov_candidates.csv": {
+        "path": "data/knowledge_base/arabizi/lebanese_external_oov_candidates.csv",
+        "row_count": 2000,
+        "rule": "Review-only mined Lebanese OOV surface forms. must_not_auto_promote=true for every row."
       }
     },
     "v13_trusted_generic_expansion": {
@@ -126,6 +139,19 @@
       "target_use": "normalization, OOV detection, duplicate matching support, language detection features, stress tests",
       "guardrail": "No row may directly drive routing/severity/sector/issue decisions or core vocabulary promotion.",
       "internet_research_policy": "External Arabizi resources are documented for future licensed ingestion; V15 itself derives variants only from existing CedarFix assets."
+    },
+    "v16_oov_absorption": {
+      "version": "v16-oov-absorption",
+      "source": "arabizi_oov_review_queue_v1.csv (Batch B001)",
+      "gwb_additions": 25,
+      "cb_additions": 11,
+      "pc_additions": 9,
+      "gwb_total_after": 444,
+      "cb_total_after": 460,
+      "pc_total_after": 118,
+      "target_use": "GWB: generic support; CB: routing candidates; PC: location+status combos",
+      "guardrail": "No external data imported; all terms derived from B001 OOV review and thin-category fill",
+      "created_at": "2026-05-21T16:14:59Z"
     }
   },
   "external_resources": [

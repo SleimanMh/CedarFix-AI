@@ -1,7 +1,7 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "1.5.1",
-  "changelog": "v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
+  "version": "1.5.2",
+  "changelog": "1.5.2 (2026-05-21): V16 GWB support sync — 22 new, 3 updated term_metadata entries. Key additions: miye (water variant, freq=9 in B001), mat3a (cut-off status), 22 generic support terms. Previous: 1.5.1. v1.5.1 (2026-05-18): Dialect correction candidate pass pending native-speaker sign-off. Removed incorrect forms introduced in v1.5.0: (1) miye* — wrong; standard Lebanese Arabizi word for water is 'may'; (2) mat3a — wrong; correct adjective is 2at3a (kahraba 2at3a, may 2at3a); (3) tire2 — non-existent; correct form is tari2; (4) khafer — non-existent in Lebanese Arabic; replaced with ri7a besh3a / ri7a bish3a / ri7a mish taybe variants; (5) 3ain for water source — replaced with nab3 (نبع) and beer may (بئر مي). Added: shar2ata (Lebanese colloquial for electric shock), nab3/beer may (correct water-source tokens), ri7a besh3a variants (correct bad-smell tokens), 2at3a metadata entry. Wrong forms noted in stoplist_notes. v1.5.0 (2026-05-18): Comprehensive gap expansion after forensic audit of 40 arabizi/mixed corpus rows (avg hit rate was 48.9%; RPT-B001-070 at 0%). Critical fixes: (1) miye/miye 2at3a/miye mat3a added to WATER — Beirut standard word for water was completely absent; (2) mat3a adjective form added to WATER+ELECTRICITY; (3) zibele vowelised form added to all WASTE issue types; (4) 7ufra added to ROADS/pothole; (5) balo3a msdoude + bala2a variants added to FLOODING/blocked_drain; (6) moulid/muwalid kharban added to ELECTRICITY/transformer_fault; (7) sa32/sa3q added to ELECTRICITY/exposed_wire + SAFETY/exposed_hazard (sa32 was in HIGH_RISK_HINTS but absent from keyword lookup); (8) nar/7ari2a added to SAFETY/fire; (9) kahrabe forms added to ELECTRICITY/power_outage; (10) khafer/ri7a khafer added to WASTE; (11) sayel added to FLOODING; (12) regional coverage: mayye/3ain/darb (Beqaa/South), bala2a (South drain), wadi yetfayan (Beqaa flash-flood), khadra (Tripoli water channel); (13) French loanwords for mixed rows: panne, eau coupee, ordures. 14 new term_metadata entries. kasaret remains DEFERRED_BATCH_002 (3-example threshold not yet met). v1.4.0: promoted 10 accepted OOV tokens from Batch 001 arabizi_oov_review_queue_v1.csv: 7eet→SAFETY/structural_collapse, ghare2+tetfa2ar→FLOODING/road_flooded, kuumeh+nkesh+yroumo→WASTE/illegal_dump, tita3abba→WASTE/garbage_not_collected, m7arrak/mcharrak→ELECTRICITY/exposed_wire, ta7dir→ROADS/pothole, transformateur→ELECTRICITY/transformer_fault. Added top-level term_metadata section for canonical-form and loanword documentation. kasaret deferred to Batch 002. v1.3.1: corrected blocked-drain seed spelling from balioa to balou3a/balo3a based on Lebanese drain transliteration. v1.3: formalized adaptive OOV policy so unknown meaningful Arabizi is reviewed through arabizi_oov_review_queue_v1.csv instead of forcing the fixed vocabulary to be exhaustive. v1.2: aligned issue_type_keywords keys to ANNOTATION_GUIDELINES official issue taxonomy; merged old synonym keys into issue_type_aliases; added road_closed, no_supply, and unclassified coverage; preserved jora/joura and 5tr Lebanese/noisy variants. v1.1: fixed 4 semantic errors (mansour men may, 2abu 2araq, balioa mafiyye, hal 3am yenkaser); fixed plain-h pothole variants; standardized mish/mesh; resolved kh/5 inconsistency; added 8 missing issue types (ROAD_CRACK, LOW_PRESSURE, VOLTAGE_FLUCTUATION, DAMAGED_BIN, BASEMENT_FLOODED, EXPOSED_HAZARD, ARMED_INCIDENT, SUSPICIOUS); rewrote samples that verbatim-copied seeds.",
   "arabizi_notes": {
     "common_substitutions": {
       "ع": "3  — ALWAYS use 3; never omit",
@@ -691,14 +691,24 @@
       "context_disambiguation": "FLOODING/blocked_drain uses tit3abba (existing seed); WASTE/garbage_not_collected uses tita3abba"
     },
     "nkesh": {
-      "arabizi_note": "نكش / نكاش — construction rubble or demolition debris. Distinct from nfayat (household waste). Use in WASTE/illegal_dump when dumped material is building debris.",
+      "arabizi_note": "إنكاش — inert construction/demolition debris; WASTE/ILLEGAL_DUMP routing candidate in CB",
       "sector": "WASTE",
-      "issue_type": "illegal_dump"
+      "issue_type": "illegal_dump",
+      "variant_forms": [
+        "2inkesh",
+        "ankesh",
+        "inkesh",
+        "nkaash"
+      ]
     },
     "ta7dir": {
-      "arabizi_note": "تحذير — warning/marking. In ROADS/pothole context: absence of warning markers (jora bla ta7dir) is a severity amplifier. Single token ta7dir alone is not a pothole indicator; it must appear in negative phrasing (bla ta7dir, ma fi ta7dir).",
+      "arabizi_note": "warning/caution (تحذير); isharet ta7dir = warning signs; ROADS/FLOODING support term",
       "sector": "ROADS",
-      "issue_type": "pothole"
+      "issue_type": "pothole",
+      "variant_forms": [
+        "ta7deer",
+        "ta7zir"
+      ]
     },
     "kasaret": {
       "arabizi_note": "كسرت — broke/cracked (feminine past tense). Deferred to Batch 002 (NEEDS_MORE_EXAMPLES from OOV queue). Do not promote until ≥3 further corpus examples. Tentative sector: ROADS/pothole or ROADS/road_collapse.",
@@ -771,11 +781,15 @@
       "cross_sector": "WATER/pipe_leak"
     },
     "mayye": {
-      "arabizi_note": "ماية — regional spelling variant. Possible Beqaa/South Lebanon spelling variant, but not trusted for production until native sign-off. The trusted production form is 'may'. Keep as candidate-only; do not use as a seed.",
+      "arabizi_note": "miye is the Lebanese dialectal form for ميّه (water); false_friend: miye=100 (مية) in formal Arabic; miye mat3a = water is cut (WATER/WATER_CUT status phrase); must not route on miye alone",
       "sector": "WATER",
       "issue_type": "water_cut",
       "variant_forms": [
-        "may"
+        "may",
+        "miye",
+        "miyeh",
+        "miyye",
+        "miyyeh"
       ],
       "status": "CANDIDATE_ONLY"
     },
@@ -850,6 +864,278 @@
         "inkata3et",
         "2it3et"
       ]
+    },
+    "mat3a": {
+      "variant_forms": [
+        "mat3a",
+        "mta3a",
+        "mat3et",
+        "mta3et",
+        "mat3"
+      ],
+      "loanword_from": "",
+      "sector": "WATER,ELECTRICITY",
+      "arabizi_note": "مقطوعة — feminine adj. for cut-off/absent; kahraba mat3a=power cut, miye mat3a=water cut; protected phrase combos in PC; do not route mat3a alone",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "byiji": {
+      "variant_forms": [
+        "byiji",
+        "byije",
+        "biji",
+        "bije",
+        "yiji"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "بيجي — 3sg masc present 'comes/will come'; ma 7ada byiji = nobody comes; complaint discourse verb",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "t2a3": {
+      "variant_forms": [
+        "t2a3",
+        "tou2a3",
+        "twa2a3",
+        "bi t2a3"
+      ],
+      "loanword_from": "",
+      "sector": "ROADS",
+      "arabizi_note": "تقع — falls/drops; bi terji3 t2a3 = keeps falling in (pothole); 2=ء emphatic qaf; ROADS pothole damage signal",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "terji3": {
+      "variant_forms": [
+        "terji3",
+        "tirja3",
+        "terja3",
+        "trja3",
+        "yirja3"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "ترجع — returns/goes back; bi terji3 t2a3 = comes back and falls in; recurring issue discourse marker",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "titrakam": {
+      "variant_forms": [
+        "titrakam",
+        "yitrakam",
+        "titrakm",
+        "3am titrakam"
+      ],
+      "loanword_from": "",
+      "sector": "WASTE,FLOODING",
+      "arabizi_note": "تتراكم — accumulates/piles up; zbele 3am titrakam = garbage accumulating; used for WASTE and FLOODING buildup",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "tirfa3": {
+      "variant_forms": [
+        "tirfa3",
+        "byirfa3",
+        "bitrfa3",
+        "3am tirfa3"
+      ],
+      "loanword_from": "",
+      "sector": "FLOODING,WATER",
+      "arabizi_note": "ترفع — rises/goes up; miye 3am tirfa3 = water is rising; FLOODING support when paired with water vocab",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "yishtikou": {
+      "variant_forms": [
+        "yishtikou",
+        "bishtiku",
+        "byishtikou",
+        "yshtiku"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "يشتكوا — 3pl present 'they complain'; l nas killon yishtikou = all the people are complaining; complaint discourse marker",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "imbere7": {
+      "variant_forms": [
+        "imbere7",
+        "imbari7",
+        "embere7"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "إمبارح — yesterday (Lebanese); uniquely Lebanese/Levantine colloquial (cf. formal Arabic ams); 7=ح",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "ghayet": {
+      "variant_forms": [
+        "ghayet",
+        "ghayit",
+        "ghayeh"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "غاية — extreme/for so long; ghayet min l zaman = for way too long; Lebanese degree/duration idiom in complaint discourse",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "zaman": {
+      "variant_forms": [
+        "zaman",
+        "zamman",
+        "zameen"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "زمان — a long time; men zaman = for a long time/since forever; common unresolved-issue discourse marker",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "masoul": {
+      "variant_forms": [
+        "masoul",
+        "mas2oul",
+        "mass2oul"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "مسؤول — official/responsible person; l masoul ma bada yiji = the official won't come; civic complaint actor",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "jawab": {
+      "variant_forms": [
+        "jawab",
+        "jaweb",
+        "joab",
+        "jwaab"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "جواب — answer/official response; ma fi jawab = no response; civic complaint discourse noun",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "killon": {
+      "variant_forms": [
+        "killon",
+        "killoun",
+        "kllon"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "كلّون — all of them (Lebanese plural); l nas killon = all the people; Lebanese quantifier",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "7aret": {
+      "variant_forms": [
+        "7aret",
+        "7ara",
+        "7aara"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "حارة — alley/sub-neighbourhood; sub-district location term; 7=ح correct Arabizi encoding",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "tarik": {
+      "variant_forms": [
+        "tarik",
+        "tire2"
+      ],
+      "loanword_from": "",
+      "sector": "ROADS",
+      "arabizi_note": "طريق — road (variant); tire2 uses 2=ء for emphatic qaf; tari2 is in CB for routing; tarik here is recognition support only",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "khandaq": {
+      "variant_forms": [
+        "khandaq",
+        "5andaq",
+        "khandek",
+        "khandak"
+      ],
+      "loanword_from": "",
+      "sector": "ROADS,SAFETY",
+      "arabizi_note": "خندق — ditch/trench; also part of neighbourhood name 'el khandaq el ghamik' (PC-0118); 5=خ alternative Arabizi encoding",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "mokhzen": {
+      "variant_forms": [
+        "mokhzen",
+        "makhzan",
+        "makhzen"
+      ],
+      "loanword_from": "",
+      "sector": "SAFETY",
+      "arabizi_note": "مخزن — warehouse/storage building; SAFETY context when fire or hazardous; 5=خ in 5andaq etc.",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "jdide": {
+      "variant_forms": [
+        "jdide",
+        "jdidi",
+        "jdeed",
+        "jdeedeh"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "جديدة — new (fem. adj.); hay el jdide is also a Beirut district name; variant of jdid",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "ghamik": {
+      "variant_forms": [
+        "ghamik",
+        "ghamek",
+        "ghamok"
+      ],
+      "loanword_from": "",
+      "sector": "ALL",
+      "arabizi_note": "غامق — deep/dark adj.; appears in 'el khandaq el ghamik' (Beirut neighbourhood) — see PC-0118 for full location combo",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "jours": {
+      "variant_forms": [
+        "jours",
+        "jour"
+      ],
+      "loanword_from": "fr",
+      "sector": "ALL",
+      "arabizi_note": "French 'day(s)'; standard Lebanese French code-switch; depuis 3 jours = for 3 days",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "route": {
+      "variant_forms": [
+        "route"
+      ],
+      "loanword_from": "fr",
+      "sector": "ROADS",
+      "arabizi_note": "French 'road'; route completement abimee = road completely damaged; French code-switch for ROADS reports",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
+    },
+    "schedule": {
+      "variant_forms": [
+        "schedule",
+        "chidoul"
+      ],
+      "loanword_from": "en",
+      "sector": "ELECTRICITY",
+      "arabizi_note": "English 'schedule'; schedule l kahraba = power cut schedule; common English code-switch for EDL electricity schedules",
+      "added_by": "update_vocab_gwb_support_v16",
+      "added_at": "2026-05-21T16:24:24Z"
     }
   },
   "stoplist_notes": {
