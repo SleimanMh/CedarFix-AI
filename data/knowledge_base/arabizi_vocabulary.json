@@ -1,12 +1,18 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "changelog": [
     "1.8.0 (2026-05-22): V20c complete OOV closure — 44 new term_metadata entries + 6 variant-form patches. Covers ALL 51 remaining OOV English-mapped Arabizi words from corpus audit. Reviewer: SYSTEM-V20c.",
     "1.7.0 (2026-05-22): V20b comprehensive OOV absorption — 43 new term_metadata entries (civic infrastructure, weather, governance, discourse) + 6 variant-form patches. Reviewer: SYSTEM-V20b.",
     "1.9.0 (2026-05-22): V20d full-corpus OOV closure -- 34 new term_metadata entries (34 planned) + 2 entry patches. Includes 5 polysemous pairs: ma_neg/ma_excl, fi_prep/fi_exist, ra2is_political/ra2is_general, ba3da_temporal/ba3da_possessive, ma3na_noun. Source: 64K-tweet Lebanon corpus scan.",
     "2.0.0 (2026-05-22): V20e corpus-gap closure -- 39 new term_metadata entries (39 planned) + 8 entry patches. Milestone: 2.0.0 -- covers major Lebanese function words, connectors, pronouns, verbs, and frustration signals. Patches: bas_connector+bass/bs, chou_question+shou/shoo, allah_excl+yalla/yella, hada_demonstrative+hayda/heyda, halla2_now+hl2, ma3_preposition+ma3kon, ba3da_temporal+ba3don. Source: Lebanon-corpus strict-Arabizi OOV scan (2,747 digit-token instances).",
-    "2.1.0 (2026-05-22): V20f full-corpus OOV dissection -- 50 new term_metadata entries + 10 entry patches. Covers: Lebanese pronouns (houwe/hiye/ento/nehna), aspect markers (la7 future), discourse particles (heik/aslan/wle/wallah), event verb (sar=59 occ), temporal (boukra/mbere7/sa23a), adjectives (helou=198 occ, mnih, a7san, zaha2), modals (lezem/fike/bede), function words (abel/metel/kello/nes/snin). Patches: 3m+aam, ktir_quant+ktr, tal3_verb+toli3/tole3/lt3, a3mel_verb+3melet, chou_question+chu/sho, allah_excl+yalle/yalli, 3la+3layk/3layki/3layna, wad3_noun+wade3, halla2_now+hal2a, ba3da_temporal+ba3doun. Source: combined OOV scan top-300 (Lebanon CSV + arabizi-twitter-leb + Kaggle Arabizi + words_annotated.csv)."
+    "2.1.0 (2026-05-22): V20f full-corpus OOV dissection -- 50 new term_metadata entries + 10 entry patches. Covers: Lebanese pronouns (houwe/hiye/ento/nehna), aspect markers (la7 future), discourse particles (heik/aslan/wle/wallah), event verb (sar=59 occ), temporal (boukra/mbere7/sa23a), adjectives (helou=198 occ, mnih, a7san, zaha2), modals (lezem/fike/bede), function words (abel/metel/kello/nes/snin). Patches: 3m+aam, ktir_quant+ktr, tal3_verb+toli3/tole3/lt3, a3mel_verb+3melet, chou_question+chu/sho, allah_excl+yalle/yalli, 3la+3layk/3layki/3layna, wad3_noun+wade3, halla2_now+hal2a, ba3da_temporal+ba3doun. Source: combined OOV scan top-300 (Lebanon CSV + arabizi-twitter-leb + Kaggle Arabizi + words_annotated.csv).",
+    {
+      "version": "2.2.0",
+      "date": "2026-05-22",
+      "author": "SYSTEM-V20g",
+      "summary": "V20g: 37 new entries + 58 variant patches -> 373 entries, 2020 known_tokens"
+    }
   ],
   "arabizi_notes": {
     "common_substitutions": {
@@ -1802,7 +1808,12 @@
       "variant_forms": [
         "7abibi",
         "habibe",
-        "habibi"
+        "habibi",
+        "7bibi",
+        "7bibe",
+        "7bibti",
+        "7bibto",
+        "7abibteh"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -1836,7 +1847,10 @@
       "variant_forms": [
         "mashe",
         "mashi",
-        "meshe"
+        "meshe",
+        "mechi",
+        "mache",
+        "meshi"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -2723,7 +2737,14 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
-        "kif"
+        "kif",
+        "kiff",
+        "kifak",
+        "kifik",
+        "kfak",
+        "kifkon",
+        "kifen",
+        "kifna"
       ],
       "reviewer_id": "SYSTEM-V20a",
       "review_date": "2026-05-21",
@@ -2745,7 +2766,12 @@
       "loanword_from": null,
       "variant_forms": [
         "eza",
-        "iza"
+        "iza",
+        "iza2",
+        "idha",
+        "idha2",
+        "2iza",
+        "2iza2"
       ],
       "reviewer_id": "SYSTEM-V20a",
       "review_date": "2026-05-21",
@@ -4724,7 +4750,11 @@
         "nhaar",
         "nharet",
         "yawm",
-        "ayem"
+        "ayem",
+        "youm",
+        "youme",
+        "alyoum",
+        "alyom"
       ],
       "reviewer_id": "SYSTEM-V20c",
       "review_date": "2026-05-22",
@@ -4807,7 +4837,10 @@
         "3ayesh",
         "3ayshin",
         "bi73",
-        "3ish"
+        "3ish",
+        "3esh",
+        "3eshe",
+        "3aysha"
       ],
       "reviewer_id": "SYSTEM-V20c",
       "review_date": "2026-05-22",
@@ -5519,7 +5552,10 @@
         "kell",
         "kol",
         "kul",
-        "kill"
+        "kill",
+        "kl",
+        "kil",
+        "kl2"
       ],
       "reviewer_id": "SYSTEM-V20d",
       "review_date": "2026-05-22",
@@ -6186,7 +6222,11 @@
         "int",
         "ent",
         "inte",
-        "ente"
+        "ente",
+        "enty",
+        "enti",
+        "enty2",
+        "enti2"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -6293,7 +6333,10 @@
         "wayn",
         "wein",
         "wayin",
-        "wein"
+        "wein",
+        "wain",
+        "wayne",
+        "w2in"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -6452,7 +6495,12 @@
         "la2anno",
         "lian",
         "li2anno",
-        "la2ann"
+        "la2ann",
+        "la2enno",
+        "la2ino",
+        "la2in",
+        "la2inno",
+        "la2inne"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -6532,7 +6580,12 @@
         "ruh",
         "brou7",
         "bru7",
-        "roo7e"
+        "roo7e",
+        "trouhe",
+        "trou7",
+        "trouh",
+        "troo7",
+        "troo7e"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -7664,7 +7717,11 @@
         "helwe",
         "helwi",
         "helwa",
-        "helwin"
+        "helwin",
+        "7elo",
+        "7elou",
+        "7elweh",
+        "7elwa"
       ],
       "reviewer_id": "SYSTEM-V20f",
       "review_date": "2026-05-22",
@@ -7874,7 +7931,11 @@
         "sarle",
         "sarlik",
         "sayer",
-        "sayir"
+        "sayir",
+        "sarkon",
+        "sayra",
+        "saret2",
+        "saro2"
       ],
       "reviewer_id": "SYSTEM-V20f",
       "review_date": "2026-05-22",
@@ -8055,7 +8116,10 @@
         "emmi",
         "immi",
         "oummi",
-        "ummi"
+        "ummi",
+        "emy",
+        "emmy",
+        "emmeh"
       ],
       "reviewer_id": "SYSTEM-V20f",
       "review_date": "2026-05-22",
@@ -8407,6 +8471,954 @@
       "confidence": "MEDIUM",
       "notes": "Lebanese verb/state 'trembling / shaking' (ra3ash). Arabizi digits 2=hamza/3=ayin (ع). Can signal fear, shock, or physical reaction to an event. 'ana ra23' = 'I am trembling'. Freq: ra23=8*.",
       "added_at": "20260522T012409Z"
+    },
+    "3an_prep": {
+      "arabic_equivalent": "عن",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3an",
+        "3anno",
+        "3anha",
+        "3anna",
+        "3anak",
+        "3anik",
+        "3annak",
+        "3annik",
+        "3annon",
+        "3ankon"
+      ],
+      "notes": "Preposition 'about/from/regarding'. Freq 49+ in digit-OOV scan. One of the most common Arabic prepositions; critical for coverage.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3and_poss": {
+      "arabic_equivalent": "عند",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3and",
+        "3ande",
+        "3andi",
+        "3andak",
+        "3andik",
+        "3ando",
+        "3anda",
+        "3andna",
+        "3andon",
+        "3andkon",
+        "3andkon"
+      ],
+      "notes": "Possession/location: 3andi=I have, 3andak=you have. Freq 20+ in scan.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3ade_adj": {
+      "arabic_equivalent": "عادي",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3ade",
+        "3adi",
+        "3adeh",
+        "3adiye",
+        "3ade2",
+        "3adeh2"
+      ],
+      "notes": "Adjective 'normal/usual/casual'. Freq 21+ in scan.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "hon_loc": {
+      "arabic_equivalent": "هون",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "hon",
+        "houn",
+        "hene",
+        "hona",
+        "honik",
+        "henek",
+        "hona2",
+        "houn2",
+        "hene2"
+      ],
+      "notes": "Lebanese locative adverb 'here'. Very common in Lebanese dialect. Freq 3+ in pure Arabizi dataset.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "hay_excl": {
+      "arabic_equivalent": "هاي",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "hay",
+        "hei",
+        "heyy",
+        "hayy",
+        "heyyy"
+      ],
+      "notes": "Informal greeting 'hey/hi'. Also feminine 'yes' or 'this (f)'. Must not confuse with Arabic hiye (she). T3 greeting marker.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "yaret_expr": {
+      "arabic_equivalent": "ياريت",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "medium",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "yaret",
+        "yyaret",
+        "y2ret",
+        "yaret2",
+        "yareit"
+      ],
+      "notes": "Wish particle 'I wish / if only'. Very common in expressions of desire, complaint, hope. T3 support for sentiment context.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3ammo_noun": {
+      "arabic_equivalent": "عمو",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3ammo",
+        "3amo",
+        "3amu",
+        "3amou",
+        "3amm",
+        "3mm"
+      ],
+      "notes": "Address form 'uncle / mister'. Very common in Lebanese conversation.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "alf_noun": {
+      "arabic_equivalent": "ألف",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "alf",
+        "alaf",
+        "elef",
+        "2alf",
+        "talef",
+        "alf2"
+      ],
+      "notes": "Number word 'thousand'. Common in expressions: alf mabrouk, alf shukr, alf salameh.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "msa_time": {
+      "arabic_equivalent": "مساء",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "msa",
+        "masa",
+        "masa2",
+        "msa2",
+        "el2masa",
+        "elmasa"
+      ],
+      "notes": "Temporal word 'evening / good evening'. Common in greetings: masa el kheir = good evening.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "sa7_part": {
+      "arabic_equivalent": "صح",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sa7",
+        "sah",
+        "sa77",
+        "sa7e",
+        "sa77e",
+        "sa7ten"
+      ],
+      "notes": "Affirmative/agreement particle 'right / correct / true'. Very common in colloquial affirmation.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mohem_adj": {
+      "arabic_equivalent": "مهم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mohem",
+        "mhimm",
+        "mhimme",
+        "muhem",
+        "mhem",
+        "mhim",
+        "mohimm",
+        "muhim"
+      ],
+      "notes": "Adjective 'important / significant'. Common in commentary tweets.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mazbout_adj": {
+      "arabic_equivalent": "مضبوط",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mazbout",
+        "mazboot",
+        "mzbt",
+        "mazbouta",
+        "mazboote",
+        "madbout",
+        "madbout2"
+      ],
+      "notes": "Adjective 'correct / calibrated / right / proper'. Also used as confirmation. Common in Lebanese.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mawjoud_adj": {
+      "arabic_equivalent": "موجود",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mawjoud",
+        "mawjoude",
+        "mwjoud",
+        "moujoude",
+        "moujoud",
+        "mawjoudin",
+        "mawjoudat"
+      ],
+      "notes": "Adjective 'present / available / existing'. Key for describing service availability (electricity, water, etc.).",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "dene_noun": {
+      "arabic_equivalent": "دنيا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "dene",
+        "denia",
+        "denye",
+        "denyete",
+        "denye2",
+        "denyeti"
+      ],
+      "notes": "Noun 'world / life / universe'. Used as endearment: 'dene' in Lebanese colloquial = 'my world / my life'.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "bebke_verb": {
+      "arabic_equivalent": "بيبكي",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "medium",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "bebke",
+        "bybke",
+        "betbke",
+        "beke",
+        "bke",
+        "bikke",
+        "nbke",
+        "bybki"
+      ],
+      "notes": "Verb 'I cry / I weep'. Emotion verb common in distress/grief tweets.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "amtin_adv": {
+      "arabic_equivalent": "آمتين",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "amtin",
+        "emtin",
+        "aimte",
+        "imte",
+        "mtin",
+        "2amten",
+        "emten",
+        "amten"
+      ],
+      "notes": "Question adverb 'when?' (Lebanese). OOV freq 4+ in pure Arabizi.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3omri_expr": {
+      "arabic_equivalent": "عمري",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3omri",
+        "3omre",
+        "3mri",
+        "3umri",
+        "3ommri",
+        "3omrak",
+        "3omrik",
+        "3omro",
+        "3omra",
+        "3omrkon"
+      ],
+      "notes": "Possessive noun 'my life / my age'. Used as term of endearment or exclamation. Also: 3omrak=your age, 3omrna=our life.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3atini_verb": {
+      "arabic_equivalent": "عطيني",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3tini",
+        "3atini",
+        "3atinik",
+        "3tinak",
+        "3atine",
+        "3atna",
+        "3atineh",
+        "3atikon"
+      ],
+      "notes": "Imperative verb 'give me'. Lebanese colloquial request.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "sett_noun": {
+      "arabic_equivalent": "ست",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sett",
+        "sett2",
+        "sitto",
+        "siti",
+        "settna",
+        "el sett",
+        "elsett"
+      ],
+      "notes": "Noun 'woman / Mrs / grandmother / lady'. Common address in Lebanese.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "ad_conj": {
+      "arabic_equivalent": "قد",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ad",
+        "2ad",
+        "add",
+        "addo",
+        "adda",
+        "adde",
+        "2adde"
+      ],
+      "notes": "Degree particle 'as much as / just as / how much'. Common in comparisons and exclamations.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "oum_noun": {
+      "arabic_equivalent": "أم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "oum",
+        "oom",
+        "oumi",
+        "omi",
+        "oume",
+        "oumna"
+      ],
+      "notes": "Noun 'mother'. Variant of emme/immi using Western oum/oom spelling. Distinct normalised form from emme_noun entry.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "menne_prep": {
+      "arabic_equivalent": "مني",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "menne",
+        "menni",
+        "minne",
+        "minni",
+        "menne2",
+        "mennak",
+        "mennik",
+        "menno",
+        "menna",
+        "mennon"
+      ],
+      "notes": "Prepositional phrase 'from me / of me'. Declined: mennak=from you, menno=from him.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "yeha_excl": {
+      "arabic_equivalent": "يحيا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "yeha",
+        "yi7ya",
+        "yi7ye",
+        "yehya",
+        "ye7ya"
+      ],
+      "notes": "Exclamation 'long live / hurray / viva'. Common in celebratory or political tweets.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "tfaddal_part": {
+      "arabic_equivalent": "تفضل",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "tfaddal",
+        "tfadal",
+        "tfaddaleh",
+        "tafaddal",
+        "tfaddali",
+        "tfaddalo",
+        "tfaddalou"
+      ],
+      "notes": "Politeness particle 'please / go ahead / help yourself / here you go'. Very common in Lebanese hospitality context.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mar7aba_greet": {
+      "arabic_equivalent": "مرحبا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mar7aba",
+        "mar7abe",
+        "marhaba",
+        "mar7abtek",
+        "marhabe",
+        "mar7aba2",
+        "marhaba2"
+      ],
+      "notes": "Standard greeting 'hello / hi'. One of the most common Lebanese greetings alongside ahlan.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "salam_greet": {
+      "arabic_equivalent": "سلام",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "salam",
+        "sallem",
+        "salamo",
+        "salam2",
+        "salami",
+        "salmit",
+        "salomit",
+        "sallamit",
+        "salaamu"
+      ],
+      "notes": "Greeting/farewell 'peace / hi / bye'. Used to open/close messages. Also sallem = 'say hi / convey greetings'.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "noom_noun": {
+      "arabic_equivalent": "نوم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "noom",
+        "nom",
+        "noum",
+        "nome",
+        "noumi",
+        "noumak",
+        "tnaam",
+        "tnami"
+      ],
+      "notes": "Noun/verb 'sleep'. Common in daily life tweets. Also: tnaam=sleep(imp).",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "sha3b_noun": {
+      "arabic_equivalent": "شعب",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "GOVERNMENT",
+        "SOCIAL"
+      ],
+      "severity_relevance": "medium",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sha3b",
+        "sha3eb",
+        "sha3bi",
+        "sha3bna",
+        "sha3biye",
+        "sha3biyyeh",
+        "sha3bkon"
+      ],
+      "notes": "Noun 'people / nation / folk'. Key political/social term. sha3bi=of the people; sha3bna=our people.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "rab_noun": {
+      "arabic_equivalent": "رب",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SOCIAL",
+        "GENERAL"
+      ],
+      "severity_relevance": "medium",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "rab",
+        "rabb",
+        "rab2",
+        "rabbi",
+        "rabbo",
+        "rabba",
+        "rabbna",
+        "rab2i",
+        "ya rab",
+        "yarab"
+      ],
+      "notes": "Noun 'Lord / God / Creator'. Freq 7 in pure Arabizi. Common in supplication: ya rab (oh Lord), rabbi (my Lord).",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "ta3ban_adj": {
+      "arabic_equivalent": "تعبان",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "HEALTH",
+        "GENERAL"
+      ],
+      "severity_relevance": "high",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ta3ban",
+        "ta3bane",
+        "ta3baneh",
+        "t3ban",
+        "ta3ben",
+        "t3ben",
+        "ta3bana",
+        "ta3banin"
+      ],
+      "notes": "Adjective 'tired / exhausted / broken / sick'. Dual-use: describes people (fatigue, illness) AND infrastructure (broken, faulty). High-severity when infrastructure context is detected.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mariz_adj": {
+      "arabic_equivalent": "مريض",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "HEALTH"
+      ],
+      "severity_relevance": "high",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mariz",
+        "marize",
+        "marida",
+        "marada",
+        "mrid",
+        "mride",
+        "marido",
+        "maraad"
+      ],
+      "notes": "Adjective 'sick / ill / diseased'. Health sector signal. Also used metaphorically: 'the system is sick'.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "dawa_noun": {
+      "arabic_equivalent": "دواء",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "HEALTH",
+        "PHARMACY"
+      ],
+      "severity_relevance": "high",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "dawa",
+        "dowa",
+        "daweh",
+        "dawa2",
+        "dawawi",
+        "adwiye",
+        "edwiyeh",
+        "dwiyeh"
+      ],
+      "notes": "Noun 'medicine / drug / remedy'. Health crisis signal. adwiye/edwiyeh=medicines (plural).",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "ekhet_noun": {
+      "arabic_equivalent": "أخت",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "SOCIAL",
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ekhet",
+        "okhet",
+        "2okhet",
+        "2ekhet",
+        "khet",
+        "khte",
+        "ekhte",
+        "okhte"
+      ],
+      "notes": "Noun 'sister'. Common family term in Lebanese social context. OOV freq 5 in pure Arabizi. T2 for social sector support.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "mno_prep": {
+      "arabic_equivalent": "منه",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mno",
+        "mnou",
+        "mnha",
+        "mnon",
+        "mnkon",
+        "mna",
+        "mennon",
+        "mennha",
+        "menno"
+      ],
+      "notes": "Prepositional pronoun 'from him / from her / from them'. Contracted form of men + pronoun suffix. Common in Lebanese.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3asha_noun": {
+      "arabic_equivalent": "عشاء",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "FOOD",
+        "GENERAL"
+      ],
+      "severity_relevance": "low",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3asha",
+        "3asha2",
+        "3ache",
+        "3ashe",
+        "3ache2",
+        "el3asha",
+        "hal3asha"
+      ],
+      "notes": "Noun 'dinner / supper'. Food sector support. Common in daily tweets.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3atshan_adj": {
+      "arabic_equivalent": "عطشان",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "WATER",
+        "HEALTH"
+      ],
+      "severity_relevance": "critical",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3atshan",
+        "3atshane",
+        "3atshana",
+        "3tshn",
+        "3tshan",
+        "3atshana"
+      ],
+      "notes": "Adjective 'thirsty'. Direct T1 water-crisis signal. When combined with water-sector context, indicates acute shortage.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
+    },
+    "3atesh_noun": {
+      "arabic_equivalent": "عطش",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "WATER",
+        "HEALTH"
+      ],
+      "severity_relevance": "critical",
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "3atesh",
+        "3tesh",
+        "3atas",
+        "3atash",
+        "3tsh"
+      ],
+      "notes": "Noun 'thirst'. Direct water-crisis T1 signal. Pair with 3atshan_adj for dehydration/water-shortage detection.",
+      "reviewer_id": "SYSTEM-V20g",
+      "review_date": "2026-05-22",
+      "confidence": 0.9,
+      "added_at": "2026-05-22"
     }
   },
   "stoplist_notes": {
