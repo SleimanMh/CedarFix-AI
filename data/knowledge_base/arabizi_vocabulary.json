@@ -1,11 +1,12 @@
 {
   "description": "Lebanese Arabizi vocabulary seeds per sector. Used by corpus annotation team to author Arabizi complaints faster. Process: write seed → human edits to natural Lebanese Arabizi → add to corpus. DO NOT use raw seeds as corpus without human review.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "changelog": [
     "1.8.0 (2026-05-22): V20c complete OOV closure — 44 new term_metadata entries + 6 variant-form patches. Covers ALL 51 remaining OOV English-mapped Arabizi words from corpus audit. Reviewer: SYSTEM-V20c.",
     "1.7.0 (2026-05-22): V20b comprehensive OOV absorption — 43 new term_metadata entries (civic infrastructure, weather, governance, discourse) + 6 variant-form patches. Reviewer: SYSTEM-V20b.",
     "1.9.0 (2026-05-22): V20d full-corpus OOV closure -- 34 new term_metadata entries (34 planned) + 2 entry patches. Includes 5 polysemous pairs: ma_neg/ma_excl, fi_prep/fi_exist, ra2is_political/ra2is_general, ba3da_temporal/ba3da_possessive, ma3na_noun. Source: 64K-tweet Lebanon corpus scan.",
-    "2.0.0 (2026-05-22): V20e corpus-gap closure -- 39 new term_metadata entries (39 planned) + 8 entry patches. Milestone: 2.0.0 -- covers major Lebanese function words, connectors, pronouns, verbs, and frustration signals. Patches: bas_connector+bass/bs, chou_question+shou/shoo, allah_excl+yalla/yella, hada_demonstrative+hayda/heyda, halla2_now+hl2, ma3_preposition+ma3kon, ba3da_temporal+ba3don. Source: Lebanon-corpus strict-Arabizi OOV scan (2,747 digit-token instances)."
+    "2.0.0 (2026-05-22): V20e corpus-gap closure -- 39 new term_metadata entries (39 planned) + 8 entry patches. Milestone: 2.0.0 -- covers major Lebanese function words, connectors, pronouns, verbs, and frustration signals. Patches: bas_connector+bass/bs, chou_question+shou/shoo, allah_excl+yalla/yella, hada_demonstrative+hayda/heyda, halla2_now+hl2, ma3_preposition+ma3kon, ba3da_temporal+ba3don. Source: Lebanon-corpus strict-Arabizi OOV scan (2,747 digit-token instances).",
+    "2.1.0 (2026-05-22): V20f full-corpus OOV dissection -- 50 new term_metadata entries + 10 entry patches. Covers: Lebanese pronouns (houwe/hiye/ento/nehna), aspect markers (la7 future), discourse particles (heik/aslan/wle/wallah), event verb (sar=59 occ), temporal (boukra/mbere7/sa23a), adjectives (helou=198 occ, mnih, a7san, zaha2), modals (lezem/fike/bede), function words (abel/metel/kello/nes/snin). Patches: 3m+aam, ktir_quant+ktr, tal3_verb+toli3/tole3/lt3, a3mel_verb+3melet, chou_question+chu/sho, allah_excl+yalle/yalli, 3la+3layk/3layki/3layna, wad3_noun+wade3, halla2_now+hal2a, ba3da_temporal+ba3doun. Source: combined OOV scan top-300 (Lebanon CSV + arabizi-twitter-leb + Kaggle Arabizi + words_annotated.csv)."
   ],
   "arabizi_notes": {
     "common_substitutions": {
@@ -1269,9 +1270,14 @@
     },
     "3la": {
       "variant_forms": [
-        "3la",
+        "3al",
         "3ala",
-        "3al"
+        "3la",
+        "3lakon",
+        "3layk",
+        "3layki",
+        "3layna",
+        "3layon"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -1483,7 +1489,8 @@
       "variant_forms": [
         "3am",
         "3em",
-        "3m"
+        "3m",
+        "aam"
       ],
       "loanword_from": "",
       "sector": "ALL",
@@ -2689,7 +2696,10 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
+        "cho",
         "chou",
+        "chu",
+        "sho",
         "shoo",
         "shou",
         "shu"
@@ -5451,6 +5461,8 @@
         "allahu",
         "yalla",
         "yallah",
+        "yalle",
+        "yalli",
         "yella"
       ],
       "reviewer_id": "SYSTEM-V20d",
@@ -5474,12 +5486,14 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
-        "ktir",
-        "ktiir",
-        "kteer",
         "keter",
         "kteer",
-        "kteerr"
+        "kteerr",
+        "kter",
+        "ktiiir",
+        "ktiir",
+        "ktir",
+        "ktr"
       ],
       "reviewer_id": "SYSTEM-V20d",
       "review_date": "2026-05-22",
@@ -5579,6 +5593,7 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
+        "hal2a",
         "hala2",
         "hala2a",
         "halla",
@@ -6023,7 +6038,9 @@
         "ba3dein",
         "ba3den",
         "ba3do",
-        "ba3don"
+        "ba3don",
+        "ba3doun",
+        "ba3dun"
       ],
       "reviewer_id": "SYSTEM-V20d",
       "review_date": "2026-05-22",
@@ -6614,12 +6631,13 @@
       "loanword_from": null,
       "variant_forms": [
         "wad3",
-        "wad3o",
         "wad3ak",
-        "wad3na",
         "wad3e",
         "wad3ha",
-        "wad3on"
+        "wad3na",
+        "wad3o",
+        "wad3on",
+        "wade3"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -6691,13 +6709,17 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
+        "3amelet",
+        "3amelo",
+        "3amlet",
+        "3melet",
         "a3mel",
         "a3mil",
+        "ba3mel",
+        "bta3mel",
         "e3mel",
         "i3mel",
-        "na3mel",
-        "ba3mel",
-        "bta3mel"
+        "na3mel"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -6797,13 +6819,16 @@
       "must_not_auto_promote": "false",
       "loanword_from": null,
       "variant_forms": [
+        "lt3",
+        "tal3",
         "tal3a",
         "tal3e",
         "tal3et",
         "tal3o",
         "tala3",
         "tela3",
-        "tal3"
+        "tole3",
+        "toli3"
       ],
       "reviewer_id": "SYSTEM-V20e",
       "review_date": "2026-05-22",
@@ -7097,6 +7122,1291 @@
       "confidence": "MEDIUM",
       "notes": "Lebanese/Levantine Arabizi adjective 'despairing / hopeless / pessimistic'. 2=hamza (ء) as in ta2is (ta-hamza-is). ta2es/ta2is = despairing, feeling hopeless (from root y-a-s = despair). Direct distress signal relevant to mental-state and crisis-severity detection. Note: could also derive from طقس (ta2s = weather/storm) in weather context -- review with context.",
       "added_at": "20260521T234549Z"
+    },
+    "la7_future": {
+      "canonical_form": "la7",
+      "arabic_equivalent": "لح",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "la7",
+        "lah",
+        "la7a",
+        "la72"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese future aspect marker 'will/gonna' (lah-ha = la7). la7 is the Arabizi digit form (7=ha ح); lah is the non-digit form. 'la7 rou7' = 'I will go'. Core Lebanese grammar particle. Freq: la7=10*, lah=25 combined. Distinct from Egyptian ha- prefix.",
+      "added_at": "20260522T012409Z"
+    },
+    "houwe_pron": {
+      "canonical_form": "houwe",
+      "arabic_equivalent": "هو",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "houwe",
+        "huwe",
+        "howe",
+        "hou"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese third person masculine singular pronoun 'he' (huwwa). Lebanese full form 'houwe' vs MSA 'huwa'. Freq: houwe=18, huwe=13, howe=7 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "hiye_pron": {
+      "canonical_form": "hiye",
+      "arabic_equivalent": "هي",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "hiye",
+        "hiyeh",
+        "hiyye"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese third person feminine singular pronoun 'she' (hiya). Lebanese full form 'hiye' vs MSA 'hiya'. Freq: hiye=10.",
+      "added_at": "20260522T012409Z"
+    },
+    "ento_pron": {
+      "canonical_form": "ento",
+      "arabic_equivalent": "إنتو",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ento",
+        "entou",
+        "entun",
+        "entow"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese second person plural pronoun 'you all/you guys' (intum). Lebanese form 'ento' vs MSA 'antum'. Freq: ento=16.",
+      "added_at": "20260522T012409Z"
+    },
+    "nehna_pron": {
+      "canonical_form": "nehna",
+      "arabic_equivalent": "نحنا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "nehna",
+        "nahna",
+        "ne7na",
+        "ne7en"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese first person plural pronoun 'we' (nahnu). Lebanese 'nehna/nahna' vs MSA 'nahnu'. ne7na is Arabizi digit form (7=ha ح). Freq: nehna=8, nahna=7, ne7na=8* combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "abel_prep": {
+      "canonical_form": "abel",
+      "arabic_equivalent": "قبل",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "abel",
+        "2abel",
+        "2abl",
+        "abl",
+        "abil"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese preposition/adverb 'before' (qabla). Temporal and sequential marker. 'abel ma' = 'before that'. Lebanese form drops emphatic q: abel vs qabel. Freq: abel=31 -- 5th highest OOV.",
+      "added_at": "20260522T012409Z"
+    },
+    "heik_part": {
+      "canonical_form": "heik",
+      "arabic_equivalent": "هيك",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "heik",
+        "hek",
+        "hayk",
+        "heke"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese demonstrative adverb 'like this / so / thus' (haytha). Extremely common discourse particle: 'heik la2' = 'just like that', 'heik w heik' = 'just so'. Freq: heik=22.",
+      "added_at": "20260522T012409Z"
+    },
+    "kello_quant": {
+      "canonical_form": "kello",
+      "arabic_equivalent": "كله",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "kello",
+        "kelo",
+        "kella",
+        "kela",
+        "kelna",
+        "kelon",
+        "kellon"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese quantifier 'all of it / all / everyone' (kulluhu). kello=all of it (m clitic), kella=all of it (f), kelna=all of us, kelon=all of them. Very common totality marker. Freq: kello=19.",
+      "added_at": "20260522T012409Z"
+    },
+    "lezem_modal": {
+      "canonical_form": "lezem",
+      "arabic_equivalent": "لازم",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "lezem",
+        "lezm",
+        "lazem",
+        "lezim",
+        "lezmo"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese obligation modal 'must / necessary / have to' (lazim). Urgency marker: 'lezem yeje' = 'he must come'. Lebanese shifts a->e in unstressed syllables. Freq: lezem=11, lezm=8 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "metel_prep": {
+      "canonical_form": "metel",
+      "arabic_equivalent": "مثل",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "metel",
+        "mtel",
+        "mitl",
+        "mitil",
+        "mitel"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese comparative preposition 'like / similar to / such as' (mithla). Extremely common in comparisons and examples. 'metel ma' = 'just as/like'. Freq: metel=25.",
+      "added_at": "20260522T012409Z"
+    },
+    "boukra_time": {
+      "canonical_form": "boukra",
+      "arabic_equivalent": "بكرا",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "boukra",
+        "bukra",
+        "bokra",
+        "bakir",
+        "bakra",
+        "bkra"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese temporal adverb 'tomorrow' (bukra). Multiple regional variants: boukra/bukra (Beirut), bakir/bokra (other). Freq: boukra=14, bukra=14, bokra=12, bakir=12 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "aslan_part": {
+      "canonical_form": "aslan",
+      "arabic_equivalent": "أصلاً",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "aslan",
+        "aslane",
+        "asln"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese discourse particle 'actually / anyway / originally / still' (aslan). Common hedge and intensifier: 'aslan ma bya3rif' = 'he doesn't even know'. Freq: aslan=25.",
+      "added_at": "20260522T012409Z"
+    },
+    "bede_want": {
+      "canonical_form": "bede",
+      "arabic_equivalent": "بدي",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "bede",
+        "bedi",
+        "beddi",
+        "bedde",
+        "baddo",
+        "badda",
+        "badak",
+        "badik",
+        "badon",
+        "badkon",
+        "badet"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese volitional verb 'want' (baddi). bede/bedi = I want, baddo = he wants, badak/badik = you want (m/f), badon = they want. Root b-d + clitic pronoun. Freq: bede=19, baddo=11, badak=10 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "fike_modal": {
+      "canonical_form": "fike",
+      "arabic_equivalent": "فيك",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "fike",
+        "fik",
+        "fiki",
+        "fiye",
+        "fiya",
+        "fina",
+        "fiyon",
+        "fikon"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese ability modal 'can' from fi (can/possible) + clitic pronoun. fike=you can (f), fik=you can (m), fina=we can, fiya/fiye=she can. 'ma fike' = 'you cannot'. Freq: fike=17, fik=13, fina=13, fiya/fiye=10 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "lek_prep": {
+      "canonical_form": "lek",
+      "arabic_equivalent": "لك",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "lek",
+        "lak",
+        "leki",
+        "laki",
+        "lkon"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese dative preposition 'for you / to you'. lek=for you (f), lak=for you (m). '3andi khabar lek' = 'I have news for you'. Freq: lek=17.",
+      "added_at": "20260522T012409Z"
+    },
+    "ele_prep": {
+      "canonical_form": "ele",
+      "arabic_equivalent": "له",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ele",
+        "elo",
+        "ela",
+        "elik",
+        "elak"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese dative preposition 'for him / for her / for you'. ele/elo=for him, ela=for her, elik=for you (f), elak=for you (m). Lebanese clitic form of lahu/laha. Freq: ele=23, elo=17, ela=14 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "mnih_adj": {
+      "canonical_form": "mnih",
+      "arabic_equivalent": "منيح",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mnih",
+        "mni7",
+        "mniha",
+        "mni7a",
+        "mneeh"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective 'good / well / nice / decent' (mniyah). mni7 is the Arabizi digit form (7=ha ح). Common positive assessment: 'mnih ktir' = 'very good'. Freq: mnih=12.",
+      "added_at": "20260522T012409Z"
+    },
+    "snin_noun": {
+      "canonical_form": "snin",
+      "arabic_equivalent": "سنين",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "snin",
+        "sneen",
+        "sineen",
+        "sinin"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese plural of 'year' (sanawat/snin). Common temporal reference: 'snin w snin' = 'years and years'. Freq: snin=11.",
+      "added_at": "20260522T012409Z"
+    },
+    "nes_noun": {
+      "canonical_form": "nes",
+      "arabic_equivalent": "ناس",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "nes",
+        "naas",
+        "nass"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'people / folks' (nas). Very common community reference: 'kell el-nes' = 'all the people'. Freq: nes=26.",
+      "added_at": "20260522T012409Z"
+    },
+    "knt_past": {
+      "canonical_form": "knt",
+      "arabic_equivalent": "كنت",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "knt",
+        "kent",
+        "kenet",
+        "kenit",
+        "kente",
+        "kento",
+        "keno"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese past tense forms of 'was/were' (kuntu). knt/kent=I was, kenet/kenit=I was (f. alt.), kente=you were (f.), kento=you were (pl.), keno=they were. Note: base form 'ken' already covered by ken_past entry. These are the abbreviated SMS/tweet forms. Freq: knt=12, keno=17, kenit=10 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "helou_adj": {
+      "canonical_form": "helou",
+      "arabic_equivalent": "حلو",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "true",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "helou",
+        "helo",
+        "helwe",
+        "helwi",
+        "helwa",
+        "helwin"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective 'beautiful / nice / sweet / cute' (helw). helo/helou=m.sg, helwe=f.sg, helwin=pl. false_friend_risk=true: helo can be confused with English 'hello' -- disambiguation by context (standalone greeting vs descriptor). HIGHEST-FREQUENCY OOV: helo=198, helwe=20 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "ykoun_cop": {
+      "canonical_form": "ykoun",
+      "arabic_equivalent": "يكون",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ykoun",
+        "ykun",
+        "koun",
+        "kono",
+        "ykon",
+        "ikoun",
+        "tkoun",
+        "nkoun"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese copula/existential verb 'to be / become / it is' (yakun). ykoun=he is, koun=be (imperative), kono=it was/became, tkoun=you are, nkoun=we are. Freq: ykoun=27, koun=15.",
+      "added_at": "20260522T012409Z"
+    },
+    "wallah_excl": {
+      "canonical_form": "wallah",
+      "arabic_equivalent": "والله",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "wallah",
+        "walla",
+        "wallaw",
+        "walla2"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Arabic/Lebanese oath/exclamation 'by God / I swear / really' (wallahi). Used for emphasis, confirmation, and emotional intensity. 'wallah ma 3ref' = 'I swear I don't know'. Freq: wallah=9.",
+      "added_at": "20260522T012409Z"
+    },
+    "wle_excl": {
+      "canonical_form": "wle",
+      "arabic_equivalent": "ولاه",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "wle",
+        "wlak",
+        "wlo",
+        "wlek",
+        "wla"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese informal exclamation/vocative 'hey / dude / man' (ya walad). Masculine address particle used in colloquial speech. 'wlak shu sa23a?' = 'man, what time is it?'. Freq: wle=11, wlak=10, wlo=10 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "inshallah_expr": {
+      "canonical_form": "inshallah",
+      "arabic_equivalent": "إن شاء الله",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "inshallah",
+        "inchallah",
+        "nshalla",
+        "nchallah",
+        "nshallah",
+        "nshla",
+        "ensha2allah"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Arabic/Lebanese expression 'God willing / hopefully / if God wills it'. Used for hope, deferment, polite refusal. Very common. Freq: nshalla=10, nchallah=8 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "mabsout_adj": {
+      "canonical_form": "mabsout",
+      "arabic_equivalent": "مبسوط",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mabsout",
+        "mabsoute",
+        "mbsout"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective 'happy / content / satisfied / pleased' (mabsut). mabsout=m.sg, mabsoute=f.sg. Positive emotional state marker. Freq: mabsout=7.",
+      "added_at": "20260522T012409Z"
+    },
+    "tayeb_part": {
+      "canonical_form": "tayeb",
+      "arabic_equivalent": "طيّب",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "tayeb",
+        "tayyeb",
+        "tayb",
+        "6ayeb"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese discourse particle 'ok / alright / fine / well then' (tayyib). 6ayeb is Arabizi digit form (6=ta emphatic ط). Very common conversation connector and acknowledgement. Freq: tayeb=10.",
+      "added_at": "20260522T012409Z"
+    },
+    "nos_noun": {
+      "canonical_form": "nos",
+      "arabic_equivalent": "نص",
+      "semantic_type": "T3_GENERIC_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "nos",
+        "noss",
+        "nus",
+        "nos2"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'half / middle / mid-' (nus). Common in quantities: 'nos kilo' = 'half a kilo', 'nos se3a' = 'half an hour'. Freq: nos=17, noss=9 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "sar_verb": {
+      "canonical_form": "sar",
+      "arabic_equivalent": "صار",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sar",
+        "saret",
+        "saro",
+        "sarle",
+        "sarlik",
+        "sayer",
+        "sayir"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese verb 'happened / became / turned into' (sara). Core event-reporting verb: 'shu sar?' = 'what happened?'. sar=it happened, saret=it happened (f/past), saro=they became, sayir=happening (active participle). HIGHEST-FREQUENCY non-digit OOV: sar=59.",
+      "added_at": "20260522T012409Z"
+    },
+    "sa23a_noun": {
+      "canonical_form": "sa23a",
+      "arabic_equivalent": "ساعة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "sa23a",
+        "sa3a",
+        "sa3at",
+        "sa3ten",
+        "sa3o"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'hour / o'clock / time' (sa3a). Critical temporal reporting word: 'sa3a wle' = 'an hour ago', 'sa3a kham' = 'five o'clock'. sa23a/sa3a are Arabizi digit forms (2=hamza, 3=ayin). HIGHEST strict-digit OOV: sa23a=23*.",
+      "added_at": "20260522T012409Z"
+    },
+    "hayet_noun": {
+      "canonical_form": "hayet",
+      "arabic_equivalent": "حياة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "hayet",
+        "hayete",
+        "hayata",
+        "hayatak",
+        "hayeti",
+        "hayetna"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'life / my life' (hayat). Used as endearment ('hayete' = 'my life / darling'), in pleas and crisis: 'khatar hayeto' = 'his life is at risk'. Freq: hayete=17, hayet=15 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "akel_noun": {
+      "canonical_form": "akel",
+      "arabic_equivalent": "أكل",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "WATER",
+        "WASTE"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "akel",
+        "akl",
+        "akla",
+        "akalet",
+        "akil"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun/verb 'food / eat / eating' (akl). Relevant to food safety, water contamination, waste context. Freq: akel=34, akl=11 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "wara_prep": {
+      "canonical_form": "wara",
+      "arabic_equivalent": "ورا",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ROADS",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "wara",
+        "wara2",
+        "warra"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese preposition 'behind / back / after' (wara2). Spatial indicator for road blockages, flood descriptions. 'wara el-beit' = 'behind the house'. Freq: wara=12.",
+      "added_at": "20260522T012409Z"
+    },
+    "a7san_adj": {
+      "canonical_form": "a7san",
+      "arabic_equivalent": "أحسن",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "a7san",
+        "a7sen",
+        "ahsan",
+        "e7san"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese comparative adjective 'better / best / superior' (ahsan). a7san uses Arabizi digit 7=ha (ح). Used in service quality comparisons: 'a7san min abel' = 'better than before'. Freq: a7san=11*.",
+      "added_at": "20260522T012409Z"
+    },
+    "daroure_adj": {
+      "canonical_form": "daroure",
+      "arabic_equivalent": "ضروري",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "daroure",
+        "darouri",
+        "daroura",
+        "darure"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective 'necessary / urgent / essential' (daruri). Urgency marker for crisis reporting: 'daroure teje' = 'it is urgent that you come'. severity_relevance=HIGH due to urgency signal. Freq: daroure=7.",
+      "added_at": "20260522T012409Z"
+    },
+    "emme_noun": {
+      "canonical_form": "emme",
+      "arabic_equivalent": "إمي",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "emme",
+        "emmi",
+        "immi",
+        "oummi",
+        "ummi"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'my mother' (ummi). Common in emotional appeals and family context. Freq: emme=12.",
+      "added_at": "20260522T012409Z"
+    },
+    "chabeb_noun": {
+      "canonical_form": "chabeb",
+      "arabic_equivalent": "شباب",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "chabeb",
+        "shabeb",
+        "chabab",
+        "shabab",
+        "shab"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'guys / youth / young people' (shabab). Informal address term and social group reference. Freq: chabeb=13, shabeb=9 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "albe_noun": {
+      "canonical_form": "albe",
+      "arabic_equivalent": "قلبي",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "albe",
+        "albi",
+        "alb",
+        "albo",
+        "albak",
+        "albha"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'heart / my heart' (qalbi). Common in emotional appeals and health context. 'ya albe' = 'oh my heart'. 'alb' = heart (base). Freq: albe=33.",
+      "added_at": "20260522T012409Z"
+    },
+    "jou3_noun": {
+      "canonical_form": "jou3",
+      "arabic_equivalent": "جوع",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "WATER",
+        "WASTE"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "jou3",
+        "joo3",
+        "jaw3"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'hunger / starvation' (ju3). Arabizi digit 3=ayin (ع). Food security signal relevant to crisis reporting. severity_relevance=HIGH (food insecurity). Freq: jou3=9*.",
+      "added_at": "20260522T012409Z"
+    },
+    "mbere7_time": {
+      "canonical_form": "mbere7",
+      "arabic_equivalent": "مبارح",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "mbere7",
+        "mbare7",
+        "embareh",
+        "embare7"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese temporal adverb 'yesterday' (mbarrih). Arabizi digit 7=ha (ح). Event-reporting anchor: 'mbere7 sar' = 'yesterday it happened'. Freq: mbere7=9*.",
+      "added_at": "20260522T012409Z"
+    },
+    "fatra_noun": {
+      "canonical_form": "fatra",
+      "arabic_equivalent": "فترة",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "fatra",
+        "fetre",
+        "fetrit"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'period / duration / time span' (fatra). Temporal context: 'hal fatra' = 'this period / lately'. Freq: fatra=8.",
+      "added_at": "20260522T012409Z"
+    },
+    "kher_noun": {
+      "canonical_form": "kheir",
+      "arabic_equivalent": "خير",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "kheir",
+        "kher",
+        "khayr",
+        "kheer"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Arabic/Lebanese noun 'good / blessing / welfare' (khayr). Common in assessments: 'ma fi kheir' = 'nothing good / things are bad'. Freq: kheir=7, kher=8 combined.",
+      "added_at": "20260522T012409Z"
+    },
+    "so2al_noun": {
+      "canonical_form": "so2al",
+      "arabic_equivalent": "سؤال",
+      "semantic_type": "T2_SECTOR_SUPPORT",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "LOW"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "so2al",
+        "sou2al",
+        "su2al",
+        "so2alo"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese noun 'question / inquiry' (su2al). Arabizi digit 2=hamza (ء). Common in service requests and complaints. Freq: so2al=10*.",
+      "added_at": "20260522T012409Z"
+    },
+    "zaha2_adj": {
+      "canonical_form": "zaha2",
+      "arabic_equivalent": "زهق",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "zaha2",
+        "zahe2",
+        "zehe2"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective/state 'bored / fed up / exhausted by' (zahi2). Arabizi digit 2=hamza/qaf (ق). Strong negative-affect signal: 'zaha2t' = 'I am fed up'. Freq: zaha2=14*.",
+      "added_at": "20260522T012409Z"
+    },
+    "khara_expr": {
+      "canonical_form": "khara",
+      "arabic_equivalent": "خرا",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "khara",
+        "khara2",
+        "khare"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese profanity 'shit / excrement' (khara). Strong negative sentiment signal used to express disgust or anger. must_not_auto_promote=true due to profanity; include for negative-sentiment detection. Freq: khara=11.",
+      "added_at": "20260522T012409Z"
+    },
+    "beche3_adj": {
+      "canonical_form": "beche3",
+      "arabic_equivalent": "بشع",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "beche3",
+        "bche3",
+        "bche3a"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective 'ugly / terrible / disgusting / horrible' (bashi3). Arabizi digit 3=ayin (ع). Strong negative assessment: 'hal shi beche3' = 'this thing is terrible'. Freq: beche3=9*.",
+      "added_at": "20260522T012409Z"
+    },
+    "bmout_expr": {
+      "canonical_form": "bmout",
+      "arabic_equivalent": "بموت",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "true",
+      "must_not_auto_promote": "true",
+      "loanword_from": null,
+      "variant_forms": [
+        "bmout",
+        "bmoute"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese hyperbolic intensity expression 'I die of (love/laughter/fear)' (bimut). false_friend_risk=true: USUALLY figurative, NOT literal death. 'bmout 3lik' = 'I love you intensely' (lit. 'I die for you'). must_not_auto_promote=true: requires context for literal vs figurative. Freq: bmout=15.",
+      "added_at": "20260522T012409Z"
+    },
+    "habal_adj": {
+      "canonical_form": "habal",
+      "arabic_equivalent": "هبل",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "MEDIUM"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "habal",
+        "hable",
+        "hablanet",
+        "7abal"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "HIGH",
+      "notes": "Lebanese adjective/noun 'crazy / stupid / idiot' (habal). 7abal is Arabizi digit form (7=ha ح). Frustration/anger signal, occasionally used affectionately. Freq: habal=7.",
+      "added_at": "20260522T012409Z"
+    },
+    "nar_signal": {
+      "canonical_form": "nar",
+      "arabic_equivalent": "نار",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "SAFETY",
+        "FLOODING"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "true",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "nar",
+        "naar"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "MEDIUM",
+      "notes": "Arabic/Lebanese noun 'fire' (nar). false_friend_risk=true: used LITERALLY ('fi nar' = 'there is fire') AND FIGURATIVELY ('hayde nar' = 'she is amazing'). As T1_DIRECT_SIGNAL for SAFETY when literal fire context. Context disambiguation required. Freq: nar=7.",
+      "added_at": "20260522T012409Z"
+    },
+    "ra23_expr": {
+      "canonical_form": "ra23",
+      "arabic_equivalent": "رعش",
+      "semantic_type": "T1_DIRECT_SIGNAL",
+      "sector_relevance": [
+        "ALL"
+      ],
+      "severity_relevance": [
+        "HIGH"
+      ],
+      "false_friend_risk": "false",
+      "must_not_auto_promote": "false",
+      "loanword_from": null,
+      "variant_forms": [
+        "ra23",
+        "ra3ch",
+        "ra3ich"
+      ],
+      "reviewer_id": "SYSTEM-V20f",
+      "review_date": "2026-05-22",
+      "confidence": "MEDIUM",
+      "notes": "Lebanese verb/state 'trembling / shaking' (ra3ash). Arabizi digits 2=hamza/3=ayin (ع). Can signal fear, shock, or physical reaction to an event. 'ana ra23' = 'I am trembling'. Freq: ra23=8*.",
+      "added_at": "20260522T012409Z"
     }
   },
   "stoplist_notes": {
