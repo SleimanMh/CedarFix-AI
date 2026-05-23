@@ -81,6 +81,27 @@ CREATE INDEX IF NOT EXISTS idx_corrections_complaint_id ON admin_corrections(com
 CREATE INDEX IF NOT EXISTS idx_corrections_applied ON admin_corrections(applied_to_training);
 
 
+CREATE TABLE IF NOT EXISTS human_review_queue (
+    id                  SERIAL PRIMARY KEY,
+    created_at          TIMESTAMP DEFAULT NOW(),
+    complaint_id        VARCHAR(36),
+    validation_status   VARCHAR(30) NOT NULL,   -- needs_clarification | human_review
+    review_reason       TEXT NOT NULL,
+    original_text       TEXT,
+    image_filename      VARCHAR(255),
+    image_detected_type VARCHAR(50),            -- what image showed (e.g. flooding)
+    text_detected_type  VARCHAR(50),            -- what text claimed (e.g. pothole)
+    resolved            BOOLEAN DEFAULT FALSE,
+    resolved_at         TIMESTAMP,
+    resolved_by         VARCHAR(100),
+    resolution_notes    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_hrq_resolved    ON human_review_queue(resolved);
+CREATE INDEX IF NOT EXISTS idx_hrq_created_at  ON human_review_queue(created_at);
+CREATE INDEX IF NOT EXISTS idx_hrq_status      ON human_review_queue(validation_status);
+
+
 CREATE TABLE IF NOT EXISTS model_performance_log (
     id              SERIAL PRIMARY KEY,
     logged_at       TIMESTAMP DEFAULT NOW(),

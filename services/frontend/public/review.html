@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CedarFix AI — Human Review Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Review Dashboard specific styles ── */
+    .review-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all var(--transition);
+      color: var(--gray-600);
+    }
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-pale);
+    }
+    .review-count {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+    .review-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .review-item {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      transition: border-color var(--transition);
+    }
+    .review-item:hover { border-color: var(--green-light); }
+    .review-item-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .review-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-clarification { background: #FFF3E0; color: #E65100; }
+    .badge-human_review  { background: #E3F2FD; color: #1565C0; }
+    .review-meta {
+      font-size: 12px;
+      color: var(--gray-600);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .review-text {
+      background: var(--gray-100);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      margin: 10px 0;
+      line-height: 1.5;
+      max-height: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .review-reason {
+      font-size: 13px;
+      color: #E65100;
+      background: #FFF8E1;
+      border-left: 3px solid #FFB300;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 8px 0;
+    }
+    .type-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+    .type-tag {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-text  { background: var(--green-pale); color: var(--green); }
+    .tag-image { background: #E1F5FE; color: #0277BD; }
+    .review-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-resolve {
+      padding: 8px 20px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background var(--transition);
+    }
+    .btn-resolve:hover { background: var(--green-mid); }
+    .btn-skip {
+      padding: 8px 16px;
+      background: var(--white);
+      color: var(--gray-600);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all var(--transition);
+    }
+    .btn-skip:hover { border-color: var(--gray-400); }
+    .resolve-form {
+      display: none;
+      margin-top: 12px;
+      padding: 16px;
+      background: var(--gray-100);
+      border-radius: 8px;
+    }
+    .resolve-form.open { display: block; }
+    .resolve-form textarea {
+      width: 100%;
+      min-height: 60px;
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    .resolve-submit {
+      padding: 6px 18px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .resolved-overlay {
+      text-align: center;
+      padding: 12px;
+      color: var(--green);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--gray-600);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state p { font-size: 15px; }
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-600);
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ───────────────── HEADER ───────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🌲</span>
+        <div>
+          <span class="logo-name">CedarFix AI</span>
+          <span class="logo-sub">Lebanese Public Infrastructure Intelligence</span>
+        </div>
+      </div>
+      <nav class="header-links">
+        <a href="index.html">Report Issue</a>
+        <a href="track.html">Track Complaint</a>
+        <a href="review.html" class="active">Human Review</a>
+        <a href="http://localhost:3000" target="_blank">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ───────────────── HERO ───────────────── -->
+  <section class="hero">
+    <h1>Human Review Queue</h1>
+    <p>Submissions that couldn't be automatically processed — review and resolve them below.</p>
+  </section>
+
+  <!-- ───────────────── MAIN ───────────────── -->
+  <main class="main">
+    <div style="max-width:900px; margin:0 auto;">
+
+      <div class="card" style="margin-bottom:24px;">
+
+        <div class="review-toolbar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="needs_clarification">Needs Clarification</button>
+          <button class="filter-btn" data-filter="human_review">Human Review</button>
+          <span class="review-count" id="reviewCount">Loading...</span>
+          <button class="btn-submit" style="padding:8px 18px;font-size:14px;" onclick="loadQueue()">↻ Refresh</button>
+        </div>
+
+        <div id="reviewList" class="review-grid">
+          <div class="loading-spinner">⏳ Loading review queue...</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ───────────────── RESOLVE MODAL ───────────────── -->
+  <script>
+    const REVIEW_API = window.REVIEW_URL || 'http://localhost:8008';
+    const ADMIN_ID   = 'admin';  // In production, use real auth
+
+    let allItems = [];
+    let currentFilter = 'all';
+
+    async function loadQueue() {
+      document.getElementById('reviewList').innerHTML =
+        '<div class="loading-spinner">⏳ Loading...</div>';
+      try {
+        const resp = await fetch(`${REVIEW_API}/human-review?limit=100`);
+        const data = await resp.json();
+        allItems = data.queue || [];
+        renderQueue();
+      } catch (e) {
+        document.getElementById('reviewList').innerHTML =
+          `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not load queue: ${e.message}</p></div>`;
+      }
+    }
+
+    function renderQueue() {
+      const filtered = currentFilter === 'all'
+        ? allItems
+        : allItems.filter(i => i.validation_status === currentFilter);
+
+      document.getElementById('reviewCount').textContent =
+        `${filtered.length} item${filtered.length !== 1 ? 's' : ''} pending`;
+
+      if (filtered.length === 0) {
+        document.getElementById('reviewList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <p>No items pending review. All caught up!</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('reviewList').innerHTML = filtered.map(item => {
+        const badgeClass = item.validation_status === 'needs_clarification'
+          ? 'badge-clarification' : 'badge-human_review';
+        const badgeLabel = item.validation_status === 'needs_clarification'
+          ? '🤔 Needs Clarification' : '👁 Human Review';
+        const date = new Date(item.created_at).toLocaleString('en-GB', {
+          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        });
+
+        const textTag = item.text_detected_type
+          ? `<span class="type-tag tag-text">📝 Text: ${item.text_detected_type.replace(/_/g,' ')}</span>` : '';
+        const imageTag = item.image_detected_type
+          ? `<span class="type-tag tag-image">📷 Image: ${item.image_detected_type.replace(/_/g,' ')}</span>` : '';
+
+        return `
+          <div class="review-item" id="item-${item.id}">
+            <div class="review-item-header">
+              <div>
+                <span class="review-badge ${badgeClass}">${badgeLabel}</span>
+                <div class="review-meta" style="margin-top:6px;">
+                  <span>🆔 ${item.complaint_id}</span>
+                  <span>📅 ${date}</span>
+                  ${item.image_filename ? '<span>📷 Has image</span>' : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="review-text">"${escapeHtml(item.original_text || '')}"</div>
+
+            ${item.review_reason ? `<div class="review-reason">⚠️ ${escapeHtml(item.review_reason)}</div>` : ''}
+
+            <div class="type-tags">${textTag}${imageTag}</div>
+
+            <div class="review-actions">
+              <button class="btn-resolve" onclick="openResolve(${item.id})">✔ Mark Resolved</button>
+              <button class="btn-skip" onclick="skipItem(${item.id})">Skip</button>
+            </div>
+
+            <div class="resolve-form" id="resolve-form-${item.id}">
+              <textarea id="resolve-notes-${item.id}" placeholder="Resolution notes (optional)..."></textarea>
+              <button class="resolve-submit" onclick="submitResolve(${item.id})">Confirm Resolution</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openResolve(id) {
+      document.getElementById(`resolve-form-${id}`).classList.add('open');
+    }
+
+    function skipItem(id) {
+      document.getElementById(`item-${id}`).style.opacity = '0.4';
+    }
+
+    async function submitResolve(id) {
+      const notes = document.getElementById(`resolve-notes-${id}`).value.trim();
+      try {
+        await fetch(`${REVIEW_API}/human-review/${id}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ admin_id: ADMIN_ID, resolution_notes: notes || 'Resolved by admin' }),
+        });
+        document.getElementById(`item-${id}`).innerHTML =
+          `<div class="resolved-overlay">✅ Resolved</div>`;
+        // Remove from local list
+        allItems = allItems.filter(i => i.id !== id);
+        document.getElementById('reviewCount').textContent =
+          `${allItems.length} item${allItems.length !== 1 ? 's' : ''} pending`;
+      } catch (e) {
+        alert(`Failed to resolve: ${e.message}`);
+      }
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderQueue();
+      });
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
+    loadQueue();
+  </script>
+</body>
+</html>

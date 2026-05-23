@@ -15,15 +15,14 @@ Model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
 """
 
 import time
-import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from prometheus_client import make_asgi_app
-from cedarfix_shared.schemas import TextAnalysisResult, Language, ComplaintType
+from cedarfix_shared.schemas import TextUnderstandingResult
 from cedarfix_shared.metrics import TEXT_ANALYSIS_DURATION, LANGUAGE_DISTRIBUTION
 from .model import TextUnderstandingModel
 
-app = FastAPI(title="IEP-1: Text Understanding", version="0.1.0")
+app = FastAPI(title="IEP-1: Text Understanding", version="0.2.0")
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
@@ -47,16 +46,12 @@ class TextAnalysisRequest(BaseModel):
     text: str
 
 
-@app.post("/analyze", response_model=TextAnalysisResult)
+@app.post("/analyze", response_model=TextUnderstandingResult)
 async def analyze_text(request: TextAnalysisRequest):
     start = time.time()
-
     result = await model.analyze(request.complaint_id, request.text)
-
     elapsed_ms = int((time.time() - start) * 1000)
     result.processing_ms = elapsed_ms
-
     TEXT_ANALYSIS_DURATION.observe(elapsed_ms / 1000)
-    LANGUAGE_DISTRIBUTION.labels(lang=result.detected_language).inc()
-
+    LANGUAGE_DISTRIBUTION.labels(lang=result.language).inc()
     return result

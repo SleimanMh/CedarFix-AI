@@ -1,9 +1,9 @@
 FROM python:3.11-slim
 WORKDIR /app
-COPY ../../shared /app/shared
+COPY shared /app/shared
 RUN pip install --no-cache-dir /app/shared
-COPY requirements.txt .
+COPY services/embedding_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
+COPY services/embedding_service/app /app/app
 EXPOSE 8003
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]

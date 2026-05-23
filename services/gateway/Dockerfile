@@ -3,13 +3,13 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install shared library first (layer caching)
-COPY ../../shared /app/shared
+COPY shared /app/shared
 RUN pip install --no-cache-dir /app/shared
 
-COPY requirements.txt .
+COPY services/gateway/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY services/gateway/app /app/app
 
 EXPOSE 8000
 

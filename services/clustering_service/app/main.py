@@ -4,39 +4,42 @@ IEP-4 — Clustering + Duplicate Detection Service
 Owned by: AI Engineer 1 (NLP)
 
 Responsibilities:
-- Per-request: classify a complaint as NEW / DUPLICATE / NEAR_DUPLICATE
-  based on similarity scores from IEP-3
+- Per-request: run the full multimodal deduplication pipeline
+  (score → reconcile → decide → cluster assign)
 - Background job: run HDBSCAN on all embeddings to discover clusters
 
-THRESHOLDS (tunable via env vars):
-  DUPLICATE:       similarity >= 0.92
-  NEAR_DUPLICATE:  similarity >= 0.78
-
-DATA NEEDED:
-  - At least 500 complaints in Qdrant before HDBSCAN produces meaningful clusters
-  - Seed data script generates these synthetically
+Input:  EmbeddingServiceResult from IEP-3
+Output: MultimodalClusteringResult
 """
 
-import os
 import asyncio
 import time
-from typing import List
-from fastapi import FastAPI, BackgroundTasks
-from pydantic import BaseModel
+from contextlib import contextmanager
+
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from prometheus_client import make_asgi_app
-from cedarfix_shared.schemas import ClusteringResult, DuplicateStatus, SimilarComplaint
+
+from cedarfix_shared.db import SessionLocal
+from cedarfix_shared.schemas import EmbeddingServiceResult, MultimodalClusteringResult
 from cedarfix_shared.metrics import DUPLICATE_RATE
-from .classifier import DuplicateClassifier
+
+from .classifier import MultimodalDuplicateClassifier
 from .hdbscan_job import run_hdbscan_clustering
 
-DUPLICATE_THRESHOLD = float(os.getenv("SIMILARITY_DUPLICATE_THRESHOLD", "0.92"))
-NEAR_DUPLICATE_THRESHOLD = float(os.getenv("SIMILARITY_NEAR_DUPLICATE_THRESHOLD", "0.78"))
-
-app = FastAPI(title="IEP-4: Clustering Service", version="0.1.0")
+app = FastAPI(title="IEP-4: Clustering Service", version="0.2.0")
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
-classifier = DuplicateClassifier(DUPLICATE_THRESHOLD, NEAR_DUPLICATE_THRESHOLD)
+_classifier = MultimodalDuplicateClassifier()
+
+
+@contextmanager
+def _db_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -44,23 +47,17 @@ async def health():
     return {"status": "ok", "service": "clustering-service"}
 
 
-class ClusterRequest(BaseModel):
-    complaint_id: str
-    similar_complaints: List[dict]
-    top_similarity_score: float
-
-
-@app.post("/classify", response_model=ClusteringResult)
-async def classify(request: ClusterRequest):
+@app.post("/classify", response_model=MultimodalClusteringResult)
+async def classify(embed_result: EmbeddingServiceResult):
     start = time.time()
-    result = classifier.classify(
-        complaint_id=request.complaint_id,
-        similar_complaints=request.similar_complaints,
-        top_similarity_score=request.top_similarity_score,
-    )
-    result.processing_ms = int((time.time() - start) * 1000)
+    try:
+        with _db_session() as db:
+            result = _classifier.classify(embed_result, db)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    DUPLICATE_RATE.labels(status=result.duplicate_status).inc()
+    result.processing_ms = int((time.time() - start) * 1000)
+    DUPLICATE_RATE.labels(status=result.duplicate_status.value).inc()
     return result
 
 
@@ -75,3 +72,4 @@ async def trigger_clustering(background_tasks: BackgroundTasks):
 async def get_clusters():
     from .hdbscan_job import get_cluster_summary
     return await get_cluster_summary()
+

@@ -1,47 +1,57 @@
 """
-IEP-3 — Embedding + Similarity Service
-=========================================
-Owned by: AI Engineer 2 (Vision/Multimodal)
+IEP-3 — Embedding + Retrieval Service
+========================================
+Owned by: AI Engineer 1/2 (Multimodal pipeline)
 
 Responsibilities:
-- Fuse text embedding (768-dim) + image embedding (512-dim) into one vector
-- Store fused vector in Qdrant
-- Search Qdrant for top-K similar complaints
-- Return similarity scores for deduplication
+- Compute intra-complaint modal alignment (TextImageAlignment)
+- Store text + image + fused embeddings in separate Qdrant collections
+- Perform INDEPENDENT retrieval: text search, image search, geo-time search
+- Merge candidate pools and return EmbeddingServiceResult
 
-FUSION STRATEGY (MVP):
-  Weighted average after projecting both to same dimension (768):
-    fused = alpha * text_emb + (1 - alpha) * project(image_emb)
-  alpha = 0.7 if image is available and relevant, else 1.0 (text only)
-
-DATA NEEDED:
-  - No additional labeled data required for MVP (unsupervised similarity)
-  - For stretch: pairs of (duplicate, non-duplicate) complaints for contrastive learning
+For fusion strategy see fusion.py.
+For alignment logic see alignment.py.
+For candidate retrieval see retrieval.py.
 """
 
 import time
-import os
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from prometheus_client import make_asgi_app
-from cedarfix_shared.schemas import EmbeddingResult, SimilarComplaint
-from cedarfix_shared.metrics import SIMILARITY_SCORE, DUPLICATE_RATE
+
+from cedarfix_shared.schemas import (
+    CanonicalComplaint,
+    CanonicalLocationJSON,
+    EmbeddingServiceResult,
+    ImageUnderstandingResult,
+    SignalsJSON,
+    TextUnderstandingResult,
+)
+from cedarfix_shared.metrics import SIMILARITY_SCORE
+
+from .alignment import ModalAlignmentComputer
 from .fusion import fuse_embeddings
 from .qdrant_client import QdrantStore
+from .retrieval import CandidateRetriever
 
-app = FastAPI(title="IEP-3: Embedding Service", version="0.1.0")
+app = FastAPI(title="IEP-3: Embedding + Retrieval Service", version="0.2.0")
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
 qdrant: QdrantStore = None
+retriever: CandidateRetriever = None
+aligner = ModalAlignmentComputer()
 
 
 @app.on_event("startup")
 async def startup():
-    global qdrant
+    global qdrant, retriever
     qdrant = QdrantStore()
-    await qdrant.init_collection()
+    await qdrant.init_collections()
+    retriever = CandidateRetriever(qdrant)
 
 
 @app.get("/health")
@@ -51,40 +61,104 @@ async def health():
 
 class EmbedRequest(BaseModel):
     complaint_id: str
-    text_embedding: List[float]
-    image_embedding: List[float] = []
-    image_available: bool = False
+    text_result: dict          # TextUnderstandingResult serialised as dict
+    image_result: Optional[dict] = None   # ImageUnderstandingResult | None
 
 
-@app.post("/embed", response_model=EmbeddingResult)
+@app.post("/embed", response_model=EmbeddingServiceResult)
 async def embed(request: EmbedRequest):
     start = time.time()
 
-    # 1. Fuse embeddings
-    fused, strategy, text_w, image_w = fuse_embeddings(
-        text_emb=request.text_embedding,
-        image_emb=request.image_embedding,
-        image_available=request.image_available,
+    # ── Deserialise IEP-1 / IEP-2 results ───────────────────────────────────
+    text_result = TextUnderstandingResult(**request.text_result)
+    image_result = (
+        ImageUnderstandingResult(**request.image_result)
+        if request.image_result
+        else None
     )
 
-    # 2. Search Qdrant for similar complaints
-    similar = await qdrant.search(fused, top_k=10)
-    top_score = similar[0].similarity_score if similar else 0.0
+    text_emb = text_result.text_embedding
+    image_emb = (image_result.image_embedding or []) if image_result else []
+    image_present = bool(image_result and image_result.image_present and image_emb)
+    image_relevance = (
+        image_result.visual_understanding.confidence
+        if image_present
+        else 0.0
+    )
 
-    # 3. Store embedding for this complaint
-    await qdrant.store(request.complaint_id, fused)
+    # ── 1. Intra-complaint modal alignment ───────────────────────────────────
+    alignment = aligner.compute(text_result, image_result)
+
+    # ── 2. Build canonical complaint ─────────────────────────────────────────
+    loc = text_result.location
+    canonical_loc = CanonicalLocationJSON(
+        normalized_location=loc.normalized,
+        district=loc.district,
+        governorate=loc.governorate,
+        latitude=loc.latitude,
+        longitude=loc.longitude,
+    )
+    canonical = CanonicalComplaint(
+        complaint_id=text_result.complaint_id,
+        timestamp=datetime.now(tz=timezone.utc),
+        summary=text_result.summary,
+        category=text_result.category,
+        subcategory=text_result.subcategory,
+        issue_type=text_result.issue_type,
+        severity=text_result.severity,
+        location=canonical_loc,
+        signals=text_result.signals,
+        modality="TEXT_AND_IMAGE" if image_present else "TEXT_ONLY",
+        text_embedding_id=f"txt_emb_{text_result.complaint_id}",
+        image_embedding_id=f"img_emb_{text_result.complaint_id}" if image_present else "",
+    )
+
+    # ── 3. Build Qdrant payload metadata ─────────────────────────────────────
+    base_payload = {
+        "summary":              canonical.summary,
+        "issue_type":           canonical.issue_type.value,
+        "subcategory":          canonical.subcategory,
+        "normalized_location":  canonical.location.normalized_location,
+        "district":             canonical.location.district,
+        "latitude":             canonical.location.latitude,
+        "longitude":            canonical.location.longitude,
+        "severity":             canonical.severity.value,
+        "timestamp":            canonical.timestamp.isoformat(),
+    }
+
+    # ── 4. Store embeddings ───────────────────────────────────────────────────
+    if text_emb:
+        await qdrant.store_text(canonical.complaint_id, text_emb, base_payload)
+    if image_present and image_emb:
+        await qdrant.store_image(canonical.complaint_id, image_emb, base_payload)
+
+    fused, _strategy, _tw, _iw = fuse_embeddings(
+        text_emb=text_emb,
+        image_emb=image_emb,
+        image_available=image_present,
+        image_relevance=image_relevance,
+    )
+    await qdrant.store_fused(canonical.complaint_id, fused, base_payload)
+
+    # ── 5. Independent candidate retrieval ───────────────────────────────────
+    candidates = await retriever.retrieve(
+        canonical=canonical,
+        text_embedding=text_emb,
+        image_embedding=image_emb,
+        image_present=image_present,
+    )
 
     elapsed_ms = int((time.time() - start) * 1000)
-
+    top_score = max((c.raw_text_similarity for c in candidates), default=0.0)
     SIMILARITY_SCORE.observe(top_score)
 
-    return EmbeddingResult(
-        complaint_id=request.complaint_id,
-        fused_embedding=fused,
-        fusion_strategy=strategy,
-        text_weight=text_w,
-        image_weight=image_w,
-        similar_complaints=similar,
-        top_similarity_score=top_score,
+    return EmbeddingServiceResult(
+        complaint_id=canonical.complaint_id,
+        canonical=canonical,
+        alignment=alignment,
+        candidates=candidates,
+        text_embedding=text_emb,
+        image_embedding=image_emb,
         processing_ms=elapsed_ms,
     )
+

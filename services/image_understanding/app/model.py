@@ -1,148 +1,103 @@
 """
-Image Understanding Model — CLIP-based zero-shot analysis.
+Image Understanding Model — CLIP-based structured scene analysis.
 AI Engineer 2 owns and improves this file.
+
+Phase 1: CLIP zero-shot + rule-based quality assessment (see analyzer.py).
+Phase 2: Replace SceneAnalyzer with BLIP-2 captioning + YOLO detection.
 """
 
 import os
 from pathlib import Path
-from typing import List, Tuple
 
-import torch
 from PIL import Image
-from transformers import CLIPProcessor, CLIPModel
-from cedarfix_shared.schemas import ImageAnalysisResult, SeverityLevel
+from transformers import CLIPModel, CLIPProcessor
+
+from cedarfix_shared.schemas import ImageQualityJSON, ImageUnderstandingResult
+from .analyzer import SceneAnalyzer
 
 UPLOADS_DIR = os.getenv("UPLOADS_DIR", "/data/uploads")
 CLIP_MODEL_NAME = os.getenv("CLIP_MODEL_NAME", "openai/clip-vit-base-patch32")
 
-# Zero-shot text prompts for relevance scoring
-RELEVANCE_PROMPTS = [
-    "a photo of road damage or pothole",
-    "a photo of flooding or standing water on a street",
-    "a photo of broken infrastructure",
-    "a photo of garbage or waste on the street",
-    "a photo of a broken traffic light",
-    "a photo of damaged sidewalk",
-    "a photo of a broken streetlight",
-    "a photo of a water pipe leak",
-    "a random unrelated photo",
-    "a selfie or indoor photo",
-]
-
-SEVERITY_PROMPTS = {
-    SeverityLevel.CRITICAL: "severe damage completely blocking the road, dangerous flooding",
-    SeverityLevel.HIGH: "large pothole or significant road damage, major flooding",
-    SeverityLevel.MEDIUM: "moderate road damage or partial obstruction",
-    SeverityLevel.LOW: "minor crack or small pothole, minimal damage",
-}
-
 
 class ImageUnderstandingModel:
     def __init__(self):
-        self.clip_model = None
-        self.clip_processor = None
+        self.clip_model: CLIPModel = None
+        self.clip_processor: CLIPProcessor = None
+        self.analyzer: SceneAnalyzer = None
 
     async def load(self):
         print(f"[IEP-2] Loading CLIP model: {CLIP_MODEL_NAME}")
         self.clip_model = CLIPModel.from_pretrained(CLIP_MODEL_NAME)
         self.clip_processor = CLIPProcessor.from_pretrained(CLIP_MODEL_NAME)
         self.clip_model.eval()
+        self.analyzer = SceneAnalyzer(self.clip_model, self.clip_processor)
         print("[IEP-2] CLIP loaded.")
 
-    async def analyze(self, complaint_id: str, image_filename: str) -> ImageAnalysisResult:
+    async def analyze(
+        self,
+        complaint_id: str,
+        image_filename: str,
+        complaint_text: str = "",
+    ) -> ImageUnderstandingResult:
+        """
+        Analyse an image.  When `complaint_text` is provided the CLIP text
+        encoder is also run, producing `clip_text_embedding` in the same
+        512-dim shared CLIP space.  This enables alignment.py to compute
+        intra-complaint cosine similarity without any cross-model projection.
+        """
         image_path = Path(UPLOADS_DIR) / image_filename
 
         if not image_path.exists():
-            return ImageAnalysisResult(
+            return ImageUnderstandingResult(
                 complaint_id=complaint_id,
-                image_available=False,
-                processing_ms=0,
+                image_present=False,
+                image_id=image_filename,
             )
 
         try:
             image = Image.open(image_path).convert("RGB")
         except Exception:
-            return ImageAnalysisResult(
+            return ImageUnderstandingResult(
                 complaint_id=complaint_id,
-                image_available=False,
-                processing_ms=0,
+                image_present=False,
+                image_id=image_filename,
+                image_quality=ImageQualityJSON(
+                    usable=False, issues=["unreadable_file"]
+                ),
             )
 
-        # 1. Get image embedding
-        image_embedding = self._get_image_embedding(image)
+        # 1. Quality check (fast heuristic)
+        quality = self.analyzer.assess_quality(image)
 
-        # 2. Score relevance (zero-shot)
-        relevance_score, detected_objects = self._score_relevance(image)
+        # 2. If unusable, return early with empty visual understanding
+        if not quality.usable:
+            return ImageUnderstandingResult(
+                complaint_id=complaint_id,
+                image_present=True,
+                image_id=image_filename,
+                image_quality=quality,
+            )
 
-        # 3. Estimate visual severity
-        visual_severity = self._estimate_severity(image) if relevance_score > 0.3 else SeverityLevel.LOW
+        # 3. Scene analysis (CLIP zero-shot)
+        visual = self.analyzer.analyze_scene(image)
 
-        # 4. Generate scene description
-        scene_description = self._describe_scene(detected_objects, visual_severity)
+        # 4. Image embedding (512-dim CLIP)
+        embedding = self.analyzer.get_image_embedding(image)
 
-        return ImageAnalysisResult(
+        # 5. CLIP text embedding — same 512-dim space as the image embedding.
+        #    Direct cosine(clip_text_embedding, image_embedding) is the correct
+        #    intra-complaint alignment signal; no projection required.
+        clip_text_emb: list = []
+        if complaint_text:
+            clip_text_emb = self.analyzer.get_text_embedding(complaint_text)
+
+        return ImageUnderstandingResult(
             complaint_id=complaint_id,
-            image_available=True,
-            detected_objects=detected_objects,
-            scene_description=scene_description,
-            visual_severity_signal=visual_severity,
-            image_embedding=image_embedding,
-            image_relevance_score=relevance_score,
-            analysis_confidence=relevance_score,
-            processing_ms=0,
+            image_present=True,
+            image_id=image_filename,
+            image_quality=quality,
+            visual_understanding=visual,
+            image_embedding=embedding,
+            clip_text_embedding=clip_text_emb,
         )
 
-    def _get_image_embedding(self, image: Image.Image) -> List[float]:
-        inputs = self.clip_processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            features = self.clip_model.get_image_features(**inputs)
-            features = features / features.norm(dim=-1, keepdim=True)
-        return features[0].tolist()
-
-    def _score_relevance(self, image: Image.Image) -> Tuple[float, List[str]]:
-        """
-        Use CLIP zero-shot to find which prompts match the image.
-        The first 8 prompts are infrastructure-related; last 2 are negative.
-        """
-        inputs = self.clip_processor(
-            text=RELEVANCE_PROMPTS,
-            images=image,
-            return_tensors="pt",
-            padding=True,
-        )
-        with torch.no_grad():
-            outputs = self.clip_model(**inputs)
-            probs = outputs.logits_per_image.softmax(dim=1)[0].tolist()
-
-        infrastructure_score = sum(probs[:8])
-        negative_score = sum(probs[8:])
-        relevance = infrastructure_score / (infrastructure_score + negative_score + 1e-8)
-
-        # Detect objects from top matching prompts
-        top_indices = sorted(range(len(probs[:8])), key=lambda i: probs[i], reverse=True)[:3]
-        detected = [RELEVANCE_PROMPTS[i].replace("a photo of ", "") for i in top_indices if probs[i] > 0.05]
-
-        return round(relevance, 3), detected
-
-    def _estimate_severity(self, image: Image.Image) -> SeverityLevel:
-        severity_texts = list(SEVERITY_PROMPTS.values())
-        severity_levels = list(SEVERITY_PROMPTS.keys())
-
-        inputs = self.clip_processor(
-            text=severity_texts,
-            images=image,
-            return_tensors="pt",
-            padding=True,
-        )
-        with torch.no_grad():
-            outputs = self.clip_model(**inputs)
-            probs = outputs.logits_per_image.softmax(dim=1)[0].tolist()
-
-        best_idx = probs.index(max(probs))
-        return severity_levels[best_idx]
-
-    def _describe_scene(self, objects: List[str], severity: SeverityLevel) -> str:
-        if not objects:
-            return "Infrastructure issue detected."
-        primary = objects[0] if objects else "damage"
-        return f"{severity.value} severity: {primary}."

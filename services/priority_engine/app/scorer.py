@@ -24,6 +24,7 @@ TYPE_BASE_SCORE = {
     "water_pipe":         0.65,
     "streetlight":        0.45,
     "sidewalk_damage":    0.35,
+    "telecom_outage":     0.55,
     "other":              0.3,
 }
 

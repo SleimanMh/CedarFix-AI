@@ -482,3 +482,79 @@ textarea.invalid, input.invalid {
 
 /* --- Utility --- */
 .hidden { display: none !important; }
+
+/* ─── Media Validation Result Cards ────────────────────────────────── */
+
+/* Shared: subtitle under h3 in result cards */
+.result-sub {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 3px;
+}
+
+/* Validation detail text */
+.validation-detail {
+  background: var(--gray-100);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gray-800);
+  margin-bottom: 14px;
+}
+
+/* Hint list */
+.validation-hints {
+  font-size: 13px;
+  color: var(--gray-800);
+  margin-bottom: 16px;
+}
+.validation-hints strong { display: block; margin-bottom: 6px; }
+.validation-hints ul {
+  list-style: disc;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* Queued badge */
+.review-queued-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--green-pale);
+  color: var(--green);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Contradiction card: orange-left border */
+.contradiction-card {
+  border-left: 4px solid var(--orange);
+}
+.contradiction-card h3 { color: var(--orange); }
+
+/* Clarification card: blue-left border */
+.clarification-card {
+  border-left: 4px solid var(--blue);
+}
+.clarification-card h3 { color: var(--blue); }
+
+/* Human review card: teal-left border */
+.humanreview-card {
+  border-left: 4px solid var(--green-mid);
+}
+.humanreview-card h3 { color: var(--green-mid); }
+
+/* Invalid card: red-left border */
+.invalid-card {
+  border-left: 4px solid var(--red);
+}
+.invalid-card h3 { color: var(--red); }
+

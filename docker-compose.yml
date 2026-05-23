@@ -54,7 +54,7 @@ services:
     networks:
       - cedarfix-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333 && printf \"GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q 200' || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -63,11 +63,12 @@ services:
     image: ghcr.io/mlflow/mlflow:v2.12.1
     container_name: cedarfix-mlflow
     command: >
+      bash -c "pip install --quiet --no-cache-dir psycopg2-binary &&
       mlflow server
       --backend-store-uri postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
       --default-artifact-root /mlflow/artifacts
       --host 0.0.0.0
-      --port 5000
+      --port 5000"
     ports:
       - "5000:5000"
     volumes:
@@ -117,8 +118,8 @@ services:
 
   gateway:
     build:
-      context: ./services/gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/gateway/Dockerfile
     container_name: cedarfix-gateway
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
@@ -163,14 +164,20 @@ services:
 
   text-understanding:
     build:
-      context: ./services/text_understanding
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/text_understanding/Dockerfile
     container_name: cedarfix-text-understanding
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
-      NER_MODEL_NAME: CAMeL-Lab/bert-base-arabic-camelbert-da-ner
       PORT: "8001"
+      # LLM routing
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
+      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_API_KEY: "none"
+      QWEN_ENABLED: "true"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: gpt-4o
     ports:
       - "8001:8001"
     volumes:
@@ -184,8 +191,8 @@ services:
 
   image-understanding:
     build:
-      context: ./services/image_understanding
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/image_understanding/Dockerfile
     container_name: cedarfix-image-understanding
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -205,8 +212,8 @@ services:
 
   embedding-service:
     build:
-      context: ./services/embedding_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/embedding_service/Dockerfile
     container_name: cedarfix-embedding-service
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -230,8 +237,8 @@ services:
 
   clustering-service:
     build:
-      context: ./services/clustering_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/clustering_service/Dockerfile
     container_name: cedarfix-clustering-service
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -258,8 +265,8 @@ services:
 
   priority-engine:
     build:
-      context: ./services/priority_engine
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/priority_engine/Dockerfile
     container_name: cedarfix-priority-engine
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -276,8 +283,8 @@ services:
 
   routing-engine:
     build:
-      context: ./services/routing_engine
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/routing_engine/Dockerfile
     container_name: cedarfix-routing-engine
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -300,8 +307,8 @@ services:
 
   explanation-service:
     build:
-      context: ./services/explanation_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/explanation_service/Dockerfile
     container_name: cedarfix-explanation-service
     environment:
       PORT: "8007"
@@ -317,8 +324,8 @@ services:
 
   review-service:
     build:
-      context: ./services/review_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/review_service/Dockerfile
     container_name: cedarfix-review-service
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
@@ -337,8 +344,8 @@ services:
 
   monitoring-service:
     build:
-      context: ./services/monitoring_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/monitoring_service/Dockerfile
     container_name: cedarfix-monitoring-service
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix

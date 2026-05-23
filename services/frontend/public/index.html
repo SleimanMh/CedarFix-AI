@@ -21,6 +21,7 @@
       <nav class="header-links">
         <a href="index.html" class="active">Report Issue</a>
         <a href="track.html">Track Complaint</a>
+        <a href="review.html">Human Review</a>
         <a href="http://localhost:3000" target="_blank">Dashboard</a>
       </nav>
     </div>
@@ -174,6 +175,82 @@
             </div>
           </div>
           <button class="btn-reset" id="btnErrorReset">Try Again</button>
+        </div>
+
+        <!-- CONTRADICTION -->
+        <div class="result-card card contradiction-card hidden" id="resultContradiction">
+          <div class="result-header">
+            <span class="result-icon">⚠️</span>
+            <div>
+              <h3>Text and Image Don't Match</h3>
+              <p class="result-sub">Your submission contains conflicting information.</p>
+            </div>
+          </div>
+          <div class="validation-detail" id="contradictionDetail"></div>
+          <div class="validation-hints">
+            <strong>What to do:</strong>
+            <ul>
+              <li>Make sure your text describes the same issue shown in your photo</li>
+              <li>Or resubmit without the photo</li>
+              <li>Or resubmit without the text description and add a new one</li>
+            </ul>
+          </div>
+          <button class="btn-reset" id="btnContradictionReset">Resubmit</button>
+        </div>
+
+        <!-- NEEDS CLARIFICATION -->
+        <div class="result-card card clarification-card hidden" id="resultClarification">
+          <div class="result-header">
+            <span class="result-icon">🤔</span>
+            <div>
+              <h3>Clarification Needed</h3>
+              <p class="result-sub">Your image shows an issue but your text is unclear.</p>
+            </div>
+          </div>
+          <div class="validation-detail" id="clarificationDetail"></div>
+          <div class="validation-hints">
+            <strong>Options:</strong>
+            <ul>
+              <li>Resubmit and add a clearer text description of the issue</li>
+              <li>Your submission has been saved for human review in the meantime</li>
+            </ul>
+          </div>
+          <div class="review-queued-badge">👁 Saved for human review — ID: <span id="clarificationId"></span></div>
+          <button class="btn-reset" id="btnClarificationReset">Resubmit With Better Description</button>
+        </div>
+
+        <!-- HUMAN REVIEW (ambiguous both text and image) -->
+        <div class="result-card card humanreview-card hidden" id="resultHumanReview">
+          <div class="result-header">
+            <span class="result-icon">👁</span>
+            <div>
+              <h3>Sent for Human Review</h3>
+              <p class="result-sub">Your submission is ambiguous and will be reviewed by our team.</p>
+            </div>
+          </div>
+          <div class="validation-detail" id="humanReviewDetail"></div>
+          <div class="review-queued-badge">✅ Queued — ID: <span id="humanReviewId"></span></div>
+          <button class="btn-reset" id="btnHumanReviewReset">Submit Another</button>
+        </div>
+
+        <!-- INVALID / NO COMPLAINT -->
+        <div class="result-card card invalid-card hidden" id="resultInvalid">
+          <div class="result-header">
+            <span class="result-icon">🚫</span>
+            <div>
+              <h3>Not Recognized as a Complaint</h3>
+              <p class="result-sub">Your text doesn't describe a public infrastructure issue.</p>
+            </div>
+          </div>
+          <div class="validation-hints">
+            <strong>Tips for a good complaint:</strong>
+            <ul>
+              <li>Describe the specific problem (e.g. "There is a large pothole on...")</li>
+              <li>Mention the location if possible</li>
+              <li>Include a photo of the issue to help our AI understand it better</li>
+            </ul>
+          </div>
+          <button class="btn-reset" id="btnInvalidReset">Try Again</button>
         </div>
 
       </section>

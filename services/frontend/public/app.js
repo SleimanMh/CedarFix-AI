@@ -28,7 +28,17 @@ const btnSpinner    = document.getElementById('btnSpinner');
 const resultPanel   = document.getElementById('resultPanel');
 const resultSuccess = document.getElementById('resultSuccess');
 const resultError   = document.getElementById('resultError');
+const resultContradiction  = document.getElementById('resultContradiction');
+const resultClarification  = document.getElementById('resultClarification');
+const resultHumanReview    = document.getElementById('resultHumanReview');
+const resultInvalid        = document.getElementById('resultInvalid');
 const formPanel     = document.querySelector('.form-panel');
+
+// All result cards — used to hide all before showing one
+const ALL_RESULT_CARDS = [
+  resultSuccess, resultError, resultContradiction,
+  resultClarification, resultHumanReview, resultInvalid,
+];
 
 // ── Character counter ─────────────────────────────────
 textArea.addEventListener('input', () => {
@@ -149,7 +159,29 @@ form.addEventListener('submit', async (e) => {
     }
 
     const data = await resp.json();
-    showSuccess(data);
+
+    // Route to the correct result panel based on pipeline status
+    switch (data.status) {
+      case 'needs_clarification':
+        showClarification(data);
+        break;
+      case 'contradiction':
+        showContradiction(data);
+        break;
+      case 'invalid_no_complaint':
+        showInvalid();
+        break;
+      case 'review_required':
+        // Could be human_review gate OR low-confidence routing — check media_validation
+        if (data.media_validation?.status === 'human_review') {
+          showHumanReview(data);
+        } else {
+          showSuccess(data);
+        }
+        break;
+      default:
+        showSuccess(data);
+    }
 
   } catch (err) {
     showError(err.message);
@@ -210,24 +242,60 @@ function showSuccess(d) {
   }
 
   // Show result, hide error
-  resultSuccess.classList.remove('hidden');
-  resultError.classList.add('hidden');
-  resultPanel.style.display = '';
-  resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  _showCard(resultSuccess);
 }
 
 // ── Render error ──────────────────────────────────────
 function showError(message) {
   document.getElementById('errorMessage').textContent = message || 'Submission failed. Is the server running?';
-  resultSuccess.classList.add('hidden');
-  resultError.classList.remove('hidden');
+  _showCard(resultError);
+}
+
+// ── Contradiction: text and image disagree ────────────
+function showContradiction(d) {
+  const reason = d.media_validation?.contradiction_reason ||
+    'Your text and image describe different issues. Please resubmit with matching evidence.';
+  document.getElementById('contradictionDetail').textContent = reason;
+  _showCard(resultContradiction);
+}
+
+// ── Clarification: image has complaint but text doesn't ─
+function showClarification(d) {
+  const question = d.media_validation?.clarification_question || '';
+  document.getElementById('clarificationDetail').textContent = question;
+  document.getElementById('clarificationId').textContent = d.complaint_id;
+  _showCard(resultClarification);
+}
+
+// ── Human review: both text and image ambiguous ───────
+function showHumanReview(d) {
+  const reason = d.media_validation?.clarification_question ||
+    'Your submission was unclear and has been queued for human review.';
+  document.getElementById('humanReviewDetail').textContent = reason;
+  document.getElementById('humanReviewId').textContent = d.complaint_id;
+  _showCard(resultHumanReview);
+}
+
+// ── Invalid: no complaint detected, no image ──────────
+function showInvalid() {
+  _showCard(resultInvalid);
+}
+
+// ── Show a single result card, hide all others ────────
+function _showCard(card) {
+  ALL_RESULT_CARDS.forEach(c => c.classList.add('hidden'));
+  card.classList.remove('hidden');
   resultPanel.style.display = '';
-  resultPanel.scrollIntoView({ behavior: 'smooth' });
+  resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── Reset form ────────────────────────────────────────
 document.getElementById('btnReset').addEventListener('click', resetForm);
 document.getElementById('btnErrorReset').addEventListener('click', resetForm);
+document.getElementById('btnContradictionReset').addEventListener('click', resetForm);
+document.getElementById('btnClarificationReset').addEventListener('click', resetForm);
+document.getElementById('btnHumanReviewReset').addEventListener('click', resetForm);
+document.getElementById('btnInvalidReset').addEventListener('click', resetForm);
 
 function resetForm() {
   form.reset();

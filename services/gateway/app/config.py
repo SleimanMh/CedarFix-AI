@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     priority_service_url: str = "http://priority-engine:8005"
     routing_service_url: str = "http://routing-engine:8006"
     explanation_service_url: str = "http://explanation-service:8007"
+    review_service_url: str = "http://review-service:8008"
     database_url: str = "postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix"
     uploads_dir: str = "/data/uploads"
 
