@@ -24,16 +24,18 @@ from cedarfix_shared.schemas import (
 # ---------------------------------------------------------------------------
 
 ISSUE_HIERARCHY: Dict[ComplaintType, Tuple[str, str]] = {
-    ComplaintType.POTHOLE:       ("roads",       "pothole"),
-    ComplaintType.ROAD_DAMAGE:   ("roads",       "road_damage"),
-    ComplaintType.FLOODING:      ("drainage",    "flooding"),
-    ComplaintType.WASTE:         ("sanitation",  "waste_accumulation"),
-    ComplaintType.ELECTRICITY:   ("electricity", "outage"),
-    ComplaintType.TRAFFIC_LIGHT: ("roads",       "traffic_light"),
-    ComplaintType.WATER_PIPE:    ("water",       "pipe_leak"),
-    ComplaintType.SIDEWALK:      ("roads",       "sidewalk_damage"),
-    ComplaintType.STREETLIGHT:   ("electricity", "streetlight"),
-    ComplaintType.OTHER:         ("other",       "other"),
+    ComplaintType.POTHOLE:          ("roads",       "pothole"),
+    ComplaintType.ROAD_DAMAGE:      ("roads",       "road_damage"),
+    ComplaintType.FLOODING:         ("drainage",    "flooding"),
+    ComplaintType.WASTE:            ("sanitation",  "waste_accumulation"),
+    ComplaintType.ELECTRICITY:      ("electricity", "outage"),
+    ComplaintType.TRAFFIC_LIGHT:    ("roads",       "traffic_light"),
+    ComplaintType.WATER_PIPE:       ("water",       "pipe_leak"),
+    ComplaintType.SIDEWALK:         ("roads",       "sidewalk_damage"),
+    ComplaintType.STREETLIGHT:      ("electricity", "streetlight"),
+    ComplaintType.TRAFFIC_INCIDENT: ("roads",       "traffic_incident"),
+    ComplaintType.PUBLIC_SAFETY:    ("other",       "public_safety"),
+    ComplaintType.OTHER:            ("other",       "other"),
 }
 
 # ---------------------------------------------------------------------------
@@ -85,6 +87,19 @@ ISSUE_KEYWORDS: Dict[ComplaintType, List[str]] = {
         "streetlight", "street light", "lamp post", "street lamp",
         "light not working", "broken light", "no lighting",
         "dark street", "lamp broken",
+    ],
+    ComplaintType.TRAFFIC_INCIDENT: [
+        "accident", "car accident", "road accident", "traffic accident",
+        "crash", "collision", "vehicle crash", "car crash",
+        "congestion", "traffic jam", "traffic block", "road blocked",
+        "blocked road", "road closure", "road closed", "traffic incident",
+        "traffic problem", "traffic issue", "heavy traffic",
+    ],
+    ComplaintType.PUBLIC_SAFETY: [
+        "unsafe", "dangerous structure", "falling debris", "risk to life",
+        "public hazard", "structural collapse", "unsafe building",
+        "falling wall", "dangerous building", "public safety",
+        "safety hazard", "fire hazard", "open manhole", "exposed wire",
     ],
 }
 
@@ -140,7 +155,8 @@ _LOCATION_PATTERN = re.compile(
     r"jbeil|byblos|zalka|dora|nahr el mott|metn|kesrouan|batroun|koura|"
     r"zgharta|mina|minyeh|nabatieh|marjayoun|hasbaya|bint jbeil|"
     r"aley|chouf|deir el qamar|beiteddine|saida|beirut|downtown|gemmayzeh|"
-    r"mar mikhael|geitawi|badaro|tallet el khayat|ras beirut"
+    r"mar mikhael|geitawi|badaro|tallet el khayat|ras beirut|"
+    r"dahr el baydar|zahle|chtaura|bekaa|baalbek|hermel|aanjar"
     r")\b",
     re.IGNORECASE,
 )
@@ -165,6 +181,10 @@ DISTRICT_MAP: Dict[str, str] = {
     "deir el qamar": "Chouf", "beiteddine": "Chouf",
     "metn": "Metn",           "kesrouan": "Kesrouan",
     "baabda": "Baabda",       "beirut": "Beirut",
+    "dahr el baydar": "Aley", "zahle": "Bekaa",
+    "chtaura": "Bekaa",       "bekaa": "Bekaa",
+    "baalbek": "Baalbek",     "hermel": "Hermel",
+    "aanjar": "Bekaa",
 }
 
 GOVERNORATE_MAP: Dict[str, str] = {
@@ -185,6 +205,9 @@ GOVERNORATE_MAP: Dict[str, str] = {
     "Marjayoun":     "Nabatieh Governorate",
     "Hasbaya":       "Nabatieh Governorate",
     "Bint Jbeil":    "Nabatieh Governorate",
+    "Bekaa":         "Bekaa Governorate",
+    "Baalbek":       "Baalbek-Hermel Governorate",
+    "Hermel":        "Baalbek-Hermel Governorate",
 }
 
 

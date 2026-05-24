@@ -380,6 +380,50 @@ textarea.invalid, input.invalid {
   margin-top: 6px;
 }
 
+/* Analysis details block */
+.analysis-block {
+  background: #F8F9FA;
+  border: 1px solid #DEE2E6;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.analysis-block > .result-label {
+  display: block;
+  margin-bottom: 10px;
+}
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.analysis-item.full-width {
+  grid-column: 1 / -1;
+}
+.analysis-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--gray-500);
+}
+.analysis-value {
+  font-size: 13px;
+  color: var(--gray-800);
+}
+.alignment-badge {
+  font-weight: 600;
+}
+.align-confirms   { color: #2D6A4F; }
+.align-contradicts { color: #C1121F; }
+.align-partial    { color: #E07B00; }
+.align-unrelated  { color: #555; }
+
 /* Warnings */
 .duplicate-warning, .review-flag {
   display: flex;

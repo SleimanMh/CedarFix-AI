@@ -34,6 +34,8 @@ class ComplaintType(str, Enum):
     SIDEWALK = "sidewalk_damage"
     STREETLIGHT = "streetlight"
     TELECOM_OUTAGE = "telecom_outage"
+    TRAFFIC_INCIDENT = "traffic_incident"
+    PUBLIC_SAFETY = "public_safety"
     OTHER = "other"
 
 
@@ -284,6 +286,9 @@ class ComplaintDecision(BaseModel):
 
     # Media validation gate result (populated right after IEP-1 + IEP-2)
     media_validation: Optional["MediaValidationResult"] = None
+
+    # Text-image alignment (populated after IEP-3; None when no image submitted)
+    text_image_alignment: Optional["TextImageAlignment"] = None
 
     # Summary fields (denormalized for quick query)
     complaint_type: Optional[ComplaintType] = None

@@ -75,7 +75,7 @@ Analyze the complaint text and return ONLY a valid JSON object — no explanatio
 JSON schema (all fields required):
 {
   "english_translation": "<complaint translated to English, or same text if already English>",
-  "issue_type": "<best matching label — use known types when applicable: pothole, road_damage, flooding, waste_accumulation, electricity_outage, telecom_outage, traffic_light, water_pipe, sidewalk_damage, streetlight — or suggest a specific label if none fit>",
+  "issue_type": "<best matching label — use known types when applicable: pothole, road_damage, flooding, waste_accumulation, electricity_outage, telecom_outage, traffic_light, water_pipe, sidewalk_damage, streetlight, traffic_incident, public_safety — or suggest a specific label if none fit>",
   "category": "<one of: roads | drainage | electricity | water | sanitation | telecom | public_health | environment | other>",
   "subcategory": "<short specific label, e.g. pothole, pipe_leak, wifi_outage>",
   "severity": "<one of: LOW | MEDIUM | HIGH | CRITICAL>",
@@ -149,7 +149,7 @@ async def _call_gpt4o_translate(text: str) -> str:
 
 async def _call_qwen(text: str, language: str) -> dict:
     """Call the self-hosted Qwen on RunPod via its OpenAI-compatible endpoint."""
-    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL)
+    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=20.0)
     response = await client.chat.completions.create(
         model=QWEN_MODEL,
         messages=[
@@ -172,7 +172,13 @@ _ISSUE_TO_CATEGORY = {
     "electricity_outage": "electricity", "traffic_light": "roads",
     "water_pipe": "water",        "sidewalk_damage": "roads",
     "streetlight": "electricity", "telecom_outage": "telecom",
+    "traffic_incident": "roads",  "public_safety": "other",
     "other": "other",
+}
+
+_VALID_CATEGORIES = {
+    "roads", "drainage", "electricity", "water", "sanitation",
+    "telecom", "public_health", "environment", "other",
 }
 
 
@@ -190,7 +196,8 @@ def _build_result(complaint_id: str, original_text: str, language: str,
     except ValueError:
         severity = SeverityLevel.LOW
 
-    category = data.get("category") or _ISSUE_TO_CATEGORY.get(issue_raw, "other")
+    llm_cat = data.get("category", "")
+    category = llm_cat if llm_cat in _VALID_CATEGORIES else _ISSUE_TO_CATEGORY.get(issue_raw, "other")
     subcategory = data.get("subcategory", issue_raw)
     translation = data.get("english_translation", original_text)
 

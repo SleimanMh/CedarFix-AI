@@ -131,22 +131,22 @@ class QdrantStore:
         )
 
     async def search_text(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
-        results = self.client.search(
+        response = self.client.query_points(
             collection_name=TEXT_COLLECTION,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
             with_payload=True,
         )
-        return [self._to_raw_candidate(r, "text_search") for r in results]
+        return [self._to_raw_candidate(r, "text_search") for r in response.points]
 
     async def search_image(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
-        results = self.client.search(
+        response = self.client.query_points(
             collection_name=IMAGE_COLLECTION,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
             with_payload=True,
         )
-        return [self._to_raw_candidate(r, "image_search") for r in results]
+        return [self._to_raw_candidate(r, "image_search") for r in response.points]
 
     async def search_geo_time(
         self,
@@ -162,11 +162,14 @@ class QdrantStore:
         Filter the text_embeddings collection by issue_type + location + time.
         Uses payload filtering (no vector distance — this is a structured search).
         """
+        from datetime import datetime as _dt
+        since_ts = _dt.fromisoformat(since_iso).timestamp()
+
         conditions = [
             FieldCondition(key="issue_type", match=MatchValue(value=issue_type)),
             FieldCondition(
                 key="timestamp",
-                range=Range(gte=since_iso),
+                range=Range(gte=since_ts),
             ),
         ]
 

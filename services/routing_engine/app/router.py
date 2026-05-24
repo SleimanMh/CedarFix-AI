@@ -22,8 +22,10 @@ TYPE_TO_ENTITY = {
     "telecom_outage":    (RoutingEntity.OGERO,                    None,                               0.95),
     "streetlight":        (RoutingEntity.EDL,                      RoutingEntity.BEIRUT_MUNICIPALITY,  0.80),
     "traffic_light":      (RoutingEntity.INTERNAL_SECURITY,        RoutingEntity.BEIRUT_MUNICIPALITY,  0.85),
+    "traffic_incident":   (RoutingEntity.INTERNAL_SECURITY,        RoutingEntity.MINISTRY_PUBLIC_WORKS, 0.88),
     "waste_accumulation": (RoutingEntity.BEIRUT_MUNICIPALITY,      RoutingEntity.MINISTRY_ENVIRONMENT, 0.87),
     "sidewalk_damage":    (RoutingEntity.BEIRUT_MUNICIPALITY,      RoutingEntity.MINISTRY_PUBLIC_WORKS, 0.83),
+    "public_safety":      (RoutingEntity.INTERNAL_SECURITY,        RoutingEntity.BEIRUT_MUNICIPALITY,  0.82),
     "other":              (RoutingEntity.HUMAN_REVIEW,             None,                               0.40),
 }
 

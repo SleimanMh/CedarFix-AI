@@ -162,6 +162,29 @@
             <span>👁 Flagged for human review due to low routing confidence.</span>
           </div>
 
+          <!-- Image + Alignment Analysis (shown when image was submitted) -->
+          <div class="analysis-block hidden" id="analysisBlock">
+            <span class="result-label">AI Analysis Details</span>
+            <div class="analysis-grid" id="analysisGrid">
+              <div class="analysis-item hidden" id="imageAnalysisRow">
+                <span class="analysis-label">Image Detection</span>
+                <span class="analysis-value" id="resImageDetection">—</span>
+              </div>
+              <div class="analysis-item hidden" id="imageConfidenceRow">
+                <span class="analysis-label">Image Confidence</span>
+                <span class="analysis-value" id="resImageConfidence">—</span>
+              </div>
+              <div class="analysis-item hidden" id="alignmentRow">
+                <span class="analysis-label">Text / Image Match</span>
+                <span class="analysis-value alignment-badge" id="resAlignmentStatus">—</span>
+              </div>
+              <div class="analysis-item full-width hidden" id="alignmentReasonRow">
+                <span class="analysis-label">Conflict Reason</span>
+                <span class="analysis-value" id="resAlignmentReason">—</span>
+              </div>
+            </div>
+          </div>
+
           <button class="btn-reset" id="btnReset">Submit Another Complaint</button>
         </div>
 

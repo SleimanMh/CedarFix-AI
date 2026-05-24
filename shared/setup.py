@@ -9,6 +9,5 @@ setup(
         "sqlalchemy>=2.0",
         "psycopg2-binary",
         "prometheus-client",
-        "mlflow",
     ],
 )

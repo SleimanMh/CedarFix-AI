@@ -2,9 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install shared library first (layer caching)
 COPY shared /app/shared
-RUN pip install --no-cache-dir /app/shared
 
 COPY services/gateway/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

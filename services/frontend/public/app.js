@@ -241,6 +241,45 @@ function showSuccess(d) {
     document.getElementById('explanationBlock').style.display = 'none';
   }
 
+  // Image + Alignment analysis details
+  const vu = d.image_analysis?.visual_understanding;
+  const align = d.text_image_alignment;
+  const hasImageData = vu || align;
+
+  if (hasImageData) {
+    document.getElementById('analysisBlock').classList.remove('hidden');
+
+    if (vu?.visual_subcategory) {
+      document.getElementById('resImageDetection').textContent =
+        vu.visual_subcategory.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      document.getElementById('imageAnalysisRow').classList.remove('hidden');
+    }
+    if (vu?.confidence != null) {
+      document.getElementById('resImageConfidence').textContent =
+        `${Math.round(vu.confidence * 100)}%`;
+      document.getElementById('imageConfidenceRow').classList.remove('hidden');
+    }
+    if (align?.alignment_status) {
+      const statusEl = document.getElementById('resAlignmentStatus');
+      const statusMap = {
+        CONFIRMS: '✅ Confirms',
+        CONTRADICTS: '⚠️ Contradicts',
+        PARTIAL: '🔶 Partial',
+        UNRELATED: '❓ Unrelated',
+        NO_IMAGE: '—',
+      };
+      statusEl.textContent = statusMap[align.alignment_status] || align.alignment_status;
+      statusEl.className = `analysis-value alignment-badge align-${align.alignment_status.toLowerCase()}`;
+      document.getElementById('alignmentRow').classList.remove('hidden');
+    }
+    if (align?.conflict_reason) {
+      document.getElementById('resAlignmentReason').textContent = align.conflict_reason;
+      document.getElementById('alignmentReasonRow').classList.remove('hidden');
+    }
+  } else {
+    document.getElementById('analysisBlock').classList.add('hidden');
+  }
+
   // Show result, hide error
   _showCard(resultSuccess);
 }

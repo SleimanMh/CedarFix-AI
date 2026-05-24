@@ -15,12 +15,12 @@ from cedarfix_shared.schemas import (
     DuplicateStatus,
     PriorityResult, RoutingResult, ExplanationResult,
     ComplaintType, MediaValidationResult, MediaValidationStatus,
-    HumanReviewItem,
+    HumanReviewItem, TextImageAlignment,
 )
 from cedarfix_shared.metrics import PIPELINE_DURATION
 from .config import settings
 
-TIMEOUT = httpx.Timeout(30.0)
+TIMEOUT = httpx.Timeout(60.0)
 
 
 async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> ComplaintDecision:
@@ -76,6 +76,29 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         t0 = time.time()
         embedding_result = await _call_embedding_service(client, complaint_id, text_result, image_result)
         decision.embedding = embedding_result
+        if embedding_result and embedding_result.alignment:
+            decision.text_image_alignment = embedding_result.alignment
+            a = embedding_result.alignment
+            if (
+                a.conflict_detected
+                and getattr(a, "reconciliation_status", None) in ("MODAL_CONFLICT", "modal_conflict")
+                and image_result and image_result.image_present
+            ):
+                decision.status = PipelineStatus.CONTRADICTION
+                decision.media_validation = MediaValidationResult(
+                    status=MediaValidationStatus.CONTRADICTION,
+                    text_is_complaint=True,
+                    image_has_complaint=True,
+                    text_detected_type=str(a.text_issue_type) if a.text_issue_type else None,
+                    image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
+                    contradiction_reason=(
+                        f"Your text describes a {a.text_issue_type or 'infrastructure'} issue "
+                        f"but your image appears to show something different "
+                        f"({a.image_issue_type or 'unrelated content'}). "
+                        f"Please resubmit with a photo that matches your complaint."
+                    ),
+                )
+                return decision
         PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
 
         # --- Stage 3: IEP-4 Clustering + Deduplication ---
@@ -189,7 +212,7 @@ async def _call_clustering_service(
     try:
         resp = await client.post(
             f"{settings.clustering_service_url}/classify",
-            json=embedding_result.model_dump(),
+            json=embedding_result.model_dump(mode="json"),
         )
         resp.raise_for_status()
         return MultimodalClusteringResult(**resp.json())
@@ -208,14 +231,14 @@ async def _call_priority_engine(client, complaint_id: str, decision: ComplaintDe
             "complaint_type": decision.complaint_type,
             "cluster_size": clustering.cluster_size if clustering else 0,
             "visual_severity": (
-                image.visual_understanding.predicted_severity
+                image.visual_understanding.visual_severity
                 if image and image.image_present and image.visual_understanding
                 else "LOW"
             ),
             "location_district": decision.location.district if decision.location else None,
             "top_similarity_score": (
-                max((c.multimodal_score for c in clustering.scored_candidates), default=0.0)
-                if clustering and clustering.scored_candidates
+                max((c.multimodal_score for c in clustering.top_candidates), default=0.0)
+                if clustering and clustering.top_candidates
                 else 0.0
             ),
         }
@@ -281,12 +304,14 @@ _TYPE_TO_CATEGORY: dict = {
     "road_damage":        "roads",
     "traffic_light":      "roads",
     "sidewalk_damage":    "roads",
+    "traffic_incident":   "roads",
     "flooding":           "drainage",
     "waste_accumulation": "sanitation",
     "electricity_outage": "electricity",
     "streetlight":        "electricity",
     "water_pipe":         "water",
     "telecom_outage":     "telecom",
+    "public_safety":      "other",
 }
 
 
@@ -454,6 +479,29 @@ async def _add_to_human_review(
         t0 = time.time()
         embedding_result = await _call_embedding_service(client, complaint_id, text_result, image_result)
         decision.embedding = embedding_result
+        if embedding_result and embedding_result.alignment:
+            decision.text_image_alignment = embedding_result.alignment
+            a = embedding_result.alignment
+            if (
+                a.conflict_detected
+                and getattr(a, "reconciliation_status", None) in ("MODAL_CONFLICT", "modal_conflict")
+                and image_result and image_result.image_present
+            ):
+                decision.status = PipelineStatus.CONTRADICTION
+                decision.media_validation = MediaValidationResult(
+                    status=MediaValidationStatus.CONTRADICTION,
+                    text_is_complaint=True,
+                    image_has_complaint=True,
+                    text_detected_type=str(a.text_issue_type) if a.text_issue_type else None,
+                    image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
+                    contradiction_reason=(
+                        f"Your text describes a {a.text_issue_type or 'infrastructure'} issue "
+                        f"but your image appears to show something different "
+                        f"({a.image_issue_type or 'unrelated content'}). "
+                        f"Please resubmit with a photo that matches your complaint."
+                    ),
+                )
+                return decision
         PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
 
         # --- Stage 3: IEP-4 Clustering + Deduplication ---

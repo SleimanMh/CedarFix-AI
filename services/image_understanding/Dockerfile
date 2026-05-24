@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 COPY shared /app/shared
-RUN pip install --no-cache-dir /app/shared
 
 # Install CPU-only torch BEFORE requirements.txt so transitive deps
 # (transformers) don't pull the 2GB CUDA build from PyPI.

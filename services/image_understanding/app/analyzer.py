@@ -156,8 +156,9 @@ class SceneAnalyzer:
         """Returns L2-normalised 512-dim CLIP image feature."""
         inputs = self._processor(images=image, return_tensors="pt")
         with torch.no_grad():
-            features = self._model.get_image_features(**inputs)
-            features = features / features.norm(dim=-1, keepdim=True)
+            vision_out = self._model.vision_model(pixel_values=inputs["pixel_values"])
+            features = self._model.visual_projection(vision_out.pooler_output)
+            features = features / features.norm(p=2, dim=-1, keepdim=True)
         return features[0].tolist()
 
     def get_text_embedding(self, text: str) -> List[float]:
@@ -177,8 +178,12 @@ class SceneAnalyzer:
             text=[text], return_tensors="pt", padding=True, truncation=True
         )
         with torch.no_grad():
-            features = self._model.get_text_features(**inputs)
-            features = features / features.norm(dim=-1, keepdim=True)
+            text_out = self._model.text_model(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"],
+            )
+            features = self._model.text_projection(text_out.pooler_output)
+            features = features / features.norm(p=2, dim=-1, keepdim=True)
         return features[0].tolist()
 
     # ------------------------------------------------------------------
@@ -186,12 +191,26 @@ class SceneAnalyzer:
     # ------------------------------------------------------------------
 
     def _clip_probs(self, texts: List[str], image: Image.Image) -> List[float]:
-        inputs = self._processor(
-            text=texts, images=image, return_tensors="pt", padding=True
+        """Compute CLIP zero-shot probabilities over a list of text prompts."""
+        img_inputs = self._processor(images=image, return_tensors="pt")
+        txt_inputs = self._processor(
+            text=texts, return_tensors="pt", padding=True, truncation=True
         )
         with torch.no_grad():
-            outputs = self._model(**inputs)
-            probs = outputs.logits_per_image.softmax(dim=1)[0].tolist()
+            vision_out = self._model.vision_model(pixel_values=img_inputs["pixel_values"])
+            image_features = self._model.visual_projection(vision_out.pooler_output)
+            image_features = image_features / image_features.norm(p=2, dim=-1, keepdim=True)
+
+            text_out = self._model.text_model(
+                input_ids=txt_inputs["input_ids"],
+                attention_mask=txt_inputs["attention_mask"],
+            )
+            text_features = self._model.text_projection(text_out.pooler_output)
+            text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
+
+            logit_scale = self._model.logit_scale.exp()
+            logits = (image_features @ text_features.T) * logit_scale
+            probs = logits.softmax(dim=-1)[0].tolist()
         return probs
 
     def _classify_category(

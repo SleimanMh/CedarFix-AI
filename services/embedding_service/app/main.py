@@ -123,7 +123,7 @@ async def embed(request: EmbedRequest):
         "latitude":             canonical.location.latitude,
         "longitude":            canonical.location.longitude,
         "severity":             canonical.severity.value,
-        "timestamp":            canonical.timestamp.isoformat(),
+        "timestamp":            canonical.timestamp.timestamp(),
     }
 
     # ── 4. Store embeddings ───────────────────────────────────────────────────
