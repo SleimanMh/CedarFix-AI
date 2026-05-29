@@ -23,9 +23,9 @@ scrape_configs:
       - targets: ['embedding-service:8003']
     metrics_path: /metrics
 
-  - job_name: 'clustering-service'
+  - job_name: 'incident-matching-service'
     static_configs:
-      - targets: ['clustering-service:8004']
+      - targets: ['incident-matching-service:8004']
     metrics_path: /metrics
 
   - job_name: 'priority-engine'

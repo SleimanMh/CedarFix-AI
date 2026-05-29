@@ -20,9 +20,10 @@
       </div>
       <nav class="header-links">
         <a href="index.html" class="active">Report Issue</a>
-        <a href="track.html">Track Complaint</a>
-        <a href="review.html">Human Review</a>
-        <a href="http://localhost:3000" target="_blank">Dashboard</a>
+        <a href="track.html">My Complaints</a>
+        <a id="adminLink" href="admin.html" style="display:none">Admin</a>
+        <span id="headerUser" style="color:rgba(255,255,255,0.7);font-size:13px;padding:6px 8px"></span>
+        <a href="#" id="logoutBtn" onclick="logout()" style="display:none">Logout</a>
       </nav>
     </div>
   </header>
@@ -323,5 +324,23 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // ── Auth init ─────────────────────────────────────
+    (function() {
+      const token = localStorage.getItem('cf_token');
+      const role  = localStorage.getItem('cf_role');
+      const user  = localStorage.getItem('cf_username');
+      if (!token) { window.location.href = 'login.html'; return; }
+      if (role === 'admin') {
+        document.getElementById('adminLink').style.display = '';
+      }
+      document.getElementById('headerUser').textContent = `👤 ${user}`;
+      document.getElementById('logoutBtn').style.display = '';
+    })();
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>

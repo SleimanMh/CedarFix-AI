@@ -3,11 +3,17 @@ Scene analyser for IEP-2: wraps CLIP inference and produces
 a structured VisualUnderstandingJSON + image quality assessment.
 
 Phase 1: CLIP zero-shot prompts.
-Phase 2: Replace with BLIP-2 captioning + YOLO object detection + Qwen-VL.
+Phase 2: Qwen2.5-VL for image reasoning and alignment (VLMAnalyzer).
 
 AI Engineer 2 owns this file.
 """
 
+import base64
+import json
+import logging
+import os
+import re
+from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 
 import torch
@@ -19,7 +25,20 @@ from cedarfix_shared.schemas import (
     ImageQualityJSON,
     SeverityLevel,
     VisualUnderstandingJSON,
+    VLMImageAnalysis,
 )
+
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# VLM Configuration
+# ---------------------------------------------------------------------------
+
+VLM_BASE_URL: str = os.getenv("VLM_BASE_URL", "")
+VLM_MODEL: str = os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct")
+VLM_ENABLED: bool = os.getenv("VLM_ENABLED", "true").lower() == "true"
+VLM_TIMEOUT: float = float(os.getenv("VLM_TIMEOUT", "25"))
+VLM_API_KEY: str = os.getenv("VLM_API_KEY", "none")
 
 # ---------------------------------------------------------------------------
 # CLIP zero-shot prompt banks
@@ -242,3 +261,195 @@ class SceneAnalyzer:
         obj_str = objects[0] if objects else subcategory.replace("_", " ")
         sev_label = severity.value.lower()
         return f"A {sev_label} severity {obj_str} visible in the image."
+
+
+# ---------------------------------------------------------------------------
+# VLM Analyzer — Qwen2.5-VL Phase 2
+# ---------------------------------------------------------------------------
+
+_VLM_SYSTEM = """\
+You are an expert image analyst for CedarFix, a Lebanese public infrastructure complaint platform.
+Given an image, return ONLY a valid JSON object (no markdown, no explanation):
+{
+  "image_type": "<infrastructure_damage | natural_scene | indoor | person | vehicle | other>",
+  "is_valid_complaint_image": <true|false>,
+  "is_harmful": <true|false>,
+  "is_ai_generated": <true|false>,
+  "damage_visible": <true|false>,
+  "visual_category": "<roads | drainage | sanitation | electricity | water | other | none>",
+  "visual_subcategory": "<pothole | road_damage | flooding | waste_accumulation | streetlight | traffic_light | sidewalk_damage | pipe_leak | other | none>",
+  "damage_severity": "<CRITICAL | HIGH | MEDIUM | LOW | NONE>",
+  "location_cues": ["<any visible location identifiers, street signs, Lebanese landmarks, null if none>"],
+  "confidence": <0.0-1.0>,
+  "reasoning": "<1-2 sentences explaining what you see>"
+}
+
+Rules:
+- is_valid_complaint_image: true only if the image shows real infrastructure damage.
+- is_harmful: true for graphic violence, hate symbols, explicit content.
+- is_ai_generated: true only if clearly synthetic/AI-rendered — this is a weak signal only.
+- location_cues: extract any Arabic/French/English text visible in the image.
+- damage_severity CRITICAL = road fully blocked, imminent danger.
+"""
+
+
+def _image_to_base64(image: Image.Image, max_size: int = 1024) -> str:
+    """Resize to at most max_size px on the longest side and encode as JPEG base64."""
+    w, h = image.size
+    if max(w, h) > max_size:
+        scale = max_size / max(w, h)
+        image = image.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+    buf = BytesIO()
+    image.convert("RGB").save(buf, format="JPEG", quality=85)
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+class VLMAnalyzer:
+    """
+    Calls Qwen2.5-VL (or any OpenAI-compatible VLM) to produce a
+    VLMImageAnalysis with richer semantic understanding than CLIP.
+
+    Only instantiated when VLM_ENABLED=true and VLM_BASE_URL is set.
+    """
+
+    def __init__(self):
+        if not VLM_BASE_URL:
+            raise RuntimeError("VLM_BASE_URL is not set — cannot initialise VLMAnalyzer")
+
+    async def analyze(
+        self,
+        image: Image.Image,
+        complaint_text: Optional[str] = None,
+    ) -> Optional[VLMImageAnalysis]:
+        """
+        Send image to the VLM and parse the structured response.
+        Returns None on error — caller should fall back to CLIP result.
+        """
+        try:
+            import openai
+            b64 = _image_to_base64(image)
+            user_content: list = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                },
+            ]
+            if complaint_text:
+                user_content.append({
+                    "type": "text",
+                    "text": (
+                        f"The citizen described this complaint as: \"{complaint_text[:300]}\". "
+                        "Does the image match this description?"
+                    ),
+                })
+            else:
+                user_content.append({
+                    "type": "text",
+                    "text": "Analyse this image for public infrastructure damage.",
+                })
+
+            client = openai.AsyncOpenAI(
+                api_key=VLM_API_KEY,
+                base_url=VLM_BASE_URL,
+                max_retries=0,
+                timeout=VLM_TIMEOUT,
+            )
+            resp = await client.chat.completions.create(
+                model=VLM_MODEL,
+                messages=[
+                    {"role": "system", "content": _VLM_SYSTEM},
+                    {"role": "user", "content": user_content},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=512,
+            )
+            raw = resp.choices[0].message.content
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            return VLMImageAnalysis(
+                image_type=data.get("image_type", "other"),
+                is_valid_complaint_image=bool(data.get("is_valid_complaint_image", False)),
+                is_harmful=bool(data.get("is_harmful", False)),
+                is_ai_generated=bool(data.get("is_ai_generated", False)),
+                damage_visible=bool(data.get("damage_visible", False)),
+                visual_category=data.get("visual_category", "other"),
+                visual_subcategory=data.get("visual_subcategory", "other"),
+                damage_severity=data.get("damage_severity", "NONE"),
+                location_cues=[c for c in data.get("location_cues", []) if c],
+                confidence=float(data.get("confidence", 0.5)),
+                reasoning=data.get("reasoning", ""),
+                vlm_alignment=None,          # filled by VLMAlignmentChecker if needed
+                vlm_alignment_confidence=None,
+            )
+        except Exception as e:
+            log.warning("[IEP-2] VLM analysis failed: %s", e)
+            return None
+
+
+class VLMAlignmentChecker:
+    """
+    Called when CLIP alignment is UNCERTAIN or CONTRADICTS.
+    Asks the VLM to explicitly judge whether the image supports the text.
+    """
+
+    def __init__(self):
+        if not VLM_BASE_URL:
+            raise RuntimeError("VLM_BASE_URL is not set — cannot initialise VLMAlignmentChecker")
+
+    async def check_alignment(
+        self,
+        image: Image.Image,
+        complaint_text: str,
+        clip_alignment: str,
+    ) -> Optional[dict]:
+        """
+        Returns dict: {alignment, text_issue, image_issue, confidence, reason}
+        alignment values: CONFIRMS | RELATED | UNCERTAIN | CONTRADICTS
+        """
+        try:
+            import openai
+            b64 = _image_to_base64(image)
+            system = (
+                "You are a complaint validator. Given an image and a text description of a public "
+                "infrastructure complaint, decide if they match. "
+                "Return ONLY valid JSON:\n"
+                '{"alignment": "<CONFIRMS|RELATED|UNCERTAIN|CONTRADICTS>", '
+                '"text_issue": "<what text claims>", '
+                '"image_issue": "<what image shows>", '
+                '"confidence": <0.0-1.0>, '
+                '"reason": "<1 sentence>"}'
+            )
+            client = openai.AsyncOpenAI(
+                api_key=VLM_API_KEY,
+                base_url=VLM_BASE_URL,
+                max_retries=0,
+                timeout=VLM_TIMEOUT,
+            )
+            resp = await client.chat.completions.create(
+                model=VLM_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": [
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+                        {"type": "text", "text": f"Complaint text: \"{complaint_text[:300]}\"\nCLIP initial alignment: {clip_alignment}. Please confirm or correct."},
+                    ]},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=256,
+            )
+            raw = resp.choices[0].message.content
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            return json.loads(raw[start:end])
+        except Exception as e:
+            log.warning("[IEP-2] VLM alignment check failed: %s", e)
+            return None

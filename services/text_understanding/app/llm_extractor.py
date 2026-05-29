@@ -27,7 +27,11 @@ from cedarfix_shared.schemas import (
     SeverityLevel,
     TextUnderstandingResult,
 )
+from cedarfix_shared.location import lookup_text
 from .extractor import StructuredExtractor
+
+# Canonical set of supported complaint type values
+_KNOWN_TYPES: set[str] = {ct.value for ct in ComplaintType}
 
 log = logging.getLogger(__name__)
 
@@ -185,10 +189,19 @@ _VALID_CATEGORIES = {
 def _build_result(complaint_id: str, original_text: str, language: str,
                   data: dict, processing_ms: int) -> TextUnderstandingResult:
     issue_raw = data.get("issue_type", "other")
-    try:
+    unknown_type = False
+
+    if issue_raw in _KNOWN_TYPES:
         issue_type = ComplaintType(issue_raw)
-    except ValueError:
+    else:
+        # LLM returned a type not in the allowed taxonomy.
+        # Accept the complaint but flag for human review.
+        log.warning(
+            "[IEP-1] LLM returned unknown issue_type=%r — setting OTHER + human review",
+            issue_raw,
+        )
         issue_type = ComplaintType.OTHER
+        unknown_type = True
 
     severity_raw = data.get("severity", "LOW")
     try:
@@ -208,17 +221,30 @@ def _build_result(complaint_id: str, original_text: str, language: str,
         emergency_signal=bool(signals_raw.get("emergency_signal", False)),
     )
 
+    # Build LocationJSON and enrich with seed lookup if possible
     location_mentions: list = data.get("location_mentions", [])
+    raw_loc = ", ".join(location_mentions)
+    resolved_loc = lookup_text(raw_loc) if raw_loc else None
     location = LocationJSON(
-        raw=", ".join(location_mentions),
-        normalized=location_mentions[0] if location_mentions else "",
-        confidence=0.75 if location_mentions else 0.0,
+        raw=raw_loc,
+        normalized=resolved_loc["name"] if resolved_loc else (location_mentions[0] if location_mentions else ""),
+        municipality=resolved_loc["municipality"] if resolved_loc else None,
+        district=resolved_loc["district"] if resolved_loc else None,
+        governorate=resolved_loc["governorate"] if resolved_loc else None,
+        latitude=resolved_loc["lat"] if resolved_loc else None,
+        longitude=resolved_loc["lng"] if resolved_loc else None,
+        confidence=0.80 if resolved_loc else (0.60 if location_mentions else 0.0),
+        source="text_lookup" if resolved_loc else ("llm_extracted" if location_mentions else "none"),
     )
 
     # normalized_text is the English translation — downstream IEP-1 embeds this
     normalized_text = translation if translation else original_text
 
-    return TextUnderstandingResult(
+    raw_confidence = float(data.get("confidence", 0.7))
+    # Penalise confidence when the type was not in the allowed taxonomy
+    effective_confidence = round(raw_confidence * 0.40, 3) if unknown_type else raw_confidence
+
+    result = TextUnderstandingResult(
         complaint_id=complaint_id,
         original_text=original_text,
         normalized_text=normalized_text,
@@ -232,9 +258,15 @@ def _build_result(complaint_id: str, original_text: str, language: str,
         severity=severity,
         signals=signals,
         urgency_keywords=data.get("keywords", []),
-        confidence=float(data.get("confidence", 0.7)),
+        confidence=effective_confidence,
         processing_ms=processing_ms,
     )
+
+    if unknown_type:
+        # Store the original LLM suggestion in subcategory so it is not lost
+        result.subcategory = issue_raw
+
+    return result
 
 
 # ---------------------------------------------------------------------------

@@ -5,10 +5,10 @@ COPY shared /app/shared
 
 # Install CPU-only torch BEFORE requirements.txt so transitive deps
 # (transformers) don't pull the 2GB CUDA build from PyPI.
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --timeout 300 torch --index-url https://download.pytorch.org/whl/cpu
 
 COPY services/image_understanding/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --timeout 300 -r requirements.txt
 
 COPY services/image_understanding/app /app/app
 EXPOSE 8002

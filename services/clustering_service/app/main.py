@@ -1,22 +1,18 @@
 """
 IEP-4 — Clustering + Duplicate Detection Service
 ===================================================
-Owned by: AI Engineer 1 (NLP)
-
 Responsibilities:
 - Per-request: run the full multimodal deduplication pipeline
-  (score → reconcile → decide → cluster assign)
-- Background job: run HDBSCAN on all embeddings to discover clusters
+  (embedding similarity → scorer → LLM judge → cluster assign)
 
 Input:  EmbeddingServiceResult from IEP-3
 Output: MultimodalClusteringResult
 """
 
-import asyncio
 import time
 from contextlib import contextmanager
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, HTTPException
 from prometheus_client import make_asgi_app
 
 from cedarfix_shared.db import SessionLocal
@@ -24,7 +20,6 @@ from cedarfix_shared.schemas import EmbeddingServiceResult, MultimodalClustering
 from cedarfix_shared.metrics import DUPLICATE_RATE
 
 from .classifier import MultimodalDuplicateClassifier
-from .hdbscan_job import run_hdbscan_clustering
 
 app = FastAPI(title="IEP-4: Clustering Service", version="0.2.0")
 metrics_app = make_asgi_app()
@@ -61,15 +56,5 @@ async def classify(embed_result: EmbeddingServiceResult):
     return result
 
 
-@app.post("/run_clustering")
-async def trigger_clustering(background_tasks: BackgroundTasks):
-    """Trigger HDBSCAN batch clustering as a background job."""
-    background_tasks.add_task(run_hdbscan_clustering)
-    return {"status": "clustering_job_started"}
 
-
-@app.get("/clusters")
-async def get_clusters():
-    from .hdbscan_job import get_cluster_summary
-    return await get_cluster_summary()
 

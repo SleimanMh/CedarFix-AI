@@ -30,8 +30,8 @@ from cedarfix_shared.schemas import (
     DuplicateDecisionEnum,
 )
 
-_ESCALATION_SIZE     = 5
-_ESCALATION_GROWTH   = 3
+_ESCALATION_SIZE     = 2   # flag cluster as escalated when 2+ complaints share the same incident
+_ESCALATION_GROWTH   = 2
 _GROWTH_WINDOW_HOURS = 24
 
 

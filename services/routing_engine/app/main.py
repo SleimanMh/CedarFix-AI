@@ -32,7 +32,7 @@ from .router import ComplaintRouter
 AUTO_ROUTE_THRESHOLD = float(os.getenv("AUTO_ROUTE_THRESHOLD", "0.85"))
 REVIEW_THRESHOLD = float(os.getenv("REVIEW_THRESHOLD", "0.65"))
 
-app = FastAPI(title="IEP-6: Routing Engine", version="0.1.0")
+app = FastAPI(title="IEP-6: Routing Engine", version="0.2.0")
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
@@ -47,8 +47,12 @@ async def health():
 class RoutingRequest(BaseModel):
     complaint_id: str
     complaint_type: Optional[str] = None
+    category: Optional[str] = "other"
     severity: Optional[str] = None
+    original_text: Optional[str] = ""
     location_district: Optional[str] = None
+    location_municipality: Optional[str] = None
+    location_governorate: Optional[str] = None
     location_mentions: List[str] = []
     extracted_keywords: List[str] = []
 
@@ -56,11 +60,15 @@ class RoutingRequest(BaseModel):
 @app.post("/route", response_model=RoutingResult)
 async def route_complaint(request: RoutingRequest):
     start = time.time()
-    result = router.route(
+    result = await router.route_async(
         complaint_id=request.complaint_id,
         complaint_type=request.complaint_type,
+        category=request.category or "other",
         severity=request.severity,
+        original_text=request.original_text or "",
         location_district=request.location_district,
+        location_municipality=request.location_municipality,
+        location_governorate=request.location_governorate,
         location_mentions=request.location_mentions,
         keywords=request.extracted_keywords,
     )

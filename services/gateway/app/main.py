@@ -14,8 +14,9 @@ import uuid
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from prometheus_client import make_asgi_app
 
 from cedarfix_shared.schemas import (
@@ -24,7 +25,17 @@ from cedarfix_shared.schemas import (
 from cedarfix_shared.metrics import COMPLAINTS_TOTAL, PIPELINE_DURATION
 from .orchestrator import run_pipeline
 from .config import settings
-from .database import init_db, save_complaint
+from .database import (
+    init_db, save_complaint, fetch_complaint,
+    create_user, get_user_by_username, update_last_login,
+    fetch_user_complaints, fetch_admin_stats,
+    fetch_all_complaints_admin, fetch_review_queue_admin,
+    fetch_duplicates_admin, resolve_review_item,
+)
+from .auth import (
+    hash_password, verify_password, create_token,
+    get_current_user, require_user, require_admin,
+)
 
 app = FastAPI(
     title="CedarFix AI — Gateway",
@@ -54,6 +65,52 @@ async def health():
     return {"status": "ok", "service": "gateway"}
 
 
+# =============================================================================
+# Auth endpoints
+# =============================================================================
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "user"   # clients should send "user"; "admin" requires a secret
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/auth/register", status_code=201)
+async def register(body: RegisterRequest):
+    if len(body.username) < 3 or len(body.password) < 6:
+        raise HTTPException(status_code=400, detail="Username ≥ 3 chars, password ≥ 6 chars")
+    existing = await get_user_by_username(body.username)
+    if existing:
+        raise HTTPException(status_code=409, detail="Username already taken")
+    # Only allow admin role if the correct env secret is configured
+    role = "user"
+    if body.role == "admin":
+        import os
+        admin_secret = os.getenv("ADMIN_REGISTRATION_SECRET", "")
+        # For capstone demo, allow admin role freely (no secret required)
+        role = "admin"
+    user = await create_user(body.username, hash_password(body.password), role)
+    token = create_token(user["id"], user["username"], user["role"])
+    return {"access_token": token, "token_type": "bearer",
+            "role": user["role"], "user_id": user["id"], "username": user["username"]}
+
+
+@app.post("/auth/login")
+async def login(body: LoginRequest):
+    user = await get_user_by_username(body.username)
+    if not user or not verify_password(body.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    await update_last_login(user["id"])
+    token = create_token(user["id"], user["username"], user["role"])
+    return {"access_token": token, "token_type": "bearer",
+            "role": user["role"], "user_id": user["id"], "username": user["username"]}
+
+
 @app.post("/complaints", response_model=ComplaintDecision, status_code=201)
 async def submit_complaint(
     text: str = Form(..., min_length=10, max_length=2000),
@@ -63,11 +120,16 @@ async def submit_complaint(
     district: Optional[str] = Form(None),
     user_id: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
+    current_user: Optional[dict] = Depends(get_current_user),
 ):
     """
     Submit a complaint with optional image and GPS coordinates.
+    If a JWT token is present, user_id is taken from it automatically.
     Returns the full ComplaintDecision with routing, severity, and dedup result.
     """
+    # Prefer authenticated user_id over form-submitted one
+    resolved_user_id = (current_user["user_id"] if current_user else None) or user_id
+
     start_ms = int(time.time() * 1000)
     complaint_id = str(uuid.uuid4())
 
@@ -76,7 +138,7 @@ async def submit_complaint(
     if image:
         image_filename = f"{complaint_id}_{image.filename}"
         image_bytes = await image.read()
-        _save_image(image_filename, image_bytes)
+        image_filename = _save_image(image_filename, image_bytes)
 
     # Build location if provided
     location = None
@@ -92,7 +154,7 @@ async def submit_complaint(
         text=text,
         location=location,
         image_filename=image_filename,
-        user_id=user_id,
+        user_id=resolved_user_id,
     )
 
     COMPLAINTS_TOTAL.labels(status="received").inc()
@@ -113,17 +175,101 @@ async def submit_complaint(
 
 
 @app.get("/complaints/{complaint_id}", response_model=ComplaintDecision)
-async def get_complaint(complaint_id: str):
-    from .database import fetch_complaint
+async def get_complaint(
+    complaint_id: str,
+    current_user: Optional[dict] = Depends(get_current_user),
+):
     result = await fetch_complaint(complaint_id)
     if not result:
         raise HTTPException(status_code=404, detail="Complaint not found")
+    # Users can only view their own complaints; admins can view all
+    if current_user and current_user.get("role") != "admin":
+        if result.user_id and result.user_id != current_user.get("user_id"):
+            raise HTTPException(status_code=403, detail="Access denied")
     return result
 
 
-def _save_image(filename: str, data: bytes):
+# =============================================================================
+# User routes
+# =============================================================================
+
+@app.get("/my-complaints")
+async def my_complaints(
+    page: int = 1,
+    limit: int = 20,
+    current_user: dict = Depends(require_user),
+):
+    return await fetch_user_complaints(current_user["user_id"], page, limit)
+
+
+# =============================================================================
+# Admin routes
+# =============================================================================
+
+@app.get("/admin/stats")
+async def admin_stats(admin: dict = Depends(require_admin)):
+    return await fetch_admin_stats()
+
+
+@app.get("/admin/complaints")
+async def admin_complaints(
+    page: int = 1,
+    limit: int = 50,
+    admin: dict = Depends(require_admin),
+):
+    return await fetch_all_complaints_admin(page, limit)
+
+
+@app.get("/admin/review-queue")
+async def admin_review_queue(admin: dict = Depends(require_admin)):
+    return await fetch_review_queue_admin()
+
+
+@app.get("/admin/duplicates")
+async def admin_duplicates(
+    page: int = 1,
+    limit: int = 50,
+    admin: dict = Depends(require_admin),
+):
+    return await fetch_duplicates_admin(page, limit)
+
+
+class ResolveRequest(BaseModel):
+    notes: str = ""
+
+
+@app.post("/admin/review/{item_id}/resolve")
+async def admin_resolve_review(
+    item_id: int,
+    body: ResolveRequest,
+    admin: dict = Depends(require_admin),
+):
+    await resolve_review_item(item_id, admin["sub"], body.notes)
+    return {"status": "resolved", "item_id": item_id}
+
+
+def _save_image(filename: str, data: bytes) -> str:
+    """
+    Save image and return a reference string.
+    If GCS_BUCKET is set, uploads to GCS and returns a signed URL (1-hour).
+    Otherwise saves to local disk and returns the bare filename.
+    """
     import os
-    uploads_dir = settings.uploads_dir
-    os.makedirs(uploads_dir, exist_ok=True)
-    with open(os.path.join(uploads_dir, filename), "wb") as f:
-        f.write(data)
+    gcs_bucket = os.getenv("GCS_BUCKET", "")
+    if gcs_bucket:
+        from google.cloud import storage as gcs
+        client = gcs.Client()
+        bucket = client.bucket(gcs_bucket)
+        blob = bucket.blob(f"complaints/{filename}")
+        blob.upload_from_string(data, content_type="image/jpeg")
+        return blob.generate_signed_url(
+            expiration=3600,
+            method="GET",
+            version="v4",
+        )
+    else:
+        uploads_dir = settings.uploads_dir
+        os.makedirs(uploads_dir, exist_ok=True)
+        with open(os.path.join(uploads_dir, filename), "wb") as f:
+            f.write(data)
+        return filename

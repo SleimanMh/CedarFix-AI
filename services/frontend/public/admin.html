@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CedarFix AI — Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      max-width: 1200px;
+      margin: 28px auto 0;
+      padding: 0 24px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px;
+      text-align: center;
+    }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--green); }
+    .stat-label { font-size: 12px; color: var(--gray-600); margin-top: 4px; }
+    .stat-card.warn .stat-value { color: var(--orange); }
+    .stat-card.danger .stat-value { color: var(--red); }
+
+    /* ── Tab navigation ── */
+    .admin-tabs {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      padding: 0 24px;
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .admin-tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gray-600);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      border-radius: 6px 6px 0 0;
+      transition: all 0.2s;
+    }
+    .admin-tab:hover { background: var(--gray-100); color: var(--green); }
+    .admin-tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .admin-tab .badge {
+      display: inline-block;
+      background: var(--red);
+      color: white;
+      border-radius: 10px;
+      font-size: 11px;
+      padding: 1px 7px;
+      margin-left: 6px;
+    }
+
+    /* ── Tab panels ── */
+    .admin-content { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* ── Table ── */
+    .admin-table-wrap {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .table-header h3 { font-size: 15px; font-weight: 700; }
+    .table-meta { font-size: 13px; color: var(--gray-600); }
+    .btn-refresh {
+      background: none;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-refresh:hover { border-color: var(--green); color: var(--green); }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--gray-100);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      text-align: left;
+    }
+    td {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-100); }
+    .text-preview {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--gray-600);
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .pill-new       { background: #e8f5e9; color: #2e7d32; }
+    .pill-duplicate { background: #fff3e0; color: #e65100; }
+    .pill-related   { background: #e3f2fd; color: #1565c0; }
+    .pill-review    { background: #fce4ec; color: #c62828; }
+    .pill-low       { background: #e8f5e9; color: #2e7d32; }
+    .pill-medium    { background: #fff9c4; color: #f57f17; }
+    .pill-high      { background: #fff3e0; color: #e65100; }
+    .pill-critical  { background: #fce4ec; color: #c62828; }
+
+    .btn-resolve {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-resolve:hover { background: var(--green-mid); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-600);
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+    .btn-page {
+      background: none;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-page:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+    .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-info { font-size: 13px; color: var(--gray-600); min-width: 80px; text-align: center; }
+
+    @media (max-width: 900px) {
+      .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🌲</span>
+        <div>
+          <span class="logo-name">CedarFix AI</span>
+          <span class="logo-sub">Admin Dashboard</span>
+        </div>
+      </div>
+      <nav class="header-links">
+        <a href="index.html">Submit Complaint</a>
+        <a href="http://localhost:3000" target="_blank">Grafana</a>
+        <span style="color:rgba(255,255,255,0.6);font-size:13px;padding:6px 8px" id="adminUsername"></span>
+        <a href="#" onclick="logout()" style="background:rgba(255,255,255,0.12)">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <h1>Admin Dashboard</h1>
+    <p>Monitor complaints, review flagged items, and manage duplicates.</p>
+  </section>
+
+  <!-- ── Stats ── -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Complaints</div></div>
+    <div class="stat-card warn"><div class="stat-value" id="statReview">—</div><div class="stat-label">Needs Review</div></div>
+    <div class="stat-card warn"><div class="stat-value" id="statDup">—</div><div class="stat-label">Duplicates</div></div>
+    <div class="stat-card"><div class="stat-value" id="statAuto">—</div><div class="stat-label">Auto-Routed</div></div>
+    <div class="stat-card danger"><div class="stat-value" id="statOpen">—</div><div class="stat-label">Open Reviews</div></div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" id="tabAll" onclick="switchTab('all')">All Complaints</button>
+    <button class="admin-tab" id="tabReview" onclick="switchTab('review')">Review Queue <span class="badge" id="reviewBadge">0</span></button>
+    <button class="admin-tab" id="tabDup" onclick="switchTab('dup')">Duplicates</button>
+  </div>
+
+  <!-- ── Content ── -->
+  <div class="admin-content">
+
+    <!-- All Complaints -->
+    <div class="tab-section active" id="sectionAll">
+      <div class="admin-table-wrap">
+        <div class="table-header">
+          <h3>All Complaints</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="table-meta" id="allMeta"></span>
+            <button class="btn-refresh" onclick="loadAll()">↻ Refresh</button>
+          </div>
+        </div>
+        <div id="allTable"><div class="empty-state"><div class="empty-icon">📋</div>Loading…</div></div>
+        <div class="pagination">
+          <button class="btn-page" id="allPrev" onclick="changePage('all', -1)">← Prev</button>
+          <span class="page-info" id="allPageInfo">Page 1</span>
+          <button class="btn-page" id="allNext" onclick="changePage('all', 1)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Queue -->
+    <div class="tab-section" id="sectionReview">
+      <div class="admin-table-wrap">
+        <div class="table-header">
+          <h3>Human Review Queue</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="table-meta" id="reviewMeta"></span>
+            <button class="btn-refresh" onclick="loadReview()">↻ Refresh</button>
+          </div>
+        </div>
+        <div id="reviewTable"><div class="empty-state"><div class="empty-icon">👁</div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Duplicates -->
+    <div class="tab-section" id="sectionDup">
+      <div class="admin-table-wrap">
+        <div class="table-header">
+          <h3>Duplicate Complaints</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="table-meta" id="dupMeta"></span>
+            <button class="btn-refresh" onclick="loadDup()">↻ Refresh</button>
+          </div>
+        </div>
+        <div id="dupTable"><div class="empty-state"><div class="empty-icon">🔁</div>Loading…</div></div>
+        <div class="pagination">
+          <button class="btn-page" id="dupPrev" onclick="changePage('dup', -1)">← Prev</button>
+          <span class="page-info" id="dupPageInfo">Page 1</span>
+          <button class="btn-page" id="dupNext" onclick="changePage('dup', 1)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

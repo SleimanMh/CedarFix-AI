@@ -148,8 +148,14 @@ form.addEventListener('submit', async (e) => {
     if (lngInput.value)      fd.append('longitude', lngInput.value);
     if (imageInput.files[0]) fd.append('image', imageInput.files[0]);
 
+    // Attach auth token if logged in so gateway binds complaint to user
+    const headers = {};
+    const cfToken = localStorage.getItem('cf_token');
+    if (cfToken) headers['Authorization'] = `Bearer ${cfToken}`;
+
     const resp = await fetch(`${GATEWAY_URL}/complaints`, {
       method: 'POST',
+      headers,
       body: fd,
     });
 

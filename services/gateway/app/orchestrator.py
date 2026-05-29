@@ -16,9 +16,11 @@ from cedarfix_shared.schemas import (
     PriorityResult, RoutingResult, ExplanationResult,
     ComplaintType, MediaValidationResult, MediaValidationStatus,
     HumanReviewItem, TextImageAlignment,
+    ConfidenceBundle, StageConfidence,
 )
 from cedarfix_shared.metrics import PIPELINE_DURATION
 from .config import settings
+from .moderation import moderate, ModerationDecisionEnum
 
 TIMEOUT = httpx.Timeout(60.0)
 
@@ -31,6 +33,20 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         location=request.location,
         image_filename=request.image_filename,
     )
+
+    # --- IEP-0: Moderation Gate (runs before everything else) ---
+    t0 = time.time()
+    mod_result = await moderate(
+        complaint_text=request.text,
+        image_filename=request.image_filename or None,
+        user_id=getattr(request, "user_id", None),
+    )
+    decision.moderation = mod_result
+    PIPELINE_DURATION.labels(stage="iep0_moderation").observe(time.time() - t0)
+
+    if mod_result.decision == ModerationDecisionEnum.REJECT:
+        decision.status = PipelineStatus.REJECTED
+        return decision
 
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
 
@@ -127,6 +143,14 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
             decision.routing_confidence = routing_result.primary_confidence
         PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
 
+        # --- Confidence bundle assembly ---
+        decision.confidence_bundle = _build_confidence_bundle(
+            text_result=decision.text_analysis,
+            image_result=decision.image_analysis,
+            clustering_result=decision.clustering,
+            routing_result=routing_result,
+        )
+
         # --- Stage 6: IEP-7 Explanation ---
         explanation_result = await _call_explanation_service(client, complaint_id, decision)
         decision.explanation = explanation_result
@@ -136,6 +160,154 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
     ) else PipelineStatus.COMPLETED
 
     return decision
+
+
+# ---------------------------------------------------------------------------
+# Confidence Bundle Assembly
+# ---------------------------------------------------------------------------
+
+def _build_confidence_bundle(
+    text_result,
+    image_result,
+    clustering_result,
+    routing_result,
+) -> ConfidenceBundle:
+    """
+    Assembles per-stage StageConfidence objects and computes a final
+    weighted geometric mean confidence for the pipeline decision.
+
+    Weights (must sum to 1.0):
+      text_type       0.30
+      text_location   0.10
+      image_clf       0.15  (0 if no image)
+      image_alignment 0.10  (0 if no image)
+      duplicate       0.20
+      routing         0.15
+    """
+    import math
+
+    stages: dict[str, "StageConfidence"] = {}
+
+    # Text type classification
+    if text_result and text_result.confidence is not None:
+        stages["text_type"] = StageConfidence(
+            score=text_result.confidence,
+            method="llm",
+            reliable=text_result.confidence >= 0.50,
+        )
+
+    # Text location confidence
+    if text_result and text_result.location:
+        loc = text_result.location
+        # location 'source' indicates how it was resolved
+        source = getattr(loc, "source", "none")
+        loc_conf = 0.90 if source == "gps" else 0.80 if source in ("seed", "llm") else 0.50
+        stages["text_location"] = StageConfidence(
+            score=loc_conf,
+            method=source or "heuristic",
+            reliable=loc_conf >= 0.70,
+        )
+
+    # Image classification
+    if image_result and image_result.image_present and image_result.visual_understanding:
+        vu = image_result.visual_understanding
+        img_conf = getattr(vu, "confidence", 0.70)
+        stages["image_classification"] = StageConfidence(
+            score=img_conf,
+            method="clip",
+            reliable=img_conf >= 0.55,
+        )
+
+    # Image alignment
+    if image_result and image_result.alignment:
+        alignment = image_result.alignment
+        ali_conf = {
+            "CONFIRMS": 0.90,
+            "RELATED": 0.72,
+            "UNCERTAIN": 0.50,
+            "CONTRADICTS": 0.25,
+        }.get(str(alignment), 0.50)
+        stages["image_alignment"] = StageConfidence(
+            score=ali_conf,
+            method="clip_cosine",
+            reliable=ali_conf >= 0.60,
+        )
+
+    # Duplicate detection
+    if clustering_result:
+        dup_conf = getattr(clustering_result, "confidence", 0.70)
+        stages["duplicate"] = StageConfidence(
+            score=dup_conf,
+            method="multimodal_scorer",
+            reliable=dup_conf >= 0.60,
+        )
+
+    # Routing
+    if routing_result:
+        stages["routing"] = StageConfidence(
+            score=routing_result.primary_confidence,
+            method=routing_result.routing_source,
+            reliable=routing_result.primary_confidence >= 0.65,
+        )
+
+    has_image = image_result is not None and getattr(image_result, "image_present", False)
+
+    if has_image:
+        weights = {
+            "text_type":          0.30,
+            "text_location":      0.08,
+            "image_classification": 0.14,
+            "image_alignment":    0.10,
+            "duplicate":          0.20,
+            "routing":            0.18,
+        }
+    else:
+        weights = {
+            "text_type":  0.40,
+            "text_location": 0.10,
+            "duplicate":  0.28,
+            "routing":    0.22,
+        }
+
+    # Weighted geometric mean (log-sum of log(score) * weight)
+    log_sum = 0.0
+    total_w = 0.0
+    for stage_key, w in weights.items():
+        sc = stages.get(stage_key)
+        if sc and sc.score > 0:
+            log_sum += w * math.log(max(sc.score, 1e-6))
+            total_w += w
+
+    final_conf = round(math.exp(log_sum / total_w), 3) if total_w > 0 else 0.50
+
+    # Determine weakest stage and review triggers
+    weakest = None
+    review_triggers: list[str] = []
+    for stage_key, sc in stages.items():
+        if not sc.reliable:
+            review_triggers.append(stage_key)
+        if weakest is None or sc.score < stages[weakest].score:
+            weakest = stage_key
+
+    # Extra review triggers from routing flags
+    if routing_result and getattr(routing_result, "requires_review", False):
+        if "routing" not in review_triggers:
+            review_triggers.append("routing")
+    if text_result and getattr(text_result, "unknown_type", False):
+        if "text_type" not in review_triggers:
+            review_triggers.append("text_type")
+
+    return ConfidenceBundle(
+        text_type=stages.get("text_type"),
+        text_location=stages.get("text_location"),
+        image_classification=stages.get("image_classification"),
+        image_alignment=stages.get("image_alignment"),
+        duplicate=stages.get("duplicate"),
+        routing=stages.get("routing"),
+        final=final_conf,
+        weakest_stage=weakest,
+        review_triggered_by=review_triggers if review_triggers else None,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -253,14 +425,17 @@ async def _call_priority_engine(client, complaint_id: str, decision: ComplaintDe
 async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDecision) -> RoutingResult | None:
     try:
         text = decision.text_analysis
+        loc = text.location if text else None
         payload = {
             "complaint_id": complaint_id,
             "complaint_type": decision.complaint_type,
+            "category": text.category if text else "other",
             "severity": decision.severity,
-            "location_district": decision.location.district if decision.location else None,
-            "location_mentions": (
-                [text.location.normalized] if text and text.location else []
-            ),
+            "original_text": decision.original_text or "",
+            "location_district": loc.district if loc else (decision.location.district if decision.location else None),
+            "location_municipality": loc.municipality if loc else None,
+            "location_governorate": loc.governorate if loc else None,
+            "location_mentions": ([loc.normalized] if loc and loc.normalized else []),
             "extracted_keywords": text.urgency_keywords if text else [],
         }
         resp = await client.post(f"{settings.routing_service_url}/route", json=payload)
@@ -529,6 +704,14 @@ async def _add_to_human_review(
             decision.assigned_entity = routing_result.primary_entity
             decision.routing_confidence = routing_result.primary_confidence
         PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
+
+        # --- Confidence bundle assembly ---
+        decision.confidence_bundle = _build_confidence_bundle(
+            text_result=decision.text_analysis,
+            image_result=decision.image_analysis,
+            clustering_result=decision.clustering,
+            routing_result=routing_result,
+        )
 
         # --- Stage 6: IEP-7 Explanation (non-blocking, fire-and-forget) ---
         explanation_result = await _call_explanation_service(client, complaint_id, decision)

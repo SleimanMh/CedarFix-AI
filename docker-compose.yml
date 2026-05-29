@@ -126,12 +126,25 @@ services:
       TEXT_SERVICE_URL: http://text-understanding:8001
       IMAGE_SERVICE_URL: http://image-understanding:8002
       EMBEDDING_SERVICE_URL: http://embedding-service:8003
-      CLUSTERING_SERVICE_URL: http://clustering-service:8004
+      CLUSTERING_SERVICE_URL: http://incident-matching-service:8004
       PRIORITY_SERVICE_URL: http://priority-engine:8005
       ROUTING_SERVICE_URL: http://routing-engine:8006
       EXPLANATION_SERVICE_URL: http://explanation-service:8007
       MLFLOW_TRACKING_URI: http://mlflow:5000
       UPLOADS_DIR: /data/uploads
+      # Moderation
+      MODERATION_ENABLED: "true"
+      MODERATION_LLM_THRESHOLD: "0.75"
+      AUTO_BAN_SPAM_THRESHOLD: "10"
+      # Location
+      NOMINATIM_URL: ""
+      # LLM (shared with other services)
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
+      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_API_KEY: "none"
+      # Auth
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cedarfix-dev-secret-change-in-prod}
+      JWT_EXPIRE_HOURS: "24"
     ports:
       - "8000:8000"
     volumes:
@@ -198,6 +211,11 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       CLIP_MODEL_NAME: openai/clip-vit-base-patch32
       PORT: "8002"
+      # VLM — Phase 2 image reasoning (Qwen2.5-VL on RunPod)
+      VLM_BASE_URL: ${VLM_BASE_URL:-}
+      VLM_MODEL: "Qwen/Qwen2.5-VL-3B-Instruct"
+      VLM_ENABLED: "true"
+      VLM_TIMEOUT: "25"
     ports:
       - "8002:8002"
     volumes:
@@ -232,14 +250,14 @@ services:
       - cedarfix-net
 
   # ---------------------------------------------------------------------------
-  # IEP-4 — CLUSTERING + DUPLICATE DETECTION (Team: AI Engineer 1 — NLP)
+  # IEP-4 — INCIDENT MATCHING + DUPLICATE DETECTION (Team: AI Engineer 1 — NLP)
   # ---------------------------------------------------------------------------
 
-  clustering-service:
+  incident-matching-service:
     build:
       context: .
       dockerfile: services/clustering_service/Dockerfile
-    container_name: cedarfix-clustering-service
+    container_name: cedarfix-incident-matching-service
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
@@ -249,6 +267,12 @@ services:
       SIMILARITY_NEAR_DUPLICATE_THRESHOLD: "0.78"
       HDBSCAN_MIN_CLUSTER_SIZE: "5"
       PORT: "8004"
+      # LLM Duplicate Judge — ambiguous 0.60–0.92 band
+      LLM_JUDGE_ENABLED: "true"
+      LLM_JUDGE_TIMEOUT: "8"
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
+      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_API_KEY: "none"
     ports:
       - "8004:8004"
     depends_on:
@@ -293,11 +317,27 @@ services:
       AUTO_ROUTE_THRESHOLD: "0.85"
       REVIEW_THRESHOLD: "0.65"
       PORT: "8006"
+      # RAG routing knowledge base
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      ROUTING_QDRANT_COLLECTION: "routing_knowledge"
+      ROUTING_RAG_ENABLED: "true"
+      ROUTING_RAG_TOP_K: "5"
+      MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+      # LLM routing decision
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
+      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_API_KEY: "none"
+      QWEN_ENABLED: "true"
     ports:
       - "8006:8006"
+    volumes:
+      - ./data/models:/root/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     networks:
       - cedarfix-net
 

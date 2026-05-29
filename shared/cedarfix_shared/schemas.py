@@ -95,12 +95,18 @@ class RoutingEntity(str, Enum):
     BEIRUT_MUNICIPALITY = "Beirut Municipality"
     EDL = "Electricite Du Liban"
     WATER_AUTHORITY = "Beirut Water Authority"
+    WATER_NORTH = "North Lebanon Water Establishment"
+    WATER_SOUTH = "South Lebanon Water Establishment"
+    WATER_BEKAA = "Bekaa Water Establishment"
     INTERNAL_SECURITY = "Internal Security Forces"
     MINISTRY_ENVIRONMENT = "Ministry of Environment"
     NORTH_MUNICIPALITY = "North Lebanon Municipality"
     SOUTH_MUNICIPALITY = "South Lebanon Municipality"
     MOUNT_LEBANON_MUNICIPALITY = "Mount Lebanon Municipality"
+    BEKAA_MUNICIPALITY = "Bekaa Municipality"
     OGERO = "Ogero"
+    CDR = "Council for Development and Reconstruction"
+    GENERIC_MUNICIPALITY = "Local Municipality"
     HUMAN_REVIEW = "Human Review Queue"
 
 
@@ -113,6 +119,7 @@ class PipelineStatus(str, Enum):
     NEEDS_CLARIFICATION = "needs_clarification"   # text doesn't describe complaint but image does
     CONTRADICTION = "contradiction"               # text and image contradict each other
     INVALID_NO_COMPLAINT = "invalid_no_complaint" # neither text nor image is a complaint
+    REJECTED = "rejected"                         # IEP-0 moderation gate hard rejection
 
 
 class MediaValidationStatus(str, Enum):
@@ -241,8 +248,11 @@ class RoutingResult(BaseModel):
     secondary_entity: Optional[RoutingEntity] = None
     secondary_confidence: float = 0.0
     routing_rationale: List[str] = []   # Tags explaining the decision
+    retrieved_sources: List[str] = []   # RAG doc IDs used in decision
+    routing_source: str = "static"      # rag | rag_static_agree | rag_static_conflict | static_fallback
     auto_routed: bool                    # False = flagged for human review
     requires_review: bool
+    review_reason: Optional[str] = None
     processing_ms: int
 
 
@@ -260,6 +270,73 @@ class ExplanationResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Final Complaint Decision (assembled by Gateway)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Confidence Bundle (cross-pipeline confidence tracking)
+# ---------------------------------------------------------------------------
+
+class StageConfidence(BaseModel):
+    score: float = 0.0
+    method: str = "unknown"   # llm | rule_based | clip | vlm | qdrant | rag
+    reliable: bool = True     # False = fell back to less reliable method
+
+
+class ConfidenceBundle(BaseModel):
+    text_type: StageConfidence = Field(default_factory=StageConfidence)
+    text_location: StageConfidence = Field(default_factory=StageConfidence)
+    image_classification: StageConfidence = Field(default_factory=StageConfidence)
+    image_alignment: StageConfidence = Field(default_factory=StageConfidence)
+    duplicate: StageConfidence = Field(default_factory=StageConfidence)
+    routing: StageConfidence = Field(default_factory=StageConfidence)
+    final: float = 0.0
+    weakest_stage: str = ""
+    review_triggered_by: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Moderation result (IEP-0)
+# ---------------------------------------------------------------------------
+
+class ModerationDecisionEnum(str, Enum):
+    PASS = "pass"
+    FLAG = "flag_for_review"
+    REJECT = "reject"
+
+
+class ModerationResult(BaseModel):
+    decision: ModerationDecisionEnum = ModerationDecisionEnum.PASS
+    reason: str = ""
+    heuristic_flags: List[str] = []
+    is_spam: bool = False
+    is_abusive: bool = False
+    is_political: bool = False
+    is_ai_generated_image: bool = False   # weak signal, never hard-reject alone
+    llm_checked: bool = False
+    vlm_checked: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Routing Knowledge Document (RAG routing)
+# ---------------------------------------------------------------------------
+
+class RoutingKnowledgeDoc(BaseModel):
+    doc_id: str
+    entity_name: str
+    entity_enum: str          # matches RoutingEntity value
+    entity_type: str          # ministry | municipality | utility | security | other
+    short_name: str
+    governs_nationally: bool = False
+    governorates: List[str] = []
+    districts: List[str] = []
+    municipalities: List[str] = []
+    complaint_types: List[str] = []
+    keywords: List[str] = []
+    not_responsible_for: List[str] = []
+    description: str = ""
+    confidence_prior: float = 0.85
+    hotline: Optional[str] = None
+    qdrant_point_id: Optional[str] = None
+
 
 class ComplaintDecision(BaseModel):
     """
@@ -289,6 +366,12 @@ class ComplaintDecision(BaseModel):
 
     # Text-image alignment (populated after IEP-3; None when no image submitted)
     text_image_alignment: Optional["TextImageAlignment"] = None
+
+    # Moderation gate result (IEP-0, populated before IEP-1/IEP-2)
+    moderation: Optional[ModerationResult] = None
+
+    # Cross-pipeline confidence bundle
+    confidence_bundle: Optional[ConfidenceBundle] = None
 
     # Summary fields (denormalized for quick query)
     complaint_type: Optional[ComplaintType] = None
@@ -359,11 +442,13 @@ class LocationJSON(BaseModel):
     """Extracted and normalised location from complaint text."""
     raw: str = ""
     normalized: str = ""
+    municipality: Optional[str] = None
     district: Optional[str] = None
     governorate: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     confidence: float = 0.0
+    source: str = "none"  # gps | reverse_geocode | text_lookup | llm_extracted | user_hint | none
 
 
 class SignalsJSON(BaseModel):
@@ -413,6 +498,23 @@ class VisualUnderstandingJSON(BaseModel):
     confidence: float = 0.0
 
 
+class VLMImageAnalysis(BaseModel):
+    """Structured output from Qwen2.5-VL (Phase 2 of IEP-2). None = VLM not called."""
+    image_type: str = "other"
+    is_valid_complaint_image: bool = False
+    is_harmful: bool = False
+    is_ai_generated: bool = False
+    damage_visible: bool = False
+    visual_category: str = "other"
+    visual_subcategory: str = "other"
+    damage_severity: SeverityLevel = SeverityLevel.LOW
+    location_cues: List[str] = []
+    confidence: float = 0.0
+    reasoning: str = ""
+    vlm_alignment: Optional[str] = None   # confirms | partial | contradicts | unrelated
+    vlm_alignment_confidence: float = 0.0
+
+
 class ImageUnderstandingResult(BaseModel):
     complaint_id: str
     image_present: bool = False
@@ -421,6 +523,7 @@ class ImageUnderstandingResult(BaseModel):
     visual_understanding: VisualUnderstandingJSON = Field(
         default_factory=VisualUnderstandingJSON
     )
+    vlm_analysis: Optional[VLMImageAnalysis] = None   # populated when VLM_ENABLED=true
     image_embedding_id: str = ""   # set by IEP-3 after Qdrant storage
     image_embedding: List[float] = []
     # CLIP text encoding of the complaint text (512-dim, same CLIP space as image_embedding).

@@ -7,9 +7,18 @@ independent dimensions, then computes a weighted composite score.
 Phase 1: rule-based weights + Haversine + exponential decay.
 Phase 2: Replace composite formula with an XGBoost ranker trained on
          labelled duplicate pairs from admin corrections.
+
+LLM Duplicate Judge:
+  When composite score falls in the ambiguous 0.60–0.92 band, a Qwen LLM
+  is called to resolve the decision. The LLM result takes precedence when
+  its confidence ≥ 0.80.
 """
 
+import json
+import logging
 import math
+import os
+import re
 from datetime import datetime, timezone
 from typing import Optional, Tuple
 
@@ -22,6 +31,93 @@ from cedarfix_shared.schemas import (
     ReconciliationStatus,
     SimilarityScores,
 )
+
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# LLM Judge configuration
+# ---------------------------------------------------------------------------
+
+LLM_JUDGE_ENABLED: bool = os.getenv("LLM_JUDGE_ENABLED", "true").lower() == "true"
+LLM_JUDGE_TIMEOUT: float = float(os.getenv("LLM_JUDGE_TIMEOUT", "8"))
+QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "")
+QWEN_MODEL: str = os.getenv("QWEN_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
+
+# Thresholds for LLM judge activation
+LLM_JUDGE_BAND_LOW: float = 0.60
+LLM_JUDGE_BAND_HIGH: float = 0.92
+LLM_JUDGE_MIN_CONFIDENCE: float = 0.80   # LLM must meet this to override composite
+
+_JUDGE_SYSTEM = """\
+You are a duplicate detection expert for CedarFix, a Lebanese public infrastructure complaint platform.
+Given two complaint reports, decide if they refer to the SAME real-world incident.
+
+Return ONLY a valid JSON object with no explanation or markdown:
+{
+  "verdict": "<DUPLICATE | RELATED_SAME_CLUSTER | NEW_INCIDENT | NEEDS_ADMIN_REVIEW>",
+  "confidence": <0.0–1.0>,
+  "reason": "<1–2 sentences>"
+}
+
+Verdict definitions:
+  DUPLICATE: Same issue, same location, reported within a short time window.
+  RELATED_SAME_CLUSTER: Different reports about the same ongoing problem (e.g., same broken road).
+  NEW_INCIDENT: Clearly distinct incidents.
+  NEEDS_ADMIN_REVIEW: Insufficient information to decide.
+"""
+
+
+async def _call_llm_judge(
+    incoming_text: str,
+    incoming_type: str,
+    incoming_location: str,
+    candidate_summary: str,
+    candidate_type: str,
+    candidate_location: str,
+    composite_score: float,
+) -> Optional[dict]:
+    if not LLM_JUDGE_ENABLED or not QWEN_BASE_URL:
+        return None
+    try:
+        import openai
+        client = openai.AsyncOpenAI(
+            api_key=QWEN_API_KEY,
+            base_url=QWEN_BASE_URL,
+            max_retries=0,
+            timeout=LLM_JUDGE_TIMEOUT,
+        )
+        user_msg = (
+            f"Incoming complaint:\n"
+            f"  Type: {incoming_type}\n"
+            f"  Location: {incoming_location}\n"
+            f"  Text: \"{incoming_text[:300]}\"\n\n"
+            f"Existing complaint:\n"
+            f"  Type: {candidate_type}\n"
+            f"  Location: {candidate_location}\n"
+            f"  Summary: \"{candidate_summary[:300]}\"\n\n"
+            f"Composite similarity score: {composite_score:.3f} (in ambiguous 0.60–0.92 range).\n"
+            "Is this a duplicate?"
+        )
+        resp = await client.chat.completions.create(
+            model=QWEN_MODEL,
+            messages=[
+                {"role": "system", "content": _JUDGE_SYSTEM},
+                {"role": "user", "content": user_msg},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.0,
+        )
+        raw = resp.choices[0].message.content
+        raw = re.sub(r"```(?:json)?", "", raw).strip()
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        if start == -1 or end == 0:
+            return None
+        return json.loads(raw[start:end])
+    except Exception as e:
+        log.warning("[IEP-4] LLM judge call failed: %s", e)
+        return None
 
 # ---------------------------------------------------------------------------
 # Adjacent issue-type pairs (partial compatibility)
@@ -133,6 +229,77 @@ class MultimodalScorer:
             # Reconciliation filled in by ReconciliationEngine after scoring
             per_candidate_reconciliation=ReconciliationStatus.INSUFFICIENT_EVIDENCE,
         )
+
+    async def score_with_llm_judge(
+        self,
+        canonical: CanonicalComplaint,
+        candidate: RawCandidate,
+        text_embedding: list,
+        image_embedding: list,
+        image_present: bool,
+        incoming_text: str = "",
+    ) -> DuplicateCandidate:
+        """
+        Like score(), but calls the LLM judge for ambiguous composite scores
+        (0.60 ≤ composite < 0.92). The LLM verdict overrides the reconciliation
+        status when its confidence ≥ LLM_JUDGE_MIN_CONFIDENCE.
+        """
+        result = self.score(canonical, candidate, text_embedding, image_embedding, image_present)
+        composite = result.multimodal_score
+
+        # Fast paths: skip LLM for clear cases
+        if composite >= LLM_JUDGE_BAND_HIGH or composite < LLM_JUDGE_BAND_LOW:
+            return result
+
+        # Ambiguous band — invoke LLM judge
+        incoming_loc = (
+            f"{canonical.location.district or ''}, {canonical.location.governorate or ''}".strip(", ")
+            or "unknown location"
+        )
+        candidate_loc = (
+            f"{candidate.location.district or ''}, {getattr(candidate.location, 'governorate', '') or ''}".strip(", ")
+            or "unknown location"
+        )
+
+        llm_data = await _call_llm_judge(
+            incoming_text=incoming_text[:300],
+            incoming_type=str(canonical.issue_type),
+            incoming_location=incoming_loc,
+            candidate_summary=candidate.summary or "",
+            candidate_type=str(candidate.issue_type),
+            candidate_location=candidate_loc,
+            composite_score=composite,
+        )
+
+        if llm_data:
+            verdict = llm_data.get("verdict", "")
+            llm_conf = float(llm_data.get("confidence", 0.0))
+            llm_reason = llm_data.get("reason", "")
+
+            if llm_conf >= LLM_JUDGE_MIN_CONFIDENCE:
+                verdict_map = {
+                    "DUPLICATE":            ReconciliationStatus.DUPLICATE,
+                    "RELATED_SAME_CLUSTER": ReconciliationStatus.NEW_INCIDENT,  # cluster, not exact dup
+                    "NEW_INCIDENT":         ReconciliationStatus.NEW_INCIDENT,
+                    "NEEDS_ADMIN_REVIEW":   ReconciliationStatus.REQUIRES_ADMIN_REVIEW,
+                }
+                reconciliation = verdict_map.get(verdict, ReconciliationStatus.INSUFFICIENT_EVIDENCE)
+                log.info(
+                    "[IEP-4] LLM judge: composite=%.3f → %s (conf=%.2f) — %s",
+                    composite, verdict, llm_conf, llm_reason,
+                )
+                # Return updated candidate with LLM reconciliation
+                return result.model_copy(update={
+                    "per_candidate_reconciliation": reconciliation,
+                    "recheck_reason": (result.recheck_reason or "") + f" | LLM judge: {llm_reason}",
+                })
+            else:
+                log.debug(
+                    "[IEP-4] LLM judge low confidence %.2f for composite %.3f — keeping score-based decision",
+                    llm_conf, composite,
+                )
+
+        return result
 
 
 # ---------------------------------------------------------------------------

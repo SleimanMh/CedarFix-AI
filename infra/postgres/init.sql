@@ -111,3 +111,130 @@ CREATE TABLE IF NOT EXISTS model_performance_log (
     metric_value    FLOAT NOT NULL,
     window_days     INTEGER DEFAULT 7
 );
+
+-- =============================================================================
+-- Routing Knowledge Base
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS routing_knowledge (
+    id                  VARCHAR(36) PRIMARY KEY,
+    entity_name         VARCHAR(100) NOT NULL,
+    entity_enum         VARCHAR(100) NOT NULL,
+    entity_type         VARCHAR(30),
+    short_name          VARCHAR(20),
+    governs_nat         BOOLEAN DEFAULT FALSE,
+    governorates        JSONB DEFAULT '[]',
+    districts           JSONB DEFAULT '[]',
+    municipalities      JSONB DEFAULT '[]',
+    complaint_types     JSONB DEFAULT '[]',
+    keywords            JSONB DEFAULT '[]',
+    not_responsible     JSONB DEFAULT '[]',
+    description         TEXT,
+    confidence_prior    FLOAT DEFAULT 0.85,
+    hotline             VARCHAR(50),
+    qdrant_point_id     VARCHAR(50),
+    updated_at          TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rk_entity_enum ON routing_knowledge(entity_enum);
+CREATE INDEX IF NOT EXISTS idx_rk_entity_type ON routing_knowledge(entity_type);
+
+
+-- =============================================================================
+-- Lebanese Locations Lookup
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS lb_locations (
+    id              SERIAL PRIMARY KEY,
+    name_en         VARCHAR(100) NOT NULL,
+    name_ar         VARCHAR(100),
+    aliases         JSONB DEFAULT '[]',
+    municipality    VARCHAR(100),
+    district        VARCHAR(100),
+    governorate     VARCHAR(100),
+    lat             FLOAT,
+    lng             FLOAT,
+    UNIQUE(name_en, municipality)
+);
+
+CREATE INDEX IF NOT EXISTS idx_loc_district    ON lb_locations(district);
+CREATE INDEX IF NOT EXISTS idx_loc_governorate ON lb_locations(governorate);
+CREATE INDEX IF NOT EXISTS idx_loc_name_en     ON lb_locations(name_en);
+
+
+-- =============================================================================
+-- User Reputation
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS user_reputation (
+    user_id             VARCHAR(100) PRIMARY KEY,
+    first_seen          TIMESTAMP DEFAULT NOW(),
+    total_submissions   INTEGER DEFAULT 0,
+    valid_submissions   INTEGER DEFAULT 0,
+    spam_count          INTEGER DEFAULT 0,
+    moderation_flags    INTEGER DEFAULT 0,
+    banned_until        TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_rep_banned ON user_reputation(banned_until);
+
+
+-- =============================================================================
+-- Moderation Audit Log
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS moderation_audit (
+    id              SERIAL PRIMARY KEY,
+    complaint_id    VARCHAR(36),
+    user_id         VARCHAR(100),
+    decision        VARCHAR(20) NOT NULL,       -- PASS | FLAG | REJECT
+    reason          TEXT,
+    heuristic_flags JSONB DEFAULT '[]',
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mod_audit_decision    ON moderation_audit(decision);
+CREATE INDEX IF NOT EXISTS idx_mod_audit_user        ON moderation_audit(user_id);
+CREATE INDEX IF NOT EXISTS idx_mod_audit_created_at  ON moderation_audit(created_at);
+
+
+-- =============================================================================
+-- Type Correction Accuracy — Materialized View (refreshed by monitoring service)
+-- =============================================================================
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS type_correction_rates AS
+SELECT
+    c.complaint_type,
+    COUNT(*)                                                AS total_complaints,
+    COUNT(ac.id)                                            AS corrected_count,
+    ROUND(
+        1.0 - (COUNT(ac.id)::NUMERIC / NULLIF(COUNT(*), 0)),
+        4
+    )                                                       AS model_accuracy,
+    MIN(c.created_at)                                       AS window_start,
+    MAX(c.created_at)                                       AS window_end
+FROM complaints c
+LEFT JOIN admin_corrections ac
+    ON c.id = ac.complaint_id
+    AND ac.corrected_complaint_type IS NOT NULL
+WHERE c.created_at >= NOW() - INTERVAL '30 days'
+GROUP BY c.complaint_type;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tcr_type ON type_correction_rates(complaint_type);
+
+-- =============================================================================
+-- Users & Authentication
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS users (
+    id              VARCHAR(36) PRIMARY KEY,
+    username        VARCHAR(100) UNIQUE NOT NULL,
+    password_hash   VARCHAR(255) NOT NULL,
+    role            VARCHAR(20) DEFAULT 'user',   -- 'user' | 'admin'
+    created_at      TIMESTAMP DEFAULT NOW(),
+    last_login      TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_role     ON users(role);
+

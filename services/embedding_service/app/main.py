@@ -33,7 +33,6 @@ from cedarfix_shared.schemas import (
 from cedarfix_shared.metrics import SIMILARITY_SCORE
 
 from .alignment import ModalAlignmentComputer
-from .fusion import fuse_embeddings
 from .qdrant_client import QdrantStore
 from .retrieval import CandidateRetriever
 
@@ -126,19 +125,11 @@ async def embed(request: EmbedRequest):
         "timestamp":            canonical.timestamp.timestamp(),
     }
 
-    # ── 4. Store embeddings ───────────────────────────────────────────────────
+    # ── 4. Store embeddings (text + image separately, no random projection) ──
     if text_emb:
         await qdrant.store_text(canonical.complaint_id, text_emb, base_payload)
     if image_present and image_emb:
         await qdrant.store_image(canonical.complaint_id, image_emb, base_payload)
-
-    fused, _strategy, _tw, _iw = fuse_embeddings(
-        text_emb=text_emb,
-        image_emb=image_emb,
-        image_available=image_present,
-        image_relevance=image_relevance,
-    )
-    await qdrant.store_fused(canonical.complaint_id, fused, base_payload)
 
     # ── 5. Independent candidate retrieval ───────────────────────────────────
     candidates = await retriever.retrieve(

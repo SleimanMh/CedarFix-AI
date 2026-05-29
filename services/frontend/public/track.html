@@ -47,28 +47,38 @@
       </div>
       <nav class="header-links">
         <a href="index.html">Report Issue</a>
-        <a href="track.html" class="active">Track Complaint</a>
-        <a href="review.html">Review Queue</a>
-        <a href="http://localhost:3000" target="_blank">Dashboard</a>
+        <a href="track.html" class="active">My Complaints</a>
+        <a id="adminLink" href="admin.html" style="display:none">Admin</a>
+        <span id="headerUser" style="color:rgba(255,255,255,0.7);font-size:13px;padding:6px 8px"></span>
+        <a href="#" onclick="logout()">Logout</a>
       </nav>
     </div>
   </header>
 
   <section class="hero">
-    <h1>Track Your Complaint</h1>
-    <p>Enter your complaint ID to see the AI's analysis, routing decision, and current status.</p>
+    <h1>My Complaints</h1>
+    <p>View all your submitted complaints and track their pipeline status.</p>
   </section>
 
   <main class="main">
-    <div class="track-container">
+    <div class="track-container" style="max-width:900px">
+
+      <!-- ── My complaints list ── -->
+      <div class="card" style="margin-bottom:24px" id="myComplaintsCard">
+        <h2 class="section-title">Your Submissions</h2>
+        <div id="myComplaintsList" style="margin-top:16px">
+          <p style="color:var(--gray-600);font-size:14px">⏳ Loading your complaints…</p>
+        </div>
+      </div>
+
+      <!-- ── Lookup by ID ── -->
       <div class="card">
-        <h2 class="section-title">Lookup Complaint</h2>
+        <h2 class="section-title">Lookup by Complaint ID</h2>
         <div class="track-form">
           <input type="text" id="trackId" placeholder="Complaint ID (e.g. a3f7c2d1-...)" />
           <button class="btn-track" id="trackBtn">Look up</button>
         </div>
-
-        <div class="track-result card" id="trackResult" style="background:var(--gray-100)">
+        <div class="track-result card" id="trackResult" style="background:var(--gray-100);display:none">
           <div id="trackContent"></div>
         </div>
       </div>
@@ -83,6 +93,62 @@
   <script src="app.js"></script>
   <script>
     const GATEWAY = window.GATEWAY_URL || 'http://localhost:8000';
+    const cfToken = localStorage.getItem('cf_token');
+    const cfRole  = localStorage.getItem('cf_role');
+    const cfUser  = localStorage.getItem('cf_username');
+
+    // ── Auth guard ────────────────────────────────────
+    if (!cfToken) { window.location.href = 'login.html'; }
+    document.getElementById('headerUser').textContent = `👤 ${cfUser}`;
+    if (cfRole === 'admin') document.getElementById('adminLink').style.display = '';
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+    function authHeaders() { return { 'Authorization': `Bearer ${cfToken}` }; }
+
+    // ── Load user's own complaints ────────────────────
+    async function loadMyComplaints() {
+      try {
+        const res = await fetch(`${GATEWAY}/my-complaints?limit=30`, { headers: authHeaders() });
+        if (!res.ok) throw new Error(await res.text());
+        const d = await res.json();
+        const list = document.getElementById('myComplaintsList');
+        if (!d.complaints || d.complaints.length === 0) {
+          list.innerHTML = '<p style="color:var(--gray-600);font-size:14px">You have not submitted any complaints yet.</p>';
+          return;
+        }
+        const sevColor = { low:'var(--green)', medium:'var(--yellow)', high:'var(--orange)', critical:'var(--red)' };
+        const rows = d.complaints.map(c => `
+          <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+                      padding:14px 0;border-bottom:1px solid var(--gray-200)">
+            <div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+                <code style="font-size:12px;color:var(--gray-600)">${c.id.slice(0,12)}…</code>
+                <span style="font-size:11px;font-weight:700;text-transform:uppercase;
+                             padding:2px 8px;border-radius:12px;background:var(--green-pale);color:var(--green)">
+                  ${(c.complaint_type||'—').replace(/_/g,' ')}
+                </span>
+                ${c.duplicate_status && c.duplicate_status !== 'NEW' ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:12px;background:#fff3e0;color:#e65100">${c.duplicate_status.replace(/_/g,' ')}</span>` : ''}
+              </div>
+              <p style="font-size:13px;color:var(--gray-700);margin-bottom:3px">${c.text_preview || ''}</p>
+              <span style="font-size:12px;color:var(--gray-600)">
+                ${new Date(c.created_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'})}
+                · Entity: <b>${c.assigned_entity || '—'}</b>
+                · Severity: <b style="color:${sevColor[(c.severity||'').toLowerCase()]||'var(--gray-800)'}">${c.severity || '—'}</b>
+              </span>
+            </div>
+            <button class="btn-track" style="white-space:nowrap" onclick="lookupId('${c.id}')">Details</button>
+          </div>`).join('');
+        list.innerHTML = `<div style="color:var(--gray-600);font-size:13px;margin-bottom:12px">${d.total} total complaint${d.total !== 1 ? 's' : ''}</div>${rows}`;
+      } catch (e) {
+        document.getElementById('myComplaintsList').innerHTML = `<p style="color:var(--red);font-size:14px">Failed to load: ${e.message}</p>`;
+      }
+    }
+
+    // ── Lookup by ID ──────────────────────────────────
+    function lookupId(id) {
+      document.getElementById('trackId').value = id;
+      document.getElementById('trackBtn').click();
+    }
 
     document.getElementById('trackBtn').addEventListener('click', async () => {
       const id = document.getElementById('trackId').value.trim();
@@ -91,9 +157,8 @@
       const content = document.getElementById('trackContent');
       box.style.display = 'block';
       content.innerHTML = '<p style="color:#6C757D;padding:12px">⏳ Loading...</p>';
-
       try {
-        const resp = await fetch(`${GATEWAY}/complaints/${encodeURIComponent(id)}`);
+        const resp = await fetch(`${GATEWAY}/complaints/${encodeURIComponent(id)}`, { headers: authHeaders() });
         if (!resp.ok) throw new Error(`Not found (${resp.status})`);
         const d = await resp.json();
         content.innerHTML = renderComplaint(d);
@@ -111,7 +176,7 @@
         { label: 'Image Understanding', done: !!d.image_analysis?.image_available,
           detail: d.image_analysis?.image_available ? d.image_analysis.scene_description : 'No image' },
         { label: 'Embedding + Similarity', done: !!d.embedding,
-          detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}, Top similarity: ${(d.embedding.top_similarity_score*100).toFixed(1)}%` : 'Pending' },
+          detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}` : 'Pending' },
         { label: 'Duplicate Detection', done: !!d.clustering,
           detail: d.clustering ? `${d.clustering.duplicate_status} · Cluster size: ${d.clustering.cluster_size}` : 'Pending' },
         { label: 'Priority Engine', done: !!d.priority,
@@ -119,12 +184,11 @@
         { label: 'Routing Engine', done: !!d.routing,
           detail: d.routing ? `${d.assigned_entity} (${conf}% confidence)` : 'Pending' },
         { label: 'Explanation', done: !!d.explanation,
-          detail: d.explanation?.explanation_text?.slice(0, 80) + '...' || 'Pending' },
+          detail: d.explanation?.explanation_text?.slice(0, 80) + '…' || 'Pending' },
       ];
-
       return `
         <div style="margin-bottom:16px">
-          <h3 style="color:var(--green);font-size:16px">Complaint ${d.complaint_id?.slice(0,8)}...</h3>
+          <h3 style="color:var(--green);font-size:16px">Complaint ${d.complaint_id?.slice(0,8)}…</h3>
           <span style="font-size:12px;color:var(--gray-600)">${d.created_at || ''}</span>
         </div>
         <div style="background:white;border-radius:8px;padding:14px;margin-bottom:16px">
@@ -139,11 +203,12 @@
                 <strong>${s.label}</strong>
                 <span>${s.detail}</span>
               </div>
-            </li>
-          `).join('')}
-        </ul>
-      `;
+            </li>`).join('')}
+        </ul>`;
     }
+
+    // Init
+    loadMyComplaints();
   </script>
 </body>
 </html>
