@@ -588,9 +588,16 @@ class RawCandidate(BaseModel):
     severity: SeverityLevel = SeverityLevel.LOW
     text_embedding: List[float] = []
     image_embedding: List[float] = []
-    sources: List[str] = []             # ["text_search", "image_search", …]
+    sources: List[str] = []             # ["text_search", "clip_text_search", "clip_image_search", …]
+    # Legacy similarity fields (kept for backward compatibility)
     raw_text_similarity: float = 0.0
     raw_image_similarity: float = 0.0
+    # Granular per-modality similarity scores
+    raw_mpnet_text_sim: float = 0.0      # cosine from MPNet 768D text search
+    raw_clip_text_sim: float = 0.0       # cosine from CLIP text query in clip_embeddings
+    raw_clip_image_sim: float = 0.0      # cosine from CLIP image query in clip_embeddings
+    clip_text_is_xmodal: bool = False    # True when clip_text hit matched a clip_image entry
+    clip_image_is_xmodal: bool = False   # True when clip_image hit matched a clip_text entry
 
 
 class EmbeddingServiceResult(BaseModel):
@@ -601,6 +608,7 @@ class EmbeddingServiceResult(BaseModel):
     candidates: List[RawCandidate] = []
     text_embedding: List[float] = []
     image_embedding: List[float] = []
+    clip_text_embedding: List[float] = []   # 512D CLIP text encoding (always present)
     processing_ms: int = 0
 
 
@@ -609,8 +617,12 @@ class EmbeddingServiceResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 class SimilarityScores(BaseModel):
-    text_similarity: float = 0.0
-    image_similarity: float = 0.0
+    text_similarity: float = 0.0        # MPNet 768D cosine
+    image_similarity: float = 0.0       # CLIP image cosine (same-modal)
+    clip_text_similarity: float = 0.0   # CLIP text cosine (may be cross-modal)
+    clip_image_similarity: float = 0.0  # CLIP image cosine (may be cross-modal)
+    clip_text_is_xmodal: bool = False
+    clip_image_is_xmodal: bool = False
     location_similarity: float = 0.5
     time_similarity: float = 0.5
     issue_type_similarity: float = 0.0

@@ -1,23 +1,26 @@
 """
 Candidate Retriever — IEP-3
 
-Performs THREE independent searches and merges the results using
-Reciprocal Rank Fusion (RRF) into a de-duplicated candidate pool.
+Performs up to FOUR independent vector searches plus a geo-time filter,
+then merges the vector-search results with Reciprocal Rank Fusion (RRF).
 
-Sources:
-  text_search     — cosine search on text_embeddings collection
-  image_search    — cosine search on image_embeddings collection (if image present)
-  geo_time_search — payload filter on text_embeddings (type + location + time window)
+Search sources:
+  text_search          — cosine on text_embeddings  (MPNet 768D)
+  clip_text_search     — cosine on clip_embeddings  (CLIP 512D, text query, always)
+  clip_image_search    — cosine on clip_embeddings  (CLIP 512D, image query, if image present)
+  geo_time_search      — payload filter on text_embeddings (type + location + time window)
+                         Not included in RRF; merged afterwards by complaint_id.
+
+Cross-modal detection:
+  When a CLIP text query matches a clip_image entry in clip_embeddings (or vice-versa),
+  that hit is flagged cross-modal.  The IEP-4 scorer applies a penalty factor and, when
+  both cross-modal signals are strong (>0.70), adds a convergence bonus.
 
 Merging rule (RRF):
-  Each source produces an ordered list. Each complaint gets a score of
-  1 / (k + rank) from each list it appears in. Final ordering is by the
-  sum of RRF scores across all lists. k=60 is the standard RRF constant.
-
-  This avoids mixing embedding spaces: text and image similarities are
-  combined at the rank level, not at the vector level.
-  raw_text_similarity and raw_image_similarity are preserved from their
-  respective searches for downstream use by the scorer in IEP-4.
+  Each vector source produces a ranked list. Each complaint earns 1/(k+rank) per list.
+  k=60 is the standard RRF constant. Scores accumulate across sources so complaints
+  found by multiple searches rank higher. raw_* similarity fields from each search are
+  preserved via max-merge for the downstream IEP-4 scorer.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -53,17 +56,18 @@ class CandidateRetriever:
         canonical: CanonicalComplaint,
         text_embedding: List[float],
         image_embedding: List[float],
+        clip_text_embedding: List[float],
         image_present: bool,
     ) -> List[RawCandidate]:
         """
         Returns a merged, de-duplicated list of RawCandidate objects ordered
-        by Reciprocal Rank Fusion score across all active search sources.
+        by Reciprocal Rank Fusion score across all active vector search sources.
         Each candidate has a `sources` list indicating how it was found.
         """
-        # Collect ordered result lists per source
+        # Ordered result lists for RRF (vector searches only)
         result_lists: List[List[RawCandidate]] = []
 
-        # ── Source 1: Text search ────────────────────────────────────────────
+        # ── Source 1: MPNet text search ──────────────────────────────────────
         if text_embedding:
             hits = [
                 h for h in await self._qdrant.search_text(text_embedding, top_k=TOP_K)
@@ -71,15 +75,27 @@ class CandidateRetriever:
             ]
             result_lists.append(hits)
 
-        # ── Source 2: Image search ───────────────────────────────────────────
-        if image_present and image_embedding:
+        # ── Source 2: CLIP text search (always — enables cross-modal detection)
+        if clip_text_embedding:
             hits = [
-                h for h in await self._qdrant.search_image(image_embedding, top_k=TOP_K)
+                h for h in await self._qdrant.search_clip(
+                    clip_text_embedding, query_type="clip_text", top_k=TOP_K
+                )
                 if h.complaint_id != canonical.complaint_id
             ]
             result_lists.append(hits)
 
-        # ── Source 3: Geo-time search ────────────────────────────────────────
+        # ── Source 3: CLIP image search (only when image is present) ─────────
+        if image_present and image_embedding:
+            hits = [
+                h for h in await self._qdrant.search_clip(
+                    image_embedding, query_type="clip_image", top_k=TOP_K
+                )
+                if h.complaint_id != canonical.complaint_id
+            ]
+            result_lists.append(hits)
+
+        # ── Geo-time search (structured filter — outside RRF) ─────────────────
         since_iso = (
             datetime.now(tz=timezone.utc) - timedelta(days=GEO_TIME_WINDOW_DAYS)
         ).isoformat()
@@ -111,8 +127,7 @@ def _rrf_merge(result_lists: List[List[RawCandidate]]) -> List[RawCandidate]:
 
     For each candidate in each list, add 1 / (RRF_K + rank) to its total
     RRF score. Candidates found by multiple sources accumulate higher scores.
-    Similarity scores from their respective searches are preserved on the
-    merged candidate for downstream use by the IEP-4 scorer.
+    All similarity fields are preserved via max-merge across matching entries.
     """
     rrf_scores: Dict[str, float] = {}
     pool: Dict[str, RawCandidate] = {}
@@ -124,16 +139,33 @@ def _rrf_merge(result_lists: List[List[RawCandidate]]) -> List[RawCandidate]:
             if cid not in pool:
                 pool[cid] = candidate
             else:
-                # Merge sources and take max of each similarity score
                 existing = pool[cid]
+                # Merge sources
                 for src in candidate.sources:
                     if src not in existing.sources:
                         existing.sources.append(src)
+                # Max-merge all similarity scores
                 existing.raw_text_similarity = max(
                     existing.raw_text_similarity, candidate.raw_text_similarity
                 )
                 existing.raw_image_similarity = max(
                     existing.raw_image_similarity, candidate.raw_image_similarity
+                )
+                existing.raw_mpnet_text_sim = max(
+                    existing.raw_mpnet_text_sim, candidate.raw_mpnet_text_sim
+                )
+                existing.raw_clip_text_sim = max(
+                    existing.raw_clip_text_sim, candidate.raw_clip_text_sim
+                )
+                existing.raw_clip_image_sim = max(
+                    existing.raw_clip_image_sim, candidate.raw_clip_image_sim
+                )
+                # Propagate cross-modal flags (True wins)
+                existing.clip_text_is_xmodal = (
+                    existing.clip_text_is_xmodal or candidate.clip_text_is_xmodal
+                )
+                existing.clip_image_is_xmodal = (
+                    existing.clip_image_is_xmodal or candidate.clip_image_is_xmodal
                 )
 
     # Return sorted by RRF score descending

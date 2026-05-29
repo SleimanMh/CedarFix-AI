@@ -1,10 +1,12 @@
 """
-Qdrant client wrapper — supports three collections for independent retrieval.
+Qdrant client wrapper — two collections for independent retrieval.
 
 Collections:
-  text_embeddings  (768-dim)  — one point per complaint
-  image_embeddings (512-dim)  — one point per complaint that has an image
-  fused_embeddings (768-dim)  — weighted fusion (backwards-compat)
+  text_embeddings  (768-dim)  — one point per complaint (MPNet)
+  clip_embeddings  (512-dim)  — up to two points per complaint:
+                                 one clip_text entry (always)
+                                 one clip_image entry (when image is present)
+                                 payload field `vector_type` = "clip_text" | "clip_image"
 """
 
 import os
@@ -17,8 +19,6 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
-    GeoBoundingBox,
-    GeoPoint,
     MatchValue,
     PointStruct,
     Range,
@@ -30,18 +30,26 @@ from cedarfix_shared.schemas import RawCandidate, ComplaintType, SeverityLevel, 
 QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 
-TEXT_COLLECTION  = os.getenv("QDRANT_TEXT_COLLECTION",  "text_embeddings")
-IMAGE_COLLECTION = os.getenv("QDRANT_IMAGE_COLLECTION", "image_embeddings")
-FUSED_COLLECTION = os.getenv("QDRANT_COLLECTION",       "fused_embeddings")
+TEXT_COLLECTION = os.getenv("QDRANT_TEXT_COLLECTION", "text_embeddings")
+CLIP_COLLECTION = os.getenv("QDRANT_CLIP_COLLECTION", "clip_embeddings")
 
-TEXT_DIM  = int(os.getenv("TEXT_EMBEDDING_DIM",  "768"))
-IMAGE_DIM = int(os.getenv("IMAGE_EMBEDDING_DIM", "512"))
-FUSED_DIM = int(os.getenv("FUSED_EMBEDDING_DIM", "768"))
+TEXT_DIM = int(os.getenv("TEXT_EMBEDDING_DIM", "768"))
+CLIP_DIM = int(os.getenv("CLIP_EMBEDDING_DIM", "512"))
 
 
 def _stable_id(complaint_id: str) -> str:
-    """Deterministic UUID from complaint_id string."""
+    """Deterministic UUID for MPNet text_embeddings (one entry per complaint)."""
     return str(uuid.uuid5(uuid.NAMESPACE_URL, complaint_id))
+
+
+def _clip_text_id(complaint_id: str) -> str:
+    """Deterministic UUID for the clip_text entry in clip_embeddings."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_text_{complaint_id}"))
+
+
+def _clip_image_id(complaint_id: str) -> str:
+    """Deterministic UUID for the clip_image entry in clip_embeddings."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_image_{complaint_id}"))
 
 
 class QdrantStore:
@@ -51,9 +59,8 @@ class QdrantStore:
     async def init_collections(self):
         existing = {c.name for c in self.client.get_collections().collections}
         specs = [
-            (TEXT_COLLECTION,  TEXT_DIM),
-            (IMAGE_COLLECTION, IMAGE_DIM),
-            (FUSED_COLLECTION, FUSED_DIM),
+            (TEXT_COLLECTION, TEXT_DIM),
+            (CLIP_COLLECTION, CLIP_DIM),
         ]
         for name, dim in specs:
             if name not in existing:
@@ -77,23 +84,25 @@ class QdrantStore:
             )],
         )
 
-    async def store_image(self, complaint_id: str, vector: List[float], payload: Dict):
+    async def store_clip_text(self, complaint_id: str, vector: List[float], payload: Dict):
+        """Store the CLIP text encoding of a complaint's text in clip_embeddings."""
         self.client.upsert(
-            collection_name=IMAGE_COLLECTION,
+            collection_name=CLIP_COLLECTION,
             points=[PointStruct(
-                id=_stable_id(complaint_id),
+                id=_clip_text_id(complaint_id),
                 vector=vector,
-                payload={"complaint_id": complaint_id, **payload},
+                payload={"complaint_id": complaint_id, "vector_type": "clip_text", **payload},
             )],
         )
 
-    async def store_fused(self, complaint_id: str, vector: List[float], payload: Dict):
+    async def store_clip_image(self, complaint_id: str, vector: List[float], payload: Dict):
+        """Store the CLIP image encoding of a complaint's image in clip_embeddings."""
         self.client.upsert(
-            collection_name=FUSED_COLLECTION,
+            collection_name=CLIP_COLLECTION,
             points=[PointStruct(
-                id=_stable_id(complaint_id),
+                id=_clip_image_id(complaint_id),
                 vector=vector,
-                payload={"complaint_id": complaint_id, **payload},
+                payload={"complaint_id": complaint_id, "vector_type": "clip_image", **payload},
             )],
         )
 
@@ -127,7 +136,7 @@ class QdrantStore:
             severity=p.get("severity", SeverityLevel.LOW),
             sources=[source],
             raw_text_similarity=round(r.score, 4) if source == "text_search" else 0.0,
-            raw_image_similarity=round(r.score, 4) if source == "image_search" else 0.0,
+            raw_mpnet_text_sim=round(r.score, 4) if source == "text_search" else 0.0,
         )
 
     async def search_text(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
@@ -139,14 +148,41 @@ class QdrantStore:
         )
         return [self._to_raw_candidate(r, "text_search") for r in response.points]
 
-    async def search_image(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
+    async def search_clip(
+        self,
+        query_vector: List[float],
+        query_type: str,
+        top_k: int = 10,
+    ) -> List[RawCandidate]:
+        """
+        Search the unified clip_embeddings collection.
+
+        query_type: "clip_text" or "clip_image" — describes what kind of vector
+                    is being used as the query. Used to detect cross-modal hits.
+
+        Cross-modal detection:
+          - query_type="clip_text" + hit vector_type="clip_image" → cross-modal text→image
+          - query_type="clip_image" + hit vector_type="clip_text" → cross-modal image→text
+        """
         response = self.client.query_points(
-            collection_name=IMAGE_COLLECTION,
-            query=vector,
+            collection_name=CLIP_COLLECTION,
+            query=query_vector,
             limit=top_k,
             with_payload=True,
         )
-        return [self._to_raw_candidate(r, "image_search") for r in response.points]
+        candidates = []
+        for r in response.points:
+            c = self._to_raw_candidate(r, f"{query_type}_search")
+            hit_vector_type = (r.payload or {}).get("vector_type", "")
+            score = round(r.score, 4)
+            if query_type == "clip_text":
+                c.raw_clip_text_sim = score
+                c.clip_text_is_xmodal = (hit_vector_type == "clip_image")
+            else:  # clip_image
+                c.raw_clip_image_sim = score
+                c.clip_image_is_xmodal = (hit_vector_type == "clip_text")
+            candidates.append(c)
+        return candidates
 
     async def search_geo_time(
         self,

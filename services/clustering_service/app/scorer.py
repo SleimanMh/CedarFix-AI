@@ -130,16 +130,27 @@ _ADJACENT_PAIRS = {
 }
 
 # ---------------------------------------------------------------------------
-# Standard scoring weights
+# Scoring weights — four context-sensitive sets
 # ---------------------------------------------------------------------------
-_W_STD = dict(text=0.40, image=0.25, type=0.15, loc=0.10, time=0.10)
 
-# Weights used when image_sim is high but text_sim is weak (cross-modal recheck)
-_W_RECHECK = dict(text=0.20, image=0.50, type=0.15, loc=0.10, time=0.05)
+# Both incoming and candidate have images (full multimodal context)
+_W_BOTH_MULTIMODAL = dict(mpnet=0.28, clip_text=0.18, clip_image=0.22, type=0.12, loc=0.10, time=0.10)
 
-# Thresholds for recheck trigger
-_RECHECK_IMAGE_MIN = 0.80
-_RECHECK_TEXT_MAX = 0.60
+# Incoming has no image, candidate has image (cross-modal: text query found image entry)
+_W_NEW_TEXT_EXISTING_IMAGE = dict(mpnet=0.35, clip_text=0.28, clip_image=0.00, type=0.15, loc=0.12, time=0.10)
+
+# Incoming has image, candidate has no image (cross-modal: image query found text entry)
+_W_NEW_IMAGE_EXISTING_TEXT = dict(mpnet=0.25, clip_text=0.00, clip_image=0.38, type=0.15, loc=0.12, time=0.10)
+
+# Both text-only (no images)
+_W_BOTH_TEXT_ONLY = dict(mpnet=0.50, clip_text=0.18, clip_image=0.00, type=0.14, loc=0.10, time=0.08)
+
+# Cross-modal signals: multiply cross-modal scores by this factor before weighting
+XMODAL_PENALTY = 0.90
+
+# Convergence bonus: added to composite when both xmodal signals are strong
+XMODAL_BONUS_THRESHOLD = 0.70
+XMODAL_BONUS = 0.04
 
 # Temporal half-life in hours
 _TIME_HALF_LIFE_HOURS = 24.0
@@ -165,13 +176,29 @@ class MultimodalScorer:
         image_present: bool,
     ) -> DuplicateCandidate:
 
-        # ── Individual dimension scores ──────────────────────────────────────
-        text_sim = candidate.raw_text_similarity       # already computed by Qdrant
-        image_sim = candidate.raw_image_similarity     # from Qdrant image search (0 if N/A)
+        # ── Detect modality combination ──────────────────────────────────────
+        # A candidate "has image" if it has a clip_image entry (raw_clip_image_sim > 0
+        # means either we found it via clip_image search, or it was a cross-modal hit).
+        new_has_image = image_present
+        candidate_has_image = candidate.raw_clip_image_sim > 0.0
 
-        # If both complaints have embeddings but image_sim was not set
-        # (candidate came via text_search only), keep it 0.0 — we did not
-        # compare images so we should not inflate the score.
+        # ── Per-modality similarity scores ───────────────────────────────────
+        mpnet_sim = candidate.raw_mpnet_text_sim or candidate.raw_text_similarity
+
+        # Apply cross-modal penalty to CLIP scores that crossed modality boundaries
+        clip_text_raw = candidate.raw_clip_text_sim
+        clip_image_raw = candidate.raw_clip_image_sim
+
+        clip_text_eff = (
+            clip_text_raw * XMODAL_PENALTY
+            if candidate.clip_text_is_xmodal
+            else clip_text_raw
+        )
+        clip_image_eff = (
+            clip_image_raw * XMODAL_PENALTY
+            if candidate.clip_image_is_xmodal
+            else clip_image_raw
+        )
 
         type_sim = _type_match_score(canonical.issue_type, candidate.issue_type)
 
@@ -186,29 +213,51 @@ class MultimodalScorer:
 
         time_sim = _temporal_similarity(canonical.timestamp, candidate.timestamp)
 
-        # ── Cross-modal recheck ───────────────────────────────────────────────
+        # ── Select weight set based on modality combination ──────────────────
+        if new_has_image and candidate_has_image:
+            w = _W_BOTH_MULTIMODAL
+        elif new_has_image and not candidate_has_image:
+            w = _W_NEW_IMAGE_EXISTING_TEXT
+        elif not new_has_image and candidate_has_image:
+            w = _W_NEW_TEXT_EXISTING_IMAGE
+        else:
+            w = _W_BOTH_TEXT_ONLY
+
+        # ── Composite score ───────────────────────────────────────────────────
+        composite = (
+            w["mpnet"]     * mpnet_sim     +
+            w["clip_text"] * clip_text_eff +
+            w["clip_image"]* clip_image_eff +
+            w["type"]      * type_sim      +
+            w["loc"]       * loc_sim       +
+            w["time"]      * time_sim
+        )
+
+        # Convergence bonus: both cross-modal signals strong → likely true duplicate
+        if (
+            candidate.clip_text_is_xmodal and clip_text_raw > XMODAL_BONUS_THRESHOLD
+            and candidate.clip_image_is_xmodal and clip_image_raw > XMODAL_BONUS_THRESHOLD
+        ):
+            composite = min(1.0, composite + XMODAL_BONUS)
+
+        # Legacy recheck flag: kept for backward compatibility with LLM judge
         recheck = image_present and (
-            image_sim >= _RECHECK_IMAGE_MIN and text_sim < _RECHECK_TEXT_MAX
+            clip_image_eff >= 0.80 and mpnet_sim < 0.60
         )
         recheck_reason = (
-            f"High image similarity ({image_sim:.2f}) but weak text similarity ({text_sim:.2f})"
+            f"High CLIP image similarity ({clip_image_raw:.2f}, xmodal={candidate.clip_image_is_xmodal}) "
+            f"but weak MPNet similarity ({mpnet_sim:.2f})"
             if recheck
             else None
         )
 
-        # ── Composite score ───────────────────────────────────────────────────
-        w = _W_RECHECK if recheck else _W_STD
-        composite = (
-            w["text"]  * text_sim  +
-            w["image"] * image_sim +
-            w["type"]  * type_sim  +
-            w["loc"]   * loc_sim   +
-            w["time"]  * time_sim
-        )
-
         scores = SimilarityScores(
-            text_similarity=round(text_sim, 4),
-            image_similarity=round(image_sim, 4),
+            text_similarity=round(mpnet_sim, 4),
+            image_similarity=round(clip_image_eff, 4),
+            clip_text_similarity=round(clip_text_eff, 4),
+            clip_image_similarity=round(clip_image_eff, 4),
+            clip_text_is_xmodal=candidate.clip_text_is_xmodal,
+            clip_image_is_xmodal=candidate.clip_image_is_xmodal,
             location_similarity=round(loc_sim, 4),
             time_similarity=round(time_sim, 4),
             issue_type_similarity=round(type_sim, 4),
