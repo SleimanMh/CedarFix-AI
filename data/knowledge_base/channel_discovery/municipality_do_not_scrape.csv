@@ -1,0 +1,10 @@
+﻿source_or_url,handling_rule_or_reason,status
+https://aley.gov.lb/ar/complaints,`https://aley.gov.lb/ar/complaints` — verification wall.,manual_or_low_rate_review
+https://nabay.gov.lb/send-complaint-ar/,`https://nabay.gov.lb/send-complaint-ar/` and `https://nabay.gov.lb/send-suggestions-ar/` — 406 / cache issues from official link targets.,manual_or_low_rate_review
+https://el-beddawi.gov.lb/send-complaint-ar/,`https://el-beddawi.gov.lb/send-complaint-ar/` and `https://el-beddawi.gov.lb/send-suggestions-ar/` — 406 / cache issues from official link targets.,manual_or_low_rate_review
+https://moukhtara.gov.lb/,`https://moukhtara.gov.lb/` — bot verification.,manual_or_low_rate_review
+https://jbail-byblos.gov.lb/,"`https://jbail-byblos.gov.lb/` — currently serves a default forum, suggesting compromise or breakdown.",manual_or_low_rate_review
+https://www.jounieh.gov.lb/,`https://www.jounieh.gov.lb/` — 502.,manual_or_low_rate_review
+https://www.bcharri.gov.lb/,`https://www.bcharri.gov.lb/` — 503.,manual_or_low_rate_review
+,Facebook page URLs discovered from official sites — machine access is heavily rate-limited / blocked.,manual_or_low_rate_review
+https://baldati.app/,`https://baldati.app/` — JS/manual review required in this session.,manual_or_low_rate_review

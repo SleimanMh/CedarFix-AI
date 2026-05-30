@@ -1,0 +1,53 @@
+﻿source_id,source_name,source_url,source_family,can_prove,cannot_prove
+SRC001,DGLAC Municipalities Directory,https://www.dglac.gov.lb/en/municipalities,dglac,"official registry identity, municipality existence, address/email/website fields, national directory coverage",that a municipality actually runs an online complaint workflow
+SRC002,Tripoli Municipality official site,https://tripoli.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC003,Tripoli Municipality complaint form,https://tripoli.gov.lb/%D8%AA%D9%82%D8%AF%D9%8A%D9%85-%D8%B4%D9%83%D9%88%D9%89,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC004,Tripoli Municipality complaint tracking,https://tripoli.gov.lb/chakwa,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC005,Tripoli Municipality objection form,https://tripoli.gov.lb/%D8%A7%D8%B9%D8%AA%D8%B1%D8%A7%D8%B6-%D8%B9%D9%84%D9%89-%D8%A7%D9%84%D8%A8%D9%84%D8%AF%D9%8A%D8%A9,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC006,Zahlé Municipality report-issue page,https://zahle.gov.lb/report-an-issue/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC007,Ras El-Matn complaints page,https://raselmatn.gov.lb/Complaints,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC008,Aley Municipality official site,https://aley.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC009,Aley Municipality complaints page,https://aley.gov.lb/ar/complaints,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC010,Nabay Municipality official site,https://nabay.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC011,El-Beddawi Municipality official site,https://el-beddawi.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC012,Nabatieh Municipality official site,https://nabatieh.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC013,Zouk Mikael Municipality official site,https://zoukmikael.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC014,Jbail-Byblos Municipality domain,https://jbail-byblos.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC015,Jounieh Municipality domain,https://www.jounieh.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC016,Bcharri Municipality domain,https://www.bcharri.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC017,Moukhtara Municipality domain,https://moukhtara.gov.lb/,official_municipality_site,"official identity, official contact data, official complaint forms, official tracking pages, exact fields/categories when public",cross-municipality coverage beyond that municipality
+SRC018,Al Fayhaa Union complaint form,https://urbcomfayhaa.gov.lb/en/send-complaints/,municipal_union_site,"official union-level complaint intake, union contact details, member municipalities when explicitly named",automatic applicability to all nearby municipalities unless membership is explicit
+SRC019,Baladi Map terms,https://www.baladimap.com/en/terms,civic_platform,"public issue evidence, categories, public sentiment, fix-status logic when platform documents it","official municipal adoption, legal responsibility, guaranteed response times"
+SRC020,Baladi Map issues,https://www.baladimap.com/en/issues,civic_platform,"public issue evidence, categories, public sentiment, fix-status logic when platform documents it","official municipal adoption, legal responsibility, guaranteed response times"
+SRC021,Baldati,https://baldati.app/,candidate_platform,existence of a reusable platform or app family,municipality-level participation unless verified per municipality
+SRC022,Ogero official site,https://ogero.gov.lb/,national_agency,"valid fallback channels for public-safety, telecom, water, or infrastructure owners",that a municipality itself is responsible for or receives that complaint
+SRC023,South Lebanon Water Establishment,https://slwe.gov.lb/,national_agency,"valid fallback channels for public-safety, telecom, water, or infrastructure owners",that a municipality itself is responsible for or receives that complaint
+SRC024,Internal Security Forces complaints,https://isf.gov.lb/anonymous-complaints/,national_agency,"valid fallback channels for public-safety, telecom, water, or infrastructure owners",that a municipality itself is responsible for or receives that complaint
+SRC025,National News Agency,https://www.nna-leb.gov.lb/en/,news,"incident discovery, official statement monitoring, complaint-related reporting","official complaint intake, tracking, or department assignment"
+moim_complaints,MOIM complaints portal and hotline,https://moim.gov.lb/,national_public_entity,,
+moim_elections,MOIM elections portal,https://elections.gov.lb/,national_public_entity,,
+tripoli_form,Tripoli municipality complaint page,https://tripoli.gov.lb/%D8%AA%D9%82%D8%AF%D9%8A%D9%85-%D8%B4%D9%83%D9%88%D9%89,official_municipality_website,,
+tripoli_lookup,Tripoli complaint inquiry link,https://tripoli.gov.lb/%D8%AA%D9%82%D8%AF%D9%8A%D9%85-%D8%B4%D9%83%D9%88%D9%89,official_municipality_website,,
+zahle_issue,Zahle report an issue,https://zahle.gov.lb/report-an-issue/,official_municipality_website,,
+beddawi_form,El-Beddawi send complaints,https://el-beddawi.gov.lb/en/send-complaints/,official_municipality_website,,
+raselmatn_form,Ras El-Matn complaints and notes,https://raselmatn.gov.lb/Complaints,official_municipality_website,,
+aley_claims,Aley claims page,https://aley.gov.lb/en/complaints,official_municipality_website,,
+fayhaa_home,Al Fayhaa Union home,https://urbcomfayhaa.gov.lb/en/home/,official_union_website,,
+fayhaa_send,Al Fayhaa Union send complaints endpoint,https://urbcomfayhaa.gov.lb/en/send-complaints/,official_union_website,,
+zoukmikael_site,Zouk Mikael municipality site,https://zoukmikael.gov.lb/,official_municipality_website,,
+zoukmikael_eportal,Zouk Mikael e-services portal,https://zoukmikaelmunicipality.microsoftcrmportals.com/,official_municipality_portal,,
+zoukmikael_app,Zouk Mikael municipal mobile app,https://zoukmikael.gov.lb/,municipal_app,,
+chab_union,CHAB municipalities website,https://www.chab.gov.lb/,official_union_website,,
+baladimap_issues,Baladi Map issues browser,https://www.baladimap.com/en/issues,third_party_civic_platform,,
+baladimap_report,Baladi Map report page,https://www.baladimap.com/en/report,third_party_civic_platform,,
+baladimap_terms,Baladi Map terms,https://www.baladimap.com/en/terms,third_party_civic_platform,,
+baldati_candidate,Baldati smart municipality,https://baldati.app/,civic_platform,"public issue evidence, categories, public sentiment, fix-status logic when platform documents it","official municipal adoption, legal responsibility, guaranteed response times"
+impact_candidate,IMPACT open data,https://impact.gov.lb/,national_public_entity,,
+ogero_main,Ogero official site,https://www.ogero.gov.lb/,utility_public_service,,
+moew_main,Ministry of Energy and Water,https://en.dgo.gov.lb/read/ministry,public_entity,,
+edl_archived,Electricite du Liban official site reference,https://www.edl.gov.lb/,utility_public_service,,
+civil_defense_official,Civil Defense official site reference,http://www.civildefense.gov.lb/,public_entity,,
+nna_official,National News Agency,https://www.nna-leb.gov.lb/en/,official_news_agency,,
+localiban_ref,Localiban directory family,http://www.localiban.org/,directory_archive,,
+jbeildailynews_ref,Jbeil Daily News,https://www.jbeildailynews.com/,local_news,,
+sakkera,Sakker El Dekkene,https://sakkera.org/,civic_reporting_platform,,
