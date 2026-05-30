@@ -1,0 +1,17 @@
+name: cedarfix
+services:
+  eep:
+    project:
+      host: ContainerApp
+  iep1:
+    project:
+      host: ContainerApp
+  iep2:
+    project:
+      host: ContainerApp
+  iep3:
+    project:
+      host: ContainerApp
+  iep4:
+    project:
+      host: ContainerApp
