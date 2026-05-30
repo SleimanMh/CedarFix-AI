@@ -1,0 +1,31 @@
+{
+  "policy_id": "CIE-NEWS-FOLLOWUP-T2-V1",
+  "created_at": "2026-05-25T23:58:00+03:00",
+  "purpose": "Relax the official-source requirement for T2 official-channel-gap municipalities while keeping production routing conservative.",
+  "allowed_when_all_true": [
+    "municipality or governorate is in the research queue and has no verified official complaint channel",
+    "source is a registered news/official-news target",
+    "article identifies a public entity, contractor, or service operator",
+    "article includes at least one lifecycle signal: reported, in_progress, reopened, restored, repaired, resumed, cleared, or assigned",
+    "location is a public asset, street, municipality, district, or governorate; no private home address is stored",
+    "normalized event uses evidence_type=news_followup unless the source is an official agency notice"
+  ],
+  "confidence_caps": {
+    "official_news_with_named_public_actor": "high",
+    "news_followup_citing_official_statement": "medium",
+    "news_followup_without_official_actor": "low",
+    "citizen_social_without_corroboration": "do_not_promote_to_production_routing"
+  },
+  "mandatory_hitl_conditions": [
+    "safety, fire, collapse, injury, criminal, public-health, or emergency context",
+    "conflict, strike damage, unexploded ordnance, security clearance, or army coordination",
+    "ambiguous road owner, bridge owner, or highway/local-road boundary",
+    "contractor, landfill, plant operator, project-GRM, or procurement boundary",
+    "private property or exact household location would be needed to act"
+  ],
+  "privacy_rules": [
+    "store no names, handles, phone numbers, plates, faces, or private addresses",
+    "paraphrase public citizen language; never store comment threads",
+    "use municipality/district precision unless the asset is a public road, station, plant, bridge, landfill, or official facility"
+  ]
+}

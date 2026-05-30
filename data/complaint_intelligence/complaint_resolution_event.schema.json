@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cedarfix.local/schemas/complaint_resolution_event.schema.json",
+  "title": "CedarFix Complaint Resolution Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "source",
+    "captured_at",
+    "issue",
+    "location",
+    "entities",
+    "lifecycle",
+    "resolution",
+    "privacy",
+    "labels_for_cedarfix",
+    "source_confidence",
+    "review_required"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^CIE-[0-9]{6}$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_id", "source_id", "platform", "source_name", "source_url"],
+      "properties": {
+        "target_id": {"type": "string"},
+        "source_id": {"type": ["string", "null"]},
+        "platform": {"type": "string"},
+        "source_name": {"type": "string"},
+        "source_url": {"type": "string"},
+        "public_url": {"type": ["string", "null"]},
+        "access_method": {"type": "string"}
+      }
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["ar", "en", "fr", "arabizi", "mixed", "unknown"]
+    },
+    "raw_text_storage": {
+      "type": "string",
+      "enum": ["none", "official_excerpt", "public_excerpt", "full_official_text", "external_url_only"]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sector", "issue_type", "severity", "keywords"],
+      "properties": {
+        "sector": {
+          "type": "string",
+          "enum": ["roads", "waste", "water", "telecom", "electricity", "safety", "environment", "public_space", "transport", "other", "unknown"]
+        },
+        "issue_type": {"type": "string"},
+        "severity": {
+          "type": "string",
+          "enum": ["emergency", "high", "medium", "low", "unknown"]
+        },
+        "keywords": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["free_text", "precision", "privacy_redacted"],
+      "properties": {
+        "free_text": {"type": ["string", "null"]},
+        "municipality": {"type": ["string", "null"]},
+        "district": {"type": ["string", "null"]},
+        "governorate": {"type": ["string", "null"]},
+        "lat": {"type": ["number", "null"]},
+        "lon": {"type": ["number", "null"]},
+        "precision": {
+          "type": "string",
+          "enum": ["exact_public_asset", "street", "neighborhood", "municipality", "district", "unknown"]
+        },
+        "privacy_redacted": {"type": "boolean"}
+      }
+    },
+    "entities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mentioned", "expected_responsible", "responding_entity", "resolver_entity"],
+      "properties": {
+        "mentioned": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "expected_responsible": {"type": ["string", "null"]},
+        "responding_entity": {"type": ["string", "null"]},
+        "resolver_entity": {"type": ["string", "null"]}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["reported", "acknowledged", "assigned", "in_progress", "resolved", "reopened", "rejected", "duplicate", "unknown"]
+        },
+        "reported_at": {"type": ["string", "null"], "format": "date-time"},
+        "acknowledged_at": {"type": ["string", "null"], "format": "date-time"},
+        "assigned_at": {"type": ["string", "null"], "format": "date-time"},
+        "in_progress_at": {"type": ["string", "null"], "format": "date-time"},
+        "resolved_at": {"type": ["string", "null"], "format": "date-time"},
+        "reopened_at": {"type": ["string", "null"], "format": "date-time"},
+        "duration_hours": {"type": ["number", "null"]}
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["was_resolved", "action_taken", "evidence_type", "evidence_confidence"],
+      "properties": {
+        "was_resolved": {"type": ["boolean", "null"]},
+        "action_taken": {"type": ["string", "null"]},
+        "evidence_type": {
+          "type": "string",
+          "enum": ["official_status", "official_post", "civic_tracker_status", "news_followup", "citizen_followup", "none", "unknown"]
+        },
+        "evidence_confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low", "none"]
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contains_pii", "pii_removed", "store_raw_text", "anonymization_notes"],
+      "properties": {
+        "contains_pii": {"type": "boolean"},
+        "pii_removed": {"type": "boolean"},
+        "store_raw_text": {"type": "boolean"},
+        "anonymization_notes": {"type": "string"}
+      }
+    },
+    "labels_for_cedarfix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["routing_entity", "hitl_required", "eval_candidate"],
+      "properties": {
+        "routing_entity": {"type": ["string", "null"]},
+        "hitl_required": {"type": "boolean"},
+        "hitl_reason": {"type": ["string", "null"]},
+        "eval_candidate": {"type": "boolean"},
+        "duplicate_cluster_hint": {"type": ["string", "null"]}
+      }
+    },
+    "source_confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "blocked"]
+    },
+    "review_required": {
+      "type": "boolean"
+    },
+    "review_notes": {
+      "type": ["string", "null"]
+    }
+  }
+}
