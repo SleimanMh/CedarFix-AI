@@ -13,7 +13,9 @@ from src.shared.schemas import IEP1LanguageSignal, Language, OOVRiskHint, OOVTok
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_VOCAB_PATH = ROOT / "data" / "knowledge_base" / "arabizi_vocabulary.json"
+LEGACY_VOCAB_PATH = ROOT / "data" / "knowledge_base" / "arabizi_vocabulary.json"
+NESTED_VOCAB_PATH = ROOT / "data" / "knowledge_base" / "arabizi" / "arabizi_vocabulary.json"
+DEFAULT_VOCAB_PATH = LEGACY_VOCAB_PATH if LEGACY_VOCAB_PATH.exists() else NESTED_VOCAB_PATH
 
 TOKEN_RE = re.compile(r"[a-z0-9]+", re.I)
 ARABIC_RE = re.compile(r"[\u0600-\u06ff]")
@@ -67,6 +69,8 @@ def iter_strings(value) -> Iterable[str]:
 
 @lru_cache(maxsize=4)
 def load_vocabulary_index(vocab_path: Path = DEFAULT_VOCAB_PATH) -> VocabularyIndex:
+    if not vocab_path.exists() and vocab_path == LEGACY_VOCAB_PATH and NESTED_VOCAB_PATH.exists():
+        vocab_path = NESTED_VOCAB_PATH
     vocab = json.loads(vocab_path.read_text(encoding="utf-8-sig"))
     known: set[str] = set(STOPWORDS)
     token_issue_map: dict[str, set[tuple[str, str]]] = {}
@@ -88,8 +92,16 @@ def load_vocabulary_index(vocab_path: Path = DEFAULT_VOCAB_PATH) -> VocabularyIn
     for term, metadata in vocab.get("term_metadata", {}).items():
         if metadata.get("loanword_from"):
             loanwords.add(normalise_token(term))
-        for variant in metadata.get("variant_forms", []):
-            known.add(normalise_token(variant))
+        sector = str(metadata.get("sector") or "").upper()
+        issue_type = str(metadata.get("issue_type") or "").upper()
+        surface_forms = list(metadata.get("variant_forms", []))
+        if "_" not in term:
+            surface_forms.append(term)
+        for variant in surface_forms:
+            for token in tokenize(variant):
+                known.add(token)
+                if sector and issue_type and token not in STOPWORDS:
+                    token_issue_map.setdefault(token, set()).add((sector, issue_type))
 
     return VocabularyIndex(
         version=vocab.get("version", "unknown"),

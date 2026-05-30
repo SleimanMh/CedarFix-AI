@@ -51,6 +51,7 @@ STOPWORDS: frozenset[str] = frozenset(
         "jouwwa",
         "kell",
         "kello",
+        "ktir",
         "khali",
         "la",
         "l",
