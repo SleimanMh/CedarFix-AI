@@ -1,0 +1,72 @@
+arabizi_variant,master_normalized,master_arabic,master_english,master_category,master_confidence,master_pos,current_vocab_canonical,current_vocab_arabic,current_vocab_sector,current_vocab_scope,quality_flag,decision,reason,hard_neg_reason
+saba7o,saba7o,صباحو,morning,greetings,high,phrase,saba7_morning,صباح,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='صباحو' vs vocab_arabic='صباح',meaning_conflict_with_vocab
+saba7oo,saba7o,صباحو,morning,greetings,high,phrase,saba7_morning,صباح,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='صباحو' vs vocab_arabic='صباح',meaning_conflict_with_vocab
+emten,emta,إمتى,when,questions,high,question_word,amtin_adv,آمتين,,,,meaning_conflict,master_arabic='إمتى' vs vocab_arabic='آمتين',meaning_conflict_with_vocab
+hal2a,hala2,هلّق,now,time,high,adverb,halla2_now,هلق,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='هلّق' vs vocab_arabic='هلق',meaning_conflict_with_vocab
+heide,hayde,هيدي,this,daily_phrases,high,pronoun,hayda_dem,هيدا,,,,meaning_conflict,master_arabic='هيدي' vs vocab_arabic='هيدا',meaning_conflict_with_vocab
+baddak,baddak,بدك,you want,verbs,high,verb,bade,بدي,,,,meaning_conflict,master_arabic='بدك' vs vocab_arabic='بدي',meaning_conflict_with_vocab
+baddik,baddik,بدِك,you want,verbs,high,verb,bade,بدي,,,,meaning_conflict,master_arabic='بدِك' vs vocab_arabic='بدي',meaning_conflict_with_vocab
+may,may,مي,water,food,high,noun,may,ماء,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='مي' vs vocab_arabic='ماء',meaning_conflict_with_vocab|support_word_scoped_routeable_in_vocab
+zahe2,zahe2,زهقان,bored / fed up,emotions,high,adjective,zaha2_adj,زهق,,,,meaning_conflict,master_arabic='زهقان' vs vocab_arabic='زهق',meaning_conflict_with_vocab
+3ammo,3ammo,عمّو,uncle,family,high,noun,3ammo_noun,عمو,,,,meaning_conflict,master_arabic='عمّو' vs vocab_arabic='عمو',meaning_conflict_with_vocab
+3amo,3ammo,عمّو,uncle,family,high,noun,3ammo_noun,عمو,,,,meaning_conflict,master_arabic='عمّو' vs vocab_arabic='عمو',meaning_conflict_with_vocab
+3amou,3ammo,عمّو,uncle,family,high,noun,3ammo_noun,عمو,,,,meaning_conflict,master_arabic='عمّو' vs vocab_arabic='عمو',meaning_conflict_with_vocab
+bus,bus,باص,bus,transportation,high,noun,otobis,أوتوبيس,ROADS,support_only_not_issue_label,,meaning_conflict,master_arabic='باص' vs vocab_arabic='أوتوبيس',meaning_conflict_with_vocab
+dawer,dawer,دوّر,turn / look around,directions,high,verb,dawwar,دوار,ROADS,,,meaning_conflict,master_arabic='دوّر' vs vocab_arabic='دوار',meaning_conflict_with_vocab
+mabsoute,mabsoute,مبسوطة,happy (fem),emotions,high,adjective,mabsout_adj,مبسوط,,,,meaning_conflict,master_arabic='مبسوطة' vs vocab_arabic='مبسوط',meaning_conflict_with_vocab
+ta3bane,ta3bane,تعبانة,tired / sick (fem),emotions,high,adjective,ta3ban_adj,تعبان,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='تعبانة' vs vocab_arabic='تعبان',meaning_conflict_with_vocab
+ta3bana,ta3bane,تعبانة,tired (fem),emotions,high,adjective,ta3ban_adj,تعبان,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='تعبانة' vs vocab_arabic='تعبان',meaning_conflict_with_vocab
+3atshane,3atshane,عطشانة,thirsty (fem),emotions,high,adjective,3atshan_adj,عطشان,,,,meaning_conflict,master_arabic='عطشانة' vs vocab_arabic='عطشان',meaning_conflict_with_vocab
+kharban,kharban,خربان,broken / ruined (emotionally or physically),emotions,high,adjective,kharben,خربان,ELECTRICITY,routeable_core_issue_term,,already_covered_routeable,canonical='kharben',support_word_scoped_routeable_in_vocab
+abi,abbe,أبي,my dad,family,high,noun,2abi,قبو / تحت الأرض,FLOODING,,,meaning_conflict,master_arabic='أبي' vs vocab_arabic='قبو / تحت الأرض',meaning_conflict_with_vocab
+sitto,sitto,ستو,grandma (regional),family,high,noun,sett_noun,ست,,,,meaning_conflict,master_arabic='ستو' vs vocab_arabic='ست',meaning_conflict_with_vocab
+siti,sitto,ستو,grandma,family,high,noun,sett_noun,ست,,,,meaning_conflict,master_arabic='ستو' vs vocab_arabic='ست',meaning_conflict_with_vocab
+la2anno,la2enno,لأنو,because,daily_phrases,high,particle,la2an_conj,لأن,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='لأنو' vs vocab_arabic='لأن',meaning_conflict_with_vocab
+mtel,mtel,متل,like / similar to,daily_phrases,high,particle,metel_prep,مثل,,,,meaning_conflict,master_arabic='متل' vs vocab_arabic='مثل',meaning_conflict_with_vocab
+metel,mtel,متل,like,daily_phrases,high,particle,metel_prep,مثل,,,,meaning_conflict,master_arabic='متل' vs vocab_arabic='مثل',meaning_conflict_with_vocab
+mitl,mtel,متل,like,daily_phrases,high,particle,metel_prep,مثل,,,,meaning_conflict,master_arabic='متل' vs vocab_arabic='مثل',meaning_conflict_with_vocab
+lessa,lissa,لسا,still,time,high,adverb,lissa,لسه,,,,meaning_conflict,master_arabic='لسا' vs vocab_arabic='لسه',meaning_conflict_with_vocab
+tfaddali,tfaddali,تفضلي,please / go ahead (fem),daily_phrases,high,phrase,tfaddal_part,تفضل,,,,meaning_conflict,master_arabic='تفضلي' vs vocab_arabic='تفضل',meaning_conflict_with_vocab
+tfaddalo,tfaddalo,تفضلوا,please / go ahead (pl),daily_phrases,high,phrase,tfaddal_part,تفضل,,,,meaning_conflict,master_arabic='تفضلوا' vs vocab_arabic='تفضل',meaning_conflict_with_vocab
+salla7,salla7,صلّح,fix / repair,verbs,high,verb,salla7,صلح,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='صلّح' vs vocab_arabic='صلح',meaning_conflict_with_vocab
+kahraba,kahraba,كهربا,electricity,phone_internet,high,noun,kahrabe,كهرباء,ELECTRICITY,routeable_core_issue_term,,meaning_conflict,master_arabic='كهربا' vs vocab_arabic='كهرباء',meaning_conflict_with_vocab
+kahrabe,kahraba,كهربا,electricity,phone_internet,high,noun,kahrabe,كهرباء,ELECTRICITY,routeable_core_issue_term,,meaning_conflict,master_arabic='كهربا' vs vocab_arabic='كهرباء',meaning_conflict_with_vocab
+moteur,moteur,موتور,generator / motor,phone_internet,high,noun,moulid,مولّد,ELECTRICITY,routeable_core_issue_term,,meaning_conflict,master_arabic='موتور' vs vocab_arabic='مولّد',meaning_conflict_with_vocab
+motor,moteur,موتور,generator / motor,phone_internet,high,noun,motor,ماتور,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='موتور' vs vocab_arabic='ماتور',meaning_conflict_with_vocab
+masraf,bank,بنك,bank,money,high,noun,masrif,مصرف,,,,meaning_conflict,master_arabic='بنك' vs vocab_arabic='مصرف',meaning_conflict_with_vocab
+shift,shift,شيفت,shift,work,high,noun,shefet,شفت,,,,meaning_conflict,master_arabic='شيفت' vs vocab_arabic='شفت',meaning_conflict_with_vocab
+mabsoota,mabsouta,مبسوطة,happy,emotions,high,adjective,mabsout_adj,مبسوط,,,,meaning_conflict,master_arabic='مبسوطة' vs vocab_arabic='مبسوط',meaning_conflict_with_vocab
+ta3bene,ta3bene,تعبانة,tired,emotions,high,adjective,ta3ban_adj,تعبان,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='تعبانة' vs vocab_arabic='تعبان',meaning_conflict_with_vocab
+te3bene,ta3bene,تعبانة,tired,emotions,high,adjective,ta3ban_adj,تعبان,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='تعبانة' vs vocab_arabic='تعبان',meaning_conflict_with_vocab
+3atshana,3atshene,عطشانة,thirsty,food,high,adjective,3atshan_adj,عطشان,,,,meaning_conflict,master_arabic='عطشانة' vs vocab_arabic='عطشان',meaning_conflict_with_vocab
+mawjoude,mawjoude,موجودة,it is available,shopping,high,phrase,mawjoud_adj,موجود,,,,meaning_conflict,master_arabic='موجودة' vs vocab_arabic='موجود',meaning_conflict_with_vocab
+nshalla,nshalla,إنشالله,God willing / hopefully,religion,high,phrase,inshallah_expr,إن شاء الله,,,,meaning_conflict,master_arabic='إنشالله' vs vocab_arabic='إن شاء الله',meaning_conflict_with_vocab
+ma3na,ma3na,معنا,with us,possessives,high,pronoun,ma3na_noun,معنى,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='معنا' vs vocab_arabic='معنى',meaning_conflict_with_vocab
+mniha,mniha,منيحة,good (feminine form)?,replies,high,adjective,mnih_adj,منيح,,,,meaning_conflict,master_arabic='منيحة' vs vocab_arabic='منيح',meaning_conflict_with_vocab
+bado,baddo,بدو,he wants,grammar,high,phrase,bade,بدي,,,,meaning_conflict,master_arabic='بدو' vs vocab_arabic='بدي',meaning_conflict_with_vocab
+badna,badna,بدنا,we want,grammar,high,phrase,bade,بدي,,,,meaning_conflict,master_arabic='بدنا' vs vocab_arabic='بدي',meaning_conflict_with_vocab
+kharben,kharben,خربان,broken,daily_phrases,high,adjective,kharben,خربان,ELECTRICITY,routeable_core_issue_term,,already_covered_routeable,canonical='kharben',support_word_scoped_routeable_in_vocab
+mazbout,mezbout,مظبوط,right/working,daily_phrases,high,adjective,mazbout_adj,مضبوط,,,,meaning_conflict,master_arabic='مظبوط' vs vocab_arabic='مضبوط',meaning_conflict_with_vocab
+mazbouta,mezbouta,مظبوطة,right/working,daily_phrases,high,adjective,mazbout_adj,مضبوط,,,,meaning_conflict,master_arabic='مظبوطة' vs vocab_arabic='مضبوط',meaning_conflict_with_vocab
+nashfe,nashfe,ناشفة,dry,daily_phrases,high,adjective,nashef_adj,ناشف / جاف,WATER,,,meaning_conflict,master_arabic='ناشفة' vs vocab_arabic='ناشف / جاف',meaning_conflict_with_vocab
+weskha,weskha,وسخة,dirty,daily_phrases,high,adjective,may_was5a,ماء وسخة,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='وسخة' vs vocab_arabic='ماء وسخة',meaning_conflict_with_vocab|support_word_scoped_routeable_in_vocab
+2elna,elna,إلنا,ours/for us,possessives,high,pronoun,2al,قال,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='إلنا' vs vocab_arabic='قال',meaning_conflict_with_vocab
+kellon,kellon,كلّن,all of them,grammar,high,pronoun,kello_quant,كله,,,,meaning_conflict,master_arabic='كلّن' vs vocab_arabic='كله',meaning_conflict_with_vocab
+ma fe may,ma fi may,ما في مي,there is no water,negation,high,phrase,ma_fi_may,ما في ماء,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='ما في مي' vs vocab_arabic='ما في ماء',meaning_conflict_with_vocab|support_word_scoped_routeable_in_vocab
+ma fi may,ma fi may,ما في مي,there is no water,negation,high,phrase,ma_fi_may,ما في ماء,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='ما في مي' vs vocab_arabic='ما في ماء',meaning_conflict_with_vocab|support_word_scoped_routeable_in_vocab
+sandou2,sandou2,صندوق,box,home,high,noun,transformateur,ترانسفورماتور,ELECTRICITY,routeable_core_issue_term,,meaning_conflict,master_arabic='صندوق' vs vocab_arabic='ترانسفورماتور',meaning_conflict_with_vocab
+weskhe,weskhe,وسخة,dirty,home,high,adjective,may_was5a,ماء وسخة,WATER,routeable_core_issue_term,,meaning_conflict,master_arabic='وسخة' vs vocab_arabic='ماء وسخة',meaning_conflict_with_vocab
+kyes,kyes,كيس,bag,shopping,high,noun,kyes,أكياس,WASTE,,,meaning_conflict,master_arabic='كيس' vs vocab_arabic='أكياس',meaning_conflict_with_vocab
+2adime,2adime,قديمة,old (feminine),adjectives,high,adjective,2adim,قديم,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='قديمة' vs vocab_arabic='قديم',meaning_conflict_with_vocab
+7ar,7ar,حر,spicy/hot,adjectives,high,adjective,7arr,حار,SAFETY,support_only_not_issue_label,,meaning_conflict,master_arabic='حر' vs vocab_arabic='حار',meaning_conflict_with_vocab
+mrattab,mratab,مرتب,organized/neat,adjectives,high,adjective,rateb_adj,رطب / مبلول,FLOODING,,,meaning_conflict,master_arabic='مرتب' vs vocab_arabic='رطب / مبلول',meaning_conflict_with_vocab
+rja3,rja3,رجع,return,verbs,high,verb,rje3et,رجعت,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='رجع' vs vocab_arabic='رجعت',meaning_conflict_with_vocab
+ghata,ghata,الغطا,cover,home,high,noun,ghata,غطاء,ROADS,routeable_core_issue_term,,meaning_conflict,master_arabic='الغطا' vs vocab_arabic='غطاء',meaning_conflict_with_vocab
+zbele,zbele,الزبالة,trash,home,high,noun,zibele,زبالة,WASTE,routeable_core_issue_term,,meaning_conflict,master_arabic='الزبالة' vs vocab_arabic='زبالة',meaning_conflict_with_vocab
+kol,kol,كول,eat,verbs,high,verb,kel_det,كل,,,,meaning_conflict,master_arabic='كول' vs vocab_arabic='كل',meaning_conflict_with_vocab
+erja3,erja3,إرجع,return,verbs,high,verb,erja3_verb,ارجع,ALL,support_only_not_issue_label,,meaning_conflict,master_arabic='إرجع' vs vocab_arabic='ارجع',meaning_conflict_with_vocab
+bakir,bakir,بكير,early,adjectives,high,adjective,boukra_time,بكرا,,,,meaning_conflict,master_arabic='بكير' vs vocab_arabic='بكرا',meaning_conflict_with_vocab
+balcony,balcony,بلكون,a balcony,home,high,noun,balkon_2,شرفة,SAFETY,,,meaning_conflict,master_arabic='بلكون' vs vocab_arabic='شرفة',meaning_conflict_with_vocab
+ascenseur,ascenseur,أسانسير,an elevator,home,high,noun,ascenseur,مصعد,SAFETY,,,meaning_conflict,master_arabic='أسانسير' vs vocab_arabic='مصعد',meaning_conflict_with_vocab
+mitel,metel,متل,like/as,particles,high,particle,metel_prep,مثل,,,,meaning_conflict,master_arabic='متل' vs vocab_arabic='مثل',meaning_conflict_with_vocab
+kento,kento,كنتوا,you all were,verbs,high,verb,knt_past,كنت,,,,meaning_conflict,master_arabic='كنتوا' vs vocab_arabic='كنت',meaning_conflict_with_vocab
