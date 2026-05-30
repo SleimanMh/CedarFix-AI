@@ -1,4 +1,4 @@
-# CedarFix Command AI
+# CedarFix — AI-Powered Municipal Complaint Intelligence
 
 Lebanon-specific multilingual municipal incident intelligence.
 
@@ -12,108 +12,101 @@ explainable infrastructure incidents for municipal operations.
 Which reported incident should be escalated first, who should handle it, and why?
 ```
 
-The project is intentionally not a generic complaint dashboard. The AI work is
+The project is intentionally not a generic complaint dashboard. The AI pipeline is
 the incident-intelligence spine:
 
 ```text
 citizen submission
-  -> EEP validation, PII scrub, queue fallback
-  -> IEP-1 multilingual extraction + Arabizi drift signal
-  -> IEP-2 duplicate / cluster fusion
-  -> IEP-3 calibrated routing + priority
-  -> IEP-4 explanation + HITL audit
-  -> MLflow / monitoring / retraining candidate loop
+  -> EEP  — validation, PII scrub, postgres persistence, Redis queue fallback
+  -> IEP-1 — multilingual extraction, Lebanese arabizi NLP, sector/issue classification
+  -> IEP-2 — near-duplicate detection and complaint fusion
+  -> IEP-3 — calibrated routing to municipality or public entity
+  -> IEP-4 — citizen-facing explanation and HITL audit narrative
 ```
 
 ## Current State
 
-| Area | Status | Evidence |
+| Area | Status | Notes |
 | --- | --- | --- |
-| EEP | Implemented locally | FastAPI service, request validation, PII scrub, Redis fallback, Dockerfile |
-| IEP-1 | Implemented as heuristic probe + service | Arabizi/OOV features, extraction contract, worker, Dockerfile |
-| IEP-2 | Not built yet | Pair labels and coverage artifacts are ready |
-| IEP-3 | Not built yet | Routing/calibration is next after IEP-2 |
-| IEP-4 | Prompt assets only | Service and tests still needed |
-| Data | Batch 001+002 active | 80 reports, 18 clusters, 107 pairs |
-| QA | Passing | 31 unit/regression tests |
-| Final release | Not ready | Next-phase gates: 2/9 |
-
-## Data
-
-Gold data lives in `data/corpus/` and is human-authored for the CedarFix domain.
-External Arabizi data was removed because it did not provide enough useful
-Lebanese municipal signal.
-
-| Dataset file | Purpose |
-| --- | --- |
-| `data/corpus/cedarfix_reports_v1.csv` | Labeled citizen reports |
-| `data/corpus/cedarfix_clusters_v1.csv` | Incident cluster metadata |
-| `data/corpus/cedarfix_pairs_v1.csv` | Duplicate, related, hard-negative, unrelated pair labels |
-| `data/corpus/arabizi_oov_review_queue_v1.csv` | Arabizi/OOV drift review queue |
-| `data/knowledge_base/arabizi_vocabulary.json` | Arabizi vocabulary v1.4.0 |
-| `data/knowledge_base/*.csv|*.json|*.yaml` | GPS, route, sector, severity references |
-
-Current Batch 001+002 counts:
-
-| Metric | Count |
-| --- | ---: |
-| Reports | 80 |
-| Clusters | 18 |
-| Pairs | 107 |
-| Arabizi rows | 32 |
-| Mixed rows | 8 |
-| Duplicate pairs | 71 |
-| Related pairs | 8 |
-| Hard-negative pairs | 14 |
-| Unrelated pairs | 14 |
-
-## Evidence Artifacts
-
-| Artifact | Purpose |
-| --- | --- |
-| `data/eval/arabizi_benchmark_v0_regression.csv` | Frozen Arabizi regression benchmark |
-| `data/eval/arabizi_coverage_batch001.json` | Batch 001 Arabizi coverage/OOV evaluation |
-| `data/eval/arabizi_stress_lab_v1.json` | Adversarial Arabizi stress lab output |
-| `data/eval/arabizi_reliability_certificate_v1.html` | Demo-ready live reliability certificate |
-| `data/eval/arabizi_pair_coverage_v1.json` | Arabizi duplicate/negative pair coverage |
-| `data/eval/arabizi_excellence_gates_v1.json` | Honest Arabizi readiness audit |
-| `data/eval/cedarfix_next_phase_gates_v1.json` | Full-project next-phase gate audit |
-| `data/eval/rubric_readiness_v1.json` | Conservative rubric readiness estimate |
-
-Current Arabizi evidence:
-
-| Metric | Value |
-| --- | ---: |
-| Arabizi/mixed rows | 40 |
-| Mean known-term coverage | 85.0% |
-| Mean OOV tokens per row | 1.24 |
-| Issue-type probe recall | 100.0% |
-| Arabizi-involving pairs | 57 |
-| Cross-language duplicate pairs | 37 |
-| Arabizi gates | 5/6 |
-
-Important limitation: Batch 001 is regression and demo evidence, not final
-generalization evidence. Final Arabizi F1 claims require Batch 002+ scale and
-native Lebanese dialect review.
+| EEP | ✅ Built | FastAPI intake, request validation, PII scrub, Redis fallback, Dockerfile |
+| IEP-1 | ✅ Built | Arabizi tokenization/normalization, sector/issue classification, v14 vocab |
+| IEP-2 | ✅ Built | Similarity-hashing deduplication service, worker, Dockerfile |
+| IEP-3 | ✅ Built | Municipality/entity routing service, router, worker, Dockerfile |
+| IEP-4 | ✅ Built | Explainer service, citizen narrative generation, worker, Dockerfile |
+| Monitoring | ✅ Configured | Prometheus scrape config + Grafana dashboard provisioning in `infra/` |
+| Deployment | ✅ Configured | `azure.yaml` maps all services to Azure Container Apps via `azd` |
+| Knowledge base | ✅ Complete | 1107 municipalities, 63 complaint types, 69 routing rules, 5772-term language bank |
+| Training data | ✅ Ready | v29 batch8 train (75,555) + val (8,997), senzi sets, telecom batch |
 
 ## Repository Layout
 
 ```text
-.github/workflows/   CI pipeline
-data/corpus/         Human-authored reports, clusters, pair labels
-data/eval/           Generated benchmark/evaluation/readiness artifacts
-data/knowledge_base/ Routing, severity, GPS, Arabizi vocabulary references
-docs/                Core project, annotation, corpus, and contract docs
-prompts/             IEP-4 prompt versions
-scripts/             Validators, evaluators, auditors, demo artifact generators
-src/eep/             External Entry Point API
-src/iep1/            Language-signal service and worker
-src/shared/          Shared schemas and Arabizi feature logic
+.github/workflows/         CI pipeline (lint, test, Docker build)
+azure.yaml                 Azure Developer CLI deployment config (eep + iep1-4 → Container Apps)
+docker-compose.yml         Local dev stack (all services + redis, postgres, prometheus, grafana)
+infra/                     Prometheus scrape config + Grafana provisioning
+requirements.txt           Python dependencies
+
+src/
+  route_complaint.py       Top-level runtime router (loads municipality CSVs + arabizi vocab)
+  eep/                     External Event Pipeline — HTTP intake, PII scrub, queue
+  iep1/                    Language extraction — arabizi NLP, sector/issue classification
+  iep2/                    Deduplication Service — near-duplicate detection
+  iep3/                    Routing Service — municipality and public entity mapping
+  iep4/                    Explainer Service — citizen-facing resolution narratives
+  shared/                  Common schemas, arabizi_features, arabizi_lexical_policy
+
+data/
+  knowledge_base/
+    arabizi_vocabulary.json          Runtime arabizi lexicon (v14, 3.29 MB, 31k+ terms)
+    arabizi/                         NLP support — master index, hard negatives, OOV queue, stoplist
+    municipalities/                  Municipality runtime data (registry, aliases, mappings, unions)
+    entities/                        Lebanese public entity definitions (MEW, EDL, OGERO, CDR, …)
+    cedarfix_language_bank.csv       5,772 approved arabizi terms with sector/issue hints
+    complaint_taxonomy.csv           63 complaint types with routing defaults and HITL flags
+    routing_rules.csv                69 routing rules keyed to complaint_type_id
+    remediation_workflows.csv        59 resolution workflows with SLA policies
+    cedarfix_complaint_scenario_inventory.csv  165 complaint scenarios with failure modes
+    [+ 7 more reference CSVs/JSONs]
+  complaint_intelligence/
+    municipality_research_tracker.csv   800-municipality research tracker (merged)
+    municipality_source_research.csv    12 source research records (merged)
+    discovered_complaint_leads.csv      156 complaint leads
+    normalized/municipal_official_process_seed.jsonl  78 seed CIE events
+    [+ scaleout findings, source targets, schema, news policy]
+  review_queue/            5 human review queues from legacy 100k complaint corpus
+  training/                10 JSONL training files (v29 batch7/8, senzi, telecom)
 ```
 
-## Setup
+## Knowledge Base
 
-PowerShell:
+| File | Rows | Purpose |
+| --- | ---: | --- |
+| `municipalities/national_municipality_registry.csv` | 1,107 | Canonical municipality master |
+| `municipalities/municipality_aliases.csv` | 3,829 | Name variant → canonical ID lookup |
+| `municipalities/municipality_service_mappings.csv` | 1,094 | Municipality → service area mappings (runtime) |
+| `municipalities/municipality_unions.csv` | 59 | Federation definitions |
+| `municipalities/municipality_official_channels.csv` | 46 | Contact channels |
+| `municipalities/municipality_complaint_workflows.csv` | 16 | Seed resolution workflows |
+| `cedarfix_language_bank.csv` | 5,772 | Approved arabizi terms |
+| `cedarfix_language_bank_review_queue.csv` | 7,298 | Candidate terms pending review |
+| `complaint_taxonomy.csv` | 63 | Complaint type definitions |
+| `routing_rules.csv` | 69 | Complaint → entity routing rules |
+| `remediation_workflows.csv` | 59 | End-to-end resolution workflows |
+| `arabizi/lebanese_arabizi_master_index.csv` | 31,032 | Full arabizi variant index |
+
+## Training Data
+
+| File | Examples | Purpose |
+| --- | ---: | --- |
+| `cidarfix_v29_batch8_train_v14_enriched.jsonl` | 75,555 | IEP-1 fine-tuning (v14 enriched) |
+| `cidarfix_v29_batch8_val_v14_enriched.jsonl` | 8,997 | Validation |
+| `cidarfix_v29_batch7_model_final_test_locked.jsonl` | 7,940 | Locked final test set (do not train on) |
+| `senzi_hard_negatives_{train,val,test}.jsonl` | — | Contrastive boundary sharpening |
+| `senzi_real_world_{train,val}.jsonl` | — | Domain adaptation from live reports |
+| `telecom_batch2_{train,val}.jsonl` | — | Telecom sector (CDR, OGERO) |
+
+## Setup
 
 ```powershell
 python -m venv .venv
@@ -129,47 +122,6 @@ safe template:
 Copy-Item .env.cedarfix.example .env.cedarfix
 ```
 
-## Validate
-
-Run the same core checks as CI:
-
-```powershell
-python scripts/validate_arabizi_vocabulary.py
-python scripts/validate_cedarfix_corpus.py
-python scripts/validate_arabizi_oov_queue.py
-python scripts/validate_arabizi_benchmark.py
-python -m unittest discover -s scripts/tests -p "test_*.py" -v
-```
-
-Expected current result:
-
-```text
-corpus/vocab/OOV/benchmark validators: 0 warnings
-unit tests: 31 passed
-```
-
-## Evaluate And Audit
-
-```powershell
-python scripts/evaluate_arabizi_coverage.py
-python scripts/run_arabizi_stress_lab.py
-python scripts/certify_arabizi_input.py
-python scripts/evaluate_arabizi_pair_coverage.py
-python scripts/audit_arabizi_excellence_gates.py
-python scripts/audit_cedarfix_next_phase_gates.py
-python scripts/audit_rubric_readiness.py
-python scripts/validate_arabizi_reliability.py
-python scripts/build_arabizi_v13_variant_audit.py
-```
-
-Current readiness:
-
-| Audit | Current result |
-| --- | --- |
-| Arabizi excellence gates | 5/6, not final-claim ready (ARZ-G02 needs native review) |
-| Full project gates | 2/9, not final-release ready |
-| Rubric readiness estimate | 30/60 weighted evidence points |
-
 ## Run Locally With Docker
 
 ```powershell
@@ -181,40 +133,38 @@ Local services:
 
 | Service | URL |
 | --- | --- |
-| EEP health | `http://127.0.0.1:8000/health` |
-| IEP-1 health | `http://127.0.0.1:8001/health` |
+| EEP | `http://127.0.0.1:8000/health` |
+| IEP-1 | `http://127.0.0.1:8001/health` |
+| IEP-2 | `http://127.0.0.1:8002/health` |
+| IEP-3 | `http://127.0.0.1:8003/health` |
+| IEP-4 | `http://127.0.0.1:8004/health` |
+| Prometheus | `http://127.0.0.1:9090` |
+| Grafana | `http://127.0.0.1:3000` |
 | PostgreSQL | `127.0.0.1:5432` |
 | Redis | `127.0.0.1:6379` |
 
-The current Docker stack contains Postgres, Redis, EEP, and IEP-1. IEP-2,
-IEP-3, IEP-4, MLflow, Prometheus, and Grafana are still planned.
+## Deploy to Azure
+
+Requires [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/):
+
+```powershell
+azd auth login
+azd up
+```
+
+All five services (eep, iep1-iep4) deploy as Azure Container Apps as defined in `azure.yaml`.
 
 ## CI
 
-GitHub Actions runs:
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push:
 
-1. Validate corpus, vocabulary, OOV queue, benchmark, and unit tests.
-2. Run Arabizi coverage evaluation and upload `arabizi_coverage_batch001.json`.
-3. Build Docker images for services whose Dockerfiles exist.
+1. Lint and test
+2. Build Docker images for all services
 
-## Key Docs
+## Route Logic
 
-| File | Use |
-| --- | --- |
-| `docs/CEDARFIX_AI_FINAL_PROJECT_PLAN.md` | Full strategy and rubric plan |
-| `docs/CORPUS_AUTHORING_PROTOCOL.md` | How to author/validate corpus batches |
-| `docs/ANNOTATION_GUIDELINES.md` | Labeling rules and taxonomies |
-| `docs/IEP1_LANGUAGE_SIGNAL_CONTRACT.md` | IEP-1 output contract |
-| `docs/ARABIZI_DRIFT_RADAR.md` | Arabizi/OOV drift loop |
-| `docs/LOCAL_DOCKER_RUNBOOK.md` | Docker runbook |
-
-## Next Build Order
-
-1. Build IEP-2 duplicate/cluster service with pair-evaluation artifact.
-2. Build IEP-3 calibrated routing with threshold sweep and false-auto-route metrics.
-3. Obtain native Lebanese dialect review for Batch 001+002 Arabizi rows (ARZ-G02).
-4. Add IEP-4 explanation/HITL service with prompt tests and audit output.
-5. Add MLflow plus Prometheus/Grafana with low-cardinality ML signals.
-6. Deploy the public cloud EEP and save a healthcheck artifact.
-
-Highest-ROI next step: **IEP-2 dedup/cluster service**.
+`src/route_complaint.py` is the runtime entry point. At startup it loads:
+- `data/knowledge_base/municipalities/municipality_aliases.csv`
+- `data/knowledge_base/municipalities/municipality_service_mappings.csv`
+- `data/knowledge_base/municipalities/national_municipality_registry.csv`
+- `data/knowledge_base/arabizi_vocabulary.json`
