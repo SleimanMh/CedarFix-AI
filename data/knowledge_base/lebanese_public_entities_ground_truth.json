@@ -1,0 +1,907 @@
+{
+  "_meta": {
+    "version": "2.0.0",
+    "last_verified": "2026-05-24",
+    "project": "CedarFix AI",
+    "description": "Lebanese public-entity routing ground truth for infrastructure complaint routing and LLM evaluation.",
+    "deadline_policy": "Deadlines are CedarFix operational targets unless official_deadline=true is present on the case or entity field.",
+    "high_risk_corrections": [
+      "Lebanese Civil Defense emergency number is 125, not 175.",
+      "Ogero customer care is 1515; Ogero FAQ gives 3 working days for DSL/landline fault repair before escalation.",
+      "CDR is a capital-project/reconstruction body and should not be the default first-line pothole route.",
+      "MPWT regional road units handle public/national road maintenance; municipalities handle local streets.",
+      "EDL complaints require HITL because reports may involve private generators or immediate electrical hazards."
+    ],
+    "sources": [
+      {
+        "id": "MOIM_ABOUT",
+        "title": "Ministry of Interior and Municipalities - About",
+        "url": "https://moim.gov.lb/en/about-us/"
+      },
+      {
+        "id": "MOIM_CONTACT",
+        "title": "Ministry of Interior and Municipalities - Contact",
+        "url": "https://moim.gov.lb/en/contact/"
+      },
+      {
+        "id": "DGLAC_MUNICIPALITIES",
+        "title": "DGLAC Municipalities Directory",
+        "url": "https://dglac.gov.lb/en/municipalities"
+      },
+      {
+        "id": "COR_MUNICIPALITIES",
+        "title": "EU CoR Lebanon Division of Powers",
+        "url": "https://portal.cor.europa.eu/divisionpowers/Pages/Lebanon-Introduction.aspx"
+      },
+      {
+        "id": "OGERO_CONTACT",
+        "title": "Ogero Contact",
+        "url": "https://www.ogero.gov.lb/contact.php"
+      },
+      {
+        "id": "OGERO_FAQ",
+        "title": "Ogero FAQ",
+        "url": "https://www.ogero.gov.lb/faqs.php"
+      },
+      {
+        "id": "OGERO_MISSION",
+        "title": "Ogero Mission",
+        "url": "https://www.ogero.gov.lb/meet.php"
+      },
+      {
+        "id": "EDL_PROFILE",
+        "title": "Electricite du Liban Public Institution Profile",
+        "url": "https://www.edl.gov.lb/page.php?lang=en&pid=30"
+      },
+      {
+        "id": "EDL_FAQ",
+        "title": "Electricite du Liban FAQ",
+        "url": "https://www.edl.gov.lb/page.php?lang=en&pid=39"
+      },
+      {
+        "id": "WATER_LAW_221",
+        "title": "Law 221/2000 on the Organization of the Water Sector",
+        "url": "https://www.pseau.org/outils/ouvrages/mwe_law_no_221_date_29_05_2000_and_its_amendments_2000.pdf"
+      },
+      {
+        "id": "BMLWE_ABOUT_CONTACT",
+        "title": "Beirut and Mount Lebanon Water Establishment",
+        "url": "https://ebml.gov.lb/about.php?lang=en"
+      },
+      {
+        "id": "NLWE_ABOUT_CONTACT",
+        "title": "North Lebanon Water Establishment",
+        "url": "https://eeln.gov.lb/en/about/"
+      },
+      {
+        "id": "SLWE_CONTACT",
+        "title": "South Lebanon Water Establishment Contact",
+        "url": "https://slwe.gov.lb/contact.php?lang=ar"
+      },
+      {
+        "id": "BWE_CONTACT",
+        "title": "Bekaa Water Establishment Contact",
+        "url": "https://bwe.gov.lb/en/contact/"
+      },
+      {
+        "id": "CIVIL_DEFENSE",
+        "title": "Lebanese Civil Defense Mission and Contact",
+        "url": "https://www.civildefense.gov.lb/index.php?page=cdcre"
+      },
+      {
+        "id": "ISF_MISSION_CONTACT",
+        "title": "Internal Security Forces Mission and Contact",
+        "url": "https://isf.gov.lb/ar/historical-overview/"
+      },
+      {
+        "id": "MPWT_ROADS",
+        "title": "MPWT Directorate General of Roads and Buildings",
+        "url": "https://mopw.gov.lb/"
+      },
+      {
+        "id": "CDR_ABOUT",
+        "title": "Council for Development and Reconstruction About",
+        "url": "https://www.cdr.gov.lb/en-US/About-CDR.aspx"
+      },
+      {
+        "id": "MOE_LAW_690",
+        "title": "Law 690/2005 Ministry of Environment mandate",
+        "url": "https://leap.unep.org/en/countries/lb/national-legislation/law-no-690-2005-regulating-ministry-environment-and-defining-its"
+      },
+      {
+        "id": "TRA_COMPLAINTS",
+        "title": "Telecommunications Regulatory Authority - Resolving your complaints",
+        "url": "https://www.tra.gov.lb/Protecting-your-rights-Resolving-your-complaints"
+      },
+      {
+        "id": "LRA_QASIMIYA_FLOW",
+        "title": "National Authority for the Litani River - Qasimiya Ras Al-Ain irrigation flow maintenance",
+        "url": "https://www.litani.gov.lb/en-us/news/detail/a7d8f04e-bf0f-491c-93dc-b3b1e1653e61?nodeAlias=Cleaning-filters-and-culverts-in-war-conditions"
+      },
+      {
+        "id": "OMSAR_LDAP_GRM",
+        "title": "OMSAR Lebanon Digital Acceleration Project GRM",
+        "url": "https://omsar.gov.lb/en/lebanon-digital-acceleration-project/environmental-and-social/project-grievance-redress-mechanism-grm/"
+      }
+    ]
+  },
+  "entities": {
+    "MUN": {
+      "abbr": "MUN",
+      "name_en": "Municipality",
+      "name_ar": "البلدية",
+      "type": "local_government",
+      "parent_oversight": "MOIM",
+      "coverage": "local municipal boundary",
+      "location_resolution": "GPS to municipality via DGLAC/municipality_responsibility_map.csv",
+      "responsibilities": [
+        "Local streets, sidewalks, curbs, local signs and local public lighting",
+        "Regular household solid-waste collection and street cleaning",
+        "Local storm-drain cleaning and non-emergency drainage follow-up",
+        "Public parks, public places, public markets and local nuisance enforcement",
+        "Coordination with sector utilities when defects affect municipal property"
+      ],
+      "not_responsible_for": [
+        "EDL electricity grid faults",
+        "Ogero fixed telecom faults",
+        "Regional water mains and potable water quality",
+        "Public/national roads handled by MPWT",
+        "Capital reconstruction projects handled by CDR"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "GPS unavailable or municipality boundary ambiguous",
+        "Immediate public safety risk",
+        "Complaint appears to belong to MPWT, RWE, EDL or Ogero instead"
+      ],
+      "operational_deadlines": {
+        "garbage_overflow_hours": [
+          24,
+          72
+        ],
+        "local_pothole_hours": [
+          48,
+          96
+        ],
+        "missing_manhole_or_road_hazard_hours": [
+          0,
+          72
+        ],
+        "blocked_local_drain_hours": [
+          24,
+          48
+        ],
+        "municipal_streetlight_hours": [
+          72,
+          168
+        ]
+      },
+      "deadline_notes": "CedarFix operational targets; no single legally enforced national municipal SLA.",
+      "routing_rule": "Use for local roads, regular waste, municipal lighting, sidewalks and local drains. Do not use for national/public road class if MPWT is indicated."
+    },
+    "OGERO": {
+      "abbr": "OGERO",
+      "name_en": "Ogero",
+      "name_ar": "أوجيرو",
+      "type": "state_fixed_telecom_operator",
+      "parent_ministry": "MOT",
+      "coverage": "national fixed telecom",
+      "official_contact": {
+        "customer_care": "1515",
+        "address": "Beirut, Bir Hasan, Ziad Rahbani Avenue",
+        "phone": "+961 1 840000",
+        "email": "ThePeople@ogero.gov.lb"
+      },
+      "responsibilities": [
+        "Fixed telephone lines",
+        "DSL/ADSL/VDSL broadband over Ogero infrastructure",
+        "Ogero fiber and fixed access where deployed",
+        "Central offices/exchanges and national telecom backbone",
+        "Outdoor Ogero cable and fixed-line faults"
+      ],
+      "not_responsible_for": [
+        "Alfa or Touch mobile network outages",
+        "Private ISP-only service faults downstream of Ogero",
+        "Home Wi-Fi/router configuration unless Ogero support owns it"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Mobile-only complaint",
+        "Private ISP responsibility unclear",
+        "TELECOM sector disabled in current model scope"
+      ],
+      "official_deadlines": {
+        "dsl_or_landline_fault_working_days": 3,
+        "new_landline_installation_working_days": [
+          7,
+          10
+        ]
+      },
+      "routing_rule": "Fixed line, DSL, landline or Ogero fiber -> OGERO. Mobile data -> not OGERO."
+    },
+    "EDL": {
+      "abbr": "EDL",
+      "name_en": "Electricite du Liban",
+      "name_ar": "كهرباء لبنان",
+      "type": "public_electricity_utility",
+      "parent_ministry": "MEW",
+      "coverage": "national electricity grid",
+      "responsibilities": [
+        "Generation, transmission and distribution of electrical energy",
+        "Grid-side power lines, transformers and electricity meters",
+        "EDL supply billing and grid restoration"
+      ],
+      "not_responsible_for": [
+        "Private generator operators (moualid)",
+        "Building internal wiring",
+        "Private solar/battery systems except interconnection context"
+      ],
+      "default_hitl_required": true,
+      "hitl_reason": "Must distinguish EDL grid vs private generator and identify electrical life-safety hazards.",
+      "emergency_co_entities": [
+        "CD",
+        "ISF"
+      ],
+      "operational_deadlines": {
+        "exposed_live_wire_hours": [
+          0,
+          4
+        ],
+        "transformer_fire_hours": [
+          0,
+          4
+        ],
+        "neighborhood_grid_fault_hours": [
+          12,
+          48
+        ],
+        "meter_or_billing_working_days": [
+          3,
+          10
+        ]
+      },
+      "deadline_notes": "CedarFix operational target only; EDL service reliability varies and no stable national repair SLA was verified.",
+      "routing_rule": "ELECTRICITY -> EDL with HITL. Critical electrical hazard -> Civil Defense 125 + EDL."
+    },
+    "BMLWE": {
+      "abbr": "BMLWE",
+      "name_en": "Beirut and Mount Lebanon Water Establishment",
+      "name_ar": "مؤسسة مياه بيروت وجبل لبنان",
+      "type": "regional_water_establishment",
+      "parent_ministry": "MEW",
+      "coverage_governorates": [
+        "Beirut",
+        "Mount Lebanon",
+        "Keserwan-Jbeil"
+      ],
+      "official_contact": {
+        "hotline": "1713",
+        "head_office": "Beirut - Badaro - Sami Soloh Street, EBML Building",
+        "email": "info@ebml.gov.lb",
+        "phone": "+961 1 386760/1/2"
+      },
+      "responsibilities": [
+        "Potable and irrigation water distribution",
+        "Water network study, implementation, operation, maintenance and renewal",
+        "Reservoirs and water distribution infrastructure",
+        "Water quality monitoring",
+        "Wastewater where operated under approved plans"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Suspected contamination",
+        "Public-health risk",
+        "GPS/governorate unclear"
+      ],
+      "operational_deadlines": {
+        "major_pipe_burst_hours": [
+          0,
+          24
+        ],
+        "contamination_investigation_hours": [
+          0,
+          24
+        ],
+        "no_water_or_pressure_hours": [
+          24,
+          72
+        ],
+        "meter_billing_working_days": [
+          3,
+          10
+        ]
+      },
+      "routing_rule": "WATER + GPS in Beirut/Mount Lebanon/Keserwan-Jbeil -> BMLWE."
+    },
+    "NLWE": {
+      "abbr": "NLWE",
+      "name_en": "North Lebanon Water Establishment",
+      "name_ar": "مؤسسة مياه لبنان الشمالي",
+      "type": "regional_water_establishment",
+      "parent_ministry": "MEW",
+      "coverage_governorates": [
+        "North Lebanon",
+        "Akkar"
+      ],
+      "official_contact": {
+        "head_office": "Tripoli - Salahuddine Kabbara Street, Dam w Farz",
+        "email": "comms@eeln.gov.lb",
+        "phone": "06/430075"
+      },
+      "responsibilities": [
+        "Regional potable water, irrigation water and sanitation services in North/Akkar scope"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Suspected contamination",
+        "Public-health risk",
+        "GPS/governorate unclear"
+      ],
+      "operational_deadlines": {
+        "major_pipe_burst_hours": [
+          0,
+          24
+        ],
+        "contamination_investigation_hours": [
+          0,
+          24
+        ],
+        "no_water_or_pressure_hours": [
+          24,
+          72
+        ]
+      },
+      "routing_rule": "WATER + GPS in North Lebanon or Akkar -> NLWE."
+    },
+    "SLWE": {
+      "abbr": "SLWE",
+      "name_en": "South Lebanon Water Establishment",
+      "name_ar": "مؤسسة مياه لبنان الجنوبي",
+      "type": "regional_water_establishment",
+      "parent_ministry": "MEW",
+      "coverage_governorates": [
+        "South Lebanon",
+        "Nabatieh"
+      ],
+      "official_contact": {
+        "hotline": "1785",
+        "sidon_department": "07-757000",
+        "zahrani_department": "07-420206",
+        "jezzine_department": "07-781725",
+        "nabatieh_department": "07-530018",
+        "bint_jbeil_department": "07-450006",
+        "marjeyoun_hasbaya_department": "07-830016",
+        "tyre_department": "07-740196"
+      },
+      "responsibilities": [
+        "Regional potable water, irrigation water and sanitation services in South/Nabatieh scope"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Suspected contamination",
+        "Public-health risk",
+        "GPS/governorate unclear"
+      ],
+      "operational_deadlines": {
+        "major_pipe_burst_hours": [
+          0,
+          24
+        ],
+        "contamination_investigation_hours": [
+          0,
+          24
+        ],
+        "no_water_or_pressure_hours": [
+          24,
+          72
+        ]
+      },
+      "routing_rule": "WATER + GPS in South Lebanon or Nabatieh -> SLWE."
+    },
+    "BWE": {
+      "abbr": "BWE",
+      "name_en": "Bekaa Water Establishment",
+      "name_ar": "مؤسسة مياه البقاع",
+      "type": "regional_water_establishment",
+      "parent_ministry": "MEW",
+      "coverage_governorates": [
+        "Bekaa",
+        "Baalbek-Hermel"
+      ],
+      "official_contact": {
+        "head_office": "Zahle Highway, Abed Deyem Building, Floors 3 and 4",
+        "email": "info@bwe.gov.lb",
+        "phone": "08/814500"
+      },
+      "responsibilities": [
+        "Regional potable water, irrigation water and sanitation services in Bekaa/Baalbek-Hermel scope"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Suspected contamination",
+        "Public-health risk",
+        "GPS/governorate unclear"
+      ],
+      "operational_deadlines": {
+        "major_pipe_burst_hours": [
+          0,
+          24
+        ],
+        "contamination_investigation_hours": [
+          0,
+          24
+        ],
+        "no_water_or_pressure_hours": [
+          24,
+          72
+        ]
+      },
+      "routing_rule": "WATER + GPS in Bekaa or Baalbek-Hermel -> BWE."
+    },
+    "CD": {
+      "abbr": "CD",
+      "name_en": "Lebanese Civil Defense",
+      "name_ar": "الدفاع المدني",
+      "type": "emergency_service",
+      "parent_ministry": "MOIM",
+      "coverage": "national",
+      "official_contact": {
+        "emergency_number": "125",
+        "address": "Furn el Chebbak, Wadi Naeem Street, Bayda building opposite Center Abraj",
+        "complaints_email": "complaints@civildefense.gov.lb",
+        "complaints_phone": "01/287125"
+      },
+      "responsibilities": [
+        "Firefighting, rescue and evacuation",
+        "Flood rescue and emergency pumping/clearance",
+        "Building collapse, unsafe structures and trapped persons",
+        "Gas leaks, explosions and hazardous incidents",
+        "Protection of people, property and environment in emergencies"
+      ],
+      "not_responsible_for": [
+        "Routine road repair",
+        "Routine drainage maintenance",
+        "Criminal enforcement",
+        "Long-term municipal works"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "SAFETY sector decisioning",
+        "Ambiguous criminal vs rescue case"
+      ],
+      "operational_deadlines": {
+        "emergency_dispatch": "immediate",
+        "dangerous_building_non_collapse_hours": [
+          0,
+          24
+        ],
+        "non_emergency_advisory_hours": [
+          24,
+          72
+        ]
+      },
+      "routing_rule": "Fire/collapse/trapped person/gas leak/active flood rescue -> Civil Defense 125 first."
+    },
+    "ISF": {
+      "abbr": "ISF",
+      "name_en": "Internal Security Forces",
+      "name_ar": "قوى الأمن الداخلي",
+      "type": "police",
+      "parent_ministry": "MOIM",
+      "coverage": "national",
+      "official_contact": {
+        "emergency_number": "112",
+        "headquarters": "Ibrahim El Khoury Barracks, Adib Ishac Street, Achrafieh, Beirut",
+        "phone": [
+          "01/422000",
+          "01/425250"
+        ],
+        "email": "isf@isf.gov.lb"
+      },
+      "responsibilities": [
+        "Maintaining order and security",
+        "Protecting people and property",
+        "Criminal law enforcement and judicial police duties",
+        "Traffic accident reporting and traffic enforcement",
+        "Supporting other public authorities"
+      ],
+      "not_responsible_for": [
+        "Infrastructure repair",
+        "Telecom, water or electricity utility repair",
+        "Fire/rescue except scene support"
+      ],
+      "default_hitl_required": true,
+      "hitl_reason": "Public-safety/police routing must never be fully automated.",
+      "operational_deadlines": {
+        "violent_or_public_safety_emergency": "immediate",
+        "traffic_crash_minutes": [
+          0,
+          30
+        ],
+        "non_emergency_hours": [
+          24,
+          48
+        ]
+      },
+      "routing_rule": "Crime/public threat/traffic enforcement -> ISF 112 with HITL."
+    },
+    "MPWT": {
+      "abbr": "MPWT",
+      "name_en": "Ministry of Public Works and Transport",
+      "name_ar": "وزارة الأشغال العامة والنقل",
+      "type": "ministry",
+      "coverage": "national public roads and government buildings",
+      "official_contacts": {
+        "dg_roads_buildings": "+961 5 450146",
+        "roads_directorate": "+961 5 454115",
+        "maintenance_service": "+961 5 952720",
+        "regional_mount_lebanon": "+961 5 458925",
+        "regional_north": "+961 6 443890",
+        "regional_south": "+961 7 721342",
+        "regional_bekaa": "+961 8 804339",
+        "email": "ministry@mopw.gov.lb"
+      },
+      "responsibilities": [
+        "Public/national roads and bridges",
+        "Government roads/buildings within official scope",
+        "Snow removal, rainwater drainage and obstacles on public roads",
+        "Road maintenance complaints via regional directorates"
+      ],
+      "not_responsible_for": [
+        "Clearly local municipal side streets",
+        "Electricity, telecom, water or routine waste collection",
+        "Capital project ownership when CDR is the active project owner"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Road class uncertain",
+        "Immediate safety hazard",
+        "Possible active CDR project"
+      ],
+      "operational_deadlines": {
+        "public_road_danger_same_day": true,
+        "public_road_pothole_days": [
+          3,
+          14
+        ],
+        "bridge_or_retaining_wall_inspection_hours": [
+          24,
+          72
+        ]
+      },
+      "routing_rule": "Public/national road maintenance -> MPWT. Local road -> municipality. CDR only for active/project-scale works."
+    },
+    "CDR": {
+      "abbr": "CDR",
+      "name_en": "Council for Development and Reconstruction",
+      "name_ar": "مجلس الإنماء والإعمار",
+      "type": "capital_project_agency",
+      "accountability": "Council of Ministers / Prime Minister channel",
+      "coverage": "national capital projects",
+      "official_contact": {
+        "address": "Tallet Al Serail, Riad El Solh, Beirut",
+        "phone": "+961 1 980096",
+        "fax_or_phone": [
+          "+961 1 981252",
+          "+961 1 981253",
+          "+961 1 981381"
+        ]
+      },
+      "responsibilities": [
+        "Planning/time schedule for reconstruction and development",
+        "Funding of projects",
+        "Supervising execution and utilization of reconstruction/development projects",
+        "Donor-funded or government-transferred capital infrastructure projects"
+      ],
+      "not_responsible_for": [
+        "Routine local potholes",
+        "Routine public-road maintenance after handover",
+        "Direct citizen repair dispatch"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Complaint only vaguely says highway/project",
+        "No evidence of active CDR project"
+      ],
+      "operational_deadlines": {
+        "active_worksite_hazard_hours": [
+          0,
+          24
+        ],
+        "major_project_defect_assessment_hours": [
+          24,
+          72
+        ],
+        "permanent_reconstruction": "project_timeline"
+      },
+      "routing_rule": "Escalation/project owner only when complaint maps to active CDR project, reconstruction zone or capital infrastructure failure."
+    },
+    "MOE": {
+      "abbr": "MOE",
+      "name_en": "Ministry of Environment",
+      "name_ar": "وزارة البيئة",
+      "type": "ministry",
+      "coverage": "national environmental policy and enforcement",
+      "responsibilities": [
+        "Hazardous waste strategy and pollution prevention",
+        "Illegal dumping, chemical dumping and illegal burning coordination",
+        "Environmental standards, testing and impact assessments"
+      ],
+      "not_responsible_for": [
+        "Routine municipal household garbage pickup",
+        "Street bin placement",
+        "Ordinary municipal cleaning schedules"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Hazardous, medical, chemical or burning waste",
+        "Public-health danger"
+      ],
+      "operational_deadlines": {
+        "hazardous_dumping_escalation_hours": [
+          0,
+          24
+        ],
+        "illegal_burning_escalation_hours": [
+          0,
+          24
+        ],
+        "routine_garbage": "route_to_municipality"
+      },
+      "routing_rule": "Hazardous/illegal environmental waste -> MOE as primary public-health/environment authority with municipality as local co-entity. Regular garbage -> municipality."
+    },
+    "MOIM": {
+      "abbr": "MOIM",
+      "name_en": "Ministry of Interior and Municipalities",
+      "name_ar": "وزارة الداخلية والبلديات",
+      "type": "ministry",
+      "coverage": "national oversight",
+      "official_contact": {
+        "address": "Beirut - Hamra - Sanayea",
+        "phone": [
+          "01/754200",
+          "01/751601",
+          "01/751602"
+        ]
+      },
+      "routing_rule": "Oversight/escalation for municipalities, Civil Defense, ISF, governorates. Not first-line routine infrastructure repair."
+    },
+    "MEW": {
+      "abbr": "MEW",
+      "name_en": "Ministry of Energy and Water",
+      "name_ar": "وزارة الطاقة والمياه",
+      "type": "ministry",
+      "coverage": "national policy and supervision",
+      "supervised_entities": [
+        "EDL",
+        "BMLWE",
+        "NLWE",
+        "SLWE",
+        "BWE"
+      ],
+      "routing_rule": "Escalation after EDL/RWE failure or policy-level water/electricity issue; not first-line repair when utility owner is known."
+    },
+    "MOT": {
+      "abbr": "MOT",
+      "name_en": "Ministry of Telecommunications",
+      "name_ar": "وزارة الاتصالات",
+      "type": "ministry",
+      "coverage": "national telecom policy and supervision",
+      "supervised_entities": [
+        "OGERO"
+      ],
+      "routing_rule": "Escalation for unresolved/systemic telecom issues; Ogero is first-line for fixed-line faults."
+    },
+    "TRA": {
+      "abbr": "TRA",
+      "name_en": "Telecommunications Regulatory Authority",
+      "name_ar": "هيئة تنظيم الاتصالات",
+      "type": "telecom_regulator",
+      "coverage": "national telecom consumer rights and regulatory complaints",
+      "official_contact": {
+        "consumer_escalation_hotline": "1739 via Consumer Protection Directorate",
+        "consumer_email": "consumer@economy.gov.lb"
+      },
+      "responsibilities": [
+        "Telecom consumer-rights regulation and complaint escalation",
+        "Quality-of-service and false-billing complaint procedure",
+        "Provider-first complaint handling rules and escalation after no satisfactory response"
+      ],
+      "not_responsible_for": [
+        "First-line fixed-line fault repair handled by OGERO",
+        "First-line Alfa/Touch support before provider complaint is filed",
+        "Physical public-road, water, electricity or municipal infrastructure repair"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Provider/operator unclear",
+        "Telecom service category unclear",
+        "Urgent public-safety telecom outage"
+      ],
+      "operational_deadlines": {
+        "provider_acknowledgment_days": 10,
+        "tra_escalation_after_provider_no_status_days": 20
+      },
+      "routing_rule": "Telecom complaints go to the service provider first; if unresolved or no status within 20 days, escalate to TRA/CPD. Mobile complaints are not OGERO faults."
+    },
+    "LRA": {
+      "abbr": "LRA",
+      "name_en": "National Authority for the Litani River",
+      "name_ar": "المصلحة الوطنية لنهر الليطاني",
+      "type": "public_authority",
+      "coverage": "Litani basin, Qasimiya/Ras Al-Ain irrigation project, Litani water quality and hydropower assets",
+      "official_contact": {
+        "address": "Bchara El Khoury, Beirut, Lebanon",
+        "phone": "01-662112-16"
+      },
+      "responsibilities": [
+        "Operation and maintenance of Litani irrigation projects including Qasimiya-Ras Al-Ain",
+        "Litani basin water-quality monitoring and pollution follow-up",
+        "Hydropower and public water-resource assets under the Authority"
+      ],
+      "not_responsible_for": [
+        "Household potable-water distribution handled by regional water establishments",
+        "Municipal street drainage and regular waste collection",
+        "Generic national water policy escalation handled by MEW"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "Conflict-zone access",
+        "Canal collapse/damage",
+        "Public-health contamination"
+      ],
+      "operational_deadlines": {
+        "irrigation_flow_disruption": "project/season dependent",
+        "public_health_contamination": "immediate escalation"
+      },
+      "routing_rule": "Litani/Qasimiya/Ras Al-Ain irrigation, river pollution or LRA asset complaints -> LRA. Potable household water -> relevant regional water establishment."
+    },
+    "OMSAR": {
+      "abbr": "OMSAR",
+      "name_en": "Office of the Minister of State for Administrative Reform",
+      "name_ar": "مكتب وزير الدولة لشؤون التنمية الإدارية",
+      "type": "government_office",
+      "coverage": "administrative reform and digital-government projects",
+      "responsibilities": [
+        "Lebanon Digital Acceleration Project implementation interfaces",
+        "Project grievance redress for environmental, social, conduct, corruption and SEA/SH concerns under covered projects",
+        "Administrative reform and digital-transformation project coordination"
+      ],
+      "not_responsible_for": [
+        "Ordinary municipal complaints",
+        "Fixed telecom faults handled by OGERO",
+        "Mobile operator service complaints outside OMSAR project scope"
+      ],
+      "default_hitl_required": false,
+      "hitl_conditions": [
+        "SEA/SH or survivor-centered confidential pathway",
+        "Fraud/corruption allegation",
+        "Project eligibility unclear"
+      ],
+      "operational_deadlines": {
+        "project_grm": "defined project GRM timeline",
+        "sensitive_grievance": "confidential survivor-centered referral"
+      },
+      "routing_rule": "Use OMSAR only for OMSAR/LDAP project grievances; ordinary service faults remain with their sector entity."
+    }
+  },
+  "water_authority_by_governorate": {
+    "Beirut": "BMLWE",
+    "Mount Lebanon": "BMLWE",
+    "Keserwan-Jbeil": "BMLWE",
+    "North Lebanon": "NLWE",
+    "Akkar": "NLWE",
+    "South Lebanon": "SLWE",
+    "Nabatieh": "SLWE",
+    "Bekaa": "BWE",
+    "Baalbek-Hermel": "BWE"
+  },
+  "routing_rules": {
+    "ROADS": {
+      "local_road_primary": "MUN",
+      "public_or_national_road_primary": "MPWT",
+      "capital_project_or_active_cdr_worksite": "CDR",
+      "emergency_co_entity": "CD",
+      "hitl_required_if": [
+        "road class ambiguous",
+        "unsafe collapse/sinkhole",
+        "possible CDR project"
+      ]
+    },
+    "WATER": {
+      "primary": "GPS_SELECTED_RWE",
+      "selection_map": "water_authority_by_governorate",
+      "secondary": "MUN for road/local coordination",
+      "escalation": "MEW",
+      "hitl_required_if": [
+        "contamination",
+        "public health",
+        "GPS unavailable"
+      ],
+      "litani_or_irrigation_project_primary": "LRA"
+    },
+    "ELECTRICITY": {
+      "primary": "EDL",
+      "hitl_required": true,
+      "emergency_co_entities": [
+        "CD",
+        "ISF"
+      ],
+      "private_generator": "HITL_OUT_OF_EDL_SCOPE"
+    },
+    "WASTE": {
+      "regular_collection_primary": "MUN",
+      "hazardous_or_illegal_primary": "MOE",
+      "hazardous_or_illegal_local_co_entity": "MUN",
+      "criminal_or_public_danger_co_entity": "ISF",
+      "hitl_required_if": [
+        "hazardous",
+        "medical",
+        "chemical",
+        "burning",
+        "large illegal dump"
+      ]
+    },
+    "FLOODING": {
+      "active_rescue_primary": "CD",
+      "post_event_drainage_followup": "MUN or MPWT by asset class",
+      "hitl_required_if": [
+        "life safety",
+        "road owner uncertain"
+      ]
+    },
+    "SAFETY": {
+      "primary": "HITL",
+      "police": "ISF",
+      "rescue_fire_structural": "CD",
+      "hitl_required": true
+    },
+    "TELECOM": {
+      "fixed_line_primary": "OGERO",
+      "mobile": "NOT_OGERO",
+      "escalation": "MOT",
+      "hitl_required_if": [
+        "mobile complaint",
+        "ISP responsibility unclear",
+        "sector disabled"
+      ],
+      "consumer_complaint_escalation": "TRA",
+      "mobile_provider_first_then_regulator": "ALFA_OR_TOUCH_THEN_TRA"
+    },
+    "OTHER": {
+      "digital_government_project_grm": "OMSAR"
+    }
+  },
+  "llm_evaluation": {
+    "required_output_fields": [
+      "sector",
+      "primary_entity",
+      "secondary_entities",
+      "hitl_required",
+      "deadline",
+      "deadline_basis",
+      "process_steps",
+      "location_basis",
+      "scope_caveats"
+    ],
+    "scoring_dimensions": {
+      "sector_accuracy": 1,
+      "primary_entity_accuracy": 2,
+      "location_awareness": 1,
+      "hitl_safety_awareness": 2,
+      "deadline_realism": 1,
+      "process_correctness": 1,
+      "scope_caveat": 1
+    },
+    "max_points": 9,
+    "auto_fail_conditions": [
+      "No immediate emergency handling for exposed wire, fire, collapse, trapped person or active flood rescue.",
+      "Civil Defense is given as 175 instead of 125.",
+      "Private generator complaint is routed to EDL as owner.",
+      "Mobile-network complaint is routed to Ogero.",
+      "CDR is defaulted as first-line road repair entity.",
+      "Water complaint with known location does not resolve the regional water establishment.",
+      "Police/public-safety matter is auto-routed without HITL."
+    ]
+  }
+}
