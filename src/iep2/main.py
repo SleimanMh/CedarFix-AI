@@ -1,0 +1,48 @@
+"""IEP-2 FastAPI application.
+
+HTTP surface: health probe + cluster inquiry endpoint.
+The real work happens in the Redis Streams worker launched at startup.
+"""
+from __future__ import annotations
+
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
+from fastapi import FastAPI
+
+from src.iep2.worker import run_worker
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger("iep2")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    task = asyncio.create_task(run_worker(), name="iep2-worker")
+    logger.info("IEP-2 worker task started")
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        logger.info("IEP-2 worker task stopped")
+
+
+app = FastAPI(
+    title="CedarFix IEP-2 — Duplicate & Incident Cluster Detection",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+
+@app.get("/health", tags=["ops"])
+async def health() -> dict:
+    return {"status": "ok", "service": "iep2"}
