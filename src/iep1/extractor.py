@@ -13,6 +13,7 @@ against which the trained multilingual classifier must be compared in T5.
 from __future__ import annotations
 
 import logging
+import re
 from functools import lru_cache
 
 from src.shared.arabizi_features import VocabularyIndex, analyze_language_signal, load_vocabulary_index
@@ -51,7 +52,7 @@ _SECTOR_KEYWORDS: dict[str, list[str]] = {
         "flooding", "flood", "inundation", "accumulation", "standing water",
         "فيضان", "تجمع مياه", "غمر",
         "inondation", "débordement",
-        "fayadene", "sayel",
+        "fayadene", "sayel", "balo3a", "balou3a", "msdoude", "ghatat", "tit3abba",
     ],
     "SAFETY": [
         "danger", "fire", "explosion", "collapse", "accident", "crime", "threat",
@@ -70,10 +71,15 @@ def classify_sector(text: str) -> tuple[str, float]:
     when no keywords match.
     """
     lower = text.lower()
+    tokens = set(re.findall(r"[a-z0-9]+", lower))
     scores: dict[str, int] = {k: 0 for k in _SECTOR_KEYWORDS}
     for sector, keywords in _SECTOR_KEYWORDS.items():
         for kw in keywords:
-            if kw in lower:
+            if re.fullmatch(r"[a-z0-9]+", kw):
+                matched = kw in tokens
+            else:
+                matched = kw in lower
+            if matched:
                 scores[sector] += 1
 
     best = max(scores, key=lambda k: scores[k])
@@ -99,7 +105,13 @@ def classify_issue_type_from_signal(
     sector_hint, sector_confidence = classify_sector(signal.raw_text)
     hits: dict[tuple[str, str], int] = {}
     for term in signal.known_terms:
-        term_hits = vocab.token_issue_map.get(term, set())
+        term_hits = {
+            (sector, issue_type)
+            for sector, issue_type in vocab.token_issue_map.get(term, set())
+            if issue_type not in {"ALL", "UNCLASSIFIED"}
+        }
+        if sector_hint != "OTHER" and any(sector == sector_hint for sector, _ in term_hits):
+            term_hits = {(sector, issue_type) for sector, issue_type in term_hits if sector == sector_hint}
         if term in IGNORED_OOV_TOKENS or len(term_hits) != 1:
             continue
         for sector, issue_type in term_hits:
