@@ -346,6 +346,17 @@ def _detect_billing_regulatory(text: str) -> bool:
     return bool(_BILLING_REGULATORY_RE.search(text))
 
 
+_MOBILE_NETWORK_RE = re.compile(
+    r"\b(mobile|alfa|touch|4g|5g|3g|lte|coverage|shabake mobile|signal mobile|shabake alfa|shabake touch"
+    r"|network alfa|network touch|mobile network|cell|cellular)\b",
+    re.IGNORECASE,
+)
+
+def _detect_mobile_complaint(text: str) -> bool:
+    """True if text signals a mobile operator network complaint (→ TRA, not OGERO)."""
+    return bool(_MOBILE_NETWORK_RE.search(text))
+
+
 # ---------------------------------------------------------------------------
 # Complaint type matching (sector → best complaint_type_id)
 # ---------------------------------------------------------------------------
@@ -587,6 +598,17 @@ def route(
         )
         if billing_ct:
             ct_id = billing_ct
+    # Mobile network override: mobile operator complaint (Alfa/Touch/4G/coverage) → CT-TEL-005 (TRA)
+    # Only fires when billing override did NOT fire (billing is higher precedence)
+    elif sector == "TELECOM" and _detect_mobile_complaint(complaint_text):
+        mobile_ct = next(
+            (cid for cid, row in _TAXONOMY.items()
+             if row.get("complaint_type", "") == "mobile_network_outage"
+             or row.get("complaint_type_id", cid) == "CT-TEL-005"),
+            None,
+        )
+        if mobile_ct:
+            ct_id = mobile_ct
     taxonomy_row = _TAXONOMY.get(ct_id, {}) if ct_id else {}
     result.complaint_type_id = ct_id or ""
     result.complaint_type = taxonomy_row.get("complaint_type", "")
