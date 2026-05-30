@@ -21,8 +21,18 @@ arabizi_v*.zip
 # Local scratch / temp
 .tmp/
 data/external_sources/
+data/raw/
+data/sources/
+data/eval/
+data/corpus/
 
 # Archive and internal docs — not part of the CedarFix repo
 _archive/
 bin/
 Rubric/
+docs/
+New folder/
+prompts/
+reports/
+scripts/
+_trash/
