@@ -1,0 +1,86 @@
+{
+  "entity_id": "EDL",
+  "entity_name": "Électricité du Liban - EDL (كهرباء لبنان)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "EDL-F001",
+      "fact_type": "legal_responsibility",
+      "value": "State monopoly on electricity generation, transmission, and distribution across Lebanon.",
+      "confidence": "high",
+      "source_ids": ["SRC-004", "SRC-012", "SRC-014"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private generators (moualid/مولد). Private generator issues are outside EDL scope.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F003",
+      "fact_type": "emergency_instruction",
+      "value": "For exposed or downed power lines: DO NOT APPROACH. Call Civil Defense 125 FIRST, then EDL 1444.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "Life-safety protocol confirmed in eval LLM-RT-013.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F004",
+      "fact_type": "operational_contact",
+      "value": "EDL customer hotline: 1444.",
+      "confidence": "high",
+      "source_ids": ["SRC-004"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F005",
+      "fact_type": "service_area",
+      "value": "National grid coverage. Load-shedding schedule varies by region (12-22+ hours/day depending on location and crisis level).",
+      "confidence": "high",
+      "source_ids": ["SRC-004", "SRC-014"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA for grid fault repair. CedarFix operational target: 12-48h for localized outages.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-014 explicitly states 'no verified official SLA'. deadline_basis='CedarFix operational target'.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F007",
+      "fact_type": "complaint_process",
+      "value": "Call 1444 for outage/fault reports. HITL required for all CedarFix electricity routing due to EDL/generator ambiguity.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["ELECTRICITY (grid outage, downed lines)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All electricity routing requires HITL to disambiguate EDL grid vs private generator (moualid)",
+      "Exposed or downed live wires — Civil Defense first",
+      "Neighborhood-wide blackout with no visible damage — HITL before EDL ticket"
+    ]
+  },
+  "sources": ["SRC-004", "SRC-012", "SRC-014", "SRC-022"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

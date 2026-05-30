@@ -1,0 +1,97 @@
+{
+  "entity_id": "CD",
+  "entity_name": "Lebanese Civil Defense (الدفاع المدني)",
+  "entity_type": "emergency_service",
+  "parent_ministry": "Ministry of Interior and Municipalities",
+  "facts": [
+    {
+      "fact_id": "CD-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Primary emergency rescue, fire suppression, and search-and-rescue operations across Lebanon.",
+      "confidence": "high",
+      "source_ids": ["SRC-001", "SRC-016"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Emergency medical services (EMS) and pre-hospital patient transport.",
+      "confidence": "high",
+      "source_ids": ["SRC-001", "SRC-016"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F003",
+      "fact_type": "legal_responsibility",
+      "value": "First responder for structural collapses, building wall hazards, sinkhole emergencies, and flood rescues.",
+      "confidence": "high",
+      "source_ids": ["SRC-001", "SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F004",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency hotline: 125. Call immediately for any life-safety incident.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-025"],
+      "notes": "125 confirmed by domain-expert eval dataset (SRC-022). Previous internal draft erroneously used 175 — 175 is NOT the correct Civil Defense number. VERIFIED: 125.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F005",
+      "fact_type": "operational_contact",
+      "value": "Secondary/public inquiries: civildefense.gov.lb. Official complaints channel: complaints@civildefense.gov.lb and phone/fax 01 287125. Official X account: @CivilDefenseLB.",
+      "confidence": "medium",
+      "source_ids": ["SRC-001", "SRC-016", "SRC-057", "SRC-058"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F006",
+      "fact_type": "service_area",
+      "value": "Operates nationwide through regional divisions. All Lebanese governorates covered.",
+      "confidence": "high",
+      "source_ids": ["SRC-001"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "Emergency dispatch target: immediate (within minutes of call). No published SLA, but operational standard is fastest possible response.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "notes": "No official published SLA. CedarFix operational classification: 'immediate emergency'.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F008",
+      "fact_type": "complaint_process",
+      "value": "For emergencies: call 125 directly. CedarFix must always trigger HITL when routing to Civil Defense and display number 125 prominently.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["FLOODING (rescue)", "SAFETY (structural/life-safety)", "ELECTRICITY (exposed live cables)"],
+    "secondary_for_sectors": ["ROADS (sinkhole)", "GENERAL emergency"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "Any incident classified as life-safety emergency",
+      "Structural hazard (cracking buildings, collapsing walls)",
+      "Active flood rescue",
+      "Exposed electrical cables",
+      "Person trapped"
+    ]
+  },
+  "sources": ["SRC-001", "SRC-016", "SRC-022", "SRC-025", "SRC-057", "SRC-058"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

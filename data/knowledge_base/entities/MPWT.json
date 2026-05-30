@@ -1,0 +1,84 @@
+{
+  "entity_id": "MPWT",
+  "entity_name": "Ministry of Public Works and Transport (وزارة الأشغال العامة والنقل)",
+  "entity_type": "government_ministry",
+  "parent_ministry": "self (ministry)",
+  "facts": [
+    {
+      "fact_id": "MPWT-F001",
+      "fact_type": "legal_responsibility",
+      "value": "PRIMARY entity for maintenance and management of Lebanon's national roads, highways, and autostrads.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-019", "SRC-022"],
+      "notes": "LLM-RT-002 confirms MPWT (not CDR) is primary for autostrad/highway issues. CDR is primary ONLY when inside an active CDR worksite.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Oversees public transportation infrastructure, seaports, airports (coordination), and public works projects not assigned to CDR.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-019"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F003",
+      "fact_type": "legal_responsibility",
+      "value": "Four Directorates: Roads and Buildings, Land Transport, Civil Aviation, Maritime Transport.",
+      "confidence": "high",
+      "source_ids": ["SRC-019"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F004",
+      "fact_type": "service_area",
+      "value": "National road network (autostrads, highways). Does NOT cover local/municipal streets.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F005",
+      "fact_type": "operational_contact",
+      "value": "Ministry website: transportation.gov.lb. Official contact list provides ministry phones and ministry@transportation.gov.lb, but no dedicated national road-repair citizen complaint hotline was clearly published.",
+      "confidence": "medium",
+      "source_ids": ["SRC-006", "SRC-054"],
+      "human_review_required": true,
+      "human_review_reason": "No public complaint hotline identified. Citizen complaint pathway for national road issues unclear. Needs research into MPWT formal complaint channel."
+    },
+    {
+      "fact_id": "MPWT-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA for national road repair. CedarFix target varies by severity: emergency 24-48h, non-emergency 72h-2 weeks.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F007",
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Boundary between MPWT and CDR jurisdiction for road projects can be ambiguous: CDR executes infrastructure on behalf of GoL but MPWT has ongoing maintenance. Active CDR project = CDR primary; maintenance after project closure = MPWT.",
+      "confidence": "medium",
+      "source_ids": ["SRC-022", "SRC-017"],
+      "human_review_required": true,
+      "human_review_reason": "MPWT vs CDR boundary requires case-by-case assessment for any road that may be part of a CDR project."
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["ROADS (national highways and autostrads)"],
+    "secondary_for_sectors": ["ROADS (escalation when municipality is unclear)"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All national road routing requires HITL due to MPWT/CDR ambiguity",
+      "No public hotline confirmed for automated contact"
+    ]
+  },
+  "sources": ["SRC-006", "SRC-017", "SRC-019", "SRC-022", "SRC-054"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

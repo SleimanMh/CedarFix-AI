@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "description": "Canonical entity schema definition for CedarFix Lebanese public entities. Every entity JSON must follow this structure.",
+    "fact_types": [
+      "legal_responsibility",
+      "operational_contact",
+      "service_area",
+      "complaint_process",
+      "deadline_or_sla",
+      "emergency_instruction",
+      "uncertain_or_needs_human_review"
+    ],
+    "confidence_levels": {
+      "high": "From official site, published law, or government PDF",
+      "medium": "Official-adjacent (secondary official, Wikipedia citing official)",
+      "low": "News article, third-party, or inferred from context",
+      "blocked": "Useful value found but requires live verification before routing use"
+    },
+    "human_review_triggers": [
+      "Contact number changed or conflicting across sources",
+      "Deadline source is weak (no official SLA published)",
+      "Entity responsibility overlaps with another entity",
+      "Geographic coverage boundary is ambiguous",
+      "Private vs public actor confusion possible",
+      "Source is blocked and unverified"
+    ]
+  },
+  "entity_template": {
+    "entity_id": "ENTITY_ID",
+    "entity_name": "Full Official Name",
+    "entity_type": "public_utility | municipality | law_enforcement | emergency_service | government_ministry | development_authority | environmental_authority",
+    "parent_ministry": "Ministry that supervises this entity",
+    "facts": [
+      {
+        "fact_id": "ENTITY_ID-F001",
+        "fact_type": "legal_responsibility | operational_contact | service_area | complaint_process | deadline_or_sla | emergency_instruction | uncertain_or_needs_human_review",
+        "value": "The actual fact content",
+        "confidence": "high | medium | low | blocked",
+        "source_ids": ["SRC-XXX"],
+        "notes": "Optional annotation or discrepancy note",
+        "human_review_required": false,
+        "human_review_reason": null
+      }
+    ],
+    "routing_summary": {
+      "primary_for_sectors": ["SECTOR_A"],
+      "secondary_for_sectors": ["SECTOR_B"],
+      "hitl_always_required": false,
+      "hitl_conditions": ["condition that triggers human review"]
+    },
+    "sources": ["SRC-XXX"],
+    "overall_confidence": "high | medium | low",
+    "last_reviewed": "YYYY-MM-DD"
+  }
+}

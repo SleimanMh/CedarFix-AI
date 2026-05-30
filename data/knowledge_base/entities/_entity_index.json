@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "2026-05-24",
+    "description": "Index of all CedarFix canonical entity files in data/knowledge_base/entities/. Each entity is a separate JSON file following the schema defined in _schema_definition.json.",
+    "pipeline_note": "These files replace the monolithic lebanese_public_entities_ground_truth.json as the authoritative source. The ground truth JSON is kept for legacy reference but canonical entity files take precedence."
+  },
+  "entities": [
+    {"entity_id": "CD",    "entity_name": "Lebanese Civil Defense",               "file": "CD.json",    "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "ISF",   "entity_name": "Internal Security Forces",             "file": "ISF.json",   "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "MUN",   "entity_name": "Lebanese Municipalities",              "file": "MUN.json",   "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "MPWT",  "entity_name": "Ministry of Public Works and Transport","file": "MPWT.json",  "overall_confidence": "high", "human_review_open": 2},
+    {"entity_id": "CDR",   "entity_name": "Council for Development and Reconstruction","file": "CDR.json","overall_confidence": "high", "human_review_open": 1},
+    {"entity_id": "EDL",   "entity_name": "Electricité du Liban",                 "file": "EDL.json",   "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "OGERO", "entity_name": "Ogero Telecom",                        "file": "OGERO.json", "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "BMLWE", "entity_name": "Beirut and Mount Lebanon Water Establishment","file": "BMLWE.json","overall_confidence": "high","human_review_open": 0},
+    {"entity_id": "NLWE",  "entity_name": "North Lebanon Water Establishment",    "file": "NLWE.json",  "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "SLWE",  "entity_name": "South Lebanon Water Establishment",    "file": "SLWE.json",  "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "BWE",   "entity_name": "Bekaa Water Establishment",            "file": "BWE.json",   "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "MEW",   "entity_name": "Ministry of Energy and Water",         "file": "MEW.json",   "overall_confidence": "high", "human_review_open": 0},
+    {"entity_id": "MOE",   "entity_name": "Ministry of Environment",              "file": "MOE.json",   "overall_confidence": "high", "human_review_open": 1}
+  ],
+  "sector_to_primary_entity": {
+    "ROADS_local":       {"primary": "MUN",   "secondary": [],       "hitl": false},
+    "ROADS_national":    {"primary": "MPWT",  "secondary": ["CDR"],  "hitl": true,  "note": "CDR only if active CDR worksite"},
+    "ROADS_worksite":    {"primary": "CDR",   "secondary": ["MPWT"], "hitl": true},
+    "WASTE_regular":     {"primary": "MUN",   "secondary": [],       "hitl": false},
+    "WASTE_hazardous":   {"primary": "MOE",   "secondary": ["MUN", "ISF"], "hitl": true},
+    "WATER_beirut_ml":   {"primary": "BMLWE", "secondary": [],       "hitl": false},
+    "WATER_north":       {"primary": "NLWE",  "secondary": [],       "hitl": false},
+    "WATER_south":       {"primary": "SLWE",  "secondary": [],       "hitl": false},
+    "WATER_bekaa":       {"primary": "BWE",   "secondary": [],       "hitl": false},
+    "WATER_contamination":{"primary": "HITL", "secondary": [],       "hitl": true},
+    "WATER_private":     {"primary": "HITL",  "secondary": [],       "hitl": true},
+    "TELECOM_fixed":     {"primary": "OGERO", "secondary": [],       "hitl": false},
+    "TELECOM_mobile":    {"primary": "HITL",  "secondary": ["MOT"],  "hitl": true},
+    "ELECTRICITY_grid":  {"primary": "EDL",   "secondary": ["MEW"],  "hitl": true,  "note": "Always HITL to distinguish grid vs generator"},
+    "ELECTRICITY_emergency":{"primary": "CD", "secondary": ["EDL"],  "hitl": true},
+    "FLOODING_rescue":   {"primary": "CD",    "secondary": ["MUN"],  "hitl": true},
+    "FLOODING_drain":    {"primary": "MUN",   "secondary": ["MPWT"], "hitl": false},
+    "SAFETY_structural": {"primary": "CD",    "secondary": ["MUN","ISF"], "hitl": true},
+    "SAFETY_armed":      {"primary": "ISF",   "secondary": ["CD"],   "hitl": true}
+  }
+}

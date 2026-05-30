@@ -1,0 +1,85 @@
+{
+  "entity_id": "CDR",
+  "entity_name": "Council for Development and Reconstruction (مجلس الإنماء والإعمار)",
+  "entity_type": "development_authority",
+  "parent_ministry": "Office of the Prime Minister",
+  "facts": [
+    {
+      "fact_id": "CDR-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Plans, supervises, and executes major infrastructure projects on behalf of the Lebanese Government. Mandate: post-war reconstruction and large-scale infrastructure.",
+      "confidence": "high",
+      "source_ids": ["SRC-005", "SRC-013", "SRC-017"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CDR-F002",
+      "fact_type": "legal_responsibility",
+      "value": "PRIMARY responsible entity ONLY when complaint is located inside or directly caused by an ACTIVE CDR construction worksite.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-019 explicitly tests this: CDR is primary only for active CDR worksites. CDR is NOT default primary for national roads (MPWT is).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CDR-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT the default routing entity for generic national road potholes or highway defects — MPWT handles those.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CDR-F004",
+      "fact_type": "service_area",
+      "value": "Nationwide for major projects. Historically oversaw downtown Beirut (Solidere), Ring Road, motorways, municipal infrastructure projects. Active project map changes over time.",
+      "confidence": "medium",
+      "source_ids": ["SRC-005", "SRC-017"],
+      "human_review_required": true,
+      "human_review_reason": "Active CDR project list changes. CedarFix must have a dynamic project boundary map to correctly identify CDR jurisdiction. Static reference insufficient."
+    },
+    {
+      "fact_id": "CDR-F005",
+      "fact_type": "operational_contact",
+      "value": "Website: cdr.gov.lb. CDR publishes project-specific grievance mechanisms for some active projects, including Roads and Employment Project phone 01980096 ext.317 / GRM.REP@cdr.gov.lb and Lake Qaraoun GRM phone 01980096/7 ext.149. Use only when the complaint is tied to an active CDR project/worksite.",
+      "confidence": "high",
+      "source_ids": ["SRC-005", "SRC-048", "SRC-049"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CDR-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Project GRM deadlines are project-specific. Road ESMPs describe Level 1 contractor/site handling within one week, Level 2 PIU social specialist within two weeks, and Level 3 PIU director within two weeks. No universal CDR SLA for non-project citizen complaints.",
+      "confidence": "medium",
+      "source_ids": ["SRC-048", "SRC-050"],
+      "notes": "Use these deadlines only for the matching CDR project GRM. Life-safety hazards still require same-day HITL and emergency routing.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CDR-F007",
+      "fact_type": "complaint_process",
+      "value": "For an active CDR road/worksite complaint, collect project name/location, route first to the site engineer or contractor channel if published, escalate to PIU social specialist if unresolved, then to PIU director or registered official letter at CDR. Track complaint level, due date, status, and final action taken.",
+      "confidence": "high",
+      "source_ids": ["SRC-048", "SRC-050"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["ROADS (active CDR worksite only)"],
+    "secondary_for_sectors": ["ROADS (escalation if MPWT fails and CDR project suspected)"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "Worksite attribution must be verified before routing to CDR",
+      "If life-safety hazard inside worksite: Civil Defense also required"
+    ]
+  },
+  "sources": ["SRC-005", "SRC-013", "SRC-017", "SRC-022", "SRC-048", "SRC-049", "SRC-050"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

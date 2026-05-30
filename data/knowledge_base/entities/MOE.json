@@ -1,0 +1,67 @@
+{
+  "entity_id": "MOE",
+  "entity_name": "Ministry of Environment (وزارة البيئة)",
+  "entity_type": "government_ministry",
+  "parent_ministry": "self (ministry)",
+  "facts": [
+    {
+      "fact_id": "MOE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Regulates and enforces environmental law. Primary entity for hazardous waste, illegal dumping of toxic/medical materials, and environmental pollution incidents.",
+      "confidence": "high",
+      "source_ids": ["SRC-009", "SRC-020"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MOE-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for regular municipal solid waste — that is the municipality's scope. MOE handles hazardous, medical, industrial, or toxic waste.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-005 distinguishes hazardous medical waste (MOE + HITL) from regular garbage (MUN).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MOE-F003",
+      "fact_type": "operational_contact",
+      "value": "Official environmental complaint channels: submit a dated/signed complaint through MoE official channels, call hotline 1789, fax 01 976535, or email complaints@moe.gov.lb.",
+      "confidence": "high",
+      "source_ids": ["SRC-009", "SRC-037"],
+      "notes": "Verified 2026-05-24 on the official MoE environmental complaints page. Hazardous/medical waste still requires HITL because of public-health and legal-risk assessment, not because the contact channel is unknown.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MOE-F004",
+      "fact_type": "service_area",
+      "value": "Nationwide. Cross-sector authority for environmental compliance.",
+      "confidence": "high",
+      "source_ids": ["SRC-009"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MOE-F005",
+      "fact_type": "deadline_or_sla",
+      "value": "No published SLA. HITL always required for environmental/hazardous waste routing. CedarFix classifies these as escalated.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["WASTE (hazardous, medical, toxic, industrial)"],
+    "secondary_for_sectors": ["WASTE (escalation of unresolved municipal dumping with environmental risk)"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All hazardous/medical waste routing requires HITL because of public-health and evidence-risk assessment",
+      "Use official MoE complaint channels only after confirming issue is environmental/hazardous, not regular municipal waste"
+    ]
+  },
+  "sources": ["SRC-009", "SRC-020", "SRC-022", "SRC-037"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

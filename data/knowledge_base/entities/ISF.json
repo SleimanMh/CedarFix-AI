@@ -1,0 +1,75 @@
+{
+  "entity_id": "ISF",
+  "entity_name": "Internal Security Forces (قوى الأمن الداخلي)",
+  "entity_type": "law_enforcement",
+  "parent_ministry": "Ministry of Interior and Municipalities",
+  "facts": [
+    {
+      "fact_id": "ISF-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Law enforcement, public order, crime investigation, and traffic regulation across Lebanon.",
+      "confidence": "high",
+      "source_ids": ["SRC-002"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F002",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency/police hotline: 112. Official contact page also lists headquarters phones 01/422000 and 01/425250, email isf@isf.gov.lb, and service number 1745.",
+      "confidence": "high",
+      "source_ids": ["SRC-002", "SRC-030"],
+      "notes": "Verified on official ISF contact page on 2026-05-24. Do not treat 999 as primary without a current official source.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for civic infrastructure (roads, water, waste). Public safety threats, armed persons, criminal activity are ISF scope.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F004",
+      "fact_type": "complaint_process",
+      "value": "Call 112 for emergencies. ISF commissariats handle non-emergency reports. ISF Information Department receives confidential complaints/tips through intelligence@isfid.gov.lb and free hotline 1788. Cybercrime/online blackmail can be reported to 01 293293 or the ISF Anonymous Complaints form. HITL always required when CedarFix routes to ISF.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-059", "SRC-060"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F005",
+      "fact_type": "service_area",
+      "value": "Nationwide. Organized by commissariat regions across all governorates.",
+      "confidence": "high",
+      "source_ids": ["SRC-002"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Immediate dispatch for criminal/armed threats. No published SLA for non-emergency complaints.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["SAFETY (armed threat, criminal activity)"],
+    "secondary_for_sectors": ["FLOODING (scene control if needed)", "SAFETY (structural — scene perimeter)"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All ISF routing requires HITL — never auto-route criminal/safety matters",
+      "Civil Defense also involved if injuries/rescues required alongside ISF scene"
+    ]
+  },
+  "sources": ["SRC-002", "SRC-022", "SRC-030", "SRC-059", "SRC-060", "SRC-061"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

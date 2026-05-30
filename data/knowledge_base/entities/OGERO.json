@@ -1,0 +1,95 @@
+{
+  "entity_id": "OGERO",
+  "entity_name": "Ogero Telecom (Office of Gestion et d'Exploitation du Réseau de Télécommunications)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Telecommunications",
+  "facts": [
+    {
+      "fact_id": "OGERO-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Owns and operates Lebanon's fixed-line telephone network and DSL internet infrastructure.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-015"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Manages submarine cable landing points (I-ME-WE, etc.) for Lebanon's international internet connectivity.",
+      "confidence": "high",
+      "source_ids": ["SRC-015"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for mobile network outages. Mobile operators (Touch, Alfa) are under MOT supervision and are separate entities.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-088", "SRC-089", "SRC-090"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F004",
+      "fact_type": "operational_contact",
+      "value": "Customer care hotline: 1515. Customer care is available every day from 8:00 AM until 10:00 PM. Main office: Beirut, Bir Hasan, Ziad Rahbani Avenue; phone +961 1 840000; email ThePeople@ogero.gov.lb.",
+      "confidence": "high",
+      "source_ids": ["SRC-003"],
+      "notes": "Verified on official Ogero contact page on 2026-05-24. Earlier internal draft value 1441 is rejected for Ogero customer care.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F005",
+      "fact_type": "operational_contact",
+      "value": "Online portal: ogero.gov.lb. Complaint submission and service request available online.",
+      "confidence": "high",
+      "source_ids": ["SRC-003"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F006",
+      "fact_type": "service_area",
+      "value": "Nationwide fixed-line and DSL coverage. Mobile networks are NOT Ogero's scope.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-015"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "Official fault repair window for DSL/fixed line: 3 working days (per Ogero FAQ).",
+      "confidence": "high",
+      "source_ids": ["SRC-024"],
+      "notes": "Verified on official Ogero FAQ on 2026-05-24. FAQ instructs users to contact customer care channels if the landline/DSL issue is not fixed within 3 working days.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F008",
+      "fact_type": "complaint_process",
+      "value": "Customer submits fault report via hotline or ogero.gov.lb portal. Ogero dispatches technician. Escalate to MEW/MOT only if systemic infrastructure failure.",
+      "confidence": "medium",
+      "source_ids": ["SRC-003", "SRC-015"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["TELECOM (fixed DSL and fixed telephone)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Mobile network complaint (route to HITL, not Ogero)",
+      "Unclear whether complaint is fixed or mobile",
+      "National or multi-governorate outage"
+    ]
+  },
+  "sources": ["SRC-003", "SRC-015", "SRC-022", "SRC-024", "SRC-088", "SRC-089", "SRC-090"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

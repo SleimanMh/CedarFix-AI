@@ -1,0 +1,102 @@
+{
+  "entity_id": "MUN",
+  "entity_name": "Lebanese Municipalities (البلديات اللبنانية)",
+  "entity_type": "municipality",
+  "parent_ministry": "Ministry of Interior and Municipalities",
+  "facts": [
+    {
+      "fact_id": "MUN-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Local road maintenance for streets within municipal boundaries.",
+      "confidence": "high",
+      "source_ids": ["SRC-010", "SRC-020"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Solid waste collection and disposal within municipal jurisdiction.",
+      "confidence": "high",
+      "source_ids": ["SRC-010"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F003",
+      "fact_type": "legal_responsibility",
+      "value": "Street lighting on local roads, local parks, public spaces management.",
+      "confidence": "high",
+      "source_ids": ["SRC-010"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F004",
+      "fact_type": "legal_responsibility",
+      "value": "Building permits, local drainage maintenance, minor local flooding (non-emergency blocked drains).",
+      "confidence": "high",
+      "source_ids": ["SRC-010"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F005",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for national roads, highways, autostrads — those belong to MPWT. Boundary is local/residential street vs state road.",
+      "confidence": "high",
+      "source_ids": ["SRC-010", "SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F006",
+      "fact_type": "service_area",
+      "value": "963 municipalities across Lebanon, organized by district and governed by Law 118/1977. Each municipality has defined geographical boundaries.",
+      "confidence": "high",
+      "source_ids": ["SRC-010", "SRC-018"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F007",
+      "fact_type": "operational_contact",
+      "value": "No national hotline. Each municipality has its own council and contact. Lookup via CedarFix GPS→district→municipality map.",
+      "confidence": "high",
+      "source_ids": ["SRC-007", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F008",
+      "fact_type": "deadline_or_sla",
+      "value": "No nationally mandated SLA. CedarFix operational targets: potholes 48-96h, waste 24-48h, drainage 24-48h.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-001 deadline_basis='CedarFix operational target, not legal SLA'. No legal SLA exists at national level for municipalities.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MUN-F009",
+      "fact_type": "complaint_process",
+      "value": "CedarFix routes to municipality based on GPS coordinates → district lookup. Citizen may also visit municipal council in person. Some municipalities/platforms expose digital complaint/report workflows through official forms or apps such as Zahle, Abbassieh, Baladi Map, Baldati, Baladiat, Mwakaba, and local apps like Kab Elias; coverage is not universal and each workflow must be verified per municipality.",
+      "confidence": "high",
+      "source_ids": ["SRC-020", "SRC-021", "SRC-038", "SRC-046", "SRC-047", "SRC-065", "SRC-066", "SRC-067", "SRC-068"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["ROADS (local streets)", "WASTE (regular solid waste)", "FLOODING (non-emergency drain)"],
+    "secondary_for_sectors": ["SAFETY (building permit enforcement)", "FLOODING (after-event drainage)"],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "GPS lookup returns ambiguous or unmatched district",
+      "Complaint is on boundary between national and local road"
+    ]
+  },
+  "sources": ["SRC-007", "SRC-010", "SRC-018", "SRC-020", "SRC-021", "SRC-022", "SRC-038", "SRC-046", "SRC-047", "SRC-065", "SRC-066", "SRC-067", "SRC-068"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

@@ -1,0 +1,65 @@
+{
+  "entity_id": "NLWE",
+  "entity_name": "North Lebanon Water Establishment (مصلحة مياه لبنان الشمالي)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "NLWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of water for North Lebanon and Akkar governorates.",
+      "confidence": "high",
+      "source_ids": ["SRC-011"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F002",
+      "fact_type": "service_area",
+      "value": "Governorates covered: North Lebanon, Akkar. HQ in Tripoli.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F003",
+      "fact_type": "operational_contact",
+      "value": "Main office: Tripoli - Salahuddine Kabbara Street, Dam w Farz. Email: comms@eeln.gov.lb. Phone: 06/430075. Branch contacts include Kobayat 06/350341, Halba 06/690095, Menieh 06/460726, Dinniyeh 06/491146, Batroun 06/642020, Koura 06/651012, Zgharta 06/660347, and Bsharri 06/672260.",
+      "confidence": "high",
+      "source_ids": ["SRC-026"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F004",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing — only public supply network.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F005",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["WATER (North Lebanon, Akkar)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports require HITL",
+      "Private vs public water supply ambiguity"
+    ]
+  },
+  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-026"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

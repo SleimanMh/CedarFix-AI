@@ -1,0 +1,75 @@
+{
+  "entity_id": "BMLWE",
+  "entity_name": "Beirut and Mount Lebanon Water Establishment (مصلحة مياه بيروت وجبل لبنان)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "BMLWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of potable and non-potable water for Beirut and Mount Lebanon governorates.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-020"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BMLWE-F002",
+      "fact_type": "service_area",
+      "value": "Governorates covered: Beirut, Mount Lebanon, Keserwan-Jbeil (per Law 221/2000). Does NOT cover North, South, Bekaa, Nabatieh.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BMLWE-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing, internal water pipes, or rooftop tanks and pumps. Only responsible for the public supply network.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-020 explicitly tests public vs private water distinction.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BMLWE-F004",
+      "fact_type": "operational_contact",
+      "value": "Hotline: 1713. Head office: Beirut - Badaro - Sami Soloh Street, EBML Building. Email: info@ebml.gov.lb. Phone: +961 1 386760/1/2. Official departments listed for Beirut North, Beirut South, Coast of Metn, Metn, Baabda, Aley, Jbeil, and Keserwan.",
+      "confidence": "high",
+      "source_ids": ["SRC-023"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BMLWE-F005",
+      "fact_type": "complaint_process",
+      "value": "Citizen calls BMLWE regional office for water supply issues. CedarFix routes to BMLWE based on GPS→governorate lookup.",
+      "confidence": "medium",
+      "source_ids": ["SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BMLWE-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["WATER (Beirut, Mount Lebanon, Keserwan-Jbeil)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports always require HITL",
+      "GPS returns ambiguous boundary with NLWE coverage"
+    ]
+  },
+  "sources": ["SRC-011", "SRC-020", "SRC-021", "SRC-022", "SRC-023"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

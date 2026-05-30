@@ -1,0 +1,57 @@
+{
+  "entity_id": "MEW",
+  "entity_name": "Ministry of Energy and Water (وزارة الطاقة والمياه)",
+  "entity_type": "government_ministry",
+  "parent_ministry": "self (ministry)",
+  "facts": [
+    {
+      "fact_id": "MEW-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Policy oversight and regulation of the electricity sector (supervises EDL) and the water sector (supervises 4 Regional Water Establishments).",
+      "confidence": "high",
+      "source_ids": ["SRC-008"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MEW-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT a direct service delivery entity for citizens. Citizens should contact EDL (electricity) or their Regional Water Establishment directly.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-014 lists MEW as 'escalation only'. Not a first-contact entity.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MEW-F003",
+      "fact_type": "complaint_process",
+      "value": "Escalation path: EDL/RWE → MEW if systemic policy failure. LibanPost Office of Citizens Complaints accepts free complaints against Ministry of Energy and Water staff who fail to deliver proper service and transfers them to the relevant authority. Not a first-contact channel for ordinary water/electricity outages.",
+      "confidence": "high",
+      "source_ids": ["SRC-008", "SRC-022", "SRC-064"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MEW-F004",
+      "fact_type": "operational_contact",
+      "value": "Website: energy.gov.lb.",
+      "confidence": "high",
+      "source_ids": ["SRC-008"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [],
+    "secondary_for_sectors": ["ELECTRICITY (escalation)", "WATER (escalation)"],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "Never auto-route to MEW — this is escalation only",
+      "Only involve MEW if EDL or water authority escalation pathway is exhausted"
+    ]
+  },
+  "sources": ["SRC-008", "SRC-022", "SRC-064"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

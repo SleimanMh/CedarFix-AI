@@ -1,0 +1,65 @@
+{
+  "entity_id": "BWE",
+  "entity_name": "Bekaa Water Establishment (مصلحة مياه البقاع)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "BWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of water for Bekaa and Baalbek-Hermel governorates.",
+      "confidence": "high",
+      "source_ids": ["SRC-011"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F002",
+      "fact_type": "service_area",
+      "value": "Governorates covered: Bekaa, Baalbek-Hermel. HQ in Zahleh.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F003",
+      "fact_type": "operational_contact",
+      "value": "Main office: Zahle Highway, Abed Deyem Building, Floors 3 and 4. Email: info@bwe.gov.lb. Phone: 08/814500. Branch contacts include Zahle 08/820236, Baalbek 08/370335, Stations-YOYO 08/811389, and South Bekaa/Joub Jannine 08/663414.",
+      "confidence": "high",
+      "source_ids": ["SRC-028"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F004",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing — only public supply network.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F005",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["WATER (Bekaa, Baalbek-Hermel)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports require HITL",
+      "Private vs public water supply ambiguity"
+    ]
+  },
+  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-028"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}

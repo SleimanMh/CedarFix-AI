@@ -1,0 +1,66 @@
+{
+  "entity_id": "SLWE",
+  "entity_name": "South Lebanon Water Establishment (مصلحة مياه لبنان الجنوبي)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "SLWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of water for South Lebanon and Nabatieh governorates.",
+      "confidence": "high",
+      "source_ids": ["SRC-011"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "SLWE-F002",
+      "fact_type": "service_area",
+      "value": "Governorates covered: South Lebanon, Nabatieh. HQ in Sidon.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "SLWE-F003",
+      "fact_type": "operational_contact",
+      "value": "Hotline: 1785. Department contacts: Sidon 07-757000, Zahrani 07-420206, Jezzine 07-781725, Nabatieh 07-530018, Bint Jbeil 07-450006, Marjeyoun-Hasbaya 07-830016, Tyre 07-740196.",
+      "confidence": "high",
+      "source_ids": ["SRC-027"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "SLWE-F004",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing — only public supply network. Contamination reports require HITL.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-008 tests contamination scenario for SLWE (Nabatieh area).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "SLWE-F005",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": ["WATER (South Lebanon, Nabatieh)"],
+    "secondary_for_sectors": [],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports require HITL",
+      "Private vs public water supply ambiguity"
+    ]
+  },
+  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-027"],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-24"
+}
