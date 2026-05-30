@@ -138,7 +138,6 @@ python scripts/validate_arabizi_vocabulary.py
 python scripts/validate_cedarfix_corpus.py
 python scripts/validate_arabizi_oov_queue.py
 python scripts/validate_arabizi_benchmark.py
-python scripts/analyze_arabizi_oov.py --self-test
 python -m unittest discover -s scripts/tests -p "test_*.py" -v
 ```
 
@@ -159,7 +158,8 @@ python scripts/evaluate_arabizi_pair_coverage.py
 python scripts/audit_arabizi_excellence_gates.py
 python scripts/audit_cedarfix_next_phase_gates.py
 python scripts/audit_rubric_readiness.py
-python scripts/validate_stress_lab_sector_coverage.py
+python scripts/validate_arabizi_reliability.py
+python scripts/build_arabizi_v13_variant_audit.py
 ```
 
 Current readiness:
