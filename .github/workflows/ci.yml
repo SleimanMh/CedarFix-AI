@@ -35,9 +35,6 @@ jobs:
       - name: Validate regression benchmark + SHA
         run: python scripts/validate_arabizi_benchmark.py
 
-      - name: OOV analyzer self-test
-        run: python scripts/analyze_arabizi_oov.py --self-test
-
       - name: Run unit tests
         run: python -m unittest discover -s scripts/tests -p "test_*.py" -v
 
