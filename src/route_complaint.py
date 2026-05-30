@@ -336,6 +336,16 @@ def _detect_national_road(text: str) -> bool:
     return bool(_NATIONAL_ROAD_RE.search(text))
 
 
+_BILLING_REGULATORY_RE = re.compile(
+    r"\b(fattoure|fawatir|7sab|billing|bill|shakkait|shikwe|TRA|hiye2|roaming|khassam|overcharge|dispute|escalat)\b",
+    re.IGNORECASE,
+)
+
+def _detect_billing_regulatory(text: str) -> bool:
+    """True if text signals a billing dispute or escalated operator complaint (→ TRA, not OGERO)."""
+    return bool(_BILLING_REGULATORY_RE.search(text))
+
+
 # ---------------------------------------------------------------------------
 # Complaint type matching (sector → best complaint_type_id)
 # ---------------------------------------------------------------------------
@@ -568,6 +578,15 @@ def route(
         )
         if national_ct:
             ct_id = national_ct
+    # Telecom billing/regulatory override: escalated billing dispute → CT-TEL-010 (TRA)
+    if sector == "TELECOM" and _detect_billing_regulatory(complaint_text):
+        billing_ct = next(
+            (cid for cid, row in _TAXONOMY.items()
+             if row.get("complaint_type", "") == "mobile_billing_or_regulatory_complaint"),
+            None,
+        )
+        if billing_ct:
+            ct_id = billing_ct
     taxonomy_row = _TAXONOMY.get(ct_id, {}) if ct_id else {}
     result.complaint_type_id = ct_id or ""
     result.complaint_type = taxonomy_row.get("complaint_type", "")
@@ -623,7 +642,9 @@ def route(
         hitl_reasons.append(rule_hitl_reason)
 
     # Gate: no location
-    if mun_id is None and sector not in ("SAFETY",):
+    # Exceptions: SAFETY (emergency, nationwide), and national regulators that don't need location (TRA, CENTRAL_INSPECTION)
+    _location_not_needed = primary_sel in ("TRA", "CENTRAL_INSPECTION", "CDR") or sector == "SAFETY"
+    if mun_id is None and not _location_not_needed:
         hitl_required = True
         hitl_reasons.append("location_missing — cannot resolve dynamic entity")
         result.warnings.append("HITL_GATE: no location found in text")
