@@ -1,0 +1,6 @@
+channel_id,entity_id,channel_name,channel_type,endpoint,required_fields_ids,source_ids,confidence,notes
+RPW-CH-MUN-DYNAMIC,MUN,Municipality official local intake,dynamic,see_municipality_official_channels.csv,RPW-REQ-LOCATION;RPW-REQ-ASSET;RPW-REQ-PHOTO,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-ARAB-REFORM-MUNI-2025,medium_high,Use for local municipal streets sidewalks and potholes after municipality resolution.
+RPW-CH-MPWT-CONTACT,MPWT,MPWT phone and contact form,phone_online,+961-5-459980; mopw.gov.lb contact form,RPW-REQ-LOCATION;RPW-REQ-ROAD-CLASS;RPW-REQ-ASSET;RPW-REQ-DANGER,SRC-MPWT-CONTACT;SRC-MPWT-ROADS-BUILDINGS,high,Use for classified roads highways bridges and ministry road assets.
+RPW-CH-CDR-CONTACT,CDR,CDR project contact,phone_online,+961-1-980096; cdr.gov.lb contact form,RPW-REQ-LOCATION;RPW-REQ-PROJECT;RPW-REQ-PHOTO,SRC-CDR-HOME;SRC-CDR-CONTACT,high,Use only when CDR or active project owner is explicit or verified.
+RPW-CH-CD-EMERGENCY,CD,Civil Defense 125 emergency,phone,125,RPW-REQ-LOCATION;RPW-REQ-DANGER,SRC-CD-HOTLINE,high,Use first for collapse fire rescue or life-safety emergencies.
+RPW-CH-ISF-EMERGENCY,ISF,ISF 112 emergency/security,phone,112,RPW-REQ-LOCATION;RPW-REQ-DANGER,SRC-ISF-STRATEGIC;SRC-ISF-FAQ,high,Use for traffic accident public order crime or road-security emergency.

@@ -1,0 +1,5 @@
+sla_id,entity_id,service_case,public_sla,published_status,source_ids,confidence,notes
+WE-SLA-MUN-WASTE,MUN,routine_collection_or_bins,not_published,not_published,SRC-AUB-WASTE-GUIDE;SRC-MUNI-AUTONOMY-HANDBOOK,medium,No universal municipal collection response SLA is encoded.
+WE-SLA-MOE-COMPLAINT,MOE,environmental_complaint,complaint_number_and_date_published,response_time_not_published,SRC-MOE-COMPLAINTS;SRC-MOE-CONTACT,high,MOE complaint process publishes complaint number/date handling but no generic remediation SLA.
+WE-SLA-CD-EMERGENCY,CD,fire_or_hazard_emergency,emergency_dispatch,no_public_ticket_sla,SRC-CD-HOTLINE,high,Use 125 for active emergency; no cleanup SLA applies.
+WE-SLA-ISF-SECURITY,ISF,security_or_crime_related_dumping,emergency_dispatch_or_station_report,no_public_cleanup_sla,SRC-ISF-FAQ;SRC-ISF-STRATEGIC,high,Police/security reporting is separate from environmental cleanup.

@@ -1,0 +1,6 @@
+boundary_id,entity_id,not_responsible_for,responsible_entity,source_ids,confidence,notes
+WE-NRF-MOE-ROUTINE,MOE,routine_household_collection_and_street_sweeping,MUN,SRC-AUB-WASTE-GUIDE;SRC-MOE-SWM-POLICY;SRC-MUNI-AUTONOMY-HANDBOOK,medium_high,MOE is regulatory/environmental layer not daily local pickup by default.
+WE-NRF-MUN-HAZARD,MUN,sole_handling_of_hazardous_medical_chemical_or_industrial_waste,MOE,SRC-MOE-MANDATE;SRC-MOE-COMPLAINTS,high,Municipality may assist with location or containment but MOE is regulator.
+WE-NRF-CD-CLEANUP,CD,post_fire_cleanup_or_routine_waste_removal,MUN_OR_MOE,SRC-CD-HOTLINE;SRC-MOE-MANDATE,high,Civil Defense is emergency response not cleanup authority.
+WE-NRF-ISF-CLEANUP,ISF,waste_cleanup_without_crime_or_security_issue,MUN_OR_MOE,SRC-ISF-STRATEGIC;SRC-MOE-MANDATE,high,ISF only where safety crime or public order is involved.
+WE-NRF-WATER-UTILITY,MOE,potable_water_outage_or_customer_water_billing,WATER_ESTABLISHMENT_BY_LOCATION,SRC-MOE-MANDATE;SRC-MOEW-DGO,medium,Environmental pollution is separate from water utility customer service.

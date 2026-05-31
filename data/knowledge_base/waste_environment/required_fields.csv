@@ -1,0 +1,8 @@
+requirement_id,field_name,applies_to,required_level,source_ids,confidence,notes
+WE-REQ-LOCATION,exact_location_or_gps,all_waste_environment_cases,required,SRC-MOE-COMPLAINTS;SRC-MUNI-AUTONOMY-HANDBOOK;SRC-CD-HOTLINE,high,Needed for municipality routing field inspection and emergency response.
+WE-REQ-WASTE-TYPE,waste_or_pollution_type,all_waste_environment_cases,required,SRC-MOE-COMPLAINTS;SRC-AUB-WASTE-GUIDE,high,Examples include household waste medical waste chemical waste industrial smoke river discharge quarry dust or bins.
+WE-REQ-SOURCE,suspected_source_or_actor,environmental_regulatory_cases,required_for_moe,SRC-MOE-COMPLAINTS;SRC-MOE-MANDATE,medium_high,Identify factory hospital truck quarry crusher river outlet or unknown source.
+WE-REQ-DANGER,fire_smoke_spill_injury_or_immediate_danger,emergency_or_hazardous_cases,required,SRC-CD-HOTLINE;SRC-MOE-COMPLAINTS,high,Emergency danger routes first to Civil Defense.
+WE-REQ-EVIDENCE,photo_video_time_frequency,environmental_regulatory_cases,optional_but_recommended,SRC-MOE-COMPLAINTS,medium_high,Useful for MOE complaint number/date process and follow-up.
+WE-REQ-WATERWAY,river_stream_coast_or_drain_name,water_pollution_cases,required_if_known,SRC-MOE-MANDATE;SRC-MOE-COMPLAINTS,medium_high,Needed to distinguish river/coastal environmental pollution from utility water complaints.
+WE-REQ-CONTRACTOR,collector_or_contractor_if_known,routine_collection_cases,optional,SRC-AUB-WASTE-GUIDE;SRC-MOE-SWM-POLICY,medium,Local contractor/union arrangements vary and are not globally encoded.

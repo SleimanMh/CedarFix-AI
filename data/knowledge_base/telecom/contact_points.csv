@@ -1,0 +1,7 @@
+contact_id,entity_id,contact_name,channel_type,endpoint,address,hours,source_ids,confidence,notes
+TEL-CP-OGERO-1515,OGERO,Ogero customer care hotline,phone,1515,national,not_published,SRC-OGERO-CONTACT;SRC-OGERO-FAQ,high,Use for fixed-line landline DSL VDSL fiber and Ogero infrastructure faults.
+TEL-CP-OGERO-MAIN,OGERO,Ogero main office phone,phone,+961-1-840000,Beirut Bir Hasan Ziad Rahbani Avenue,office_hours_not_published,SRC-OGERO-CONTACT,high,General Ogero office/contact point.
+TEL-CP-OGERO-FORM,OGERO,Ogero contact form,online,https://ogero.gov.lb/contact.php,Beirut Bir Hasan Ziad Rahbani Avenue,not_published,SRC-OGERO-CONTACT,high,Use as fixed telecom intake/follow-up channel when available.
+TEL-CP-TRA-1739,TRA,TRA Consumer Protection Directorate hotline,phone,1739,national,not_published,SRC-TRA-COMPLAINT;SRC-TRA-MANDATE,high,Use for telecom consumer escalation after provider failure or for regulatory complaints.
+TEL-CP-TRA-FORM,TRA,TRA online complaint page,online,https://www.tra.gov.lb/Filing-complaint-with-TRA,TRA Beirut,not_published,SRC-TRA-COMPLAINT,high,Use for complaint escalation not first-line fixed technical faults.
+TEL-CP-MUN-PUBLIC-SPACE,MUN,Municipality public-space obstruction handoff,dynamic,see_municipality_official_channels.csv,varies_by_municipality,varies_by_municipality,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-ARAB-REFORM-MUNI-2025,medium,Use only as secondary handoff when telecom cable/cabinet creates a public-space obstruction.

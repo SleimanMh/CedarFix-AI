@@ -1,0 +1,9 @@
+requirement_id,entity_id,workflow_type,required_field_or_document,required_for,source_ids,confidence,notes
+TEL-REQ-OGERO-LINE,OGERO,fixed_fault_report,line_or_account_number,fixed_internet_landline_or_line_fault,SRC-OGERO-CONTACT;SRC-OGERO-FAQ,medium_high,Line or account details are operationally needed for fixed-service troubleshooting even when public form field list is not fully captured.
+TEL-REQ-OGERO-LOCATION,OGERO,infrastructure_damage_report,exact_location_or_landmark,public_cable_cabinet_or_pole_damage,SRC-OGERO-MISSION;SRC-OGERO-CONTACT,medium_high,Exact location is required for field repair dispatch.
+TEL-REQ-OGERO-CONTACT,OGERO,fixed_fault_report,callback_phone_or_email,customer_followup,SRC-OGERO-CONTACT,high,Ogero contact channels need a way to follow up.
+TEL-REQ-OGERO-DESCRIPTION,OGERO,fixed_fault_report,fault_description_and_start_time,fixed_internet_landline_or_cable_fault,SRC-OGERO-FAQ,medium,Fault details help separate line outage slow internet cabinet cable and CPE issues.
+TEL-REQ-TRA-PROVIDER,TRA,consumer_escalation,provider_name,mobile_or_fixed_regulatory_complaint,SRC-TRA-COMPLAINT,high,TRA escalation depends on provider identity.
+TEL-REQ-TRA-PRIOR-ATTEMPT,TRA,consumer_escalation,prior_provider_attempt_or_deadline_failure,provider_nonresponse_or_unsatisfactory_resolution,SRC-TRA-COMPLAINT,high,TRA page positions complaints as escalation after provider handling fails or deadlines are missed.
+TEL-REQ-TRA-EVIDENCE,TRA,consumer_escalation,bill_or_service_evidence,billing_quality_of_service_or_disconnection_dispute,SRC-TRA-COMPLAINT;SRC-TRA-MANDATE,medium_high,Attach billing or service evidence when available.
+TEL-REQ-HITL-CPE,HITL,boundary_review,confirm_private_device_router_vs_public_line,private_router_wifi_or_device_issue,SRC-OGERO-MISSION,medium,Reviewer should ask if other devices/neighbor lines are affected and whether Ogero line is down.

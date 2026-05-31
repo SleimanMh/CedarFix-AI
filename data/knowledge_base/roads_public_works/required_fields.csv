@@ -1,0 +1,8 @@
+requirement_id,field_name,applies_to,required_level,source_ids,confidence,notes
+RPW-REQ-LOCATION,exact_location_or_gps,all_roads_public_works,required,SRC-MPWT-CONTACT;SRC-CDR-CONTACT;SRC-MUNI-AUTONOMY-HANDBOOK,high,Needed to resolve municipality road class and nearby emergency response.
+RPW-REQ-MUNICIPALITY,municipality_or_nearest_landmark,local_road_or_sidewalk,required,SRC-MUNI-AUTONOMY-HANDBOOK,medium_high,Allows dynamic municipality routing and local-vs-national boundary review.
+RPW-REQ-ROAD-CLASS,road_class_or_route_name,national_or_ambiguous_road,required_for_autoroute,SRC-MPWT-ROADS-BUILDINGS;SRC-MPWT-HOME,medium_high,Ask for highway route name bridge name or whether the road is national/classified.
+RPW-REQ-ASSET,asset_type,all_roads_public_works,required,SRC-MPWT-ROADS-BUILDINGS;SRC-MUNI-AUTONOMY-HANDBOOK,medium_high,Examples include pothole sidewalk bridge guardrail sign debris snow closure or worksite.
+RPW-REQ-DANGER,immediate_danger_or_blockage,blocked_or_unsafe_road,required,SRC-CD-HOTLINE;SRC-ISF-STRATEGIC,high,Collect whether traffic is blocked people are injured collapse is active or fire/rescue is needed.
+RPW-REQ-PROJECT,project_name_owner_or_contractor,public_project_or_cdr_case,required_for_cdr,SRC-CDR-HOME;SRC-CDR-CONTACT,medium_high,CDR routing requires explicit project owner or active project/worksite evidence.
+RPW-REQ-PHOTO,photo_or_video,roads_public_works,optional,SRC-MPWT-CONTACT;SRC-CDR-CONTACT,medium,Useful evidence but not required for emergency triage.

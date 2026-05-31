@@ -1,0 +1,6 @@
+boundary_id,entity_id,not_responsible_for,responsible_entity,source_ids,confidence,notes
+RPW-NRF-MUN-NATIONAL,MUN,national_or_classified_roads_highways_bridges,MPWT,SRC-MPWT-ROADS-BUILDINGS;SRC-MUNI-AUTONOMY-HANDBOOK,medium_high,Municipality remains secondary only for local context.
+RPW-NRF-MPWT-LOCAL,MPWT,ordinary_local_neighborhood_roads_and_sidewalks,MUN,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-MPWT-ROADS-BUILDINGS,medium_high,Do not use MPWT for every pothole.
+RPW-NRF-CDR-ROUTINE,CDR,routine_road_maintenance_or_day_to_day_local_service,MUN_OR_MPWT,SRC-CDR-HOME;SRC-CDR-CONTACT,high,CDR requires project-owner evidence.
+RPW-NRF-CD-FOLLOWUP,CD,post_emergency_repair_or_road_maintenance,MUN_OR_MPWT,SRC-CD-HOTLINE;SRC-MPWT-ROADS-BUILDINGS,high,Civil Defense handles emergency response not ordinary repairs.
+RPW-NRF-ISF-INFRA,ISF,road_infrastructure_repair_without_security_or_accident_issue,MUN_OR_MPWT,SRC-ISF-STRATEGIC;SRC-MPWT-ROADS-BUILDINGS,high,Use ISF for traffic accident crime or public-order emergency.

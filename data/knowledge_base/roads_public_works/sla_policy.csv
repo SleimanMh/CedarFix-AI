@@ -1,0 +1,5 @@
+sla_id,entity_id,service_case,public_sla,published_status,source_ids,confidence,notes
+RPW-SLA-MUN-LOCAL,MUN,local_road_or_sidewalk_repair,not_published,not_published,SRC-MUNI-AUTONOMY-HANDBOOK,medium,No national generic municipal repair SLA is encoded.
+RPW-SLA-MPWT-ROADS,MPWT,national_road_or_bridge_complaint,not_published,not_published,SRC-MPWT-CONTACT;SRC-MPWT-ROADS-BUILDINGS,medium_high,Use contact evidence but do not promise a response time.
+RPW-SLA-CDR-PROJECT,CDR,project_owner_complaint,not_published,not_published,SRC-CDR-CONTACT;SRC-CDR-HOME,medium_high,Project-specific grievance mechanisms may exist but are not generalized here.
+RPW-SLA-CD-EMERGENCY,CD,emergency_fire_rescue_collapse_response,emergency_dispatch,no_public_ticket_sla,SRC-CD-HOTLINE,high,Call 125 for immediate danger; no public repair SLA applies.

@@ -1,0 +1,6 @@
+channel_id,entity_id,channel_name,channel_type,endpoint,required_fields_ids,source_ids,confidence,notes
+WE-CH-MUN-DYNAMIC,MUN,Municipality local waste intake,dynamic,see_municipality_official_channels.csv,WE-REQ-LOCATION;WE-REQ-WASTE-TYPE;WE-REQ-PHOTO,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-AUB-WASTE-GUIDE,medium_high,Routine collection and local cleanliness start here after municipality resolution.
+WE-CH-MOE-HOTLINE,MOE,MOE complaint hotline,phone,1789,WE-REQ-LOCATION;WE-REQ-WASTE-TYPE;WE-REQ-SOURCE;WE-REQ-EVIDENCE,SRC-MOE-CONTACT;SRC-MOE-COMPLAINTS,high,Use for environmental regulatory complaints and hazardous cases.
+WE-CH-MOE-EMAIL,MOE,MOE environmental complaint email,email,complaints@moe.gov.lb,WE-REQ-LOCATION;WE-REQ-WASTE-TYPE;WE-REQ-SOURCE;WE-REQ-EVIDENCE,SRC-MOE-CONTACT;SRC-MOE-COMPLAINTS,high,Ask for complaint number/date after filing.
+WE-CH-CD-EMERGENCY,CD,Civil Defense emergency,phone,125,WE-REQ-LOCATION;WE-REQ-DANGER,SRC-CD-HOTLINE,high,Use first for fire chemical hazard rescue or immediate life safety.
+WE-CH-ISF-EMERGENCY,ISF,ISF emergency/security,phone,112,WE-REQ-LOCATION;WE-REQ-DANGER,SRC-ISF-STRATEGIC;SRC-ISF-FAQ,high,Use for crime public order or traffic/security risk.

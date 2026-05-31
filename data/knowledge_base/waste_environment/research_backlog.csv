@@ -1,0 +1,5 @@
+task_id,topic,priority,status,source_ids,notes
+WE-RB-001,municipal waste contractor and union coverage map,high,open,SRC-AUB-WASTE-GUIDE;SRC-DGLAC-MUNI-DIR,Needed to route shared-service or contractor-specific waste complaints.
+WE-RB-002,MOE complaint form field scrape and current hotline verification,high,open,SRC-MOE-COMPLAINTS;SRC-MOE-CONTACT,Deepen channel fields beyond source-backed summary.
+WE-RB-003,official hazardous waste process by category,medium,open,SRC-MOE-MANDATE;SRC-MOE-SWM-POLICY,Needed to distinguish medical chemical industrial and household hazardous waste workflows.
+WE-RB-004,quarry/crusher permit and enforcement registry,medium,open,SRC-MOEW-DGO;SRC-MOE-MANDATE,Would reduce HITL for quarry owner and licensing boundary.

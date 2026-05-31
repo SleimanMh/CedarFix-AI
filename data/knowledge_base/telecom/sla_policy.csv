@@ -1,0 +1,5 @@
+sla_id,entity_id,complaint_type,official_sla,restoration_time_policy,emergency_policy,source_ids,confidence,notes
+TEL-SLA-OGERO-FIXED,OGERO,fixed_internet_or_landline_fault,not_published,do_not_promise_repair_time,call_emergency_services_if_immediate_public_danger,SRC-OGERO-FAQ;SRC-OGERO-CONTACT,medium,No generic fixed-service restoration SLA should be promised from the captured sources.
+TEL-SLA-OGERO-INFRA,OGERO,public_cable_or_cabinet_damage,not_published,do_not_promise_repair_time,call_112_or_125_if_immediate_life_safety_danger,SRC-OGERO-MISSION;SRC-OGERO-CONTACT,medium,Field repair timing depends on dispatch and asset state.
+TEL-SLA-TRA-CONSUMER,TRA,consumer_or_regulatory_escalation,provider_deadline_or_unsatisfactory_resolution_required,do_not_promise_TRA_resolution_time,not_for_emergency_dispatch,SRC-TRA-COMPLAINT,medium_high,TRA complaint process is escalation after provider handling failure or missed deadlines. Exact resolution SLA not captured.
+TEL-SLA-MOBILE,MOBILE_OPERATOR,mobile_network_outage,varies_by_operator,do_not_promise_restoration_time,not_for_emergency_dispatch,SRC-TRA-MANDATE,medium,Operator-specific channels and SLAs are backlog items.
