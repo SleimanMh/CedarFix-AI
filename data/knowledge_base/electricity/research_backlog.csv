@@ -1,0 +1,8 @@
+task_id,entity_id,missing_item,target_url_or_query,priority,status,last_checked,notes
+ELEC-RB-001,EDL,official_contact_or_fault_page_fields,site:edl.gov.lb 1444 complaint outage meter fault,high,open,2026-05-31,EDL HTTPS certificate mismatch and static fetch failures blocked direct extraction of current contact/fault form fields. HTTP portal is reachable.
+ELEC-RB-002,EDL,public_reference_number_policy,EDL 1444 complaint reference number,medium,open,2026-05-31,No public ticket/reference policy captured for EDL reports.
+ELEC-RB-003,EDZ,post_validation_complaint_fields,https://www.edz.com.lb/Services/File_a_Complaint,medium,partial,2026-05-31,Official page exposes meter serial and subscription number before validation. Fields after validation and reference behavior remain account-gated.
+ELEC-RB-004,EDZ,exact_concession_municipality_list,EDZ 15 surrounding regions municipalities,high,open,2026-05-31,EDZ about page states Zahle and 15 surrounding regions. Need exact municipality list before EDZ geofence goes beyond current service map.
+ELEC-RB-005,ALL,private_generator_regulatory_handling,private generator complaints Lebanon municipality MEW tariff enforcement,high,open,2026-05-31,Generator faults and billing disputes should stay HITL until official local or regulatory path is verified.
+ELEC-RB-006,MUN,streetlight_per_municipality_channels,municipality_official_channels streetlight complaint Lebanon,medium,open,2026-05-31,Streetlight intake varies by municipality. Use municipality channel discovery rather than inventing a national channel.
+ELEC-RB-007,ALL,official_restoration_slas,EDL EDZ outage restoration SLA Lebanon,medium,open,2026-05-31,No official generic restoration SLA captured. Keep do-not-promise policy.
