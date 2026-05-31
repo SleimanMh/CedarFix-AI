@@ -162,8 +162,9 @@ class ModalAlignmentComputer:
             score=alignment_score,
             types_compatible=types_compatible,
             types_match=types_match,
+            types_adjacent=types_adjacent,
             image_type=image_issue_type,
-            cap_at_uncertain=used_fallback,   # fallback path never asserts SUPPORTS/CONTRADICTS
+            cap_at_uncertain=used_fallback,
         )
 
         if used_fallback and conflict_reason is None:
@@ -213,6 +214,7 @@ def _classify_alignment(
     score: float,
     types_compatible: bool,
     types_match: bool,
+    types_adjacent: bool,
     image_type,
     cap_at_uncertain: bool,
 ) -> tuple:
@@ -233,26 +235,28 @@ def _classify_alignment(
         # Fallback path: acknowledge the image is present but don't assert alignment.
         return AlignmentStatus.UNCERTAIN, False, None
 
-    if score >= _SUPPORT_THRESHOLD and types_compatible:
+    # Type match is the primary signal — CLIP cosine on raw complaint text is
+    # unreliable because CLIP was trained on image captions, not complaint prose.
+    if types_match:
         return AlignmentStatus.SUPPORTS, False, None
 
-    if score >= _SUPPORT_THRESHOLD and not types_compatible:
+    if types_adjacent:
+        return AlignmentStatus.UNCERTAIN, False, None
+
+    # Types differ — use cosine as secondary evidence.
+    if score >= _SUPPORT_THRESHOLD:
+        # High visual similarity but different types — flag as unrelated
         conflict_detected = True
         conflict_reason = (
             f"CLIP similarity is high ({score:.2f}) but issue types differ: "
-            f"text={None}, image={image_type}"
+            f"image={image_type}"
         )
         return AlignmentStatus.UNRELATED, conflict_detected, conflict_reason
 
-    if score < _CONTRADICT_THRESHOLD and not types_match:
+    if score < _CONTRADICT_THRESHOLD:
         conflict_detected = True
-        conflict_reason = (
-            f"Low CLIP similarity ({score:.2f}) and mismatched types."
-        )
+        conflict_reason = f"Low CLIP similarity ({score:.2f}) and mismatched types."
         return AlignmentStatus.CONTRADICTS, conflict_detected, conflict_reason
-
-    if score < _CONTRADICT_THRESHOLD and types_match:
-        return AlignmentStatus.UNRELATED, False, "Image appears unrelated despite matching type."
 
     return AlignmentStatus.UNCERTAIN, False, None
 

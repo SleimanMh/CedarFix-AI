@@ -122,3 +122,141 @@ async def resolve_human_review_item(item_id: int, resolution_notes: str, admin_i
             {"id": item_id, "notes": resolution_notes, "admin_id": admin_id},
         )
         session.commit()
+
+
+# ---------------------------------------------------------------------------
+# Retraining Store
+# ---------------------------------------------------------------------------
+
+import json as _json
+from typing import List
+
+
+def get_retraining_queue(
+    pending_only: bool = True,
+    rag_no_match_only: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    filters = []
+    if pending_only:
+        filters.append("admin_reviewed = FALSE")
+    if rag_no_match_only:
+        filters.append("rag_no_match = TRUE")
+    where = ("WHERE " + " AND ".join(filters)) if filters else ""
+
+    with Session() as session:
+        result = session.execute(
+            text(f"""
+                SELECT id, complaint_id, created_at, complaint_text, image_filename,
+                       pipeline_status, rag_no_match, hitl_flag_reason,
+                       admin_reviewed, admin_decision, admin_notes,
+                       usable_for_finetuning, finetuning_exported
+                FROM retraining_store
+                {where}
+                ORDER BY created_at DESC
+                LIMIT :lim OFFSET :off
+            """),
+            {"lim": limit, "off": offset},
+        )
+        rows = result.mappings().all()
+        total_result = session.execute(
+            text(f"SELECT COUNT(*) FROM retraining_store {where}")
+        )
+        total = total_result.scalar() or 0
+    return {"records": [dict(r) for r in rows], "total": total}
+
+
+def get_retraining_record(complaint_id: str) -> Optional[dict]:
+    with Session() as session:
+        result = session.execute(
+            text("""
+                SELECT id, complaint_id, created_at, complaint_text, image_filename,
+                       text_classification_json, image_classification_json,
+                       rag_routing_response, pipeline_status,
+                       rag_no_match, hitl_flag_reason,
+                       admin_reviewed, admin_reviewed_at, admin_reviewed_by,
+                       admin_decision, admin_notes,
+                       corrected_text_json, corrected_image_json, corrected_rag_response,
+                       usable_for_finetuning, finetuning_exported
+                FROM retraining_store
+                WHERE complaint_id = :cid
+            """),
+            {"cid": complaint_id},
+        )
+        row = result.fetchone()
+        if not row:
+            return None
+        return dict(row._mapping)
+
+
+def save_retraining_review(
+    complaint_id: str,
+    admin_id: str,
+    admin_decision: str,
+    admin_notes: Optional[str],
+    corrected_text_json: Optional[dict],
+    corrected_image_json: Optional[dict],
+    corrected_rag_response: Optional[dict],
+) -> None:
+    usable = admin_decision == "can_be_processed"
+    with Session() as session:
+        session.execute(
+            text("""
+                UPDATE retraining_store
+                SET admin_reviewed        = TRUE,
+                    admin_reviewed_at     = NOW(),
+                    admin_reviewed_by     = :admin_id,
+                    admin_decision        = :decision,
+                    admin_notes           = :notes,
+                    corrected_text_json   = :text_json,
+                    corrected_image_json  = :image_json,
+                    corrected_rag_response = :rag_json,
+                    usable_for_finetuning = :usable
+                WHERE complaint_id = :cid
+            """),
+            {
+                "cid":      complaint_id,
+                "admin_id": admin_id,
+                "decision": admin_decision,
+                "notes":    admin_notes,
+                "text_json":  _json.dumps(corrected_text_json)  if corrected_text_json  else None,
+                "image_json": _json.dumps(corrected_image_json) if corrected_image_json else None,
+                "rag_json":   _json.dumps(corrected_rag_response) if corrected_rag_response else None,
+                "usable":   usable,
+            },
+        )
+        session.commit()
+
+
+def get_retraining_export(mark_exported: bool = False) -> dict:
+    with Session() as session:
+        result = session.execute(
+            text("""
+                SELECT id, complaint_id, created_at, complaint_text, image_filename,
+                       text_classification_json, image_classification_json,
+                       rag_routing_response, pipeline_status,
+                       rag_no_match, hitl_flag_reason,
+                       admin_reviewed_by, admin_decision, admin_notes,
+                       corrected_text_json, corrected_image_json, corrected_rag_response
+                FROM retraining_store
+                WHERE usable_for_finetuning = TRUE
+                  AND finetuning_exported   = FALSE
+                ORDER BY created_at ASC
+            """)
+        )
+        rows = result.mappings().all()
+        records = [dict(r) for r in rows]
+
+        if mark_exported and records:
+            ids = [r["id"] for r in records]
+            session.execute(
+                text(
+                    "UPDATE retraining_store SET finetuning_exported = TRUE "
+                    "WHERE id = ANY(:ids)"
+                ),
+                {"ids": ids},
+            )
+            session.commit()
+
+    return {"records": records, "total": len(records)}

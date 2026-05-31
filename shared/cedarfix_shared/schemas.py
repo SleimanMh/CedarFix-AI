@@ -31,6 +31,7 @@ class ComplaintType(str, Enum):
     ELECTRICITY = "electricity_outage"
     ROAD_DAMAGE = "road_damage"
     WATER_PIPE = "water_pipe"
+    WATER_OUTAGE = "water_outage"
     SIDEWALK = "sidewalk_damage"
     STREETLIGHT = "streetlight"
     TELECOM_OUTAGE = "telecom_outage"
@@ -249,10 +250,13 @@ class RoutingResult(BaseModel):
     secondary_confidence: float = 0.0
     routing_rationale: List[str] = []   # Tags explaining the decision
     retrieved_sources: List[str] = []   # RAG doc IDs used in decision
-    routing_source: str = "static"      # rag | rag_static_agree | rag_static_conflict | static_fallback
+    routing_source: str = "static"      # rag | rag_static_agree | rag_static_conflict | static_fallback | rag_no_match
     auto_routed: bool                    # False = flagged for human review
     requires_review: bool
     review_reason: Optional[str] = None
+    # True when RAG retrieval returned zero candidate documents for this complaint.
+    # Triggers automatic HITL and adds a retraining_store row for admin review.
+    rag_no_candidates: bool = False
     processing_ms: int
 
 
@@ -284,10 +288,10 @@ class StageConfidence(BaseModel):
 class ConfidenceBundle(BaseModel):
     text_type: StageConfidence = Field(default_factory=StageConfidence)
     text_location: StageConfidence = Field(default_factory=StageConfidence)
-    image_classification: StageConfidence = Field(default_factory=StageConfidence)
-    image_alignment: StageConfidence = Field(default_factory=StageConfidence)
-    duplicate: StageConfidence = Field(default_factory=StageConfidence)
-    routing: StageConfidence = Field(default_factory=StageConfidence)
+    image_classification: Optional[StageConfidence] = None
+    image_alignment: Optional[StageConfidence] = None
+    duplicate: Optional[StageConfidence] = None
+    routing: Optional[StageConfidence] = None
     final: float = 0.0
     weakest_stage: str = ""
     review_triggered_by: str = ""
@@ -349,6 +353,7 @@ class ComplaintDecision(BaseModel):
 
     # Raw input
     original_text: str
+    user_id: Optional[str] = None
     location: Optional[LocationInput] = None
     image_filename: Optional[str] = None
 
@@ -398,9 +403,29 @@ class MediaValidationResult(BaseModel):
     status: MediaValidationStatus
     text_is_complaint: bool
     image_has_complaint: bool
-    text_detected_type: Optional[str] = None    # issue_type from text
-    image_detected_type: Optional[str] = None   # visual_subcategory from image
-    contradiction_reason: Optional[str] = None  # human-readable explanation
+    # --- Text modality ---
+    text_detected_type: Optional[str] = None      # issue_type from text (e.g. "water_pipe")
+    text_detected_category: Optional[str] = None  # parent category from text (e.g. "water")
+    text_confidence: Optional[float] = None        # text classification confidence 0–1
+    # --- Image modality ---
+    image_detected_type: Optional[str] = None      # visual_subcategory from image (e.g. "waste_accumulation")
+    image_detected_category: Optional[str] = None  # parent category from image (e.g. "sanitation")
+    image_confidence: Optional[float] = None        # image classification confidence 0–1
+    # --- Three-dimensional semantic descriptors (text modality) ---
+    text_semantic_domain: Optional[str] = None     # transportation | utilities | environment | safety | other
+    text_physical_component: Optional[str] = None  # road_surface | water_pipe | electrical_line | drainage_system | public_space | ...
+    text_failure_mode: Optional[str] = None        # damage | outage | overflow | accumulation | blockage | other
+    # --- Three-dimensional semantic descriptors (image modality) ---
+    image_semantic_domain: Optional[str] = None
+    image_physical_component: Optional[str] = None
+    image_failure_mode: Optional[str] = None
+    # --- Overlap score: 0 = no match, 1 = domain only, 2 = domain+component, 3 = full match ---
+    modality_overlap_score: Optional[int] = None
+    # --- Reconciliation ---
+    reconciled_type: Optional[str] = None          # final issue type used for downstream pipeline
+    reconciled_source: Optional[str] = None        # "text" | "image" | "both" | "contradiction"
+    # --- Messages ---
+    contradiction_reason: Optional[str] = None     # human-readable explanation
     clarification_question: Optional[str] = None
 
 
@@ -473,6 +498,11 @@ class TextUnderstandingResult(BaseModel):
     signals: SignalsJSON = Field(default_factory=SignalsJSON)
     urgency_keywords: List[str] = []
     confidence: float = 0.0
+    # Three semantic descriptor dimensions — produced by the text LLM.
+    # Used by the orchestrator for cross-modal overlap scoring.
+    semantic_domain: Optional[str] = None     # transportation | utilities | environment | safety | other
+    physical_component: Optional[str] = None  # road_surface | sidewalk | water_pipe | electrical_line | drainage_system | public_space | street_furniture | other
+    failure_mode: Optional[str] = None        # damage | outage | overflow | accumulation | blockage | other
     text_embedding_id: str = ""   # set by IEP-3 after Qdrant storage
     text_embedding: List[float] = []
     processing_ms: int = 0
@@ -496,6 +526,10 @@ class VisualUnderstandingJSON(BaseModel):
     damage_visible: bool = False
     visual_severity: SeverityLevel = SeverityLevel.LOW
     confidence: float = 0.0
+    # Three semantic descriptor dimensions — derived from CLIP subcategory or filled by VLM.
+    semantic_domain: Optional[str] = None
+    physical_component: Optional[str] = None
+    failure_mode: Optional[str] = None
 
 
 class VLMImageAnalysis(BaseModel):
@@ -513,6 +547,10 @@ class VLMImageAnalysis(BaseModel):
     reasoning: str = ""
     vlm_alignment: Optional[str] = None   # confirms | partial | contradicts | unrelated
     vlm_alignment_confidence: float = 0.0
+    # Three semantic descriptor dimensions — produced by the VLM.
+    semantic_domain: Optional[str] = None
+    physical_component: Optional[str] = None
+    failure_mode: Optional[str] = None
 
 
 class ImageUnderstandingResult(BaseModel):
@@ -725,3 +763,53 @@ class RoutingPayload(BaseModel):
     admin_review: AdminReviewJSON = Field(default_factory=AdminReviewJSON)
     next_stage: str = "ROUTING_ENGINE"
     processing_ms: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Retraining Store — Admin Review
+# ---------------------------------------------------------------------------
+
+class RetrainingReviewRequest(BaseModel):
+    """
+    Posted by an admin to review a retraining_store record.
+
+    admin_decision options:
+      can_be_processed    – valid complaint CedarFix should handle; corrected_* should be filled
+      cannot_be_processed – valid complaint but outside current CedarFix scope
+      fake                – spam, test submission, or not a real complaint
+      unsupported         – complaint type not in taxonomy yet; keep for future expansion
+    """
+    admin_id: str
+    admin_decision: str   # can_be_processed | cannot_be_processed | fake | unsupported
+    admin_notes: Optional[str] = None
+    # Corrected pipeline outputs – required only when admin_decision = 'can_be_processed'
+    corrected_text_json: Optional[dict] = None
+    corrected_image_json: Optional[dict] = None
+    corrected_rag_response: Optional[dict] = None
+
+
+class RetrainingRecord(BaseModel):
+    """
+    A single row from retraining_store as returned by the review API.
+    """
+    id: int
+    complaint_id: str
+    created_at: datetime
+    complaint_text: str
+    image_filename: Optional[str] = None
+    text_classification_json: Optional[dict] = None
+    image_classification_json: Optional[dict] = None
+    rag_routing_response: Optional[dict] = None
+    pipeline_status: Optional[str] = None
+    rag_no_match: bool = False
+    hitl_flag_reason: Optional[str] = None
+    admin_reviewed: bool = False
+    admin_reviewed_at: Optional[datetime] = None
+    admin_reviewed_by: Optional[str] = None
+    admin_decision: Optional[str] = None
+    admin_notes: Optional[str] = None
+    corrected_text_json: Optional[dict] = None
+    corrected_image_json: Optional[dict] = None
+    corrected_rag_response: Optional[dict] = None
+    usable_for_finetuning: bool = False
+    finetuning_exported: bool = False

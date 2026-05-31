@@ -30,6 +30,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         complaint_id=complaint_id,
         status=PipelineStatus.PROCESSING,
         original_text=request.text,
+        user_id=request.user_id,
         location=request.location,
         image_filename=request.image_filename,
     )
@@ -141,6 +142,27 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         if routing_result:
             decision.assigned_entity = routing_result.primary_entity
             decision.routing_confidence = routing_result.primary_confidence
+
+            # RAG no-match: routing knowledge base has zero candidates for this complaint.
+            # Flag for HITL immediately so an admin can classify it:
+            # unsupported type, data gap, fake, or out-of-scope.
+            if routing_result.rag_no_candidates:
+                decision.status = PipelineStatus.REVIEW_REQUIRED
+                await _add_to_human_review(
+                    client, complaint_id, request,
+                    MediaValidationResult(
+                        status=MediaValidationStatus.HUMAN_REVIEW,
+                        text_is_complaint=True,
+                        image_has_complaint=bool(request.image_filename),
+                        text_detected_type=(
+                            str(decision.complaint_type)
+                            if decision.complaint_type else None
+                        ),
+                        contradiction_reason=routing_result.review_reason,
+                        clarification_question=None,
+                    ),
+                )
+
         PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
 
         # --- Confidence bundle assembly ---
@@ -149,6 +171,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
             image_result=decision.image_analysis,
             clustering_result=decision.clustering,
             routing_result=routing_result,
+            alignment_result=embedding_result.alignment if embedding_result else None,
         )
 
         # --- Stage 6: IEP-7 Explanation ---
@@ -171,6 +194,7 @@ def _build_confidence_bundle(
     image_result,
     clustering_result,
     routing_result,
+    alignment_result=None,
 ) -> ConfidenceBundle:
     """
     Assembles per-stage StageConfidence objects and computes a final
@@ -219,14 +243,15 @@ def _build_confidence_bundle(
         )
 
     # Image alignment
-    if image_result and image_result.alignment:
-        alignment = image_result.alignment
+    if alignment_result and getattr(alignment_result, "alignment_status", None):
+        alignment = str(alignment_result.alignment_status)
         ali_conf = {
-            "CONFIRMS": 0.90,
-            "RELATED": 0.72,
+            "SUPPORTS": 0.90,
             "UNCERTAIN": 0.50,
             "CONTRADICTS": 0.25,
-        }.get(str(alignment), 0.50)
+            "UNRELATED": 0.30,
+            "NO_IMAGE": 0.0,
+        }.get(alignment, 0.50)
         stages["image_alignment"] = StageConfidence(
             score=ali_conf,
             method="clip_cosine",
@@ -298,15 +323,15 @@ def _build_confidence_bundle(
             review_triggers.append("text_type")
 
     return ConfidenceBundle(
-        text_type=stages.get("text_type"),
-        text_location=stages.get("text_location"),
+        text_type=stages.get("text_type") or StageConfidence(),
+        text_location=stages.get("text_location") or StageConfidence(),
         image_classification=stages.get("image_classification"),
         image_alignment=stages.get("image_alignment"),
         duplicate=stages.get("duplicate"),
         routing=stages.get("routing"),
         final=final_conf,
-        weakest_stage=weakest,
-        review_triggered_by=review_triggers if review_triggers else None,
+        weakest_stage=weakest or "",
+        review_triggered_by=", ".join(review_triggers) if review_triggers else "",
     )
 
 
@@ -485,9 +510,33 @@ _TYPE_TO_CATEGORY: dict = {
     "electricity_outage": "electricity",
     "streetlight":        "electricity",
     "water_pipe":         "water",
+    "water_outage":       "water",
     "telecom_outage":     "telecom",
     "public_safety":      "other",
 }
+
+
+def _descriptor_overlap(
+    text_domain: str | None, text_component: str | None, text_mode: str | None,
+    image_domain: str | None, image_component: str | None, image_mode: str | None,
+) -> int:
+    """
+    Count how many of the 3 semantic dimensions (domain, physical_component, failure_mode)
+    match between text and image.  Returns 0–3.
+
+    0 = completely incompatible (strong contradiction signal)
+    1 = same broad domain only (weak agreement — trust text)
+    2 = same domain + component (good compatibility)
+    3 = full match (strong agreement)
+    """
+    score = 0
+    if text_domain and image_domain and text_domain == image_domain:
+        score += 1
+    if text_component and image_component and text_component == image_component:
+        score += 1
+    if text_mode and image_mode and text_mode == image_mode:
+        score += 1
+    return score
 
 
 def _validate_media(
@@ -502,28 +551,47 @@ def _validate_media(
     text_is_complaint = False
     text_type_str: str | None = None
     text_category: str | None = None
+    text_confidence: float | None = None
     text_service_failed = text_result is None   # IEP-1 completely unavailable
+    text_semantic_domain: str | None = None
+    text_physical_component: str | None = None
+    text_failure_mode: str | None = None
 
     if text_result:
         raw = text_result.issue_type
         text_type_str = raw.value if hasattr(raw, "value") else str(raw)
+        text_confidence = float(text_result.confidence)
         text_is_complaint = (
-            text_result.confidence >= 0.35 and text_type_str != "other"
-        ) or text_result.confidence >= 0.55
+            text_confidence >= 0.35 and text_type_str != "other"
+        ) or text_confidence >= 0.55
         text_category = _TYPE_TO_CATEGORY.get(text_type_str)
+        text_semantic_domain = getattr(text_result, "semantic_domain", None)
+        text_physical_component = getattr(text_result, "physical_component", None)
+        text_failure_mode = getattr(text_result, "failure_mode", None)
 
     # --- Assess image ---
     image_has_complaint = False
     image_type_str: str | None = None
     image_category: str | None = None
+    image_confidence: float | None = None
+    image_semantic_domain: str | None = None
+    image_physical_component: str | None = None
+    image_failure_mode: str | None = None
     has_image = image_result is not None and image_result.image_present
 
     if has_image:
         vu = image_result.visual_understanding
         iq = image_result.image_quality
+        vlm = image_result.vlm_analysis  # may be None
         image_has_complaint = iq.usable and vu.damage_visible and vu.confidence >= 0.40
         image_type_str = vu.visual_subcategory or None
         image_category = vu.visual_category or None
+        image_confidence = float(vu.confidence)
+        # Prefer VLM descriptors (richer semantics); fall back to CLIP-derived ones
+        descriptor_src = vlm if vlm else vu
+        image_semantic_domain = getattr(descriptor_src, "semantic_domain", None)
+        image_physical_component = getattr(descriptor_src, "physical_component", None)
+        image_failure_mode = getattr(descriptor_src, "failure_mode", None)
 
     # --- Decision matrix ---
     # If IEP-1 service was completely unreachable, don't block — let pipeline continue
@@ -533,24 +601,66 @@ def _validate_media(
             text_is_complaint=False,
             image_has_complaint=image_has_complaint,
             text_detected_type=None,
+            text_detected_category=None,
+            text_confidence=None,
             image_detected_type=image_type_str,
+            image_detected_category=image_category,
+            image_confidence=image_confidence,
+            text_semantic_domain=None,
+            text_physical_component=None,
+            text_failure_mode=None,
+            image_semantic_domain=image_semantic_domain,
+            image_physical_component=image_physical_component,
+            image_failure_mode=image_failure_mode,
+            modality_overlap_score=None,
+            reconciled_type=image_type_str,
+            reconciled_source="image" if image_has_complaint else None,
         )
 
     if text_is_complaint:
-        # Contradiction: text and image point to different infrastructure categories
-        if (
-            image_has_complaint
-            and text_category
-            and image_category
-            and text_category != image_category
-            and image_result.visual_understanding.confidence >= 0.50
-        ):
+        # Compute dimensional overlap across 3 semantic descriptors.
+        # When both sides have descriptors, overlap score drives the contradiction decision.
+        # Fallback to category comparison when descriptors are absent (e.g. old CLIP data).
+        overlap: int | None = None
+        if text_semantic_domain is not None and image_semantic_domain is not None:
+            overlap = _descriptor_overlap(
+                text_semantic_domain, text_physical_component, text_failure_mode,
+                image_semantic_domain, image_physical_component, image_failure_mode,
+            )
+            is_contradiction = (
+                image_has_complaint
+                and overlap == 0
+                and image_confidence is not None and image_confidence >= 0.50
+            )
+        else:
+            # Legacy fallback: compare top-level categories only
+            is_contradiction = (
+                image_has_complaint
+                and text_category and image_category
+                and text_category != image_category
+                and image_confidence is not None and image_confidence >= 0.50
+            )
+
+        if is_contradiction:
             return MediaValidationResult(
                 status=MediaValidationStatus.CONTRADICTION,
                 text_is_complaint=True,
                 image_has_complaint=True,
                 text_detected_type=text_type_str,
+                text_detected_category=text_category,
+                text_confidence=text_confidence,
                 image_detected_type=image_type_str,
+                image_detected_category=image_category,
+                image_confidence=image_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                modality_overlap_score=overlap,
+                reconciled_type=None,
+                reconciled_source="contradiction",
                 contradiction_reason=(
                     f"Your text describes a {text_category} issue "
                     f"({text_type_str.replace('_', ' ')}), but your image shows "
@@ -558,12 +668,32 @@ def _validate_media(
                     f"Please resubmit with matching text and photo."
                 ),
             )
+        # Both modalities are compatible — rec_source reflects degree of agreement
+        if overlap is None:
+            rec_source = (
+                "both" if (image_has_complaint and image_type_str == text_type_str) else "text"
+            )
+        else:
+            rec_source = "both" if (image_has_complaint and overlap >= 2) else "text"
         return MediaValidationResult(
             status=MediaValidationStatus.VALID,
             text_is_complaint=True,
             image_has_complaint=image_has_complaint,
             text_detected_type=text_type_str,
+            text_detected_category=text_category,
+            text_confidence=text_confidence,
             image_detected_type=image_type_str,
+            image_detected_category=image_category,
+            image_confidence=image_confidence,
+            text_semantic_domain=text_semantic_domain,
+            text_physical_component=text_physical_component,
+            text_failure_mode=text_failure_mode,
+            image_semantic_domain=image_semantic_domain,
+            image_physical_component=image_physical_component,
+            image_failure_mode=image_failure_mode,
+            modality_overlap_score=overlap,
+            reconciled_type=text_type_str,
+            reconciled_source=rec_source,
         )
 
     # Text is NOT a complaint — check image
@@ -572,8 +702,21 @@ def _validate_media(
             status=MediaValidationStatus.NEEDS_CLARIFICATION,
             text_is_complaint=False,
             image_has_complaint=True,
-            image_detected_type=image_type_str,
             text_detected_type=text_type_str,
+            text_detected_category=text_category,
+            text_confidence=text_confidence,
+            image_detected_type=image_type_str,
+            image_detected_category=image_category,
+            image_confidence=image_confidence,
+            text_semantic_domain=text_semantic_domain,
+            text_physical_component=text_physical_component,
+            text_failure_mode=text_failure_mode,
+            image_semantic_domain=image_semantic_domain,
+            image_physical_component=image_physical_component,
+            image_failure_mode=image_failure_mode,
+            modality_overlap_score=None,
+            reconciled_type=image_type_str,
+            reconciled_source="image",
             clarification_question=(
                 f"Your text doesn't clearly describe a public infrastructure complaint, "
                 f"but your image shows a {image_category or 'infrastructure'} issue "
@@ -587,6 +730,21 @@ def _validate_media(
             status=MediaValidationStatus.HUMAN_REVIEW,
             text_is_complaint=False,
             image_has_complaint=False,
+            text_detected_type=text_type_str,
+            text_detected_category=text_category,
+            text_confidence=text_confidence,
+            image_detected_type=image_type_str,
+            image_detected_category=image_category,
+            image_confidence=image_confidence,
+            text_semantic_domain=text_semantic_domain,
+            text_physical_component=text_physical_component,
+            text_failure_mode=text_failure_mode,
+            image_semantic_domain=image_semantic_domain,
+            image_physical_component=image_physical_component,
+            image_failure_mode=image_failure_mode,
+            modality_overlap_score=None,
+            reconciled_type=None,
+            reconciled_source=None,
             clarification_question=(
                 "Your submission is unclear — neither the text nor the image clearly "
                 "shows a public infrastructure problem. A human reviewer will assess it."
@@ -597,6 +755,21 @@ def _validate_media(
         status=MediaValidationStatus.INVALID_NO_COMPLAINT,
         text_is_complaint=False,
         image_has_complaint=False,
+        text_detected_type=text_type_str,
+        text_detected_category=text_category,
+        text_confidence=text_confidence,
+        image_detected_type=image_type_str,
+        image_detected_category=image_category,
+        image_confidence=image_confidence,
+        text_semantic_domain=text_semantic_domain,
+        text_physical_component=text_physical_component,
+        text_failure_mode=text_failure_mode,
+        image_semantic_domain=image_semantic_domain,
+        image_physical_component=image_physical_component,
+        image_failure_mode=image_failure_mode,
+        modality_overlap_score=None,
+        reconciled_type=None,
+        reconciled_source=None,
     )
 
 
@@ -711,6 +884,7 @@ async def _add_to_human_review(
             image_result=decision.image_analysis,
             clustering_result=decision.clustering,
             routing_result=routing_result,
+            alignment_result=embedding_result.alignment if embedding_result else None,
         )
 
         # --- Stage 6: IEP-7 Explanation (non-blocking, fire-and-forget) ---

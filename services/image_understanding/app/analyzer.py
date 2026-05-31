@@ -92,6 +92,20 @@ _SEVERITY_PROMPTS: List[Tuple[str, SeverityLevel]] = [
      SeverityLevel.LOW),
 ]
 
+# Three-dimensional semantic descriptors derived from CLIP visual_subcategory.
+# Used when the VLM is unavailable.  (domain, physical_component, failure_mode)
+_SUBCATEGORY_TO_DESCRIPTORS: Dict[str, Tuple[str, str, str]] = {
+    "pothole":            ("transportation", "road_surface",      "damage"),
+    "road_damage":        ("transportation", "road_surface",      "damage"),
+    "flooding":           ("environment",    "drainage_system",   "overflow"),
+    "waste_accumulation": ("environment",    "public_space",      "accumulation"),
+    "traffic_light":      ("transportation", "traffic_signal",    "damage"),
+    "sidewalk_damage":    ("transportation", "sidewalk",          "damage"),
+    "streetlight":        ("transportation", "street_light",      "damage"),
+    "pipe_leak":          ("utilities",      "water_pipe",        "damage"),
+    "other":              ("other",          "other",             "other"),
+}
+
 # Quality heuristics — minimum image size (px)
 _MIN_USABLE_PIXELS = 128 * 128
 
@@ -161,6 +175,11 @@ class SceneAnalyzer:
         # --- Caption (rule-based for Phase 1; replace with BLIP-2 in Phase 2) ---
         caption = self._make_caption(subcategory, severity, detected_objects)
 
+        # --- Three semantic descriptor fields (for cross-modal overlap scoring) ---
+        sem_domain, phys_comp, fail_mode = _SUBCATEGORY_TO_DESCRIPTORS.get(
+            subcategory, ("other", "other", "other")
+        )
+
         return VisualUnderstandingJSON(
             caption=caption,
             visual_category=category,
@@ -169,6 +188,9 @@ class SceneAnalyzer:
             damage_visible=damage_visible,
             visual_severity=severity,
             confidence=round(infra_confidence, 3),
+            semantic_domain=sem_domain,
+            physical_component=phys_comp,
+            failure_mode=fail_mode,
         )
 
     def get_image_embedding(self, image: Image.Image) -> List[float]:
@@ -278,6 +300,9 @@ Given an image, return ONLY a valid JSON object (no markdown, no explanation):
   "damage_visible": <true|false>,
   "visual_category": "<roads | drainage | sanitation | electricity | water | other | none>",
   "visual_subcategory": "<pothole | road_damage | flooding | waste_accumulation | streetlight | traffic_light | sidewalk_damage | pipe_leak | other | none>",
+  "semantic_domain": "<one of: transportation | utilities | environment | safety | other>",
+  "physical_component": "<specific element: road_surface | sidewalk | traffic_signal | street_light | water_pipe | water_supply | electrical_line | drainage_system | public_space | other>",
+  "failure_mode": "<one of: damage | outage | overflow | accumulation | blockage | other>",
   "damage_severity": "<CRITICAL | HIGH | MEDIUM | LOW | NONE>",
   "location_cues": ["<any visible location identifiers, street signs, Lebanese landmarks, null if none>"],
   "confidence": <0.0-1.0>,
@@ -290,6 +315,9 @@ Rules:
 - is_ai_generated: true only if clearly synthetic/AI-rendered — this is a weak signal only.
 - location_cues: extract any Arabic/French/English text visible in the image.
 - damage_severity CRITICAL = road fully blocked, imminent danger.
+- semantic_domain=transportation for road/traffic/sidewalk; utilities for water/electricity/telecom; environment for flooding/garbage; safety for personal danger.
+- physical_component = the specific infrastructure element visibly present or damaged.
+- failure_mode: damage = physical breakage; outage = service unavailable; overflow = flooding/excess water; accumulation = waste buildup; blockage = obstruction.
 """
 
 
@@ -383,8 +411,11 @@ class VLMAnalyzer:
                 location_cues=[c for c in data.get("location_cues", []) if c],
                 confidence=float(data.get("confidence", 0.5)),
                 reasoning=data.get("reasoning", ""),
-                vlm_alignment=None,          # filled by VLMAlignmentChecker if needed
+                vlm_alignment=None,
                 vlm_alignment_confidence=None,
+                semantic_domain=data.get("semantic_domain"),
+                physical_component=data.get("physical_component"),
+                failure_mode=data.get("failure_mode"),
             )
         except Exception as e:
             log.warning("[IEP-2] VLM analysis failed: %s", e)

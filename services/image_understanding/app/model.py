@@ -111,9 +111,31 @@ class ImageUnderstandingModel:
         embedding = self.analyzer.get_image_embedding(image)
 
         # 5. CLIP text embedding — same 512-dim space as the image embedding.
+        #    CLIP was trained on image captions, not complaint prose, so raw
+        #    complaint text gives very low cosine similarity even for matching types.
+        #    Instead we encode the standard CLIP infrastructure caption for the
+        #    detected visual_subcategory — this is what CLIP "expects" and produces
+        #    scores in the same 0.5–0.9 range as the zero-shot classification prompts.
+        _SUBCAT_TO_CLIP_PROMPT = {
+            "pothole":            "a photo of road damage or pothole",
+            "road_damage":        "a photo of cracked or broken road surface",
+            "flooding":           "a photo of street flooding or standing water",
+            "waste_accumulation": "a photo of garbage or waste accumulation on the street",
+            "outage":             "a photo of electricity or power outage, dark street",
+            "traffic_light":      "a photo of a broken or non-functioning traffic light",
+            "pipe_leak":          "a photo of a burst or leaking water pipe",
+            "sidewalk_damage":    "a photo of a cracked or broken sidewalk",
+            "streetlight":        "a photo of a broken or dark street lamp",
+            "other":              "a photo of public infrastructure damage",
+        }
         clip_text_emb: list = []
         if complaint_text:
-            clip_text_emb = self.analyzer.get_text_embedding(complaint_text)
+            detected_subcat = visual.visual_subcategory if visual else "other"
+            clip_prompt = _SUBCAT_TO_CLIP_PROMPT.get(
+                detected_subcat,
+                f"a photo of {detected_subcat.replace('_', ' ')}",
+            )
+            clip_text_emb = self.analyzer.get_text_embedding(clip_prompt)
 
         # 6. VLM Phase 2 — richer semantic analysis (async, non-blocking on CLIP path)
         vlm_analysis = None

@@ -392,6 +392,7 @@ class ComplaintRouter:
         rationale = list(static_rationale)
         requires_review = final_conf < self.review_threshold
         review_reason: Optional[str] = None
+        rag_no_candidates = False
 
         # ── RAG path ─────────────────────────────────────────────────────────
         if RAG_ENABLED:
@@ -400,6 +401,19 @@ class ComplaintRouter:
                 location_governorate, keywords, original_text,
             )
             docs = _retrieve_docs(query_text, top_k=RAG_TOP_K)
+
+            if not docs:
+                # RAG has no knowledge of this complaint type / location combination.
+                # Flag for human review so the admin can (a) confirm unsupported type
+                # or (b) correct and add a gold label to the retraining store.
+                rag_no_candidates = True
+                requires_review = True
+                routing_source = "rag_no_match"
+                review_reason = (
+                    "RAG returned zero routing candidates for this complaint. "
+                    "The complaint type or location may not be in the current "
+                    "routing knowledge base. Human review required."
+                )
 
             if docs:
                 retrieved_sources = [d.get("doc_id", "") for d in docs]
@@ -487,6 +501,7 @@ class ComplaintRouter:
             auto_routed=auto_routed,
             requires_review=requires_review,
             review_reason=review_reason,
+            rag_no_candidates=rag_no_candidates,
             processing_ms=0,
         )
 

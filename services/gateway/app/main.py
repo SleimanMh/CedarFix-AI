@@ -31,6 +31,9 @@ from .database import (
     fetch_user_complaints, fetch_admin_stats,
     fetch_all_complaints_admin, fetch_review_queue_admin,
     fetch_duplicates_admin, resolve_review_item,
+    save_retraining_record, fetch_retraining_queue,
+    fetch_retraining_record, submit_retraining_review,
+    fetch_retraining_export,
 )
 from .auth import (
     hash_password, verify_password, create_token,
@@ -164,13 +167,19 @@ async def submit_complaint(
         decision.total_pipeline_ms = int(time.time() * 1000) - start_ms
 
         await save_complaint(decision)
+        # Always persist the pipeline outputs for retraining / active learning.
+        # The retraining_store row will be reviewed by an admin later, especially
+        # when rag_no_match=TRUE or requires_review=TRUE.
+        await save_retraining_record(decision)
         COMPLAINTS_TOTAL.labels(status="completed").inc()
         PIPELINE_DURATION.labels(stage="full").observe(decision.total_pipeline_ms / 1000)
 
         return decision
 
     except Exception as e:
+        import traceback
         COMPLAINTS_TOTAL.labels(status="failed").inc()
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
 
 
@@ -246,6 +255,125 @@ async def admin_resolve_review(
 ):
     await resolve_review_item(item_id, admin["sub"], body.notes)
     return {"status": "resolved", "item_id": item_id}
+
+
+# =============================================================================
+# Admin — Retraining Store
+# =============================================================================
+
+class RetrainingReviewBody(BaseModel):
+    """
+    Sent by admin to review a retraining_store row.
+
+    admin_decision:
+      can_be_processed    – valid, in-scope; fill corrected_* for gold label
+      cannot_be_processed – valid but outside current CedarFix scope
+      fake                – spam / test / not a real complaint
+      unsupported         – complaint type not in taxonomy yet
+    """
+    admin_decision: str
+    admin_notes: Optional[str] = None
+    corrected_text_json: Optional[dict] = None
+    corrected_image_json: Optional[dict] = None
+    corrected_rag_response: Optional[dict] = None
+
+
+@app.get("/admin/retraining")
+async def admin_retraining_queue(
+    pending_only: bool = True,
+    rag_no_match_only: bool = False,
+    page: int = 1,
+    limit: int = 50,
+    admin: dict = Depends(require_admin),
+):
+    """
+    Returns retraining_store rows.
+    pending_only=true (default) shows only unreviewed records.
+    rag_no_match_only=true filters to only complaints where RAG found zero candidates.
+    """
+    offset = (page - 1) * limit
+    return await fetch_retraining_queue(
+        pending_only=pending_only,
+        rag_no_match_only=rag_no_match_only,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@app.get("/admin/retraining/{complaint_id}")
+async def admin_retraining_detail(
+    complaint_id: str,
+    admin: dict = Depends(require_admin),
+):
+    """
+    Returns the full retraining_store row for a complaint (including all JSONB columns)
+    so the admin can inspect pipeline outputs and fill in corrections.
+    """
+    record = await fetch_retraining_record(complaint_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Retraining record not found")
+    return record
+
+
+@app.post("/admin/retraining/{complaint_id}/review", status_code=200)
+async def admin_submit_retraining_review(
+    complaint_id: str,
+    body: RetrainingReviewBody,
+    admin: dict = Depends(require_admin),
+):
+    """
+    Admin submits a review decision for a retraining_store row.
+
+    When admin_decision='can_be_processed':
+      - Provide corrected_text_json and/or corrected_rag_response to create a gold label.
+      - The row's usable_for_finetuning flag is set to TRUE automatically.
+      - This record will appear in the next /admin/retraining/export batch.
+
+    When admin_decision is 'cannot_be_processed', 'fake', or 'unsupported':
+      - The row is kept (usable_for_finetuning=FALSE) for future taxonomy analysis.
+      - corrected_* fields are ignored.
+    """
+    allowed_decisions = {"can_be_processed", "cannot_be_processed", "fake", "unsupported"}
+    if body.admin_decision not in allowed_decisions:
+        raise HTTPException(
+            status_code=422,
+            detail=f"admin_decision must be one of: {', '.join(sorted(allowed_decisions))}",
+        )
+    await submit_retraining_review(
+        complaint_id=complaint_id,
+        admin_id=admin["sub"],
+        admin_decision=body.admin_decision,
+        admin_notes=body.admin_notes,
+        corrected_text_json=body.corrected_text_json,
+        corrected_image_json=body.corrected_image_json,
+        corrected_rag_response=body.corrected_rag_response,
+    )
+    return {"status": "reviewed", "complaint_id": complaint_id, "decision": body.admin_decision}
+
+
+@app.get("/admin/retraining/export")
+async def admin_retraining_export(
+    mark_exported: bool = False,
+    admin: dict = Depends(require_admin),
+):
+    """
+    Returns all retraining_store rows that are usable for fine-tuning
+    (usable_for_finetuning=TRUE, finetuning_exported=FALSE).
+
+    Each record contains:
+      - complaint_text          → user input (LLM fine-tuning prompt)
+      - image_filename          → image reference if complaint had an image
+      - text_classification_json → original IEP-1 output
+      - image_classification_json → original IEP-2 output (null if no image)
+      - rag_routing_response    → original IEP-6 routing output
+      - corrected_text_json     → admin-corrected IEP-1 (gold label)
+      - corrected_image_json    → admin-corrected IEP-2 (gold label)
+      - corrected_rag_response  → admin-corrected routing (gold label)
+
+    Set mark_exported=true to atomically mark records as exported
+    (prevents duplicate exports).
+    """
+    return await fetch_retraining_export(mark_exported=mark_exported)
 
 
 def _save_image(filename: str, data: bytes) -> str:

@@ -173,8 +173,10 @@
       const steps = [
         { label: 'Text Understanding', done: !!d.text_analysis,
           detail: d.text_analysis ? `${d.complaint_type?.replace(/_/g,' ')} — ${d.text_analysis.detected_language}` : 'Not processed' },
-        { label: 'Image Understanding', done: !!d.image_analysis?.image_available,
-          detail: d.image_analysis?.image_available ? d.image_analysis.scene_description : 'No image' },
+        { label: 'Image Understanding', done: !!d.image_analysis?.image_present,
+          detail: d.image_analysis?.image_present
+            ? (d.image_analysis.visual_understanding?.visual_subcategory?.replace(/_/g,' ') || d.image_analysis.visual_understanding?.caption || 'Processed')
+            : 'No image' },
         { label: 'Embedding + Similarity', done: !!d.embedding,
           detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}` : 'Pending' },
         { label: 'Duplicate Detection', done: !!d.clustering,
@@ -184,7 +186,7 @@
         { label: 'Routing Engine', done: !!d.routing,
           detail: d.routing ? `${d.assigned_entity} (${conf}% confidence)` : 'Pending' },
         { label: 'Explanation', done: !!d.explanation,
-          detail: d.explanation?.explanation_text?.slice(0, 80) + '…' || 'Pending' },
+          detail: d.explanation?.explanation_text ? d.explanation.explanation_text.slice(0, 80) + '…' : 'Pending' },
       ];
       return `
         <div style="margin-bottom:16px">
@@ -195,6 +197,10 @@
           <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-600)">Original Text</span>
           <p style="font-size:14px;margin-top:6px;line-height:1.6">${d.original_text || ''}</p>
         </div>
+        ${d.status === 'contradiction' && d.media_validation?.contradiction_reason ? `
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#856404">
+          ⚠️ <strong>Contradiction detected:</strong> ${d.media_validation.contradiction_reason}
+        </div>` : ''}
         <ul class="pipeline-steps">
           ${steps.map(s => `
             <li class="pipeline-step">

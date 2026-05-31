@@ -31,6 +31,7 @@ ISSUE_HIERARCHY: Dict[ComplaintType, Tuple[str, str]] = {
     ComplaintType.ELECTRICITY:      ("electricity", "outage"),
     ComplaintType.TRAFFIC_LIGHT:    ("roads",       "traffic_light"),
     ComplaintType.WATER_PIPE:       ("water",       "pipe_leak"),
+    ComplaintType.WATER_OUTAGE:     ("water",       "water_outage"),
     ComplaintType.SIDEWALK:         ("roads",       "sidewalk_damage"),
     ComplaintType.STREETLIGHT:      ("electricity", "streetlight"),
     ComplaintType.TRAFFIC_INCIDENT: ("roads",       "traffic_incident"),
@@ -76,7 +77,14 @@ ISSUE_KEYWORDS: Dict[ComplaintType, List[str]] = {
     ComplaintType.WATER_PIPE: [
         "pipe leak", "water leak", "broken pipe", "water pipe",
         "burst pipe", "leaking pipe", "water main", "pipe burst",
-        "water gushing",
+        "water gushing", "water waste", "wasted water", "water loss",
+        "water is wasting", "water being wasted",
+    ],
+    ComplaintType.WATER_OUTAGE: [
+        "water outage", "no water", "water cut", "water cutoff",
+        "water supply cut", "no running water", "water not available",
+        "water disconnected", "water supply issue", "water shortage",
+        "ma fi may", "mayo ma3na",
     ],
     ComplaintType.SIDEWALK: [
         "sidewalk", "pavement broken", "footpath", "walkway broken",

@@ -238,3 +238,69 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role     ON users(role);
 
+
+-- =============================================================================
+-- Retraining Store
+-- Captures every processed complaint (all outputs) plus admin corrections,
+-- so the data can be used for fine-tuning Qwen2.5 and improving RAG coverage.
+--
+-- Lifecycle:
+--   1. Pipeline writes a row immediately after processing (raw outputs, no admin data yet).
+--   2. Admin reviews the row (especially when rag_no_match=TRUE or hitl_flag_reason IS NOT NULL).
+--   3. Admin sets admin_decision + optionally fills corrected_* columns.
+--   4. When admin_decision = 'can_be_processed', usable_for_finetuning is set to TRUE
+--      and the row becomes a gold-label training example for export.
+--   5. Rows with admin_decision = 'cannot_be_processed'|'fake'|'unsupported' are kept
+--      (usable_for_finetuning stays FALSE) for future taxonomy improvement analysis.
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS retraining_store (
+    id                          SERIAL PRIMARY KEY,
+    complaint_id                VARCHAR(36) NOT NULL UNIQUE,
+    created_at                  TIMESTAMP DEFAULT NOW(),
+
+    -- Raw complaint input
+    complaint_text              TEXT NOT NULL,
+    image_filename              VARCHAR(255),
+
+    -- Pipeline outputs stored at processing time (before any admin correction)
+    text_classification_json    JSONB,          -- IEP-1: TextUnderstandingResult
+    image_classification_json   JSONB,          -- IEP-2: ImageUnderstandingResult (NULL when no image)
+    rag_routing_response        JSONB,          -- IEP-6: RoutingResult
+
+    -- Pipeline flags
+    pipeline_status             VARCHAR(50),    -- mirrors complaints.status
+    rag_no_match                BOOLEAN DEFAULT FALSE,  -- RAG returned 0 candidates
+    hitl_flag_reason            TEXT,           -- populated when pipeline triggered HITL
+
+    -- Admin review fields
+    admin_reviewed              BOOLEAN DEFAULT FALSE,
+    admin_reviewed_at           TIMESTAMP,
+    admin_reviewed_by           VARCHAR(100),
+
+    -- Admin decision
+    -- can_be_processed   → complaint is valid & CedarFix should handle it; corrected_* filled
+    -- cannot_be_processed → valid complaint but outside CedarFix scope for now
+    -- fake               → spam / test submission / not a real complaint
+    -- unsupported        → complaint type not yet in taxonomy; keep for future expansion
+    admin_decision              VARCHAR(30),
+    admin_notes                 TEXT,
+
+    -- Admin-corrected pipeline outputs (only required when admin_decision = 'can_be_processed')
+    corrected_text_json         JSONB,          -- admin-corrected IEP-1 output
+    corrected_image_json        JSONB,          -- admin-corrected IEP-2 output (when image present)
+    corrected_rag_response      JSONB,          -- admin-corrected routing decision
+
+    -- Export control
+    usable_for_finetuning       BOOLEAN DEFAULT FALSE,   -- TRUE only after admin approves
+    finetuning_exported         BOOLEAN DEFAULT FALSE    -- TRUE after included in a training export
+);
+
+CREATE INDEX IF NOT EXISTS idx_rts_complaint_id   ON retraining_store(complaint_id);
+CREATE INDEX IF NOT EXISTS idx_rts_admin_reviewed ON retraining_store(admin_reviewed);
+CREATE INDEX IF NOT EXISTS idx_rts_rag_no_match   ON retraining_store(rag_no_match);
+CREATE INDEX IF NOT EXISTS idx_rts_usable         ON retraining_store(usable_for_finetuning);
+CREATE INDEX IF NOT EXISTS idx_rts_exported       ON retraining_store(finetuning_exported);
+CREATE INDEX IF NOT EXISTS idx_rts_admin_decision ON retraining_store(admin_decision);
+CREATE INDEX IF NOT EXISTS idx_rts_created_at     ON retraining_store(created_at);
+

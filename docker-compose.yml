@@ -140,7 +140,7 @@ services:
       NOMINATIM_URL: ""
       # LLM (shared with other services)
       QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
       QWEN_API_KEY: "none"
       # Auth
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cedarfix-dev-secret-change-in-prod}
@@ -186,7 +186,7 @@ services:
       PORT: "8001"
       # LLM routing
       QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
       QWEN_API_KEY: "none"
       QWEN_ENABLED: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -211,9 +211,9 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       CLIP_MODEL_NAME: openai/clip-vit-base-patch32
       PORT: "8002"
-      # VLM — Phase 2 image reasoning (Qwen2.5-VL on RunPod)
-      VLM_BASE_URL: ${VLM_BASE_URL:-}
-      VLM_MODEL: "Qwen/Qwen2.5-VL-3B-Instruct"
+      # VLM — same RunPod endpoint as QWEN_BASE_URL (one VL model for text + vision)
+      VLM_BASE_URL: ${QWEN_BASE_URL:-}
+      VLM_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
       VLM_ENABLED: "true"
       VLM_TIMEOUT: "25"
     ports:
@@ -271,7 +271,7 @@ services:
       LLM_JUDGE_ENABLED: "true"
       LLM_JUDGE_TIMEOUT: "8"
       QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
       QWEN_API_KEY: "none"
     ports:
       - "8004:8004"
@@ -326,7 +326,7 @@ services:
       MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
       # LLM routing decision
       QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: Qwen/Qwen2.5-3B-Instruct
+      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
       QWEN_API_KEY: "none"
       QWEN_ENABLED: "true"
     ports:

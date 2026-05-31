@@ -16,9 +16,10 @@ import logging
 import os
 import re
 import time
-from typing import Optional
+from typing import List, Literal, Optional
 
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 
 from cedarfix_shared.schemas import (
     ComplaintType,
@@ -30,8 +31,54 @@ from cedarfix_shared.schemas import (
 from cedarfix_shared.location import lookup_text
 from .extractor import StructuredExtractor
 
-# Canonical set of supported complaint type values
-_KNOWN_TYPES: set[str] = {ct.value for ct in ComplaintType}
+# ---------------------------------------------------------------------------
+# Structured output schema — keys are fixed by us; LLM only fills values.
+# When the endpoint supports guided_json (vLLM), this schema is enforced at
+# the token level so the model cannot invent keys, wrong enum values, or
+# refuse to answer by outputting something like {"error": "not a complaint"}.
+# ---------------------------------------------------------------------------
+
+class _SignalsOutput(BaseModel):
+    public_safety_risk: bool = False
+    traffic_impact: bool = False
+    emergency_signal: bool = False
+
+
+class _LLMOutput(BaseModel):
+    is_complaint: bool = True
+    english_translation: str = ""
+    issue_type: Literal[
+        "pothole", "road_damage", "flooding", "waste_accumulation",
+        "electricity_outage", "water_outage", "telecom_outage",
+        "traffic_light", "water_pipe", "sidewalk_damage", "streetlight",
+        "traffic_incident", "public_safety", "other",
+    ] = "other"
+    category: str = "other"         # free-form — LLM can use new values
+    subcategory: str = "other"      # free-form — LLM should be specific
+    severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"] = "LOW"
+    location_mentions: List[str] = []
+    keywords: List[str] = []
+    summary: str = ""
+    signals: _SignalsOutput = Field(default_factory=_SignalsOutput)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    semantic_domain: Literal[
+        "transportation", "utilities", "environment", "safety", "other",
+    ] = "other"
+    physical_component: str = "other"   # free-form — be specific
+    failure_mode: Literal[
+        "damage", "outage", "overflow", "accumulation", "blockage",
+        "contamination", "other",
+    ] = "other"
+
+
+# JSON schema passed to vLLM's guided_json parameter.
+# This locks the output structure so the LLM only generates values.
+_LLM_OUTPUT_SCHEMA: dict = _LLMOutput.model_json_schema()
+
+# Whether to use guided_json constrained decoding.
+# Falls back to plain json_object mode if the endpoint rejects the parameter.
+QWEN_GUIDED: bool = os.getenv("QWEN_GUIDED", "true").lower() == "true"
+
 
 log = logging.getLogger(__name__)
 
@@ -71,33 +118,30 @@ Return ONLY a JSON object with a single field:
 No explanation, no markdown.
 """
 
-# Full classification prompt — used by Qwen for all languages
+# Full classification prompt — used by Qwen for all languages.
+# With guided_json the model only fills values — no need to describe JSON format.
 _SYSTEM_PROMPT = """\
-You are an AI assistant for CedarFix, a Lebanese public infrastructure complaint platform.
-Analyze the complaint text and return ONLY a valid JSON object — no explanation, no markdown.
+You are a Lebanese public infrastructure complaint classifier for CedarFix.
+Analyze the text and fill in the output fields.
 
-JSON schema (all fields required):
-{
-  "english_translation": "<complaint translated to English, or same text if already English>",
-  "issue_type": "<best matching label — use known types when applicable: pothole, road_damage, flooding, waste_accumulation, electricity_outage, telecom_outage, traffic_light, water_pipe, sidewalk_damage, streetlight, traffic_incident, public_safety — or suggest a specific label if none fit>",
-  "category": "<one of: roads | drainage | electricity | water | sanitation | telecom | public_health | environment | other>",
-  "subcategory": "<short specific label, e.g. pothole, pipe_leak, wifi_outage>",
-  "severity": "<one of: LOW | MEDIUM | HIGH | CRITICAL>",
-  "location_mentions": ["<place name>"],
-  "keywords": ["<key term>"],
-  "summary": "<one-sentence English summary>",
-  "signals": {
-    "public_safety_risk": <true|false>,
-    "traffic_impact": <true|false>,
-    "emergency_signal": <true|false>
-  },
-  "confidence": <0.0–1.0>
-}
+is_complaint: true if the text describes ANY real public infrastructure or public-space problem
+(potholes, floods, garbage, power outage, water leak, streetlights, broken benches, fallen trees,
+construction rubble, stray animals causing danger, river pollution, sewage smell, missing manholes, etc.).
+Set false ONLY for pure personal emotion, spam, or text 100% unrelated to public space.
+
+For issue_type - pick the closest match from the allowed values, or "other" if nothing fits.
+For category and subcategory - use the most accurate specific label even if it is new (e.g. broken_bench, fallen_tree, chemical_pollution).
+For semantic_domain, physical_component, failure_mode - describe what you actually observe in the text.
+For confidence - how certain you are of issue_type (0.0 = no complaint, 1.0 = certain).
 
 Rules:
 - severity=CRITICAL only for imminent danger or total blockage.
-- confidence reflects how certain you are of issue_type.
-- Ogero handles internet/wifi/telecom outages; EDL handles electricity.
+- confidence=0.0 when is_complaint=false.
+- Ogero handles telecom outages; EDL handles electricity.
+- "water waste" or "wasted water" = pipe leak: issue_type water_pipe, category water.
+- "waste" or "garbage" alone = solid trash: issue_type waste_accumulation, category sanitation.
+- If no issue_type fits, use "other" but set subcategory and category to something specific (e.g. subcategory: broken_bench, category: street_furniture).
+- semantic_domain, physical_component, failure_mode: free-form, use the most accurate label.
 """
 
 
@@ -152,18 +196,49 @@ async def _call_gpt4o_translate(text: str) -> str:
 
 
 async def _call_qwen(text: str, language: str) -> dict:
-    """Call the self-hosted Qwen on RunPod via its OpenAI-compatible endpoint."""
+    """Call the self-hosted Qwen on RunPod via its OpenAI-compatible endpoint.
+
+    When QWEN_GUIDED=true (default), passes the JSON schema as guided_json so
+    vLLM constrains token generation — the LLM only fills values, never invents
+    keys, wrong enum values, or malformed JSON.
+    Falls back to plain json_object mode if the endpoint rejects guided_json.
+    """
     client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=20.0)
-    response = await client.chat.completions.create(
+
+    kwargs: dict = dict(
         model=QWEN_MODEL,
         messages=[
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": _user_prompt(text, language)},
         ],
-        response_format={"type": "json_object"},
-        temperature=0.1,
+        temperature=0.0,
     )
-    return _parse_llm_json(response.choices[0].message.content)
+
+    if QWEN_GUIDED:
+        # Guided decoding: vLLM enforces the schema at token level.
+        # The model cannot output a wrong enum value or miss a required key.
+        kwargs["extra_body"] = {"guided_json": _LLM_OUTPUT_SCHEMA}
+    else:
+        kwargs["response_format"] = {"type": "json_object"}
+
+    try:
+        response = await client.chat.completions.create(**kwargs)
+        raw = response.choices[0].message.content
+        data = _parse_llm_json(raw)
+        # Validate through Pydantic — coerces types and fills missing fields with defaults.
+        validated = _LLMOutput.model_validate(data)
+        return validated.model_dump()
+    except Exception as e:
+        if QWEN_GUIDED and ("guided" in str(e).lower() or "extra_body" in str(e).lower() or "422" in str(e)):
+            # Endpoint doesn't support guided_json — retry without it.
+            log.warning("[IEP-1] guided_json not supported (%s), retrying without", e)
+            kwargs.pop("extra_body", None)
+            kwargs["response_format"] = {"type": "json_object"}
+            response = await client.chat.completions.create(**kwargs)
+            data = _parse_llm_json(response.choices[0].message.content)
+            validated = _LLMOutput.model_validate(data)
+            return validated.model_dump()
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -174,43 +249,57 @@ _ISSUE_TO_CATEGORY = {
     "pothole": "roads",           "road_damage": "roads",
     "flooding": "drainage",       "waste_accumulation": "sanitation",
     "electricity_outage": "electricity", "traffic_light": "roads",
-    "water_pipe": "water",        "sidewalk_damage": "roads",
+    "water_pipe": "water",        "water_outage": "water",
+    "sidewalk_damage": "roads",
     "streetlight": "electricity", "telecom_outage": "telecom",
     "traffic_incident": "roads",  "public_safety": "other",
     "other": "other",
 }
 
-_VALID_CATEGORIES = {
-    "roads", "drainage", "electricity", "water", "sanitation",
-    "telecom", "public_health", "environment", "other",
-}
-
-
 def _build_result(complaint_id: str, original_text: str, language: str,
                   data: dict, processing_ms: int) -> TextUnderstandingResult:
-    issue_raw = data.get("issue_type", "other")
-    unknown_type = False
-
-    if issue_raw in _KNOWN_TYPES:
-        issue_type = ComplaintType(issue_raw)
-    else:
-        # LLM returned a type not in the allowed taxonomy.
-        # Accept the complaint but flag for human review.
-        log.warning(
-            "[IEP-1] LLM returned unknown issue_type=%r — setting OTHER + human review",
-            issue_raw,
+    # --- Non-complaint early exit ---
+    # LLM explicitly said this is not an infrastructure complaint.
+    # Force type=OTHER + near-zero confidence so the media-validation gate
+    # catches it as invalid_no_complaint (or needs_clarification if image disagrees).
+    if not data.get("is_complaint", True):
+        log.info("[IEP-1] LLM flagged as non-complaint for complaint_id=%s", complaint_id)
+        translation = data.get("english_translation", original_text)
+        return TextUnderstandingResult(
+            complaint_id=complaint_id,
+            original_text=original_text,
+            normalized_text=translation or original_text,
+            language=language,
+            english_translation=translation if language != "en" else None,
+            summary=data.get("summary", "Not a complaint"),
+            category="other",
+            subcategory="not_a_complaint",
+            issue_type=ComplaintType.OTHER,
+            location=LocationJSON(raw="", normalized="", confidence=0.0, source="none"),
+            severity=SeverityLevel.LOW,
+            signals=SignalsJSON(public_safety_risk=False, traffic_impact=False, emergency_signal=False),
+            urgency_keywords=[],
+            confidence=0.0,
+            processing_ms=processing_ms,
         )
-        issue_type = ComplaintType.OTHER
-        unknown_type = True
 
+    # issue_type is already validated by _LLMOutput Pydantic model \u2014 guaranteed to be a
+    # known ComplaintType value (guided_json enforces this at the token level; Pydantic
+    # coerces any remaining edge cases to "other").
+    issue_raw = data.get("issue_type", "other")
+    issue_type = ComplaintType(issue_raw) if issue_raw in {ct.value for ct in ComplaintType} else ComplaintType.OTHER
+    unknown_type = (issue_raw not in {ct.value for ct in ComplaintType})
     severity_raw = data.get("severity", "LOW")
     try:
         severity = SeverityLevel(severity_raw)
     except ValueError:
-        severity = SeverityLevel.LOW
+        log.warning("[IEP-1] LLM returned unknown severity=%r \u2014 using MEDIUM", severity_raw)
+        severity = SeverityLevel.MEDIUM
 
     llm_cat = data.get("category", "")
-    category = llm_cat if llm_cat in _VALID_CATEGORIES else _ISSUE_TO_CATEGORY.get(issue_raw, "other")
+    # Use whatever category the LLM returns \u2014 don't restrict to a hardcoded list.
+    # Only fall back to the static type\u2192category map when the LLM returned nothing.
+    category = llm_cat if llm_cat else _ISSUE_TO_CATEGORY.get(issue_raw, issue_raw or "other")
     subcategory = data.get("subcategory", issue_raw)
     translation = data.get("english_translation", original_text)
 
@@ -259,12 +348,19 @@ def _build_result(complaint_id: str, original_text: str, language: str,
         signals=signals,
         urgency_keywords=data.get("keywords", []),
         confidence=effective_confidence,
+        semantic_domain=data.get("semantic_domain"),
+        physical_component=data.get("physical_component"),
+        failure_mode=data.get("failure_mode"),
         processing_ms=processing_ms,
     )
 
     if unknown_type:
-        # Store the original LLM suggestion in subcategory so it is not lost
-        result.subcategory = issue_raw
+        # The LLM returned an issue_type outside the taxonomy enum.
+        # Surface it in subcategory so it is visible in the JSON — do NOT lose it.
+        # subcategory already holds the LLM's own subcategory value; prepend the
+        # raw issue_type so both are preserved, e.g. "broken_fence (damaged_railing)".
+        llm_sub = data.get("subcategory", "")
+        result.subcategory = f"{issue_raw} ({llm_sub})" if llm_sub and llm_sub != issue_raw else issue_raw
 
     return result
 
