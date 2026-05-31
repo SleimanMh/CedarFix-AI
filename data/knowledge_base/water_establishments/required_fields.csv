@@ -1,0 +1,119 @@
+requirement_id,entity_id,workflow_type,required_field_or_document,required_for,source_ids,confidence,notes
+BMLWE-FAULT-REQ-LOCATION,BMLWE,fault_or_leak_report,exact_location_or_department_area,faults_and_leaks,SRC-BMLWE-FAQ;SRC-BMLWE-CONTACT,medium,FAQ confirms fault reporting channels but not exact required fields. Location is operationally required for routing.
+BMLWE-FORM-DOC-SUBSCRIPTION-RECEIPT,BMLWE,forms_catalog,copy_of_subscription_receipt,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists document cards but static text does not preserve exact form-to-document binding.
+BMLWE-FORM-DOC-STAMPS,BMLWE,forms_catalog,stamps,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists stamps for multiple form-document cards.
+BMLWE-FORM-DOC-ID,BMLWE,forms_catalog,copy_of_id,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists copy of ID for multiple form-document cards.
+BMLWE-FORM-DOC-TITLE-LEASE,BMLWE,forms_catalog,title_or_lease_deed,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists title or lease deed in form-document cards.
+BMLWE-FORM-DOC-ELECTRICITY,BMLWE,forms_catalog,electricity_receipt_or_subscription_receipt,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists electricity receipt or electricity subscription receipt in form-document cards.
+BMLWE-FORM-DOC-DETECTION-FEE,BMLWE,forms_catalog,detection_fee,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists detection fee in one form-document card.
+BMLWE-FORM-DOC-RENT-CONTRACT,BMLWE,forms_catalog,copy_of_rent_contract,service_request_forms,SRC-BMLWE-FORMS,medium,Official forms page lists rent contract in one form-document card.
+BMLWE-FORM-DOC-SALE-CONTRACT,BMLWE,forms_catalog,sale_contract_or_sale_contract_ratified_by_notary,transfer_or_subscription_related_requests,SRC-BMLWE-FORMS,medium,Official forms page lists sale contract requirements but static text does not preserve exact card binding.
+BMLWE-FORM-DOC-MUNICIPAL-LEASE,BMLWE,forms_catalog,lease_contract_ratified_by_municipality,lessee_change_or_subscription_related_requests,SRC-BMLWE-FORMS,medium,Official forms page lists municipality-ratified lease contract for some requests.
+BMLWE-FORM-DOC-MUKHTAR,BMLWE,forms_catalog,attestation_of_domiciliation_from_locality_mayor,transfer_related_requests,SRC-BMLWE-FORMS,medium,Official forms page lists a locality mayor attestation in one form-document card.
+BMLWE-FORM-DOC-HEIRS,BMLWE,forms_catalog,cession_of_remaining_heirs_rights_if_transfer_to_heir,transfer_to_heir,SRC-BMLWE-FORMS,medium,Official forms page lists heir-right cession for transfer to one heir.
+BMLWE-FORM-DOC-CONSTRUCTION-PERMIT,BMLWE,forms_catalog,construction_permit_cover,new_building_or_temporary_subscription,SRC-BMLWE-FORMS,medium,Official forms page lists construction permit cover in new-building related requests.
+BMLWE-FORM-DOC-WORKS-PERMIT,BMLWE,forms_catalog,works_permit_or_work_completion_attestation,new_building_or_temporary_subscription,SRC-BMLWE-FORMS,medium,Official forms page lists works permit or work-completion attestation.
+BMLWE-FORM-DOC-SITE-MAP,BMLWE,forms_catalog,site_map_500_1,new_building_or_not_connected_to_network_request,SRC-BMLWE-FORMS,medium,Official forms page lists site map 500/1 in one form-document card.
+NLWE-COMPLAINT-SUBSCRIBER-NAME,NLWE,complaint,subscriber_name,private_or_general_complaint,SRC-NLWE-CUSTOMER-SERVICE,high,Official customer-service page lists this field for complaints.
+NLWE-COMPLAINT-SUBSCRIPTION-NUMBER,NLWE,complaint,subscription_number,private_or_general_complaint,SRC-NLWE-CUSTOMER-SERVICE,high,Official customer-service page lists this field for complaints.
+NLWE-COMPLAINT-PROBLEM,NLWE,complaint,problem_description,private_or_general_complaint,SRC-NLWE-CUSTOMER-SERVICE,high,Official customer-service page lists this field for complaints.
+NLWE-COMPLAINT-ADDRESS,NLWE,complaint,address,private_or_general_complaint,SRC-NLWE-CUSTOMER-SERVICE,high,Official customer-service page lists this field for complaints.
+NLWE-CONTACT-NAME,NLWE,contact_form,name,general_message,SRC-NLWE-CONTACT,high,Official contact page exposes this form field.
+NLWE-CONTACT-EMAIL,NLWE,contact_form,email,general_message,SRC-NLWE-CONTACT,high,Official contact page exposes this form field.
+NLWE-CONTACT-PHONE,NLWE,contact_form,phone,general_message,SRC-NLWE-CONTACT,high,Official contact page exposes this form field.
+NLWE-CONTACT-MESSAGE,NLWE,contact_form,message,general_message,SRC-NLWE-CONTACT,high,Official contact page exposes this form field.
+NLWE-SERVICE-CALL-OR-VISIT,NLWE,service_request,call_06_430075_or_visit_office,any_service_request,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page gives phone and office process.
+NLWE-SERVICE-APPLICATION-FORM,NLWE,service_request,application_form,water_network_subscription_or_other_service_request,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page says offices provide the application form.
+NLWE-SERVICE-OWNERSHIP,NLWE,service_request,ownership_document_lease_investment_or_sale_contract,water_network_subscription,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page lists this document.
+NLWE-SERVICE-MUKHTAR,NLWE,service_request,municipality_or_mukhtar_statement_if_unsurveyed_or_building_alliance,water_network_subscription,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page lists this conditional document.
+NLWE-SERVICE-DIVIDER-SPACE,NLWE,service_request,provide_space_for_divider_when_necessary,water_network_subscription,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page lists this condition.
+NLWE-SERVICE-ID,NLWE,service_request,copy_of_id,water_network_subscription,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page lists this document.
+NLWE-TRANSFER-APPLICATION,NLWE,transfer_subscription,download_fill_and_submit_transfer_application,subscription_transfer,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page describes transfer application process.
+NLWE-SUSPEND-REQUEST,NLWE,suspend_subscription,request_to_suspend_subscription_for_up_to_five_years,subscription_suspension,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page describes temporary suspension.
+NLWE-CANCEL-FORM,NLWE,cancel_subscription,unsubscribe_form_and_personal_or_legal_agent_submission,subscription_cancellation,SRC-NLWE-SERVICE-REQUESTS,high,Official service-request page describes cancellation form and submission.
+NLWE-OMT-SUBSCRIPTION-NUMBER,NLWE,bill_payment_omt,subscription_number,settling_nlwe_dues_at_omt,SRC-NLWE-OMT,medium_high,Partner payment page lists this payment detail.
+NLWE-OMT-REGION,NLWE,bill_payment_omt,region,settling_nlwe_dues_at_omt,SRC-NLWE-OMT,medium_high,Partner payment page lists this payment detail.
+NLWE-OMT-TOWN,NLWE,bill_payment_omt,town,settling_nlwe_dues_at_omt,SRC-NLWE-OMT,medium_high,Partner payment page lists this payment detail.
+SLWE-FAULT-REQ-NOT-PUBLISHED,SLWE,fault_or_problem,official_required_fields_not_published,hotline_fault_report,SRC-SLWE-CUSTOMER-SERVICE;SRC-SLWE-CONTACT,high,Official page says to report faults or problems to 1785 but does not publish intake fields.
+SLWE-OMT-SUBSCRIPTION-OR-RECEIPT,SLWE,bill_payment_omt,subscription_number_or_old_receipt,settling_slwe_dues_at_omt,SRC-SLWE-OMT,medium_high,Partner payment page lists this payment detail.
+SLWE-BILL-INQUIRY-DETAILS,SLWE,bill_inquiry,subscription_details_not_visible_in_static_fetch,online_bill_inquiry,SRC-SLWE-BILLING,medium,Official bill inquiry page links to invoice view but static fetch does not expose form fields.
+BWE-CONTACT-NAME,BWE,contact_form,name,general_message,SRC-BWE-CONTACT,high,Official contact page exposes this form field.
+BWE-CONTACT-EMAIL,BWE,contact_form,email,general_message,SRC-BWE-CONTACT,high,Official contact page exposes this form field.
+BWE-CONTACT-PHONE,BWE,contact_form,phone,general_message,SRC-BWE-CONTACT,high,Official contact page exposes this form field.
+BWE-CONTACT-MESSAGE,BWE,contact_form,message,general_message,SRC-BWE-CONTACT,high,Official contact page exposes this form field.
+BWE-INVOICE-DISTRICT,BWE,invoice_inquiry,choose_district_or_concerned_center,invoice_inquiry,SRC-BWE-FAQ,high,Official FAQ says bill inquiry starts by choosing the district and contacting the concerned center.
+BWE-OFFICE-REQ-NOT-PUBLISHED,BWE,repair_maintenance_or_water_testing,official_required_fields_not_published,repair_maintenance_water_testing_new_subscription,SRC-BWE-CUSTOMER-SERVICE,high,Official customer-service page confirms offices handle these requests but does not list required fields.
+BWE-WATER-QUALITY-CONTEXT,BWE,water_quality_concern,location_source_or_sample_context_recommended,dirty_water_or_water_testing_request,SRC-BWE-WATER-QUALITY,medium,Official water-quality page confirms laboratories and monitoring but not intake field requirements.
+BWE-OMT-REQ-NOT-PUBLISHED,BWE,bill_payment_omt,official_required_fields_not_published,settling_bwe_dues_at_omt,SRC-BWE-OMT,medium_high,Partner payment page confirms OMT payment availability but does not publish exact lookup fields.
+BMLWE-CONTACT-FIRST-NAME,BMLWE,contact_form,name_or_first_name,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Name field.
+BMLWE-CONTACT-FAMILY-NAME,BMLWE,contact_form,family_name,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Family Name field.
+BMLWE-CONTACT-PHONE,BMLWE,contact_form,phone_number,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Phone Number field.
+BMLWE-CONTACT-ADDRESS,BMLWE,contact_form,address,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Address field.
+BMLWE-CONTACT-COUNTRY,BMLWE,contact_form,country,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Country field.
+BMLWE-CONTACT-GENDER,BMLWE,contact_form,gender,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Gender field.
+BMLWE-CONTACT-EMAIL,BMLWE,contact_form,email,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Email field.
+BMLWE-CONTACT-MESSAGE,BMLWE,contact_form,message,general_message,SRC-BMLWE-CONTACT,high,Official EBML contact form exposes Message field.
+BMLWE-OMT-SUBSCRIPTION-NUMBER,BMLWE,bill_payment_omt,subscription_number,settling_bmlwe_dues_at_omt,SRC-BMLWE-OMT,medium_high,Partner payment page lists this payment detail.
+BMLWE-OMT-SUBSCRIPTION-TYPE,BMLWE,bill_payment_omt,subscription_type,settling_bmlwe_dues_at_omt,SRC-BMLWE-OMT,medium_high,Partner payment page lists this payment detail.
+BMLWE-OMT-REGION,BMLWE,bill_payment_omt,region,settling_bmlwe_dues_at_omt,SRC-BMLWE-OMT,medium_high,Partner payment page lists this payment detail.
+BMLWE-OMT-TOWN,BMLWE,bill_payment_omt,town,settling_bmlwe_dues_at_omt,SRC-BMLWE-OMT,medium_high,Partner payment page lists this payment detail.
+SLWE-EPAYMENT-CUSTOMER-NO,SLWE,online_payment,customer_no,bill_payment,SRC-SLWE-EPAYMENT,high,Official SLWE payment page exposes customer_no field.
+SLWE-EPAYMENT-SERVICE-CENTER,SLWE,online_payment,service_center,bill_payment,SRC-SLWE-EPAYMENT,high,Official SLWE payment page exposes service_center field.
+SLWE-VISIT-FULL-NAME,SLWE,visit_registration,full_name,customer_service_visit,SRC-SLWE-VISIT-REGISTER,high,Official SLWE visit-registration page exposes full_name field.
+SLWE-VISIT-PHONE,SLWE,visit_registration,phone,customer_service_visit,SRC-SLWE-VISIT-REGISTER,high,Official SLWE visit-registration page exposes phone field.
+SLWE-VISIT-CUSTOMER-NUMBER,SLWE,visit_registration,customer_number,customer_service_visit,SRC-SLWE-VISIT-REGISTER,high,Official SLWE visit-registration page exposes customer_number field.
+SLWE-VISIT-PROPERTY-NUMBER,SLWE,visit_registration,property_number,customer_service_visit,SRC-SLWE-VISIT-REGISTER,high,Official SLWE visit-registration page exposes property_number field.
+SLWE-VISIT-SERVICE-CENTER,SLWE,visit_registration,service_center,customer_service_visit,SRC-SLWE-VISIT-REGISTER,high,Official SLWE visit-registration page exposes service_center field.
+LRA-CONTACT-FIRST-NAME,LRA,contact_form,first_name,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes FirstName field.
+LRA-CONTACT-LAST-NAME,LRA,contact_form,last_name,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes LastName field.
+LRA-CONTACT-EMAIL,LRA,contact_form,email,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes EmailInput field.
+LRA-CONTACT-SUBJECT,LRA,contact_form,subject,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes subject field.
+LRA-CONTACT-ATTACHMENT,LRA,contact_form,uploaded_file,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes UploadedFile field.
+LRA-CONTACT-MESSAGE,LRA,contact_form,message,LRA_boundary_contact,SRC-LRA-CONTACT,high,Official LRA contact form exposes Message field.
+LRA-WQ-FACTOR-TYPE,LRA,water_quality_indicator_query,factor_type,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes FactorType field.
+LRA-WQ-FACTOR,LRA,water_quality_indicator_query,factor,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes Factor field.
+LRA-WQ-DATE-FROM,LRA,water_quality_indicator_query,date_from,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes date-from field.
+LRA-WQ-DATE-TO,LRA,water_quality_indicator_query,date_to,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes date-to field.
+LRA-WQ-BASIN,LRA,water_quality_indicator_query,basin,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes Basin field.
+LRA-WQ-SAMPLE-POINT,LRA,water_quality_indicator_query,sample_point,LRA_water_quality_lookup,SRC-LRA-WATER-QUALITY,high,Official LRA water-quality indicator page exposes SamplePoint field.
+MEW-CONTACT-FIRST-NAME,MEW,contact_form,first_name,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes first-name field.
+MEW-CONTACT-LAST-NAME,MEW,contact_form,last_name,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes last-name field.
+MEW-CONTACT-EMAIL,MEW,contact_form,email,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes email field.
+MEW-CONTACT-PHONE,MEW,contact_form,phone,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes phone field.
+MEW-CONTACT-SUBJECT,MEW,contact_form,subject,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes subject field.
+MEW-CONTACT-MESSAGE,MEW,contact_form,message,ministry_contact,SRC-MEW-CONTACT,high,Official MEW contact form exposes message field.
+MEW-CLAIMS-FIRST-NAME,MEW,claims_form,first_name,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes first-name field.
+MEW-CLAIMS-FATHER-NAME,MEW,claims_form,father_name,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes father-name field.
+MEW-CLAIMS-LAST-NAME,MEW,claims_form,last_name,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes last-name field.
+MEW-CLAIMS-ADDRESS,MEW,claims_form,full_address,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes full-address field.
+MEW-CLAIMS-PHONE,MEW,claims_form,phone,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes phone field.
+MEW-CLAIMS-MOBILE,MEW,claims_form,mobile,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes mobile field.
+MEW-CLAIMS-EMAIL,MEW,claims_form,email,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes email field.
+MEW-CLAIMS-CONFIDENTIALITY,MEW,claims_form,confidentiality_choice,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes confidentiality radio choice.
+MEW-CLAIMS-VIOLATION-TYPES,MEW,claims_form,violation_types,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes violation-type checkboxes.
+MEW-CLAIMS-OTHER-VIOLATION,MEW,claims_form,other_violations,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes other-violations text field.
+MEW-CLAIMS-EXTRA-INFO,MEW,claims_form,transaction_number_date_and_place_or_extra_info,ministry_claim,SRC-MEW-CLAIMS,high,Official MEW claims form exposes violation extra info field.
+SLWE-SUBSCRIPTION-ID,SLWE,drinking_water_subscription,copy_of_id,all_subscription_cases,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists ID copy for divided apartments undivided apartments completed houses and construction sites.
+SLWE-SUBSCRIPTION-TITLE-DEED,SLWE,drinking_water_subscription,title_deed_or_surveyed_sale_contract,divided_apartment_or_completed_house_or_construction_site,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists title deed or surveyed sale contract for divided apartments and title deed for completed houses and construction sites.
+SLWE-SUBSCRIPTION-MUNICIPAL-AREA,SLWE,drinking_water_subscription,municipality_statement_of_apartment_area,when_area_not_stated_or_for_undivided_apartment,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page requires municipality statement of apartment area when missing from deed and for undivided apartments.
+SLWE-SUBSCRIPTION-PRELIM-SALE,SLWE,drinking_water_subscription,preliminary_sale_contract,undivided_apartment,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists preliminary sale contract for undivided apartments.
+SLWE-SUBSCRIPTION-NOTARY,SLWE,drinking_water_subscription,notary_declaration,undivided_apartment,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists notary declaration for undivided apartments.
+SLWE-SUBSCRIPTION-BUILDING-PERMIT,SLWE,drinking_water_subscription,municipal_building_permit,completed_house_or_construction_site,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists municipal building permit for completed houses and construction sites.
+SLWE-SUBSCRIPTION-ENGINEERS-PERMIT,SLWE,drinking_water_subscription,engineers_syndicate_permit_cover_showing_floor_areas,completed_house_or_construction_site,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page lists Engineers Syndicate permit cover showing floor areas.
+SLWE-SUBSCRIPTION-COMPLETION,SLWE,drinking_water_subscription,municipality_completion_statement_with_completed_floor_area,completed_house_ready_for_habitation,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page requires a municipality statement that construction is complete and ready for habitation with completed floor area.
+SLWE-SUBSCRIPTION-CONSTRUCTION-CANCEL-NOTE,SLWE,construction_subscription_followup,subscriber_must_request_cancellation_after_construction_completion,construction_site_subscription,SRC-SLWE-SUBSCRIPTION-DRINKING-WATER,high,Official subscription page notes that after construction ends the subscriber must request cancellation of the construction subscription.
+SLWE-CANCEL-ID,SLWE,cancel_subscription,copy_of_id,subscription_cancellation,SRC-SLWE-CANCEL-SUBSCRIPTION,high,Official cancellation page lists ID copy.
+SLWE-CANCEL-LAST-RECEIPT,SLWE,cancel_subscription,copy_of_latest_water_receipt,subscription_cancellation,SRC-SLWE-CANCEL-SUBSCRIPTION,high,Official cancellation page lists latest water receipt copy.
+SLWE-CANCEL-TITLE-LEASE,SLWE,cancel_subscription,title_deed_or_sale_contract_or_lease_contract,subscription_cancellation,SRC-SLWE-CANCEL-SUBSCRIPTION,high,Official cancellation page lists title deed or sale contract or lease contract.
+SLWE-TRANSFER-ID,SLWE,transfer_subscription,copy_of_id,transfer_from_name_to_name,SRC-SLWE-TRANSFER-SUBSCRIPTION,high,Official transfer page lists ID copy.
+SLWE-TRANSFER-LAST-RECEIPT,SLWE,transfer_subscription,copy_of_latest_water_receipt,transfer_from_name_to_name,SRC-SLWE-TRANSFER-SUBSCRIPTION,high,Official transfer page lists latest water receipt copy.
+SLWE-TRANSFER-TITLE-SALE,SLWE,transfer_subscription,title_deed_or_sale_contract,transfer_from_name_to_name,SRC-SLWE-TRANSFER-SUBSCRIPTION,high,Official transfer page lists title deed or sale contract.
+SLWE-QUANTITY-ID,SLWE,water_quantity_adjustment,copy_of_id,quantity_adjustment,SRC-SLWE-WATER-QUANTITY-ADJUSTMENT,high,Official quantity-adjustment page lists ID copy.
+SLWE-QUANTITY-LAST-RECEIPT,SLWE,water_quantity_adjustment,copy_of_latest_water_receipt,quantity_adjustment,SRC-SLWE-WATER-QUANTITY-ADJUSTMENT,high,Official quantity-adjustment page lists latest water receipt copy.
+SLWE-QUANTITY-TITLE-SALE,SLWE,water_quantity_adjustment,title_deed_or_sale_contract,quantity_adjustment,SRC-SLWE-WATER-QUANTITY-ADJUSTMENT,high,Official quantity-adjustment page lists title deed or sale contract.
+SLWE-QUANTITY-COMPLETION,SLWE,water_quantity_adjustment,municipality_completion_statement,quantity_adjustment,SRC-SLWE-WATER-QUANTITY-ADJUSTMENT,high,Official quantity-adjustment page lists municipality completion statement.
+SLWE-QUANTITY-OCCUPANCY,SLWE,water_quantity_adjustment,occupancy_permit,quantity_adjustment,SRC-SLWE-WATER-QUANTITY-ADJUSTMENT,high,Official quantity-adjustment page lists occupancy permit.
+SLWE-ARREARS-ID,SLWE,arrears_installment,copy_of_id,arrears_installment_request,SRC-SLWE-ARREARS-INSTALLMENT,high,Official arrears-installment page lists ID copy.
+SLWE-ARREARS-RECEIPT,SLWE,arrears_installment,copy_of_water_receipt,arrears_installment_request,SRC-SLWE-ARREARS-INSTALLMENT,high,Official arrears-installment page lists water receipt copy.
+SLWE-ARREARS-UNDERTAKING,SLWE,arrears_installment,payment_undertaking,arrears_installment_request,SRC-SLWE-ARREARS-INSTALLMENT,high,Official arrears-installment page lists payment undertaking.
+SLWE-ARREARS-TITLE-SALE,SLWE,arrears_installment,title_deed_or_sale_contract,arrears_installment_request,SRC-SLWE-ARREARS-INSTALLMENT,high,Official arrears-installment page lists title deed or sale contract.
