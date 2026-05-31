@@ -1,0 +1,259 @@
+"""
+Expand public_safety_enforcement_routing_eval_v1.jsonl from 16 → 50 cases.
+
+34 new cases cover all 6 entities (CD, ISF, MUN, MUNICIPAL_POLICE,
+CENTRAL_INSPECTION, DGLAC) in all 3 language modes (Arabizi, Arabic, English)
+across all complaint-type boundaries.
+"""
+
+import json, pathlib
+
+ROOT = pathlib.Path(__file__).parent.parent
+EVAL_DIR = ROOT / "data/eval"
+FILE = EVAL_DIR / "public_safety_enforcement_routing_eval_v1.jsonl"
+
+# ─────────────────────────── CD — Civil Defense (6 new → total 8) ─────────────
+
+CD_NEW = [
+    # Fire emergencies — Arabizi / Arabic / English
+    {"id": "PSE-EVAL-017",
+     "prompt": "7ari2a bl beit w l nar 3am ttefsha2 bi nabatieh",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-001",
+     "expected_hitl_reason_codes": "emergency_first"},
+    {"id": "PSE-EVAL-018",
+     "prompt": "حريق في مبنى سكني في بيروت",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-001",
+     "expected_hitl_reason_codes": "emergency_first"},
+    {"id": "PSE-EVAL-019",
+     "prompt": "warehouse fire spreading in tripoli industrial zone",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-001",
+     "expected_hitl_reason_codes": "emergency_first"},
+    # Building structural risk / collapse
+    {"id": "PSE-EVAL-020",
+     "prompt": "bneye 3andha tasha22o2at ktire w fi 5atar te2a3 bi saida",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-002",
+     "expected_hitl_reason_codes": "building_safety_boundary"},
+    {"id": "PSE-EVAL-021",
+     "prompt": "انهيار جزئي في مبنى قديم في طرابلس",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-002",
+     "expected_hitl_reason_codes": "collapse_emergency"},
+    {"id": "PSE-EVAL-022",
+     "prompt": "people trapped by flooding in basement in hermel",
+     "expected_sector": "SAFETY", "expected_primary_entity": "CD",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-001",
+     "expected_hitl_reason_codes": "emergency_first"},
+]
+
+# ─────────────────────────── ISF — Law Enforcement (6 new → total 8) ──────────
+
+ISF_NEW = [
+    # Theft / armed incidents
+    {"id": "PSE-EVAL-023",
+     "prompt": "sar sal2a bi baiti bi tripoli w l 7arami lessa bel 7ay",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-003",
+     "expected_hitl_reason_codes": "law_enforcement_safety"},
+    {"id": "PSE-EVAL-024",
+     "prompt": "شجار بالأسلحة البيضاء في حي في بيروت",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-003",
+     "expected_hitl_reason_codes": "law_enforcement_safety"},
+    {"id": "PSE-EVAL-025",
+     "prompt": "car theft on main road near nabatieh",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-003",
+     "expected_hitl_reason_codes": "law_enforcement_safety"},
+    # Traffic accidents with injuries
+    {"id": "PSE-EVAL-026",
+     "prompt": "7adis sare3 3al autostrad 7add sidon w fi jare7in",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-004",
+     "expected_hitl_reason_codes": "traffic_accident_boundary"},
+    {"id": "PSE-EVAL-027",
+     "prompt": "حادث سير مع مصابين على الطريق الدولي قرب البترون",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-004",
+     "expected_hitl_reason_codes": "traffic_accident_boundary"},
+    {"id": "PSE-EVAL-028",
+     "prompt": "drunk driver caused accident blocking road in batroun",
+     "expected_sector": "SAFETY", "expected_primary_entity": "ISF",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-004",
+     "expected_hitl_reason_codes": "traffic_accident_boundary"},
+]
+
+# ─────────────────────────── MUN — Municipality (7 new → total 13) ─────────────
+
+MUN_NEW = [
+    # Dangerous assets (fallen tree, etc.)
+    {"id": "PSE-EVAL-029",
+     "prompt": "shajer mkassar 3al rasef w masde l darb bi beirut, l baladiye ma 3am te3mel shi",
+     "expected_sector": "SAFETY", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-005",
+     "expected_hitl_reason_codes": "dangerous_asset_boundary"},
+    # Stray animals
+    {"id": "PSE-EVAL-030",
+     "prompt": "klab dalli 3am yohjomo 3al 2atfal bi 7adi2a 3ame bi saida",
+     "expected_sector": "SAFETY", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-006",
+     "expected_hitl_reason_codes": "stray_animals_public_risk"},
+    {"id": "PSE-EVAL-031",
+     "prompt": "pack of stray dogs blocking school entrance in aley, children scared",
+     "expected_sector": "SAFETY", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-SAFE-006",
+     "expected_hitl_reason_codes": "stray_animals_public_risk"},
+    # Illegal construction
+    {"id": "PSE-EVAL-032",
+     "prompt": "bneye 3am tensho bala rakhse bi tripoli, rawwa7et lal baladiye w ma 7ada fetah temm",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-MUNI-004",
+     "expected_hitl_reason_codes": "illegal_construction_boundary"},
+    {"id": "PSE-EVAL-033",
+     "prompt": "بناء بدون ترخيص في حي سكني في زحلة",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-MUNI-004",
+     "expected_hitl_reason_codes": "illegal_construction_boundary"},
+    {"id": "PSE-EVAL-034",
+     "prompt": "illegal building extension going up in jounieh, no permit visible",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUN",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-MUNI-004",
+     "expected_hitl_reason_codes": "illegal_construction_boundary"},
+    # Municipality unresponsive
+    {"id": "PSE-EVAL-035",
+     "prompt": "l baladiye ma 3am tredd 3al shekwe min 3 asabi3 bi hermel",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUN",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-ADMIN-001",
+     "expected_hitl_reason_codes": ""},
+]
+
+# ────────────────────────── MUNICIPAL_POLICE (5 new → total 8) ─────────────────
+
+MUPOL_NEW = [
+    # Sidewalk obstruction
+    {"id": "PSE-EVAL-036",
+     "prompt": "cafe 7atte krase 3al rasef w masde l mashi b jounieh",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUNICIPAL_POLICE",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-MUNI-003",
+     "expected_hitl_reason_codes": ""},
+    # Noise disturbance
+    {"id": "PSE-EVAL-037",
+     "prompt": "ضجيج موتوسيكلات في الليل في البترون",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUNICIPAL_POLICE",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-MUNI-002",
+     "expected_hitl_reason_codes": "noise_enforcement_boundary"},
+    {"id": "PSE-EVAL-038",
+     "prompt": "neighbours construction work making noise after midnight in saida",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUNICIPAL_POLICE",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-MUNI-002",
+     "expected_hitl_reason_codes": "noise_enforcement_boundary"},
+    # Parking
+    {"id": "PSE-EVAL-039",
+     "prompt": "sayyara wa2feh 3al rasef w masde l mashi bi baabda",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUNICIPAL_POLICE",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-MUNI-001",
+     "expected_hitl_reason_codes": ""},
+    {"id": "PSE-EVAL-040",
+     "prompt": "باعة متجولون يحتلون الرصيف ويمنعون المشاة في بيروت",
+     "expected_sector": "OTHER", "expected_primary_entity": "MUNICIPAL_POLICE",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-MUNI-003",
+     "expected_hitl_reason_codes": ""},
+]
+
+# ────────────────────────── CENTRAL_INSPECTION (5 new → total 7) ───────────────
+
+CI_NEW = [
+    # Bribery / corruption
+    {"id": "PSE-EVAL-041",
+     "prompt": "mwa4af 7kome ma 3am yenjes l mo3amele illa bi mabla3 bi nabatieh",
+     "expected_sector": "OTHER", "expected_primary_entity": "CENTRAL_INSPECTION",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-002",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+    {"id": "PSE-EVAL-042",
+     "prompt": "موظف في البلدية طلب رشوة مقابل إنجاز معاملة في طرابلس",
+     "expected_sector": "OTHER", "expected_primary_entity": "CENTRAL_INSPECTION",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-002",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+    {"id": "PSE-EVAL-043",
+     "prompt": "government official demanding cash to process document in zahle",
+     "expected_sector": "OTHER", "expected_primary_entity": "CENTRAL_INSPECTION",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-002",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+    # Administrative negligence / delays
+    {"id": "PSE-EVAL-044",
+     "prompt": "dayret l dawle bi jbeil ma 3am tkhelles mo3amelat min isbu3in w ma fi 7ada bi msou2liye",
+     "expected_sector": "OTHER", "expected_primary_entity": "CENTRAL_INSPECTION",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-002",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+    {"id": "PSE-EVAL-045",
+     "prompt": "public service office delays document for 3 weeks with no explanation in aley",
+     "expected_sector": "OTHER", "expected_primary_entity": "CENTRAL_INSPECTION",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-002",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+]
+
+# ─────────────────────────── DGLAC — Registration (5 new → total 6) ────────────
+
+DGLAC_NEW = [
+    {"id": "PSE-EVAL-046",
+     "prompt": "badde souwwet sherkeh b zahle w ma 3arfe shu l ijraat lal DGLAC",
+     "expected_sector": "OTHER", "expected_primary_entity": "DGLAC",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-ADMIN-003",
+     "expected_hitl_reason_codes": ""},
+    {"id": "PSE-EVAL-047",
+     "prompt": "كيف أسجل نشاطاً تجارياً في مديرية تسجيل الشركات",
+     "expected_sector": "OTHER", "expected_primary_entity": "DGLAC",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-ADMIN-003",
+     "expected_hitl_reason_codes": ""},
+    {"id": "PSE-EVAL-048",
+     "prompt": "company name registration rejected by DGLAC, no reason given",
+     "expected_sector": "OTHER", "expected_primary_entity": "DGLAC",
+     "expected_hitl": True, "expected_complaint_type_id": "CT-ADMIN-003",
+     "expected_hitl_reason_codes": "oversight_complaint_boundary"},
+    {"id": "PSE-EVAL-049",
+     "prompt": "badde sta3lam 3an rakhset tijara bi saida, wein bfawwet",
+     "expected_sector": "OTHER", "expected_primary_entity": "DGLAC",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-ADMIN-003",
+     "expected_hitl_reason_codes": ""},
+    {"id": "PSE-EVAL-050",
+     "prompt": "رقم السجل التجاري غير موجود في نظام DGLAC في بيروت",
+     "expected_sector": "OTHER", "expected_primary_entity": "DGLAC",
+     "expected_hitl": False, "expected_complaint_type_id": "CT-ADMIN-003",
+     "expected_hitl_reason_codes": ""},
+]
+
+# ─────────────────────────── APPEND ─────────────────────────────────────────────
+
+ALL_NEW = CD_NEW + ISF_NEW + MUN_NEW + MUPOL_NEW + CI_NEW + DGLAC_NEW
+
+# Read existing cases
+existing_ids = set()
+existing_lines = []
+with FILE.open("r", encoding="utf-8") as fh:
+    for line in fh:
+        if line.strip():
+            obj = json.loads(line)
+            existing_ids.add(obj["id"])
+            existing_lines.append(line.rstrip())
+
+# Filter to only genuinely new cases
+to_add = [c for c in ALL_NEW if c["id"] not in existing_ids]
+
+with FILE.open("a", encoding="utf-8", newline="\n") as fh:
+    for case in to_add:
+        fh.write(json.dumps(case, ensure_ascii=False) + "\n")
+
+total = len(existing_lines) + len(to_add)
+print(f"public_safety_enforcement_routing_eval_v1.jsonl: {len(existing_lines)} → {total} cases  (+{len(to_add)} added)")
+
+# Verify entity distribution
+from collections import Counter
+entity_dist = Counter()
+with FILE.open("r", encoding="utf-8") as fh:
+    for line in fh:
+        if line.strip():
+            entity_dist[json.loads(line)["expected_primary_entity"]] += 1
+print("Entity distribution:", dict(entity_dist))
