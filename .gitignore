@@ -23,7 +23,7 @@ arabizi_v*.zip
 data/external_sources/
 data/raw/
 data/sources/
-data/eval/
+data/eval/*
 data/corpus/
 
 # Archive and internal docs — not part of the CedarFix repo
@@ -34,5 +34,27 @@ docs/
 New folder/
 prompts/
 reports/
-scripts/
+scripts/*
 _trash/
+
+# Force-include water-establishments reproducibility pack
+# (scripts/ and data/eval/ are ignored above, but these files are required
+#  to rebuild and verify the water routing pack from a clean checkout)
+!scripts/build_water_resolution_and_evals.py
+!scripts/evaluate_electricity_routing.py
+!scripts/evaluate_roads_public_works_routing.py
+!scripts/evaluate_telecom_routing.py
+!scripts/evaluate_water_routing.py
+!scripts/validate_electricity_kb.py
+!scripts/validate_roads_public_works_kb.py
+!scripts/validate_telecom_kb.py
+!scripts/validate_water_establishments_kb.py
+!scripts/validate_waste_environment_kb.py
+!scripts/audit_water_production_pack.py
+!scripts/scrape_water_establishment_coverage.py
+!scripts/triage_water_inventory_candidates.py
+!data/eval/electricity_routing_eval_v1.jsonl
+!data/eval/roads_public_works_routing_eval_v1.jsonl
+!data/eval/telecom_routing_eval_v1.jsonl
+!data/eval/waste_environment_routing_eval_v1.jsonl
+!data/eval/water_establishments_routing_eval_v1.jsonl

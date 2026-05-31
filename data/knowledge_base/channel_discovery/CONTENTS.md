@@ -44,3 +44,13 @@ Flagged sources: Aley complaint form (bot wall), Nabay complaint/suggestion form
 | `municipalities/municipality_complaint_workflows.csv` | +1 row: Aley complaint form (`blocked_needs_manual_review`, official route confirmed via homepage nav) |
 
 Municipalities already in the KB were not duplicated (Tripoli, Zahle, Ras El-Matn, El-Beddawi, Nabay, Al Fayhaa Union).
+
+---
+
+## Related Entity Shards
+
+- `../water_establishments/` holds the structured water-establishment routing shard.
+- `../electricity/` holds the structured electricity routing shard for EDL, EDZ, Civil Defense electrical emergencies, municipal streetlights, and private-generator boundaries.
+- `../telecom/` holds the structured telecom routing shard for Ogero, TRA, mobile-operator boundaries, private CPE, and private ISP cases.
+- `../roads_public_works/` holds the structured roads/public-works routing shard for local roads, MPWT national/classified road boundaries, CDR project ambiguity, and road-safety escalation.
+- `../waste_environment/` holds the structured waste/environment routing shard for municipal waste, MOE environmental complaints, hazardous waste, river/quarry pollution, and emergency fire/hazard boundaries.
