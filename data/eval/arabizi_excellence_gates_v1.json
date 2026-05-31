@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "2026-05-31",
+    "purpose": "Pass/fail promotion gates for the CedarFix Arabizi classification model. A finetuning run MUST pass all REQUIRED gates before being promoted to production. ADVISORY gates are tracked but do not block promotion.",
+    "eval_suite_reference": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl (505 cases)",
+    "telecom_eval_reference": "data/training/cidarfix_telecom_eval_locked.jsonl (150 cases)",
+    "baseline_scores_from": "reports/llm_eval_500_summary.json (2026-05-29)"
+  },
+  "gates": {
+    "G-01": {
+      "name": "top1_routing_accuracy",
+      "description": "Fraction of complaints routed to the correct primary entity (top-1 match)",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "top1_routing_accuracy",
+      "threshold": 0.95,
+      "baseline": 1.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — do not promote; retrain or fix routing rules"
+    },
+    "G-02": {
+      "name": "hitl_recall",
+      "description": "Fraction of cases that REQUIRE human review that are correctly flagged as HITL. Missing a HITL case is a safety failure.",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "hitl_recall",
+      "threshold": 1.0,
+      "baseline": 1.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — HITL recall must be perfect; any miss is a safety risk"
+    },
+    "G-03": {
+      "name": "hitl_precision",
+      "description": "Fraction of HITL-flagged cases that actually require review. Low precision = too many false flags, degrading throughput.",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "hitl_precision",
+      "threshold": 0.85,
+      "baseline": 1.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — excessive false HITL flags degrade operational efficiency"
+    },
+    "G-04": {
+      "name": "deadline_hallucination_rate",
+      "description": "Fraction of complaints where the model invents a specific SLA deadline not in the KB. Must be zero.",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "deadline_hallucination_rate",
+      "threshold": 0.0,
+      "baseline": 0.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — hallucinated deadlines create false citizen expectations"
+    },
+    "G-05": {
+      "name": "wrong_agency_rate",
+      "description": "Fraction of complaints routed to a factually wrong agency (e.g. ISF for water, OGERO for electricity).",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "wrong_agency_rate",
+      "threshold": 0.02,
+      "baseline": 0.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — wrong routing erodes citizen trust and causes real delays"
+    },
+    "G-06": {
+      "name": "telecom_sector_accuracy",
+      "description": "Top-1 accuracy on the locked 150-case TELECOM eval slice. Must distinguish OGERO (line/DSL) from TRA (billing/regulatory/mobile).",
+      "eval_file": "data/training/cidarfix_telecom_eval_locked.jsonl",
+      "metric": "top1_routing_accuracy",
+      "threshold": 0.90,
+      "baseline": null,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — TELECOM cannot be claimed without passing this slice"
+    },
+    "G-07": {
+      "name": "arabizi_stress_sector_stability",
+      "description": "Fraction of Arabizi spelling variants that produce the same sector label (from arabizi_stress_lab_v1.json).",
+      "eval_file": "data/eval/arabizi_stress_lab_v1.json",
+      "metric": "stable_sector_rate",
+      "threshold": 0.90,
+      "baseline": 1.0,
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — routing must be stable across common Arabizi spelling variants"
+    },
+    "G-08": {
+      "name": "arabizi_stress_issue_stability",
+      "description": "Fraction of Arabizi spelling variants that produce the same issue_type label.",
+      "eval_file": "data/eval/arabizi_stress_lab_v1.json",
+      "metric": "acceptable_decision_rate",
+      "threshold": 0.70,
+      "baseline": 0.7083,
+      "gate_type": "ADVISORY",
+      "fail_action": "WARN — issue_type instability is acceptable; sector stability is what blocks"
+    },
+    "G-09": {
+      "name": "over_route_municipality_rate",
+      "description": "Rate of complaints incorrectly sent to a municipality when a national authority should handle it.",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "over_route_municipality_count",
+      "threshold": 3,
+      "baseline": 0,
+      "gate_type": "ADVISORY",
+      "fail_action": "WARN — review municipality override logic if count rises above 3"
+    },
+    "G-10": {
+      "name": "source_backed_answer_rate",
+      "description": "Fraction of routing decisions backed by a registered source in source_registry.csv.",
+      "eval_file": "data/eval/llm_routing_eval_cases_expanded_v0_2.jsonl",
+      "metric": "source_backed_answer_rate",
+      "threshold": 0.95,
+      "baseline": 1.0,
+      "gate_type": "ADVISORY",
+      "fail_action": "WARN — unregistered sources indicate KB gaps; add to source_registry.csv"
+    }
+  },
+  "promotion_decision": {
+    "required_gates": ["G-01", "G-02", "G-03", "G-04", "G-05", "G-06", "G-07"],
+    "advisory_gates": ["G-08", "G-09", "G-10"],
+    "rule": "ALL required gates must PASS. Advisory gates generate warnings only. Record gate run results in reports/ before promoting."
+  }
+}

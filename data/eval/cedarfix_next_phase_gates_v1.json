@@ -1,0 +1,97 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "2026-05-31",
+    "purpose": "Next-phase promotion gates for the full CedarFix AI system. These gates gate the KB, router, and training pipeline together — not just the classifier model. Pass all REQUIRED gates before any production deployment or major version bump.",
+    "companion_gates": "data/eval/arabizi_excellence_gates_v1.json — model-only gates (must also pass)"
+  },
+  "gates": {
+    "P-01": {
+      "name": "vocab_version_minimum",
+      "description": "Production arabizi_vocabulary.json must be v14 or later (6340+ terms, 0 CRITICAL violations).",
+      "check": "data/knowledge_base/arabizi_vocabulary.json must match data/knowledge_base/arabizi/arabizi_vocabulary_v14_merged.json or newer",
+      "current_status": "PASS — production arabizi_vocabulary.json is v14.0.0 (6340 term_metadata entries, 463 issue_type_keyword variants across 8 sectors); promoted in commit 204db883",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — promote vocab v14 before any finetuning run or production deployment"
+    },
+    "P-02": {
+      "name": "training_manifest_exists",
+      "description": "A finetuning_manifest_v1.json must exist, listing all training files with row counts and split roles.",
+      "check": "data/training/finetuning_manifest_v1.json must exist and list train/val/test/telecom_eval_locked",
+      "current_status": "PASS — created 2026-05-31",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — without a manifest, finetuning runs are not reproducible"
+    },
+    "P-03": {
+      "name": "zero_train_eval_overlap",
+      "description": "No exact text overlap between training data and any locked eval file.",
+      "check": "MD5 hash comparison: train vs val, train vs test_locked, train vs telecom_eval_locked",
+      "current_status": "PASS — verified 2026-05-31 (0 overlaps across all pairs)",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — eval contamination makes all accuracy numbers invalid"
+    },
+    "P-04": {
+      "name": "telecom_locked_eval_exists",
+      "description": "A locked 150-case TELECOM eval slice must exist with stratified issue_type coverage and 0 train overlap.",
+      "check": "data/training/cidarfix_telecom_eval_locked.jsonl must exist with >= 100 rows",
+      "current_status": "PASS — 150 rows, stratified, seed=42, 0 train overlap (created 2026-05-31)",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — TELECOM accuracy claims require a held-out evidence base"
+    },
+    "P-05": {
+      "name": "routing_kb_validates",
+      "description": "scripts/validate_routing_kb.py must report OK (no ERRORS, only expected WARNING on cross-taxonomy gate scopes).",
+      "check": "run: python scripts/validate_routing_kb.py",
+      "current_status": "PASS — validated 2026-05-31 (1 expected WARNING, 0 errors)",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — broken routing KB will cause silent mismatch between model output and routing table"
+    },
+    "P-06": {
+      "name": "full_accuracy_audit_clean",
+      "description": "scripts/_full_accuracy_audit.py must report 0 errors, 0 warnings.",
+      "check": "run: python scripts/_full_accuracy_audit.py",
+      "current_status": "PASS — 0 errors, 0 warnings, 5/5 smoke tests pass (2026-05-31)",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — audit failures indicate KB/router inconsistencies"
+    },
+    "P-07": {
+      "name": "hard_benchmark_breadth",
+      "description": "The hard-negative eval benchmark must have >= 300 cases across at least 5 sectors, with airport/travel < 30% of cases.",
+      "check": "data/eval/arabizi_master_hard_negative_eval_cases.jsonl: count rows, count by category",
+      "current_status": "PASS — 304 cases, 9 sectors (ELECTRICITY=49, ROADS=47, WATER=42, SAFETY=37, OTHER=33, TELECOM=31, WASTE=28, ENVIRONMENT=24, ADMIN=13); 120/304 HITL; arabizi=263/english=29/arabic=12; airport/travel=0% (2026-05-31)",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — a hard benchmark dominated by one category cannot support general robustness claims"
+    },
+    "P-08": {
+      "name": "entity_contact_schema_complete",
+      "description": "All 18 entities in public_entities_extended.csv must have all 8 contact fields filled (no empty values).",
+      "check": "run: python scripts/_screenshot_audit.py — all 18 must show missing=NONE",
+      "current_status": "PASS — verified 2026-05-31",
+      "gate_type": "REQUIRED",
+      "fail_action": "BLOCK — incomplete contact data causes citizen-facing routing errors"
+    },
+    "P-09": {
+      "name": "iep3_vs_router_gap_documented",
+      "description": "The gap between IEP3 (uses sector_agency_map.csv) and the municipality-aware router (src/route_complaint.py) is documented and a migration plan exists.",
+      "check": "IEP3 upgrade plan must be documented or IEP3 must use route_complaint.py",
+      "current_status": "FAIL — IEP3 still uses sector_agency_map.csv; no migration plan committed",
+      "gate_type": "ADVISORY",
+      "fail_action": "WARN — CedarFix accuracy claims apply to route_complaint.py only, not to IEP3"
+    },
+    "P-10": {
+      "name": "arabic_script_coverage",
+      "description": "Training set must have >= 500 Arabic-script rows OR the model explicitly claims Arabizi-only support.",
+      "check": "finetuning_manifest_v1.json language_mix.arabic count",
+      "current_status": "WARN — current train: 0 Arabic-script rows; model must be declared Arabizi-only",
+      "gate_type": "ADVISORY",
+      "fail_action": "WARN — document Arabic-only limitation in all user-facing materials"
+    }
+  },
+  "promotion_decision": {
+    "required_gates": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06", "P-07", "P-08"],
+    "advisory_gates": ["P-09", "P-10"],
+    "currently_failing_required": [],
+    "currently_passing_required": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06", "P-07", "P-08"],
+    "immediate_actions": []
+  }
+}

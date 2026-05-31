@@ -1,0 +1,115 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "2026-05-31",
+    "project": "CedarFix AI — Lebanese Arabizi Complaint Classifier",
+    "base_model_family": "instruction-tuned LLM (provider TBD)",
+    "task": "Multi-label complaint classification: is_municipal_complaint, sector, issue_type, confidence, evidence_terms",
+    "vocab_version": "v14 (6340 terms)",
+    "notes": "telecom_eval_locked is NOT used in training — reserved for TELECOM sector evaluation only"
+  },
+  "splits": {
+    "train": {
+      "file": "data/training/cidarfix_v29_batch8_train_v14_enriched.jsonl",
+      "rows": 91169,
+      "role": "primary training set",
+      "schema": "messages (system/user/assistant) with assistant JSON output",
+      "sector_distribution": {
+        "ROADS": 12183,
+        "WATER": 11736,
+        "SAFETY": 11403,
+        "WASTE": 10965,
+        "ELECTRICITY": 9250,
+        "TELECOM": 5466,
+        "ADMIN": 18,
+        "OTHER_MIXED": 30148
+      },
+      "language_mix": {
+        "arabizi": 90795,
+        "english_or_latin": 374
+      },
+      "exact_overlap_with_val": 0,
+      "exact_overlap_with_test": 0
+    },
+    "val": {
+      "file": "data/training/cidarfix_v29_batch8_val_v14_enriched.jsonl",
+      "rows": 10562,
+      "role": "validation set (used for loss monitoring during training)",
+      "sector_distribution": {
+        "ROADS": 1528,
+        "WATER": 1380,
+        "SAFETY": 1367,
+        "WASTE": 1291,
+        "ELECTRICITY": 1241,
+        "TELECOM": 612,
+        "ADMIN": 4,
+        "OTHER_MIXED": 3139
+      },
+      "language_mix": {
+        "arabizi": 10519,
+        "english_or_latin": 43
+      }
+    },
+    "test_locked": {
+      "file": "data/training/cidarfix_v29_batch7_model_final_test_locked.jsonl",
+      "rows": 7940,
+      "role": "LOCKED holdout — never used in training or val; final accuracy benchmark",
+      "sector_distribution": {
+        "ROADS": 1418,
+        "SAFETY": 1328,
+        "WATER": 1294,
+        "ELECTRICITY": 997,
+        "WASTE": 978,
+        "TELECOM": 0,
+        "OTHER_MIXED": 1925
+      },
+      "language_mix": {
+        "arabizi": 7920,
+        "english_or_latin": 20
+      },
+      "notes": "No TELECOM rows — use telecom_eval_locked for TELECOM sector evaluation"
+    },
+    "telecom_eval_locked": {
+      "file": "data/training/cidarfix_telecom_eval_locked.jsonl",
+      "rows": 150,
+      "role": "LOCKED TELECOM eval slice — stratified by issue_type, sourced from val (0 overlap with train)",
+      "sector_distribution": {
+        "TELECOM": 150
+      },
+      "issue_type_distribution": {
+        "connectivity_issue": 42,
+        "slow_internet": 38,
+        "service_unresponsive": 25,
+        "line_fault": 24,
+        "infrastructure_damage": 21
+      },
+      "language_mix": {
+        "arabizi": 144,
+        "english_or_latin": 6
+      },
+      "source": "stratified sample from val TELECOM rows; seed=42; created 2026-05-31"
+    }
+  },
+  "readiness_gates": {
+    "minimum_train_rows": 80000,
+    "minimum_val_rows": 8000,
+    "telecom_locked_eval_required": true,
+    "zero_train_val_overlap": true,
+    "vocab_version_minimum": "v14",
+    "all_sectors_represented": ["ROADS", "WATER", "SAFETY", "WASTE", "ELECTRICITY", "TELECOM"],
+    "status": {
+      "minimum_train_rows": "PASS (91169 >= 80000)",
+      "minimum_val_rows": "PASS (10562 >= 8000)",
+      "telecom_locked_eval_required": "PASS (150 rows created)",
+      "zero_train_val_overlap": "PASS (verified 2026-05-31)",
+      "vocab_version_minimum": "PENDING (production still v13.7.2 — promote v14 before finetuning)",
+      "all_sectors_represented": "PASS"
+    }
+  },
+  "known_gaps": {
+    "arabic_script_rows": "Near-zero — model will be Arabizi-only; Arabic support requires separate data collection",
+    "test_locked_telecom": "test_locked has 0 TELECOM rows — use telecom_eval_locked for TELECOM benchmarking",
+    "admin_sector_low": "ADMIN rows extremely low (18 train, 4 val) — not suitable for ADMIN classification claims",
+    "airport_bias_in_hard_benchmark": "Existing 134-case hard benchmark is airport-dominated; expand to 300-500 for robust eval"
+  }
+}
