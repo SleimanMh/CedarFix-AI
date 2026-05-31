@@ -71,7 +71,8 @@
       background: var(--white);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
     .table-header {
       display: flex;
@@ -94,6 +95,7 @@
     }
     .btn-refresh:hover { border-color: var(--green); color: var(--green); }
     table { width: 100%; border-collapse: collapse; }
+    #reviewTable table { min-width: 980px; }
     th {
       background: var(--gray-100);
       font-size: 12px;
@@ -149,6 +151,191 @@
     }
     .btn-resolve:hover { background: var(--green-mid); }
 
+    /* ── Toast notifications ── */
+    .toast-stack {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10000;
+    }
+    .toast {
+      min-width: 260px;
+      max-width: 420px;
+      background: #1b4332;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.2s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.error { background: #9d0208; }
+
+    /* ── Review editor modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 24, 20, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 12000;
+      padding: 18px;
+    }
+    .modal-overlay.open { display: flex; }
+    .review-modal {
+      width: min(1100px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      border: 1px solid #dfe4ea;
+    }
+    .review-modal-header {
+      position: sticky;
+      top: 0;
+      background: #f6f9f7;
+      border-bottom: 1px solid #e4ebe6;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 1;
+    }
+    .review-modal-title {
+      margin: 0;
+      font-size: 16px;
+      color: #1f3f34;
+      font-weight: 700;
+    }
+    .btn-close-modal {
+      border: 1px solid #cdd7cf;
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .review-modal-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .review-card {
+      border: 1px solid #e4ebe6;
+      border-radius: 10px;
+      background: #fcfefd;
+      padding: 12px;
+    }
+    .review-card h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #416457;
+    }
+    .review-kv {
+      font-size: 13px;
+      color: #46535d;
+      line-height: 1.45;
+      margin: 0;
+      word-break: break-word;
+    }
+    .review-image {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #dbe6de;
+      background: #f8fbf9;
+    }
+    .review-image-placeholder {
+      font-size: 13px;
+      color: #6d7e74;
+      padding: 18px 10px;
+      border: 1px dashed #c7d5cc;
+      border-radius: 8px;
+      text-align: center;
+      background: #fafcfb;
+    }
+    .review-form {
+      display: grid;
+      gap: 10px;
+    }
+    .review-form-row {
+      display: grid;
+      gap: 6px;
+    }
+    .review-form label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #385e50;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .review-form select,
+    .review-form textarea {
+      border: 1px solid #cfd8d2;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #fff;
+    }
+    .review-form textarea { min-height: 120px; }
+    .review-form textarea.notes { min-height: 70px; font-family: inherit; }
+    .review-form small { color: #60717d; font-size: 12px; }
+    .review-error {
+      color: #9d0208;
+      font-size: 12px;
+      display: none;
+    }
+    .review-error.show { display: block; }
+    .review-modal-footer {
+      position: sticky;
+      bottom: 0;
+      background: #f6f9f7;
+      border-top: 1px solid #e4ebe6;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .btn-modal-secondary,
+    .btn-modal-primary {
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-modal-secondary {
+      border-color: #ccd7cf;
+      background: #fff;
+      color: #2c3d34;
+    }
+    .btn-modal-primary {
+      background: #2d6a4f;
+      color: #fff;
+    }
+    .btn-modal-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
     .empty-state {
       text-align: center;
       padding: 48px 24px;
@@ -180,6 +367,7 @@
 
     @media (max-width: 900px) {
       .stats-bar { grid-template-columns: repeat(3, 1fr); }
+      .review-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
       .stats-bar { grid-template-columns: 1fr 1fr; }
@@ -226,6 +414,7 @@
   <div class="admin-tabs">
     <button class="admin-tab active" id="tabAll" onclick="switchTab('all')">All Complaints</button>
     <button class="admin-tab" id="tabReview" onclick="switchTab('review')">Review Queue <span class="badge" id="reviewBadge">0</span></button>
+    <button class="admin-tab" id="tabResolved" onclick="switchTab('resolved')">Resolved Reviews</button>
     <button class="admin-tab" id="tabDup" onclick="switchTab('dup')">Duplicates</button>
   </div>
 
@@ -284,8 +473,102 @@
       </div>
     </div>
 
+    <!-- Resolved Review History -->
+    <div class="tab-section" id="sectionResolved">
+      <div class="admin-table-wrap">
+        <div class="table-header">
+          <h3>Resolved Human Reviews</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="table-meta" id="resolvedMeta"></span>
+            <button class="btn-refresh" onclick="loadResolvedReviews()">↻ Refresh</button>
+          </div>
+        </div>
+        <div id="resolvedTable"><div class="empty-state"><div class="empty-icon">✅</div>Loading…</div></div>
+      </div>
+    </div>
+
   </div>
 
+  <div id="reviewModalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="review-modal" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+      <div class="review-modal-header">
+        <h3 id="reviewModalTitle" class="review-modal-title">Review Item</h3>
+        <button id="btnCloseReviewModal" class="btn-close-modal" type="button">Close</button>
+      </div>
+
+      <div class="review-modal-body">
+        <div class="review-grid">
+          <div class="review-card">
+            <h4>Queue Context</h4>
+            <p id="reviewContextText" class="review-kv">—</p>
+          </div>
+          <div class="review-card">
+            <h4>Complaint Snapshot</h4>
+            <p id="reviewComplaintText" class="review-kv">—</p>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <h4>Image Preview</h4>
+          <img id="reviewImagePreview" class="review-image" alt="Complaint image" style="display:none" />
+          <div id="reviewImagePlaceholder" class="review-image-placeholder">No image available for this complaint.</div>
+        </div>
+
+        <form id="reviewEditorForm" class="review-form">
+          <div class="review-form-row">
+            <label for="reviewDecision">Feedback Decision</label>
+            <select id="reviewDecision">
+              <option value="">Resolve only (no feedback loop update)</option>
+              <option value="can_be_processed">can_be_processed</option>
+              <option value="cannot_be_processed">cannot_be_processed</option>
+              <option value="fake">fake</option>
+              <option value="unsupported">unsupported</option>
+            </select>
+            <small>Choose <b>can_be_processed</b> to feed corrected JSON into finetuning export.</small>
+          </div>
+
+          <div class="review-form-row">
+            <label for="reviewMatch">Text/Image Match Confirmation</label>
+            <select id="reviewMatch">
+              <option value="">Not sure / not provided</option>
+              <option value="true">Yes, they match</option>
+              <option value="false">No, they do not match</option>
+            </select>
+          </div>
+
+          <div class="review-form-row">
+            <label for="reviewNotes">Resolution Notes</label>
+            <textarea id="reviewNotes" class="notes" placeholder="What did you decide and why?"></textarea>
+          </div>
+
+          <div class="review-grid">
+            <div class="review-form-row">
+              <label for="reviewTextJson">Text LLM JSON (editable)</label>
+              <textarea id="reviewTextJson" placeholder='{"issue_type":"water_pipe", ...}'></textarea>
+            </div>
+            <div class="review-form-row">
+              <label for="reviewImageJson">Image LLM JSON (editable)</label>
+              <textarea id="reviewImageJson" placeholder='{"visual_subcategory":"water_leak", ...}'></textarea>
+            </div>
+          </div>
+
+          <div class="review-form-row">
+            <label for="reviewRoutingJson">Routing Decision JSON (editable)</label>
+            <textarea id="reviewRoutingJson" placeholder='{"primary_entity":"...", ...}'></textarea>
+          </div>
+
+          <div id="reviewEditorError" class="review-error"></div>
+        </form>
+      </div>
+
+      <div class="review-modal-footer">
+        <button id="btnCancelReviewModal" class="btn-modal-secondary" type="button">Cancel</button>
+        <button id="btnSubmitReviewEditor" class="btn-modal-primary" type="button">Save & Resolve</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack"></div>
   <script src="admin.js"></script>
 </body>
 </html>

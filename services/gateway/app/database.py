@@ -20,6 +20,22 @@ AsyncSessionLocal = sessionmaker(async_engine, class_=AsyncSession, expire_on_co
 async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Dedicated store for admin-edited review outcomes and corrected JSON payloads.
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS admin_review_edits (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMP DEFAULT NOW(),
+                review_item_id INTEGER,
+                complaint_id VARCHAR(36) NOT NULL,
+                admin_id VARCHAR(100) NOT NULL,
+                resolution_notes TEXT,
+                admin_decision VARCHAR(50),
+                image_text_match BOOLEAN,
+                text_llm_json JSONB,
+                image_llm_json JSONB,
+                routing_json JSONB
+            )
+        """))
 
 
 async def save_complaint(decision: ComplaintDecision):
@@ -116,7 +132,9 @@ async def fetch_user_complaints(user_id: str, page: int = 1, limit: int = 20) ->
                 SELECT id, created_at, status, complaint_type, severity,
                        assigned_entity, duplicate_status, requires_review,
                        priority_score, location_district,
-                       LEFT(original_text, 120) AS text_preview
+                       LEFT(original_text, 120) AS text_preview,
+                       full_decision_json->'text_analysis'->>'subcategory' AS subcategory,
+                       full_decision_json->'text_analysis'->>'category' AS category
                 FROM complaints
                 WHERE user_id = :uid
                 ORDER BY created_at DESC
@@ -160,7 +178,9 @@ async def fetch_all_complaints_admin(page: int = 1, limit: int = 50) -> dict:
                 SELECT id, created_at, status, complaint_type, severity,
                        assigned_entity, duplicate_status, requires_review,
                        priority_score, user_id, location_district,
-                       LEFT(original_text, 120) AS text_preview
+                       LEFT(original_text, 120) AS text_preview,
+                       full_decision_json->'text_analysis'->>'subcategory' AS subcategory,
+                       full_decision_json->'text_analysis'->>'category' AS category
                 FROM complaints
                 ORDER BY created_at DESC
                 LIMIT :lim OFFSET :off
@@ -189,6 +209,34 @@ async def fetch_review_queue_admin() -> list:
         return [dict(zip(cols, r)) for r in result.fetchall()]
 
 
+async def fetch_resolved_review_admin(limit: int = 200) -> list:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            text("""
+                SELECT q.id, q.created_at, q.resolved_at, q.complaint_id,
+                       q.validation_status, q.review_reason,
+                       q.resolved_by, q.resolution_notes,
+                       LEFT(q.original_text, 120) AS text_preview,
+                       e.admin_decision, e.image_text_match,
+                       e.created_at AS admin_edit_created_at
+                FROM human_review_queue q
+                LEFT JOIN LATERAL (
+                    SELECT admin_decision, image_text_match, created_at
+                    FROM admin_review_edits e
+                    WHERE e.review_item_id = q.id
+                    ORDER BY e.id DESC
+                    LIMIT 1
+                ) e ON TRUE
+                WHERE q.resolved = true
+                ORDER BY q.resolved_at DESC NULLS LAST, q.created_at DESC
+                LIMIT :lim
+            """),
+            {"lim": limit},
+        )
+        cols = list(result.keys())
+        return [dict(zip(cols, r)) for r in result.fetchall()]
+
+
 async def fetch_duplicates_admin(page: int = 1, limit: int = 50) -> dict:
     offset = (page - 1) * limit
     async with AsyncSessionLocal() as session:
@@ -196,7 +244,9 @@ async def fetch_duplicates_admin(page: int = 1, limit: int = 50) -> dict:
             text("""
                 SELECT id, created_at, complaint_type, duplicate_status,
                        duplicate_of, cluster_id, assigned_entity, severity,
-                       LEFT(original_text, 120) AS text_preview
+                       LEFT(original_text, 120) AS text_preview,
+                       full_decision_json->'text_analysis'->>'subcategory' AS subcategory,
+                       full_decision_json->'text_analysis'->>'category' AS category
                 FROM complaints
                 WHERE duplicate_status != 'NEW'
                 ORDER BY created_at DESC
@@ -213,17 +263,89 @@ async def fetch_duplicates_admin(page: int = 1, limit: int = 50) -> dict:
     return {"complaints": rows, "total": total}
 
 
-async def resolve_review_item(item_id: int, resolved_by: str, notes: str = "") -> None:
+async def resolve_review_item(
+    item_id: int,
+    resolved_by: str,
+    notes: str = "",
+    admin_decision: Optional[str] = None,
+    corrected_text_json: Optional[dict] = None,
+    corrected_image_json: Optional[dict] = None,
+    corrected_rag_response: Optional[dict] = None,
+    image_text_match: Optional[bool] = None,
+    text_llm_json: Optional[dict] = None,
+    image_llm_json: Optional[dict] = None,
+    routing_json: Optional[dict] = None,
+) -> None:
     async with AsyncSessionLocal() as session:
-        await session.execute(
+        result = await session.execute(
             text("""
                 UPDATE human_review_queue
                 SET resolved = true, resolved_at = NOW(),
                     resolved_by = :by, resolution_notes = :notes
                 WHERE id = :id
+                RETURNING complaint_id
             """),
             {"id": item_id, "by": resolved_by, "notes": notes},
         )
+
+        row = result.fetchone()
+        complaint_id = row[0] if row else None
+
+        if complaint_id:
+            await session.execute(
+                text("""
+                    INSERT INTO admin_review_edits
+                        (review_item_id, complaint_id, admin_id, resolution_notes,
+                         admin_decision, image_text_match, text_llm_json,
+                         image_llm_json, routing_json)
+                    VALUES
+                        (:review_item_id, :complaint_id, :admin_id, :resolution_notes,
+                         :admin_decision, :image_text_match, :text_llm_json,
+                         :image_llm_json, :routing_json)
+                """),
+                {
+                    "review_item_id": item_id,
+                    "complaint_id": complaint_id,
+                    "admin_id": resolved_by,
+                    "resolution_notes": notes,
+                    "admin_decision": admin_decision,
+                    "image_text_match": image_text_match,
+                    "text_llm_json": json.dumps(text_llm_json) if text_llm_json else None,
+                    "image_llm_json": json.dumps(image_llm_json) if image_llm_json else None,
+                    "routing_json": json.dumps(routing_json) if routing_json else None,
+                },
+            )
+
+        # Optional: push admin feedback into the existing retraining feedback loop.
+        # This lets reviewers close the queue item and label data in one action.
+        if complaint_id and admin_decision:
+            usable = admin_decision == "can_be_processed"
+            await session.execute(
+                text("""
+                    UPDATE retraining_store
+                    SET admin_reviewed         = TRUE,
+                        admin_reviewed_at      = NOW(),
+                        admin_reviewed_by      = :admin_id,
+                        admin_decision         = :admin_decision,
+                        admin_notes            = COALESCE(:admin_notes, admin_notes),
+                        corrected_text_json    = :text_json,
+                        corrected_image_json   = :image_json,
+                        corrected_rag_response = :rag_json,
+                        usable_for_finetuning  = :usable
+                    WHERE complaint_id = :cid
+                """),
+                {
+                    "cid": complaint_id,
+                    "admin_id": resolved_by,
+                    "admin_decision": admin_decision,
+                    "admin_notes": notes,
+                    "text_json": json.dumps(corrected_text_json) if corrected_text_json else None,
+                    "image_json": json.dumps(corrected_image_json) if corrected_image_json else None,
+                    "rag_json": json.dumps(corrected_rag_response) if corrected_rag_response else None,
+                    "usable": usable,
+                },
+            )
+
         await session.commit()
 
 

@@ -298,11 +298,12 @@ Given an image, return ONLY a valid JSON object (no markdown, no explanation):
   "is_harmful": <true|false>,
   "is_ai_generated": <true|false>,
   "damage_visible": <true|false>,
-  "visual_category": "<roads | drainage | sanitation | electricity | water | other | none>",
-  "visual_subcategory": "<pothole | road_damage | flooding | waste_accumulation | streetlight | traffic_light | sidewalk_damage | pipe_leak | other | none>",
+    "visual_category": "<free-form, specific snake_case label that best groups the visible issue (e.g. street_furniture, urban_greenery, vandalism, animal_hazard, environmental_hazard, road_surface, drainage, water_network, electrical_grid, public_space_issue). Use 'other' only if truly impossible to identify>",
+    "visual_subcategory": "<free-form, highly specific snake_case label for what is actually visible (e.g. broken_bench, fallen_tree, graffiti, stray_animal_attack, chemical_spill, illegal_dumping, collapsed_wall, broken_railing, damaged_sign, pipe_leak, pothole). Avoid broad labels>",
+  "caption": "<a single descriptive sentence of what you actually see in the image, written as a natural English description — e.g. 'A damaged park bench with broken wooden slats lying on the ground near a pedestrian path.'>",
   "semantic_domain": "<one of: transportation | utilities | environment | safety | other>",
-  "physical_component": "<specific element: road_surface | sidewalk | traffic_signal | street_light | water_pipe | water_supply | electrical_line | drainage_system | public_space | other>",
-  "failure_mode": "<one of: damage | outage | overflow | accumulation | blockage | other>",
+  "physical_component": "<specific element: road_surface | sidewalk | traffic_signal | street_light | water_pipe | water_supply | electrical_line | drainage_system | public_space | street_furniture | other>",
+  "failure_mode": "<one of: damage | outage | overflow | accumulation | blockage | contamination | other>",
   "damage_severity": "<CRITICAL | HIGH | MEDIUM | LOW | NONE>",
   "location_cues": ["<any visible location identifiers, street signs, Lebanese landmarks, null if none>"],
   "confidence": <0.0-1.0>,
@@ -310,14 +311,19 @@ Given an image, return ONLY a valid JSON object (no markdown, no explanation):
 }
 
 Rules:
-- is_valid_complaint_image: true only if the image shows real infrastructure damage.
+- caption: ALWAYS fill this with a concrete, specific description of what is visible. Do NOT say "the image shows infrastructure damage" — describe exactly what you see (e.g. "A large pothole filled with brown water on a cracked asphalt road.", "Graffiti covering a concrete wall near a bridge abutment.", "A fallen tree blocking a two-lane residential street.").
+- If the image indicates a complaint, set is_valid_complaint_image=true and use specific labels in visual_category + visual_subcategory.
+- NEVER use broad placeholders like "other", "infrastructure_issue", or "damage" when a more specific label is possible.
+- If the image is not a complaint, still describe what it contains accurately in caption and use specific labels for the visible content.
+- is_valid_complaint_image: true only if the image shows real infrastructure damage or a public-space problem.
 - is_harmful: true for graphic violence, hate symbols, explicit content.
-- is_ai_generated: true only if clearly synthetic/AI-rendered — this is a weak signal only.
+- is_ai_generated: true only if clearly synthetic/AI-rendered.
 - location_cues: extract any Arabic/French/English text visible in the image.
 - damage_severity CRITICAL = road fully blocked, imminent danger.
 - semantic_domain=transportation for road/traffic/sidewalk; utilities for water/electricity/telecom; environment for flooding/garbage; safety for personal danger.
 - physical_component = the specific infrastructure element visibly present or damaged.
-- failure_mode: damage = physical breakage; outage = service unavailable; overflow = flooding/excess water; accumulation = waste buildup; blockage = obstruction.
+- failure_mode: damage = physical breakage; outage = service unavailable; overflow = flooding/excess water; accumulation = waste buildup; blockage = obstruction; contamination = chemical or biological hazard.
+- visual_subcategory: ALWAYS be specific. Use 'other' only as a true last resort.
 """
 
 
@@ -407,12 +413,13 @@ class VLMAnalyzer:
                 damage_visible=bool(data.get("damage_visible", False)),
                 visual_category=data.get("visual_category", "other"),
                 visual_subcategory=data.get("visual_subcategory", "other"),
+                caption=data.get("caption", ""),
                 damage_severity=data.get("damage_severity", "NONE"),
                 location_cues=[c for c in data.get("location_cues", []) if c],
                 confidence=float(data.get("confidence", 0.5)),
                 reasoning=data.get("reasoning", ""),
                 vlm_alignment=None,
-                vlm_alignment_confidence=None,
+                vlm_alignment_confidence=0.0,
                 semantic_domain=data.get("semantic_domain"),
                 physical_component=data.get("physical_component"),
                 failure_mode=data.get("failure_mode"),

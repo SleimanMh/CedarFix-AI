@@ -61,14 +61,9 @@ class _LLMOutput(BaseModel):
     summary: str = ""
     signals: _SignalsOutput = Field(default_factory=_SignalsOutput)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
-    semantic_domain: Literal[
-        "transportation", "utilities", "environment", "safety", "other",
-    ] = "other"
+    semantic_domain: str = "other"       # free-form — be specific (e.g. public_space, transportation)
     physical_component: str = "other"   # free-form — be specific
-    failure_mode: Literal[
-        "damage", "outage", "overflow", "accumulation", "blockage",
-        "contamination", "other",
-    ] = "other"
+    failure_mode: str = "other"          # free-form — be specific (e.g. broken, damaged, blocked)
 
 
 # JSON schema passed to vLLM's guided_json parameter.
@@ -130,18 +125,32 @@ construction rubble, stray animals causing danger, river pollution, sewage smell
 Set false ONLY for pure personal emotion, spam, or text 100% unrelated to public space.
 
 For issue_type - pick the closest match from the allowed values, or "other" if nothing fits.
-For category and subcategory - use the most accurate specific label even if it is new (e.g. broken_bench, fallen_tree, chemical_pollution).
-For semantic_domain, physical_component, failure_mode - describe what you actually observe in the text.
 For confidence - how certain you are of issue_type (0.0 = no complaint, 1.0 = certain).
 
-Rules:
+CRITICAL RULE — when issue_type is "other":
+  issue_type MUST stay "other" (it is a fixed enum — do NOT put the real label there).
+  Instead put the real label in category and subcategory:
+  NEVER set category="other" or subcategory="other" when issue_type is "other".
+  Use snake_case labels. Examples:
+    broken bench      → issue_type: "other", category: "street_furniture",     subcategory: "broken_bench"
+    fallen tree       → issue_type: "other", category: "urban_greenery",       subcategory: "fallen_tree"
+    graffiti          → issue_type: "other", category: "vandalism",            subcategory: "graffiti"
+    stray animals     → issue_type: "other", category: "animal_hazard",        subcategory: "stray_animal_attack"
+    chemical spill    → issue_type: "other", category: "environmental_hazard", subcategory: "chemical_spill"
+    illegal dumping   → issue_type: "other", category: "waste_management",     subcategory: "illegal_dumping"
+    collapsed wall    → issue_type: "other", category: "structural_hazard",    subcategory: "collapsed_wall"
+    broken railing    → issue_type: "other", category: "street_furniture",     subcategory: "broken_railing"
+    river pollution   → issue_type: "other", category: "environmental_hazard", subcategory: "river_pollution"
+  Use the same approach for anything not in this list — describe it precisely in category + subcategory.
+
+For semantic_domain, physical_component, failure_mode - describe what you actually observe in the text, be specific.
+
+Other rules:
 - severity=CRITICAL only for imminent danger or total blockage.
 - confidence=0.0 when is_complaint=false.
 - Ogero handles telecom outages; EDL handles electricity.
 - "water waste" or "wasted water" = pipe leak: issue_type water_pipe, category water.
 - "waste" or "garbage" alone = solid trash: issue_type waste_accumulation, category sanitation.
-- If no issue_type fits, use "other" but set subcategory and category to something specific (e.g. subcategory: broken_bench, category: street_furniture).
-- semantic_domain, physical_component, failure_mode: free-form, use the most accurate label.
 """
 
 
@@ -203,7 +212,7 @@ async def _call_qwen(text: str, language: str) -> dict:
     keys, wrong enum values, or malformed JSON.
     Falls back to plain json_object mode if the endpoint rejects guided_json.
     """
-    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=20.0)
+    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=35.0)
 
     kwargs: dict = dict(
         model=QWEN_MODEL,
@@ -221,24 +230,28 @@ async def _call_qwen(text: str, language: str) -> dict:
     else:
         kwargs["response_format"] = {"type": "json_object"}
 
-    try:
-        response = await client.chat.completions.create(**kwargs)
-        raw = response.choices[0].message.content
-        data = _parse_llm_json(raw)
-        # Validate through Pydantic — coerces types and fills missing fields with defaults.
-        validated = _LLMOutput.model_validate(data)
-        return validated.model_dump()
-    except Exception as e:
-        if QWEN_GUIDED and ("guided" in str(e).lower() or "extra_body" in str(e).lower() or "422" in str(e)):
-            # Endpoint doesn't support guided_json — retry without it.
-            log.warning("[IEP-1] guided_json not supported (%s), retrying without", e)
-            kwargs.pop("extra_body", None)
-            kwargs["response_format"] = {"type": "json_object"}
+    for attempt in range(2):
+        try:
             response = await client.chat.completions.create(**kwargs)
-            data = _parse_llm_json(response.choices[0].message.content)
+            raw = response.choices[0].message.content
+            data = _parse_llm_json(raw)
+            # Validate through Pydantic — coerces types and fills missing fields with defaults.
             validated = _LLMOutput.model_validate(data)
             return validated.model_dump()
-        raise
+        except Exception as e:
+            if QWEN_GUIDED and ("guided" in str(e).lower() or "extra_body" in str(e).lower() or "422" in str(e)):
+                # Endpoint doesn't support guided_json — retry without it.
+                log.warning("[IEP-1] guided_json not supported (%s), retrying without", e)
+                kwargs.pop("extra_body", None)
+                kwargs["response_format"] = {"type": "json_object"}
+                response = await client.chat.completions.create(**kwargs)
+                data = _parse_llm_json(response.choices[0].message.content)
+                validated = _LLMOutput.model_validate(data)
+                return validated.model_dump()
+            if attempt == 0 and "timed out" in str(e).lower():
+                log.warning("[IEP-1] Qwen timeout on attempt 1, retrying (%s)", e)
+                continue
+            raise
 
 
 # ---------------------------------------------------------------------------

@@ -105,6 +105,32 @@
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     function authHeaders() { return { 'Authorization': `Bearer ${cfToken}` }; }
 
+    function displayType(type, subcategory) {
+      const t = (type || '').toLowerCase();
+      const s = (subcategory || '').toLowerCase().trim();
+      const isSpecific = s && s !== 'other' && s !== 'unknown';
+      const label = (t === 'other' && isSpecific) ? s : t;
+      return label.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || '—';
+    }
+
+    function displayImageFinding(imageAnalysis) {
+      const vu = imageAnalysis?.visual_understanding;
+      const sub = (vu?.visual_subcategory || '').toLowerCase().trim();
+      const isSpecific = sub && sub !== 'other' && sub !== 'unknown' && sub !== 'none';
+
+      if (isSpecific) {
+        return sub.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      // If category is generic (other), show what the model actually saw.
+      const caption = (imageAnalysis?.vlm_analysis?.caption || vu?.caption || '').trim();
+      if (caption) {
+        return caption;
+      }
+
+      return 'Processed';
+    }
+
     // ── Load user's own complaints ────────────────────
     async function loadMyComplaints() {
       try {
@@ -125,7 +151,7 @@
                 <code style="font-size:12px;color:var(--gray-600)">${c.id.slice(0,12)}…</code>
                 <span style="font-size:11px;font-weight:700;text-transform:uppercase;
                              padding:2px 8px;border-radius:12px;background:var(--green-pale);color:var(--green)">
-                  ${(c.complaint_type||'—').replace(/_/g,' ')}
+                  ${displayType(c.complaint_type, c.subcategory)}
                 </span>
                 ${c.duplicate_status && c.duplicate_status !== 'NEW' ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:12px;background:#fff3e0;color:#e65100">${c.duplicate_status.replace(/_/g,' ')}</span>` : ''}
               </div>
@@ -172,10 +198,12 @@
       const conf = Math.round((d.routing_confidence || 0) * 100);
       const steps = [
         { label: 'Text Understanding', done: !!d.text_analysis,
-          detail: d.text_analysis ? `${d.complaint_type?.replace(/_/g,' ')} — ${d.text_analysis.detected_language}` : 'Not processed' },
+          detail: d.text_analysis
+            ? `${displayType(d.complaint_type, d.text_analysis.subcategory)} — ${d.text_analysis.detected_language || d.text_analysis.language || ''}`
+            : 'Not processed' },
         { label: 'Image Understanding', done: !!d.image_analysis?.image_present,
           detail: d.image_analysis?.image_present
-            ? (d.image_analysis.visual_understanding?.visual_subcategory?.replace(/_/g,' ') || d.image_analysis.visual_understanding?.caption || 'Processed')
+            ? displayImageFinding(d.image_analysis)
             : 'No image' },
         { label: 'Embedding + Similarity', done: !!d.embedding,
           detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}` : 'Pending' },

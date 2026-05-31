@@ -541,6 +541,7 @@ class VLMImageAnalysis(BaseModel):
     damage_visible: bool = False
     visual_category: str = "other"
     visual_subcategory: str = "other"
+    caption: str = ""              # VLM-generated natural language description of what it sees
     damage_severity: SeverityLevel = SeverityLevel.LOW
     location_cues: List[str] = []
     confidence: float = 0.0

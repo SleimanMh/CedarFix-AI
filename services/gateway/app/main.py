@@ -9,13 +9,16 @@ TEAM: Backend Engineer
 """
 
 import asyncio
+import os
 import time
 import uuid
+from pathlib import Path
 from typing import Optional
 
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from prometheus_client import make_asgi_app
 
@@ -30,6 +33,7 @@ from .database import (
     create_user, get_user_by_username, update_last_login,
     fetch_user_complaints, fetch_admin_stats,
     fetch_all_complaints_admin, fetch_review_queue_admin,
+    fetch_resolved_review_admin,
     fetch_duplicates_admin, resolve_review_item,
     save_retraining_record, fetch_retraining_queue,
     fetch_retraining_record, submit_retraining_review,
@@ -234,6 +238,14 @@ async def admin_review_queue(admin: dict = Depends(require_admin)):
     return await fetch_review_queue_admin()
 
 
+@app.get("/admin/review-resolved")
+async def admin_review_resolved(
+    limit: int = 200,
+    admin: dict = Depends(require_admin),
+):
+    return await fetch_resolved_review_admin(limit=limit)
+
+
 @app.get("/admin/duplicates")
 async def admin_duplicates(
     page: int = 1,
@@ -245,6 +257,18 @@ async def admin_duplicates(
 
 class ResolveRequest(BaseModel):
     notes: str = ""
+    # Optional feedback-loop decision. If provided, the linked retraining_store
+    # row for this complaint is updated in the same request.
+    # Allowed values mirror /admin/retraining/{complaint_id}/review.
+    admin_decision: Optional[str] = None
+    corrected_text_json: Optional[dict] = None
+    corrected_image_json: Optional[dict] = None
+    corrected_rag_response: Optional[dict] = None
+    # New review-editor fields stored in admin_review_edits
+    image_text_match: Optional[bool] = None
+    text_llm_json: Optional[dict] = None
+    image_llm_json: Optional[dict] = None
+    routing_json: Optional[dict] = None
 
 
 @app.post("/admin/review/{item_id}/resolve")
@@ -253,8 +277,40 @@ async def admin_resolve_review(
     body: ResolveRequest,
     admin: dict = Depends(require_admin),
 ):
-    await resolve_review_item(item_id, admin["sub"], body.notes)
+    allowed_decisions = {"can_be_processed", "cannot_be_processed", "fake", "unsupported"}
+    if body.admin_decision is not None and body.admin_decision not in allowed_decisions:
+        raise HTTPException(
+            status_code=422,
+            detail=f"admin_decision must be one of: {', '.join(sorted(allowed_decisions))}",
+        )
+
+    await resolve_review_item(
+        item_id=item_id,
+        resolved_by=admin["sub"],
+        notes=body.notes,
+        admin_decision=body.admin_decision,
+        corrected_text_json=body.corrected_text_json or body.text_llm_json,
+        corrected_image_json=body.corrected_image_json or body.image_llm_json,
+        corrected_rag_response=body.corrected_rag_response or body.routing_json,
+        image_text_match=body.image_text_match,
+        text_llm_json=body.text_llm_json,
+        image_llm_json=body.image_llm_json,
+        routing_json=body.routing_json,
+    )
     return {"status": "resolved", "item_id": item_id}
+
+
+@app.get("/media/{image_name}")
+async def get_media(image_name: str):
+    """
+    Serve locally uploaded complaint images so admin review can preview them.
+    If a full URL is stored, callers should use it directly.
+    """
+    uploads = Path(settings.uploads_dir)
+    file_path = uploads / image_name
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(str(file_path))
 
 
 # =============================================================================

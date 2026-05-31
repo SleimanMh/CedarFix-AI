@@ -200,7 +200,10 @@ class MultimodalScorer:
             else clip_image_raw
         )
 
-        type_sim = _type_match_score(canonical.issue_type, candidate.issue_type)
+        type_sim = _type_match_score(
+            canonical.issue_type, candidate.issue_type,
+            canonical.subcategory, candidate.subcategory,
+        )
 
         loc_sim = _location_similarity(
             lat_a=canonical.location.latitude,
@@ -355,8 +358,24 @@ class MultimodalScorer:
 # Scoring sub-functions
 # ---------------------------------------------------------------------------
 
-def _type_match_score(type_a: ComplaintType, type_b: ComplaintType) -> float:
+def _type_match_score(
+    type_a: ComplaintType,
+    type_b: ComplaintType,
+    sub_a: str = "",
+    sub_b: str = "",
+) -> float:
     if type_a == type_b:
+        # Both OTHER — compare specific subcategories when available.
+        # Two complaints of "other" type with DIFFERENT specific subcategories
+        # (e.g. "broken_bench" vs "graffiti") should not get a full type match.
+        if type_a == ComplaintType.OTHER:
+            a = (sub_a or "").strip().lower()
+            b = (sub_b or "").strip().lower()
+            if (a and b
+                    and a not in ("other", "unknown")
+                    and b not in ("other", "unknown")
+                    and a != b):
+                return 0.20   # different "other" incidents — partial credit only
         return 1.0
     if frozenset({type_a, type_b}) in _ADJACENT_PAIRS:
         return 0.40

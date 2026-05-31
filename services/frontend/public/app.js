@@ -201,9 +201,25 @@ function showSuccess(d) {
   // Complaint ID
   document.getElementById('resultId').textContent = `ID: ${d.complaint_id}`;
 
-  // Basic fields
-  document.getElementById('resType').textContent =
-    (d.complaint_type || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  // Basic fields — Type: show subcategory as the primary label when type is "other"
+  const rawType = d.complaint_type || 'Unknown';
+  const sub = d.text_analysis?.subcategory || '';
+  const isOther = rawType === 'other';
+  const specificSub = sub && !['other', 'unknown', ''].includes(sub.toLowerCase());
+
+  document.getElementById('resType').textContent = displayType(rawType, sub);
+
+  // Category Detail row — show category when type is "other" with a specific subcategory
+  const subRow = document.getElementById('subcategoryRow');
+  const cat = d.text_analysis?.category || '';
+  const specificCat = cat && !['other', 'unknown', ''].includes(cat.toLowerCase());
+  if (isOther && specificSub && specificCat && cat !== sub) {
+    document.getElementById('resSubcategory').textContent =
+      cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    subRow.classList.remove('hidden');
+  } else {
+    subRow.classList.add('hidden');
+  }
 
   const lang = d.text_analysis?.detected_language;
   const langMap = { ar: '🇦🇷 Arabic', fr: '🇫🇷 French', en: '🇬🇧 English', unknown: '—' };
@@ -366,6 +382,22 @@ function setLoading(on) {
 function toggleEl(id, show) {
   document.getElementById(id).classList.toggle('hidden', !show);
 }
+
+/**
+ * Returns a human-readable type label.
+ * When issue_type is "other" and a specific subcategory exists, shows that instead.
+ *   displayType('other', 'broken_bench')  → 'Broken Bench'
+ *   displayType('pothole', '')            → 'Pothole'
+ *   displayType('other', 'other')         → 'Other'
+ */
+function displayType(type, subcategory) {
+  const t = (type || '').toLowerCase();
+  const s = (subcategory || '').toLowerCase().trim();
+  const isSpecific = s && s !== 'other' && s !== 'unknown';
+  const label = (t === 'other' && isSpecific) ? s : t;
+  return label.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || '—';
+}
+
 
 // ── Ticker: load recent complaints ───────────────────
 async function loadTicker() {

@@ -72,8 +72,9 @@ _SUBCAT_TO_TYPE: dict = {
 }
 
 # ── Primary path (CLIP-native) thresholds ────────────────────────────────────
-_SUPPORT_THRESHOLD    = 0.55   # cosine ≥ this + compatible types → SUPPORTS
-_CONTRADICT_THRESHOLD = 0.25   # cosine < this + incompatible types → CONTRADICTS
+_SUPPORT_THRESHOLD          = 0.55   # cosine ≥ this + compatible types → SUPPORTS
+_CONTRADICT_THRESHOLD       = 0.25   # cosine < this + incompatible types → CONTRADICTS
+_COSINE_DOMINATES_THRESHOLD = 0.65   # cosine ≥ this → SUPPORTS regardless of type labels
 
 # ── Fallback path (random projection) penalty ────────────────────────────────
 # Scores from the fallback path are unreliable cross-model comparisons.
@@ -157,6 +158,20 @@ class ModalAlignmentComputer:
         )
         types_compatible = types_match or types_adjacent
 
+        # ── Both-OTHER subcategory comparison ─────────────────────────────────
+        # When both sides are OTHER with distinct specific subcategories, treat
+        # them as incompatible so CLIP cosine becomes the deciding signal.
+        if (text_issue_type == ComplaintType.OTHER
+                and image_issue_type == ComplaintType.OTHER):
+            text_sub = (text_result.subcategory or "").strip().lower()
+            img_sub  = (img_subcat or "").strip().lower()
+            if (text_sub and img_sub
+                    and text_sub not in ("other", "unknown")
+                    and img_sub  not in ("other", "unknown")
+                    and text_sub != img_sub):
+                types_match      = False
+                types_compatible = False
+
         # ── Classify alignment status ─────────────────────────────────────────
         alignment_status, conflict_detected, conflict_reason = _classify_alignment(
             score=alignment_score,
@@ -235,23 +250,29 @@ def _classify_alignment(
         # Fallback path: acknowledge the image is present but don't assert alignment.
         return AlignmentStatus.UNCERTAIN, False, None
 
-    # Type match is the primary signal — CLIP cosine on raw complaint text is
-    # unreliable because CLIP was trained on image captions, not complaint prose.
+    # ── Cosine-dominates: very high CLIP similarity overrides label disagreement.
+    # This handles cases where text/image get different (but related) subcategory
+    # labels — e.g. "broken_bench" vs "damaged_street_furniture".  At ≥0.65 the
+    # visual content is clearly the same issue regardless of label taxonomy.
+    if score >= _COSINE_DOMINATES_THRESHOLD:
+        return AlignmentStatus.SUPPORTS, False, None
+
+    # Type match is a strong secondary signal.
     if types_match:
         return AlignmentStatus.SUPPORTS, False, None
 
     if types_adjacent:
         return AlignmentStatus.UNCERTAIN, False, None
 
-    # Types differ — use cosine as secondary evidence.
+    # Types differ — use cosine as tertiary evidence.
     if score >= _SUPPORT_THRESHOLD:
-        # High visual similarity but different types — flag as unrelated
-        conflict_detected = True
+        # High-ish cosine but labels differ — call it UNCERTAIN (not UNRELATED):
+        # the image is likely related to the complaint but the labels don't agree.
         conflict_reason = (
-            f"CLIP similarity is high ({score:.2f}) but issue types differ: "
-            f"image={image_type}"
+            f"CLIP similarity is high ({score:.2f}) but issue type labels differ "
+            f"(image type: {image_type}). Visual content is likely related."
         )
-        return AlignmentStatus.UNRELATED, conflict_detected, conflict_reason
+        return AlignmentStatus.UNCERTAIN, False, conflict_reason
 
     if score < _CONTRADICT_THRESHOLD:
         conflict_detected = True
