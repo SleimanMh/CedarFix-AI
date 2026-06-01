@@ -105,7 +105,7 @@ technically correct but operationally incomplete.
 Target files:
 
 - `knowledge_base/roads_public_works/road_class_ownership_index.csv`
-- new `knowledge_base/roads_public_works/cdr_project_service_areas.csv`
+- `knowledge_base/roads_public_works/cdr_project_service_areas.csv`
 - `knowledge_base/roads_public_works/contact_points.csv`
 - `knowledge_base/roads_public_works/source_registry.csv`
 
@@ -114,9 +114,16 @@ Current state:
 - `road_class_ownership_index.csv` now has 12 seed rows: two guardrails for
   local/neighborhood versus classified/national roads, plus named MPWT/CDR/MUN
   evidence from existing NNA/source-target research.
+- `cdr_project_service_areas.csv` now has 6 seed rows: explicit CDR worksite
+  guardrail, Roads and Employment Project GRM, road ESMP/T807 timeline
+  evidence, Lake Qaraoun Pollution Prevention GRM, Jounieh road expansion, and
+  Dbayeh CDR coordination boundary.
 - This is not yet a GIS layer and not a complete national road inventory.
   Unknown road class still needs HITL unless the complaint gives strong
   national/classified/highway/project evidence.
+- This is not yet a complete active CDR project inventory. Unknown construction
+  or worksite complaints still need HITL unless the complaint names CDR, a
+  listed project, or a verifiable project/worksite signal.
 
 Collect:
 
@@ -124,7 +131,8 @@ Collect:
 - road names or references;
 - bridges, tunnels, retaining walls, sidewalks, and drainage ownership;
 - MPWT regional or directorate contact coverage;
-- CDR project locations, scopes, statuses, and GRM paths.
+- full CDR project locations, scopes, statuses, contractors if public, package
+  geometry, and GRM paths.
 
 Why:
 

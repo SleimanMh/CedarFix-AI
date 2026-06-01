@@ -14,12 +14,12 @@ Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 148 | 18.67 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 149 | 18.68 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
 | `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
-| Total under `data/` | 191 | 205.67 MB | 106 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
+| Total under `data/` | 192 | 205.68 MB | 107 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -314,8 +314,9 @@ Folder: `knowledge_base/roads_public_works/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | MPWT/MUN/CDR-style contacts and handoffs. |
 | `complaint_channels.csv` | 5 | Complaint/service channels. |
-| `source_registry.csv` | 22 | Roads/public works source evidence copied from root source IDs plus shard-local NNA evidence for named road/project events. |
+| `source_registry.csv` | 25 | Roads/public works source evidence copied from root source IDs plus shard-local CDR/NNA evidence for named road/project events. |
 | `road_class_ownership_index.csv` | 12 | Seed ownership/context index for local-road and national-road guardrails plus named MPWT/CDR/MUN road, bridge, drainage, snow, and project signals. |
+| `cdr_project_service_areas.csv` | 6 | Seed CDR project/service-area index covering explicit CDR guardrails, GRMs, Jounieh expansion, Lake Qaraoun, and Dbayeh coordination boundaries. |
 | `required_fields.csv` | 7 | Required fields for road/public works complaints. |
 | `boundary_conditions.csv` | 9 | Local road vs national/classified road vs CDR/project owner vs emergency boundaries. |
 | `not_responsible_for.csv` | 5 | Negative boundaries. |
@@ -545,8 +546,9 @@ Start with these P0 lanes:
    public-space handling.
 3. Continue roads/public-works ownership data: the seed
    `road_class_ownership_index.csv` now covers 12 guardrail/named-event rows,
-   but official classified-road geometry, MPWT operational contacts, and CDR
-   project service areas still need expansion.
+   and `cdr_project_service_areas.csv` now covers 6 CDR guardrail/project rows,
+   but official classified-road geometry, MPWT operational contacts, full CDR
+   project inventory, and project-boundary geometry still need expansion.
 4. Build waste/environment operations data: waste operators, union coverage,
    landfill/dump/transfer/sorting sites, and MoE category-specific fields.
 5. Deepen telecom data: OGERO form/app/1515 fields, Alfa/Touch official

@@ -11,6 +11,11 @@ Runtime scope:
   local-vs-national guardrails plus named MPWT/CDR/MUN evidence for selected
   road, drainage, snow, and bridge cases already extracted in
   `complaint_intelligence/source_targets.csv`.
+- `cdr_project_service_areas.csv` is a seed CDR project/service-area index. It
+  includes official CDR GRM/process evidence, the Jounieh road-expansion CDR
+  owner signal, and a Dbayeh CDR coordination boundary. It should narrow CDR
+  routing only when a complaint names a project, worksite, or listed service
+  area.
 
 The shard `source_registry.csv` mirrors the relevant root source IDs from
 `data/knowledge_base/source_registry.csv` and adds shard-local `SRC-NNA-*`
@@ -23,3 +28,6 @@ Known gap:
   complete national road-segment inventory. If a complaint names a road not in
   the seed index, keep using `boundary_conditions.csv` and HITL for ambiguous
   class/owner decisions.
+- This folder still does not contain a complete active CDR project inventory,
+  contractor list, or project polygon/road-package geometry. If a complaint says
+  only "construction on the road" without a CDR/project clue, keep HITL.

@@ -1,5 +1,5 @@
 task_id,topic,priority,status,source_ids,notes
 RPW-RB-001,official classified-road geospatial layer,high,open,SRC-MPWT-ROADS-BUILDINGS,Needed to reduce HITL on main/national road ownership.
-RPW-RB-002,CDR active project inventory with locations,high,open,SRC-CDR-HOME,Needed before routing CDR without explicit citizen project evidence.
+RPW-RB-002,CDR active project inventory with locations,high,partial_seed,SRC-CDR-HOME;SRC-CDR-ROADS-EMPLOYMENT-GRM;SRC-CDR-LAKE-QARAOUN-GRM,Seed file cdr_project_service_areas.csv exists but full active project inventory package geometry and contractor/status coverage are still needed before routing CDR without explicit project evidence.
 RPW-RB-003,municipal road-maintenance channel coverage,medium,open,SRC-DGLAC-MUNI-DIR,Extend per-municipality verified contact channels.
 RPW-RB-004,MPWT regional office routing table,medium,open,SRC-MPWT-CONTACT,Would improve regional assignment after MPWT selection.

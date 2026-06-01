@@ -19,9 +19,18 @@ The shard uses existing official and reputable source IDs already registered in 
 - a Beirut Al-Rihab boundary case where Beirut Municipality stays primary even though MPWT helped clear flooding;
 - a Dahr al-Baidar main-road rehabilitation context row that remains MPWT/CDR HITL because owner and project scope are not fully proven.
 
+`cdr_project_service_areas.csv` adds the first CDR-specific project/service-area seed. It has:
+
+- an explicit CDR worksite guardrail;
+- CDR Roads and Employment Project GRM evidence for project-specific road worksites;
+- road ESMP/T807 complaint timeline evidence for CDR road-project GRM handling;
+- Lake Qaraoun Pollution Prevention Project GRM evidence for CDR water/environment project complaints;
+- the Jounieh road expansion CDR owner/admin-pipeline signal;
+- the Dbayeh flood-preparedness row as a CDR coordination boundary, not a CDR primary-owner proof.
+
 ## Known Limits
 
 - No verified national GIS layer of classified roads is encoded; the seed index is not a geometry layer.
 - No generic public SLA for road repair or snow clearance is encoded.
-- CDR project boundaries are not resolved without explicit project evidence.
+- CDR project boundaries are only seeded; no complete active project inventory, contractor list, road-package geometry, or project polygon layer is encoded.
 - Drainage cases can involve MPWT, municipality, CDR, sewer actors, and contractors; keep HITL when the asset owner is not named.
