@@ -131,6 +131,27 @@
       "file": "TRA.json",
       "overall_confidence": "high",
       "human_review_open": 0
+    },
+    {
+      "entity_id": "LRA",
+      "entity_name": "Litani River Authority",
+      "file": "LRA.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MOBILE_OPERATOR",
+      "entity_name": "Mobile Network Operators",
+      "file": "MOBILE_OPERATOR.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MUNICIPAL_POLICE",
+      "entity_name": "Municipal Police / Municipal Enforcement Units",
+      "file": "MUNICIPAL_POLICE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
     }
   ],
   "sector_to_primary_entity": {

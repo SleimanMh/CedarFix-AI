@@ -380,8 +380,8 @@ no_match = []
 for r in registry:
     district   = (r.get("district_en") or "").strip()
     governorate = (r.get("governorate_en") or "").strip()
-    mun_id  = r.get("municipality_id") or r.get("municipality_key", "")
-    mun_key = r.get("municipality_key", "")
+    mun_id  = r.get("municipality_id") or r.get("registry_id") or r.get("municipality_key", "")
+    mun_key = r.get("municipality_key") or r.get("registry_id", "")
     name_en = r.get("name_en") or mun_key
     name_ar = r.get("name_ar") or mun_key
 

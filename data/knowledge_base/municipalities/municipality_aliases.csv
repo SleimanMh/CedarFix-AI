@@ -3828,3 +3828,44 @@ ALIAS-MUN-MOIM-2025-8a9d84bcc316-002,MUN-MOIM-2025-8a9d84bcc316,,moim_2025_elect
 ALIAS-MUN-MOIM-2025-cd3ffba0444b-001,MUN-MOIM-2025-cd3ffba0444b,,moim_2025_election_results_unmatched_to_dglac,primary_ar,كفريا,ar,true,high,registry
 ALIAS-MUN-MOIM-2025-cd3ffba0444b-002,MUN-MOIM-2025-cd3ffba0444b,,moim_2025_election_results_unmatched_to_dglac,slug,moim_2025_south_saida_كفريا,en,false,high,registry
 ALIAS-MUN-DGLAC-57396-005,MUN-DGLAC-57396,57396,arabizi_alias,arabizi,kfarfila,ar_latn,false,high,manual_arabizi_fix
+ALIAS-MUN-LB-90001-001,MUN-LB-90001,,manual_backfill_2026,primary_en,Wadi Chahrour,en,true,high,registry
+ALIAS-MUN-LB-90001-002,MUN-LB-90001,,manual_backfill_2026,normalized_en,wadi chahrour,en,false,high,registry
+ALIAS-MUN-LB-90001-003,MUN-LB-90001,,manual_backfill_2026,primary_ar,وادي شحرور,ar,true,high,registry
+ALIAS-MUN-LB-90002-001,MUN-LB-90002,,manual_backfill_2026,primary_en,Dhour El Choueir,en,true,high,registry
+ALIAS-MUN-LB-90002-002,MUN-LB-90002,,manual_backfill_2026,normalized_en,dhour el choueir,en,false,high,registry
+ALIAS-MUN-LB-90002-003,MUN-LB-90002,,manual_backfill_2026,primary_ar,ضهور الشوير,ar,true,high,registry
+ALIAS-MUN-LB-90003-001,MUN-LB-90003,,manual_backfill_2026,primary_en,Anjar,en,true,high,registry
+ALIAS-MUN-LB-90003-002,MUN-LB-90003,,manual_backfill_2026,normalized_en,anjar,en,false,high,registry
+ALIAS-MUN-LB-90003-003,MUN-LB-90003,,manual_backfill_2026,primary_ar,عنجر,ar,true,high,registry
+ALIAS-MUN-LB-90004-001,MUN-LB-90004,,manual_backfill_2026,primary_en,Rmeish,en,true,high,registry
+ALIAS-MUN-LB-90004-002,MUN-LB-90004,,manual_backfill_2026,normalized_en,rmeish,en,false,high,registry
+ALIAS-MUN-LB-90004-003,MUN-LB-90004,,manual_backfill_2026,primary_ar,رميش,ar,true,high,registry
+ALIAS-MUN-LB-90005-001,MUN-LB-90005,,manual_backfill_2026,primary_en,Blat,en,true,high,registry
+ALIAS-MUN-LB-90005-002,MUN-LB-90005,,manual_backfill_2026,normalized_en,blat,en,false,high,registry
+ALIAS-MUN-LB-90005-003,MUN-LB-90005,,manual_backfill_2026,primary_ar,بلاط,ar,true,high,registry
+ALIAS-MUN-LB-90006-001,MUN-LB-90006,,manual_backfill_2026,primary_en,Dik El Mehdeh,en,true,high,registry
+ALIAS-MUN-LB-90006-002,MUN-LB-90006,,manual_backfill_2026,normalized_en,dik el mehdeh,en,false,high,registry
+ALIAS-MUN-LB-90006-003,MUN-LB-90006,,manual_backfill_2026,primary_ar,ديك المحدي,ar,true,high,registry
+ALIAS-MUN-LB-90007-001,MUN-LB-90007,,manual_backfill_2026,primary_en,Haddatha,en,true,high,registry
+ALIAS-MUN-LB-90007-002,MUN-LB-90007,,manual_backfill_2026,normalized_en,haddatha,en,false,high,registry
+ALIAS-MUN-LB-90007-003,MUN-LB-90007,,manual_backfill_2026,primary_ar,حداثا,ar,true,high,registry
+ALIAS-MUN-LB-90008-001,MUN-LB-90008,,manual_backfill_2026,primary_en,Qabb Ilyas,en,true,high,registry
+ALIAS-MUN-LB-90008-002,MUN-LB-90008,,manual_backfill_2026,normalized_en,qabb ilyas,en,false,high,registry
+ALIAS-MUN-LB-90008-003,MUN-LB-90008,,manual_backfill_2026,primary_ar,قب إلياس,ar,true,high,registry
+ALIAS-MUN-LB-90009-001,MUN-LB-90009,,manual_backfill_2026,primary_en,Klayaa,en,true,high,registry
+ALIAS-MUN-LB-90009-002,MUN-LB-90009,,manual_backfill_2026,normalized_en,klayaa,en,false,high,registry
+ALIAS-MUN-LB-90009-003,MUN-LB-90009,,manual_backfill_2026,primary_ar,القليعة,ar,true,high,registry
+ALIAS-MUN-LB-90010-001,MUN-LB-90010,,manual_backfill_2026,primary_en,Burj Al Muluk,en,true,high,registry
+ALIAS-MUN-LB-90010-002,MUN-LB-90010,,manual_backfill_2026,normalized_en,burj al muluk,en,false,high,registry
+ALIAS-MUN-LB-90010-003,MUN-LB-90010,,manual_backfill_2026,primary_ar,برج الملوك,ar,true,high,registry
+ALIAS-MUN-LB-90011-001,MUN-LB-90011,,manual_backfill_2026,primary_en,Al-Tell,en,true,high,registry
+ALIAS-MUN-LB-90011-002,MUN-LB-90011,,manual_backfill_2026,normalized_en,al-tell,en,false,high,registry
+ALIAS-MUN-LB-90011-003,MUN-LB-90011,,manual_backfill_2026,normalized_en,al tell,en,false,high,registry
+ALIAS-MUN-LB-90011-004,MUN-LB-90011,,manual_backfill_2026,no_article_en,Tell,en,false,high,registry
+ALIAS-MUN-LB-90011-005,MUN-LB-90011,,manual_backfill_2026,primary_ar,التل,ar,true,high,registry
+ALIAS-MUN-LB-90012-001,MUN-LB-90012,,manual_backfill_2026,primary_en,Ain Menin,en,true,high,registry
+ALIAS-MUN-LB-90012-002,MUN-LB-90012,,manual_backfill_2026,normalized_en,ain menin,en,false,high,registry
+ALIAS-MUN-LB-90012-003,MUN-LB-90012,,manual_backfill_2026,primary_ar,عين منين,ar,true,high,registry
+ALIAS-MUN-LB-90013-001,MUN-LB-90013,,manual_backfill_2026,primary_en,Shfaouniyye,en,true,high,registry
+ALIAS-MUN-LB-90013-002,MUN-LB-90013,,manual_backfill_2026,normalized_en,shfaouniyye,en,false,high,registry
+ALIAS-MUN-LB-90013-003,MUN-LB-90013,,manual_backfill_2026,primary_ar,الشفونية,ar,true,high,registry

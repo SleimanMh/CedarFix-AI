@@ -91,8 +91,10 @@ def merge_sources(*values: str) -> str:
 
 def branch_for(row: dict[str, str], branches: list[dict[str, str]]) -> dict[str, str]:
     entity_id = row["water_establishment_id"]
-    district = row["district_en"]
-    governorate = row["governorate_en"]
+    district = row["district_en"].removesuffix(" District").replace("Zahlé", "Zahle").replace("West Bekaa", "Western Bekaa")
+    governorate = row["governorate_en"].removesuffix(" Governorate").replace("Nabatieh", "Nabatiye")
+    if governorate == "Keserwan-Jbeil":
+        governorate = "Mount Lebanon"
     candidates = [item for item in branches if item["entity_id"] == entity_id]
 
     exact = [

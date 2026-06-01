@@ -6,6 +6,32 @@ CedarFix converts fragmented citizen reports in Arabic, English, French,
 Arabizi, and mixed language into validated, deduplicated, prioritized, and
 explainable infrastructure incidents for municipal operations.
 
+## Explain It To A Friend
+
+Imagine people are reporting problems around a city: potholes, garbage piles,
+water leaks, power hazards, flooding, broken internet, or safety issues. The
+reports are messy: some are in English, some in Arabic, some in Lebanese
+Arabizi, some include GPS, some include photos, and many people may report the
+same real-world incident.
+
+CedarFix is the system that turns those messy reports into an operational case:
+
+1. It accepts the report and gives it a tracking ID.
+2. It understands the language and issue type.
+3. It checks whether the report is a duplicate of an existing incident.
+4. It decides which municipality or public entity should handle it.
+5. It refuses to auto-route dangerous or uncertain cases and sends them to a
+   human reviewer.
+6. It writes explanations for citizens and operators.
+7. It tracks whether the incident was resolved or reopened.
+8. It monitors whether model confidence is honest over time.
+9. It only suggests resolution steps when those steps are backed by verified KB
+   evidence.
+
+The project is not just "classify complaint text." It is a miniature civic AI
+pipeline with intake, routing, safety gates, explanations, lifecycle tracking,
+monitoring, and grounded resolution planning.
+
 ## Operational Question
 
 ```text
@@ -51,14 +77,14 @@ calibration dashboards. See `docs/MONITORING_SIGNALS.md`.
 | Civic Compiler | ✅ Built | Belief state, proof obligations, counterfactuals, active sensing, autonomy governor |
 | Monitoring | ✅ Live | Every service exposes `/metrics`; Prometheus scrape + Grafana provisioning in `infra/` |
 | Deployment | ✅ Configured | `azure.yaml` maps all services to Azure Container Apps via `azd` |
-| Knowledge base | ✅ Complete | 1107 municipalities, 63 complaint types, 69 routing rules, 5772-term language bank |
-| Training data | ✅ Ready | v29 batch8 train (75,555) + val (8,997), senzi sets, telecom batch |
+| Knowledge base | ✅ Complete | 1,107 municipality registry rows, 21 entity records, 64 complaint types, 70 routing rules, 5,772-term language bank |
+| Training data | ✅ Ready | v29 batch8 train (91,150) + val (10,562), locked batch7/telecom evals, top-tier reference set |
 
 ## Repository Layout
 
 ```text
 .github/workflows/         CI pipeline (lint, test, Docker build)
-azure.yaml                 Azure Developer CLI deployment config (eep + iep1-7 → Container Apps)
+azure.yaml                 Azure Developer CLI deployment config (eep + iep1-iep8 -> Container Apps)
 docker-compose.yml         Local dev stack (all services + redis, postgres, prometheus, grafana)
 infra/                     Prometheus scrape config + Grafana provisioning
 requirements.txt           Python dependencies
@@ -83,48 +109,52 @@ data/
     municipalities/                  Municipality runtime data (registry, aliases, mappings, unions)
     entities/                        Lebanese public entity definitions (MEW, EDL, OGERO, CDR, …)
     cedarfix_language_bank.csv       5,772 approved arabizi terms with sector/issue hints
-    complaint_taxonomy.csv           63 complaint types with routing defaults and HITL flags
-    routing_rules.csv                69 routing rules keyed to complaint_type_id
+    complaint_taxonomy.csv           64 complaint types with routing defaults and HITL flags
+    routing_rules.csv                70 routing rules keyed to complaint_type_id
     remediation_workflows.csv        59 resolution workflows with SLA policies
     cedarfix_complaint_scenario_inventory.csv  165 complaint scenarios with failure modes
     [+ 7 more reference CSVs/JSONs]
   complaint_intelligence/
-    municipality_research_tracker.csv   800-municipality research tracker (merged)
+    municipality_research_tracker.csv   800-row municipality research tracker (merged)
     municipality_source_research.csv    12 source research records (merged)
     discovered_complaint_leads.csv      156 complaint leads
     normalized/municipal_official_process_seed.jsonl  78 seed CIE events
     [+ scaleout findings, source targets, schema, news policy]
   review_queue/            5 human review queues from legacy 100k complaint corpus
-  training/                10 JSONL training files (v29 batch7/8, senzi, telecom)
+  training/                JSONL train/validation/test files, manifests, and backups
 ```
 
 ## Knowledge Base
 
 | File | Rows | Purpose |
 | --- | ---: | --- |
-| `municipalities/national_municipality_registry.csv` | 1,107 | Canonical municipality master |
-| `municipalities/municipality_aliases.csv` | 3,829 | Name variant → canonical ID lookup |
-| `municipalities/municipality_service_mappings.csv` | 1,094 | Municipality → service area mappings (runtime) |
+| `municipalities/national_municipality_registry.csv` | 1,107 | Canonical municipality registry rows |
+| `municipalities/municipality_aliases.csv` | 3,870 | Name variant → registry/municipality ID lookup |
+| `municipalities/municipality_service_mappings.csv` | 1,107 | Registry-row → service area mappings (runtime) |
 | `municipalities/municipality_unions.csv` | 59 | Federation definitions |
-| `municipalities/municipality_official_channels.csv` | 46 | Contact channels |
-| `municipalities/municipality_complaint_workflows.csv` | 16 | Seed resolution workflows |
+| `municipalities/municipality_official_channels.csv` | 102 | Contact channel rows |
+| `municipalities/municipality_complaint_workflows.csv` | 30 | Seed resolution workflow rows |
 | `cedarfix_language_bank.csv` | 5,772 | Approved arabizi terms |
 | `cedarfix_language_bank_review_queue.csv` | 7,298 | Candidate terms pending review |
-| `complaint_taxonomy.csv` | 63 | Complaint type definitions |
-| `routing_rules.csv` | 69 | Complaint → entity routing rules |
+| `complaint_taxonomy.csv` | 64 | Complaint type definitions |
+| `routing_rules.csv` | 70 | Complaint → entity routing rules |
 | `remediation_workflows.csv` | 59 | End-to-end resolution workflows |
 | `arabizi/lebanese_arabizi_master_index.csv` | 31,032 | Full arabizi variant index |
+
+Municipality counts are intentionally labeled by what they count: `1,107` is
+complete registry-row/runtime coverage, while `800` is currently populated
+official `municipality_id` coverage. Rows without official IDs route through
+`registry_id` fallback.
 
 ## Training Data
 
 | File | Examples | Purpose |
 | --- | ---: | --- |
-| `cidarfix_v29_batch8_train_v14_enriched.jsonl` | 75,555 | IEP-1 fine-tuning (v14 enriched) |
-| `cidarfix_v29_batch8_val_v14_enriched.jsonl` | 8,997 | Validation |
+| `cidarfix_v29_batch8_train_v14_enriched.jsonl` | 91,150 | IEP-1 fine-tuning (v14 enriched) |
+| `cidarfix_v29_batch8_val_v14_enriched.jsonl` | 10,562 | Validation |
 | `cidarfix_v29_batch7_model_final_test_locked.jsonl` | 7,940 | Locked final test set (do not train on) |
-| `senzi_hard_negatives_{train,val,test}.jsonl` | — | Contrastive boundary sharpening |
-| `senzi_real_world_{train,val}.jsonl` | — | Domain adaptation from live reports |
-| `telecom_batch2_{train,val}.jsonl` | — | Telecom sector (CDR, OGERO) |
+| `cidarfix_v29_top_tier_generated_v1.jsonl` | 242 | Curated reference examples |
+| `cidarfix_telecom_eval_locked.jsonl` | 150 | Locked telecom-specific evaluation set |
 
 ## Setup
 

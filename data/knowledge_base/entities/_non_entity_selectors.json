@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "2026-06-01",
+    "purpose": "Documents routing sentinels and selector expressions that appear in KB rows but are not canonical public entities."
+  },
+  "sentinels": {
+    "ALL": {
+      "meaning": "Research or trusted-context row applies across several entities in the shard.",
+      "canonical_entity": null
+    },
+    "HITL": {
+      "meaning": "Human-in-the-loop review or abstention path; not a dispatchable public entity.",
+      "canonical_entity": null
+    }
+  },
+  "dynamic_selectors": {
+    "MUN_DYNAMIC": "Resolve to the specific municipality row, with MUN as the canonical entity family.",
+    "MUNICIPAL_POLICE_DYNAMIC": "Resolve municipality first, then use MUNICIPAL_POLICE as the local enforcement category.",
+    "WATER_ESTABLISHMENT_BY_LOCATION": "Resolve to BMLWE, NLWE, SLWE, or BWE from municipality service mapping.",
+    "MOBILE_OPERATOR_OR_TRA": "Use MOBILE_OPERATOR first when provider-specific; use TRA for regulatory escalation."
+  },
+  "expression_patterns": [
+    "*_IF_*",
+    "*_OR_*",
+    "*_BY_*",
+    "*_FIRST",
+    "*_CONDITIONAL"
+  ]
+}
