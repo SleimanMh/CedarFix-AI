@@ -14,12 +14,12 @@ Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 147 | 18.65 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 148 | 18.67 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
 | `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
-| Total under `data/` | 190 | 205.65 MB | 105 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
+| Total under `data/` | 191 | 205.67 MB | 106 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -314,7 +314,8 @@ Folder: `knowledge_base/roads_public_works/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | MPWT/MUN/CDR-style contacts and handoffs. |
 | `complaint_channels.csv` | 5 | Complaint/service channels. |
-| `source_registry.csv` | 12 | Roads/public works source evidence copied from root source IDs for local Copilot/agent lookup. |
+| `source_registry.csv` | 22 | Roads/public works source evidence copied from root source IDs plus shard-local NNA evidence for named road/project events. |
+| `road_class_ownership_index.csv` | 12 | Seed ownership/context index for local-road and national-road guardrails plus named MPWT/CDR/MUN road, bridge, drainage, snow, and project signals. |
 | `required_fields.csv` | 7 | Required fields for road/public works complaints. |
 | `boundary_conditions.csv` | 9 | Local road vs national/classified road vs CDR/project owner vs emergency boundaries. |
 | `not_responsible_for.csv` | 5 | Negative boundaries. |
@@ -542,8 +543,10 @@ Start with these P0 lanes:
 2. Complete municipal union memberships and create a shared-service
    responsibility table for union-level waste, roads, drainage, lighting, and
    public-space handling.
-3. Build roads/public-works ownership data: classified/national road evidence,
-   MPWT operational contacts, and CDR project service areas.
+3. Continue roads/public-works ownership data: the seed
+   `road_class_ownership_index.csv` now covers 12 guardrail/named-event rows,
+   but official classified-road geometry, MPWT operational contacts, and CDR
+   project service areas still need expansion.
 4. Build waste/environment operations data: waste operators, union coverage,
    landfill/dump/transfer/sorting sites, and MoE category-specific fields.
 5. Deepen telecom data: OGERO form/app/1515 fields, Alfa/Touch official

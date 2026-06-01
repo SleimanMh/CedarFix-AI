@@ -104,14 +104,23 @@ technically correct but operationally incomplete.
 
 Target files:
 
-- new `knowledge_base/roads_public_works/road_class_ownership_index.csv`
+- `knowledge_base/roads_public_works/road_class_ownership_index.csv`
 - new `knowledge_base/roads_public_works/cdr_project_service_areas.csv`
 - `knowledge_base/roads_public_works/contact_points.csv`
 - `knowledge_base/roads_public_works/source_registry.csv`
 
+Current state:
+
+- `road_class_ownership_index.csv` now has 12 seed rows: two guardrails for
+  local/neighborhood versus classified/national roads, plus named MPWT/CDR/MUN
+  evidence from existing NNA/source-target research.
+- This is not yet a GIS layer and not a complete national road inventory.
+  Unknown road class still needs HITL unless the complaint gives strong
+  national/classified/highway/project evidence.
+
 Collect:
 
-- national/classified road evidence;
+- official national/classified road identifiers and geometry;
 - road names or references;
 - bridges, tunnels, retaining walls, sidewalks, and drainage ownership;
 - MPWT regional or directorate contact coverage;
