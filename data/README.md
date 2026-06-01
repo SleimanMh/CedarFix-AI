@@ -10,16 +10,16 @@ another agent needs to work in `data/`, start here before editing anything.
 
 ## Current Inventory
 
-Counts below were taken from the local filesystem on 2026-06-01.
+Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 146 | 18.36 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 146 | 18.37 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
-| `complaint_intelligence/` | 12 | 1.29 MB | Source research, normalized civic events, and discovery leads. |
-| Total under `data/` | 187 | 205.33 MB | 103 CSV, 35 JSON, 19 JSONL, 27 Markdown, 3 `.gitkeep`. |
+| `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
+| Total under `data/` | 189 | 205.36 MB | 104 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -292,12 +292,12 @@ Folder: `knowledge_base/telecom/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | OGERO/TRA contacts and handoffs. |
 | `complaint_channels.csv` | 7 | Fixed telecom and regulatory channels. |
+| `source_registry.csv` | 5 | Telecom shard source evidence copied from root source IDs for local Copilot/agent lookup. |
 | `required_fields.csv` | 8 | OGERO fixed-fault and TRA escalation fields. |
 | `boundary_conditions.csv` | 8 | OGERO vs mobile/TRA/private device/ISP boundaries. |
 | `not_responsible_for.csv` | 6 | Negative responsibility boundaries. |
 | `sla_policy.csv` | 4 | SLA policy; do not invent repair times. |
 | `research_backlog.csv` | 6 | Remaining tasks. |
-| `source_registry.csv` | 0 | Placeholder; this shard currently reuses root source IDs. |
 
 Key documents:
 
@@ -313,12 +313,12 @@ Folder: `knowledge_base/roads_public_works/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | MPWT/MUN/CDR-style contacts and handoffs. |
 | `complaint_channels.csv` | 5 | Complaint/service channels. |
+| `source_registry.csv` | 12 | Roads/public works source evidence copied from root source IDs for local Copilot/agent lookup. |
 | `required_fields.csv` | 7 | Required fields for road/public works complaints. |
 | `boundary_conditions.csv` | 9 | Local road vs national/classified road vs CDR/project owner vs emergency boundaries. |
 | `not_responsible_for.csv` | 5 | Negative boundaries. |
 | `sla_policy.csv` | 4 | SLA policy; avoid unverified timelines. |
 | `research_backlog.csv` | 4 | Remaining tasks. |
-| `source_registry.csv` | 0 | Placeholder; this shard currently reuses root source IDs. |
 
 Key documents:
 
@@ -356,12 +356,12 @@ Folder: `knowledge_base/waste_environment/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | Municipality/MOE/CD handoff contacts. |
 | `complaint_channels.csv` | 5 | Waste/environment channels. |
+| `source_registry.csv` | 16 | Waste/environment source evidence copied from root source IDs for local Copilot/agent lookup. |
 | `required_fields.csv` | 7 | Required fields. |
 | `boundary_conditions.csv` | 9 | Routine waste vs hazardous/industrial/river/fire/crime boundaries. |
 | `not_responsible_for.csv` | 5 | Negative boundaries. |
 | `sla_policy.csv` | 4 | SLA policy; avoids invented service times. |
 | `research_backlog.csv` | 4 | Remaining tasks. |
-| `source_registry.csv` | 0 | Placeholder; this shard currently reuses root source IDs. |
 
 Key documents:
 
@@ -447,6 +447,8 @@ truth.
 
 | File | Rows/shape | Purpose |
 | --- | ---: | --- |
+| `NEXT_DATA.md` | doc | Prioritized next-data acquisition plan for humans and code assistants. |
+| `next_data_acquisition_queue.csv` | 20 | Machine-readable P0/P1/P2 acquisition queue for channels, unions, roads, waste, telecom, outcomes, evals, and privacy. |
 | `source_targets.csv` | 169 | Source targets and search/discovery planning. |
 | `discovered_complaint_leads.csv` | 156 | Leads discovered from public/official sources. |
 | `municipality_research_tracker.csv` | 800 | Municipality research status rows. This is research coverage, not the full registry count. |
@@ -498,6 +500,9 @@ Strengths:
   grounding, Arabic multilingual routing, and Arabizi hard negatives.
 - Entity JSON files exist for 21 canonical public entities/categories and are connected to
   source-backed dossiers/audits.
+- Roads/public works, telecom, and waste/environment now have shard-level
+  source registries so code assistants do not need to jump to the root source
+  registry to understand local evidence.
 
 Known gaps and cautions:
 
@@ -506,10 +511,9 @@ Known gaps and cautions:
 - Municipality identity columns are not fully normalized: 307 registry rows do
   not have official `municipality_id`, so runtime joins must keep using
   `registry_id` fallback.
-- Telecom, roads/public works, and waste/environment shard `source_registry.csv`
-  files currently have zero rows and rely on root source IDs. Do not mistake
-  empty shard registries for no evidence at all; check root `source_registry.csv`
-  and shard dossiers.
+- Roads/public works, telecom, and waste/environment still need deeper
+  operational datasets: road-class ownership, CDR project areas, waste
+  operators/sites, mobile-operator channels, and outcome evidence.
 - Several canonical entity JSON files still carry medium confidence and open
   human-review items.
 - Candidate/research files are intentionally noisy. Promote them only after
@@ -518,6 +522,33 @@ Known gaps and cautions:
   construction, according to `_split_manifest.json`.
 - Many SLA tables explicitly say restoration timelines are not published. Do
   not generate promised repair deadlines unless a source-backed row supports it.
+
+## Next Data Acquisition
+
+The next data priority is operational evidence, not more raw municipality names.
+The full plan lives in `complaint_intelligence/NEXT_DATA.md`, and the executable
+queue lives in `complaint_intelligence/next_data_acquisition_queue.csv`.
+
+Start with these P0 lanes:
+
+1. Verify and promote the first 200 municipality contact candidates into
+   official channel/workflow rows.
+2. Complete municipal union memberships and create a shared-service
+   responsibility table for union-level waste, roads, drainage, lighting, and
+   public-space handling.
+3. Build roads/public-works ownership data: classified/national road evidence,
+   MPWT operational contacts, and CDR project service areas.
+4. Build waste/environment operations data: waste operators, union coverage,
+   landfill/dump/transfer/sorting sites, and MoE category-specific fields.
+5. Deepen telecom data: OGERO form/app/1515 fields, Alfa/Touch official
+   channels, TRA escalation field/deadline wording, and private-device/private
+   ISP exclusions.
+6. Start outcome and human-override capture using
+   `complaint_resolution_event.schema.json` so real accepted/rejected/resolved
+   routes can calibrate IEP-7 and future evals.
+
+Do not bulk collect private channels, citizen comments with PII, unverified
+directory contacts, or generic examples that do not target a routing failure.
 
 ## Common Lookup Recipes
 

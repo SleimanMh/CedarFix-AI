@@ -8,4 +8,7 @@ Runtime scope:
 - Active CDR/project-site complaints route to CDR only when the complaint explicitly names CDR or a project/worksite signal.
 - Immediate public danger still routes first to Civil Defense or ISF according to emergency type.
 
-The shard uses root source IDs from `data/knowledge_base/source_registry.csv` and does not introduce new scraped source IDs.
+The shard `source_registry.csv` now mirrors the relevant root source IDs from
+`data/knowledge_base/source_registry.csv` so local assistants can resolve
+evidence without leaving the folder. It does not introduce new scraped source
+IDs.
