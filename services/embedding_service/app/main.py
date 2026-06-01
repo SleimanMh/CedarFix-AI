@@ -143,7 +143,7 @@ async def embed(request: EmbedRequest):
     # ── 3. Build Qdrant payload metadata ─────────────────────────────────────
     base_payload = {
         "summary":              canonical.summary,
-        "issue_type":           canonical.issue_type.value,
+        "issue_type":           canonical.issue_type,
         "subcategory":          canonical.subcategory,
         "normalized_location":  canonical.location.normalized_location,
         "district":             canonical.location.district,

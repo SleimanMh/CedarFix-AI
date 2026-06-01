@@ -102,7 +102,7 @@ class CandidateRetriever:
 
         geo_hits = [
             h for h in await self._qdrant.search_geo_time(
-                issue_type=canonical.issue_type.value,
+                issue_type=canonical.issue_type,
                 latitude=canonical.location.latitude,
                 longitude=canonical.location.longitude,
                 district=canonical.location.district,

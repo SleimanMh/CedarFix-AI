@@ -48,6 +48,8 @@ class RoutingRequest(BaseModel):
     complaint_id: str
     complaint_type: Optional[str] = None
     category: Optional[str] = "other"
+    subcategory: Optional[str] = "unknown"
+    summary: Optional[str] = ""
     severity: Optional[str] = None
     original_text: Optional[str] = ""
     location_district: Optional[str] = None
@@ -55,6 +57,12 @@ class RoutingRequest(BaseModel):
     location_governorate: Optional[str] = None
     location_mentions: List[str] = []
     extracted_keywords: List[str] = []
+    signals: Optional[dict] = None
+    routing_features: Optional[dict] = None
+    evidence_text: List[str] = []
+    evidence_image: List[str] = []
+    alignment_features: Optional[dict] = None
+    multimodal_alignment: Optional[dict] = None
 
 
 @app.post("/route", response_model=RoutingResult)
@@ -64,6 +72,8 @@ async def route_complaint(request: RoutingRequest):
         complaint_id=request.complaint_id,
         complaint_type=request.complaint_type,
         category=request.category or "other",
+        subcategory=request.subcategory or "unknown",
+        summary=request.summary or "",
         severity=request.severity,
         original_text=request.original_text or "",
         location_district=request.location_district,
@@ -71,6 +81,12 @@ async def route_complaint(request: RoutingRequest):
         location_governorate=request.location_governorate,
         location_mentions=request.location_mentions,
         keywords=request.extracted_keywords,
+        signals=request.signals or {},
+        routing_features=request.routing_features or {},
+        evidence_text=request.evidence_text,
+        evidence_image=request.evidence_image,
+        alignment_features=request.alignment_features or {},
+        multimodal_alignment=request.multimodal_alignment or {},
     )
     result.processing_ms = int((time.time() - start) * 1000)
 

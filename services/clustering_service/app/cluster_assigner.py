@@ -114,7 +114,7 @@ class ClusterAssigner:
             id=new_id,
             created_at=now,
             updated_at=now,
-            complaint_type=canonical.issue_type.value,
+            complaint_type=str(canonical.issue_type),
             dominant_district=canonical.location.district,
             member_count=1,
             trend=ClusterGrowthSignal.NEW.value,
@@ -127,7 +127,7 @@ class ClusterAssigner:
             complaint_id=canonical.complaint_id,
             cluster_action=ClusterActionEnum.CREATE_NEW_CLUSTER,
             cluster_id=new_id,
-            cluster_type=canonical.issue_type.value,
+            cluster_type=str(canonical.issue_type),
             cluster_location=canonical.location.district,
             cluster_size_before=0,
             cluster_size_after=1,
@@ -161,7 +161,7 @@ class ClusterAssigner:
         return (
             db.query(Cluster)
             .filter(
-                Cluster.complaint_type == canonical.issue_type.value,
+                Cluster.complaint_type == str(canonical.issue_type),
                 Cluster.dominant_district == canonical.location.district,
                 Cluster.updated_at >= cutoff,
             )

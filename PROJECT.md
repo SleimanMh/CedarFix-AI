@@ -1,5 +1,8 @@
 # CedarFix AI — Complete Project Documentation
 
+> Current canonical design document: [DESIGN.md](DESIGN.md)
+> The sections below are the older project-level documentation and may lag behind the live implementation.
+
 ## Table of Contents
 1. [Project Overview](#1-project-overview)
 2. [System Architecture](#2-system-architecture)

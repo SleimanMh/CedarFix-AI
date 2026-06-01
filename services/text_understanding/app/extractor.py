@@ -39,6 +39,24 @@ ISSUE_HIERARCHY: Dict[ComplaintType, Tuple[str, str]] = {
     ComplaintType.OTHER:            ("other",       "other"),
 }
 
+# Semantic descriptors used downstream for cross-modal text/image validation.
+# Keep this aligned with the image-side descriptor vocabulary.
+ISSUE_DESCRIPTORS: Dict[ComplaintType, Tuple[str, str, str]] = {
+    ComplaintType.POTHOLE:          ("transportation", "road_surface",    "damage"),
+    ComplaintType.ROAD_DAMAGE:      ("transportation", "road_surface",    "damage"),
+    ComplaintType.FLOODING:         ("environment",    "drainage_system", "overflow"),
+    ComplaintType.WASTE:            ("environment",    "public_space",    "accumulation"),
+    ComplaintType.ELECTRICITY:      ("utilities",      "electrical_line", "outage"),
+    ComplaintType.TRAFFIC_LIGHT:    ("transportation", "traffic_signal",  "damage"),
+    ComplaintType.WATER_PIPE:       ("utilities",      "water_pipe",      "damage"),
+    ComplaintType.WATER_OUTAGE:     ("utilities",      "water_supply",    "outage"),
+    ComplaintType.SIDEWALK:         ("transportation", "sidewalk",        "damage"),
+    ComplaintType.STREETLIGHT:      ("transportation", "street_light",    "damage"),
+    ComplaintType.TRAFFIC_INCIDENT: ("transportation", "road_surface",    "blockage"),
+    ComplaintType.PUBLIC_SAFETY:    ("safety",         "public_space",    "other"),
+    ComplaintType.OTHER:            ("other",          "other",           "other"),
+}
+
 # ---------------------------------------------------------------------------
 # Keyword maps (English — Phase 1)
 # TODO Phase 2: replace with fine-tuned classifier
@@ -236,6 +254,9 @@ class StructuredExtractor:
         normalized = self._normalize(text)
         issue_type, type_conf = self._classify_issue_type(normalized)
         category, subcategory = ISSUE_HIERARCHY[issue_type]
+        semantic_domain, physical_component, failure_mode = ISSUE_DESCRIPTORS.get(
+            issue_type, ("other", "other", "other")
+        )
         location = self._extract_location(normalized)
         severity = self._estimate_severity(normalized)
         signals = self._extract_signals(normalized)
@@ -260,6 +281,9 @@ class StructuredExtractor:
             signals=signals,
             urgency_keywords=urgency_kws,
             confidence=min(overall_conf, 0.95),
+            semantic_domain=semantic_domain,
+            physical_component=physical_component,
+            failure_mode=failure_mode,
         )
 
     # ------------------------------------------------------------------

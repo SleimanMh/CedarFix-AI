@@ -206,16 +206,27 @@ def _get_qdrant():
 def _build_query_text(
     complaint_type: str,
     category: str,
+    subcategory: str,
+    summary: str,
     location_municipality: Optional[str],
     location_district: Optional[str],
     location_governorate: Optional[str],
     keywords: List[str],
+    signals: dict,
+    routing_features: dict,
+    evidence_text: List[str],
+    evidence_image: List[str],
+    alignment_features: dict,
+    multimodal_alignment: dict,
     original_text: str,
 ) -> str:
     parts = [
         f"complaint type: {complaint_type}",
         f"category: {category}",
+        f"subcategory: {subcategory}",
     ]
+    if summary:
+        parts.append(f"summary: {summary[:200]}")
     if location_municipality:
         parts.append(f"municipality: {location_municipality}")
     if location_district:
@@ -224,6 +235,18 @@ def _build_query_text(
         parts.append(f"governorate: {location_governorate}")
     if keywords:
         parts.append(f"keywords: {', '.join(keywords[:6])}")
+    if signals:
+        parts.append(f"signals: {json.dumps(signals, ensure_ascii=True)}")
+    if routing_features:
+        parts.append(f"routing_features: {json.dumps(routing_features, ensure_ascii=True)}")
+    if alignment_features:
+        parts.append(f"alignment_features: {json.dumps(alignment_features, ensure_ascii=True)}")
+    if evidence_text:
+        parts.append(f"text_evidence: {', '.join(evidence_text[:6])}")
+    if evidence_image:
+        parts.append(f"image_evidence: {', '.join(evidence_image[:6])}")
+    if multimodal_alignment:
+        parts.append(f"multimodal_alignment: {json.dumps(multimodal_alignment, ensure_ascii=True)}")
     parts.append(f"complaint: {original_text[:200]}")
     return " | ".join(parts)
 
@@ -368,6 +391,8 @@ class ComplaintRouter:
         complaint_id: str,
         complaint_type: Optional[str],
         category: str,
+        subcategory: str,
+        summary: str,
         severity: Optional[str],
         original_text: str,
         location_district: Optional[str],
@@ -375,6 +400,12 @@ class ComplaintRouter:
         location_governorate: Optional[str],
         location_mentions: List[str],
         keywords: List[str],
+        signals: dict,
+        routing_features: dict,
+        evidence_text: List[str],
+        evidence_image: List[str],
+        alignment_features: dict,
+        multimodal_alignment: dict,
     ) -> RoutingResult:
         ct = complaint_type or "other"
 
@@ -397,8 +428,21 @@ class ComplaintRouter:
         # ── RAG path ─────────────────────────────────────────────────────────
         if RAG_ENABLED:
             query_text = _build_query_text(
-                ct, category, location_municipality, location_district,
-                location_governorate, keywords, original_text,
+                ct,
+                category,
+                subcategory,
+                summary,
+                location_municipality,
+                location_district,
+                location_governorate,
+                keywords,
+                signals,
+                routing_features,
+                evidence_text,
+                evidence_image,
+                alignment_features,
+                multimodal_alignment,
+                original_text,
             )
             docs = _retrieve_docs(query_text, top_k=RAG_TOP_K)
 

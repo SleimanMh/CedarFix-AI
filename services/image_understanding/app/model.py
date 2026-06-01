@@ -113,7 +113,9 @@ class ImageUnderstandingModel:
         # 5. VLM Phase 2 — richer semantic analysis (async, non-blocking on CLIP path)
         vlm_analysis = None
         if self.vlm_analyzer:
-            vlm_analysis = await self.vlm_analyzer.analyze(image, complaint_text or None)
+            # Primary image understanding must remain image-only. Text is used
+            # later by the dedicated alignment checker, not to bias labels.
+            vlm_analysis = await self.vlm_analyzer.analyze(image, None)
 
             # Prefer VLM labels/caption when available so downstream UI and matching
             # reflect the richer model output (especially for issue_type=other cases).
@@ -127,6 +129,7 @@ class ImageUnderstandingModel:
                     "semantic_domain": vlm_analysis.semantic_domain or visual.semantic_domain,
                     "physical_component": vlm_analysis.physical_component or visual.physical_component,
                     "failure_mode": vlm_analysis.failure_mode or visual.failure_mode,
+                    "visual_candidates": vlm_analysis.visual_candidates,
                 })
 
             # If VLM ran: update alignment when CLIP was uncertain and VLM gives high confidence

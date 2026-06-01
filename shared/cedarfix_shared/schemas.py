@@ -379,7 +379,7 @@ class ComplaintDecision(BaseModel):
     confidence_bundle: Optional[ConfidenceBundle] = None
 
     # Summary fields (denormalized for quick query)
-    complaint_type: Optional[ComplaintType] = None
+    complaint_type: Optional[str] = None
     severity: Optional[SeverityLevel] = None
     priority_score: Optional[float] = None
     assigned_entity: Optional[RoutingEntity] = None
@@ -483,6 +483,31 @@ class SignalsJSON(BaseModel):
     emergency_signal: bool = False
 
 
+class RoutingFeaturesJSON(BaseModel):
+    domain: str = "unknown"
+    physical_component: str = "unknown"
+    failure_mode: str = "unknown"
+    hazard_type: str = "none"
+    affected_public_space: bool = True
+    requires_emergency_attention: bool = False
+
+
+class ExtractionEvidenceJSON(BaseModel):
+    text_evidence: List[str] = []
+    image_evidence: List[str] = []
+    missing_information: List[str] = []
+
+
+class AlignmentFeaturesJSON(BaseModel):
+    domain: str = "unknown"
+    physical_component: str = "unknown"
+    failure_mode: str = "unknown"
+    visible_hazard: bool = False
+    objects: List[str] = []
+    actions: List[str] = []
+    location_context: List[str] = []
+
+
 class TextUnderstandingResult(BaseModel):
     complaint_id: str
     original_text: str
@@ -492,7 +517,7 @@ class TextUnderstandingResult(BaseModel):
     summary: str = ""
     category: str = ""          # roads | drainage | electricity | water | sanitation
     subcategory: str = ""       # pothole | flooding | outage …
-    issue_type: ComplaintType = ComplaintType.OTHER
+    issue_type: str = "unknown"
     location: LocationJSON = Field(default_factory=LocationJSON)
     severity: SeverityLevel = SeverityLevel.LOW
     signals: SignalsJSON = Field(default_factory=SignalsJSON)
@@ -503,6 +528,9 @@ class TextUnderstandingResult(BaseModel):
     semantic_domain: Optional[str] = None     # transportation | utilities | environment | safety | other
     physical_component: Optional[str] = None  # road_surface | sidewalk | water_pipe | electrical_line | drainage_system | public_space | street_furniture | other
     failure_mode: Optional[str] = None        # damage | outage | overflow | accumulation | blockage | other
+    routing_features: RoutingFeaturesJSON = Field(default_factory=RoutingFeaturesJSON)
+    evidence: ExtractionEvidenceJSON = Field(default_factory=ExtractionEvidenceJSON)
+    alignment_features: AlignmentFeaturesJSON = Field(default_factory=AlignmentFeaturesJSON)
     text_embedding_id: str = ""   # set by IEP-3 after Qdrant storage
     text_embedding: List[float] = []
     processing_ms: int = 0
@@ -518,7 +546,7 @@ class ImageQualityJSON(BaseModel):
     issues: List[str] = []
 
 
-class VisualUnderstandingJSON(BaseModel):
+class _LegacyVisualUnderstandingJSON(BaseModel):
     caption: str = ""
     visual_category: str = ""
     visual_subcategory: str = ""
@@ -532,6 +560,33 @@ class VisualUnderstandingJSON(BaseModel):
     failure_mode: Optional[str] = None
 
 
+class VisualIssueCandidate(BaseModel):
+    """One plausible public-space issue visible in the image."""
+    visual_category: str = ""
+    visual_subcategory: str = ""
+    caption: str = ""
+    semantic_domain: Optional[str] = None
+    physical_component: Optional[str] = None
+    failure_mode: Optional[str] = None
+    confidence: float = 0.0
+    evidence: str = ""
+
+
+class VisualUnderstandingJSON(BaseModel):
+    caption: str = ""
+    visual_category: str = ""
+    visual_subcategory: str = ""
+    detected_objects: List[str] = []
+    damage_visible: bool = False
+    visual_severity: SeverityLevel = SeverityLevel.LOW
+    confidence: float = 0.0
+    # Three semantic descriptor dimensions â€” derived from CLIP subcategory or filled by VLM.
+    semantic_domain: Optional[str] = None
+    physical_component: Optional[str] = None
+    failure_mode: Optional[str] = None
+    visual_candidates: List[VisualIssueCandidate] = []
+
+
 class VLMImageAnalysis(BaseModel):
     """Structured output from Qwen2.5-VL (Phase 2 of IEP-2). None = VLM not called."""
     image_type: str = "other"
@@ -543,7 +598,13 @@ class VLMImageAnalysis(BaseModel):
     visual_subcategory: str = "other"
     caption: str = ""              # VLM-generated natural language description of what it sees
     damage_severity: SeverityLevel = SeverityLevel.LOW
-    location_cues: List[str] = []
+    location_cues: dict = Field(default_factory=lambda: {
+        "detected_text": [],
+        "landmarks": [],
+        "street_signs": [],
+        "storefront_names": [],
+        "confidence": 0.0,
+    })
     confidence: float = 0.0
     reasoning: str = ""
     vlm_alignment: Optional[str] = None   # confirms | partial | contradicts | unrelated
@@ -552,6 +613,10 @@ class VLMImageAnalysis(BaseModel):
     semantic_domain: Optional[str] = None
     physical_component: Optional[str] = None
     failure_mode: Optional[str] = None
+    routing_features: RoutingFeaturesJSON = Field(default_factory=RoutingFeaturesJSON)
+    evidence: ExtractionEvidenceJSON = Field(default_factory=ExtractionEvidenceJSON)
+    alignment_features: AlignmentFeaturesJSON = Field(default_factory=AlignmentFeaturesJSON)
+    visual_candidates: List[VisualIssueCandidate] = []
 
 
 class ImageUnderstandingResult(BaseModel):
@@ -582,10 +647,13 @@ class TextImageAlignment(BaseModel):
     complaint_id: str
     alignment_status: AlignmentStatus = AlignmentStatus.NO_IMAGE
     alignment_score: float = 0.0
-    text_issue_type: ComplaintType = ComplaintType.OTHER
+    text_issue_type: str = "unknown"
     image_issue_type: Optional[str] = None
     text_subcategory: str = ""
     image_subcategory: str = ""
+    matched_features: List[str] = []
+    conflicting_features: List[str] = []
+    reason: str = ""
     conflict_detected: bool = False
     conflict_reason: Optional[str] = None
     reconciliation_status: ReconciliationStatus = ReconciliationStatus.INSUFFICIENT_EVIDENCE
@@ -606,7 +674,7 @@ class CanonicalComplaint(BaseModel):
     summary: str = ""
     category: str = ""
     subcategory: str = ""
-    issue_type: ComplaintType = ComplaintType.OTHER
+    issue_type: str = "unknown"
     severity: SeverityLevel = SeverityLevel.LOW
     location: CanonicalLocationJSON = Field(default_factory=CanonicalLocationJSON)
     signals: SignalsJSON = Field(default_factory=SignalsJSON)
@@ -620,7 +688,7 @@ class RawCandidate(BaseModel):
     complaint_id: str
     cluster_id: Optional[str] = None
     summary: str = ""
-    issue_type: ComplaintType = ComplaintType.OTHER
+    issue_type: str = "unknown"
     subcategory: str = ""
     location: CanonicalLocationJSON = Field(default_factory=CanonicalLocationJSON)
     timestamp: Optional[datetime] = None
@@ -671,7 +739,7 @@ class DuplicateCandidate(BaseModel):
     candidate_complaint_id: str
     candidate_cluster_id: Optional[str] = None
     candidate_summary: str = ""
-    candidate_issue_type: ComplaintType = ComplaintType.OTHER
+    candidate_issue_type: str = "unknown"
     candidate_subcategory: str = ""
     candidate_location: CanonicalLocationJSON = Field(default_factory=CanonicalLocationJSON)
     similarity_scores: SimilarityScores = Field(default_factory=SimilarityScores)

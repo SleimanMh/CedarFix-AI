@@ -24,7 +24,6 @@ from typing import Optional, Tuple
 
 from cedarfix_shared.schemas import (
     CanonicalComplaint,
-    ComplaintType,
     DuplicateCandidate,
     EmbeddingServiceResult,
     RawCandidate,
@@ -123,10 +122,10 @@ async def _call_llm_judge(
 # Adjacent issue-type pairs (partial compatibility)
 # ---------------------------------------------------------------------------
 _ADJACENT_PAIRS = {
-    frozenset({ComplaintType.POTHOLE, ComplaintType.ROAD_DAMAGE}),
-    frozenset({ComplaintType.FLOODING, ComplaintType.WATER_PIPE}),
-    frozenset({ComplaintType.ELECTRICITY, ComplaintType.STREETLIGHT}),
-    frozenset({ComplaintType.WASTE, ComplaintType.SIDEWALK}),
+    frozenset({"pothole", "road_damage"}),
+    frozenset({"flooding", "water_pipe"}),
+    frozenset({"electricity_outage", "streetlight"}),
+    frozenset({"waste_accumulation", "sidewalk_damage"}),
 }
 
 # ---------------------------------------------------------------------------
@@ -359,16 +358,18 @@ class MultimodalScorer:
 # ---------------------------------------------------------------------------
 
 def _type_match_score(
-    type_a: ComplaintType,
-    type_b: ComplaintType,
+    type_a: str,
+    type_b: str,
     sub_a: str = "",
     sub_b: str = "",
 ) -> float:
+    type_a = (type_a or "unknown").strip().lower()
+    type_b = (type_b or "unknown").strip().lower()
     if type_a == type_b:
         # Both OTHER — compare specific subcategories when available.
         # Two complaints of "other" type with DIFFERENT specific subcategories
         # (e.g. "broken_bench" vs "graffiti") should not get a full type match.
-        if type_a == ComplaintType.OTHER:
+        if type_a in ("other", "unknown"):
             a = (sub_a or "").strip().lower()
             b = (sub_b or "").strip().lower()
             if (a and b

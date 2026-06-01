@@ -1,15 +1,4 @@
-"""
-LLM Extractor — IEP-1
-======================
-Replaces the rule-based StructuredExtractor for multilingual complaints.
-
-Routing:
-  - Arabizi  → GPT-4o  (best Arabizi comprehension, via OpenAI API)
-  - Arabic / French / English → Qwen2.5-7B-Instruct (self-hosted via Ollama)
-
-Both backends return the same JSON schema so the caller is backend-agnostic.
-Falls back to the rule-based StructuredExtractor if both LLMs are unavailable.
-"""
+"""LLM Extractor - IEP-1 (fact extraction only)."""
 
 import json
 import logging
@@ -22,8 +11,10 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
 from cedarfix_shared.schemas import (
-    ComplaintType,
+    AlignmentFeaturesJSON,
+    ExtractionEvidenceJSON,
     LocationJSON,
+    RoutingFeaturesJSON,
     SignalsJSON,
     SeverityLevel,
     TextUnderstandingResult,
@@ -31,80 +22,72 @@ from cedarfix_shared.schemas import (
 from cedarfix_shared.location import lookup_text
 from .extractor import StructuredExtractor
 
-# ---------------------------------------------------------------------------
-# Structured output schema — keys are fixed by us; LLM only fills values.
-# When the endpoint supports guided_json (vLLM), this schema is enforced at
-# the token level so the model cannot invent keys, wrong enum values, or
-# refuse to answer by outputting something like {"error": "not a complaint"}.
-# ---------------------------------------------------------------------------
 
 class _SignalsOutput(BaseModel):
     public_safety_risk: bool = False
     traffic_impact: bool = False
+    corruption_signal: bool = False
     emergency_signal: bool = False
+
+
+class _RoutingFeaturesOutput(BaseModel):
+    domain: str = "unknown"
+    physical_component: str = "unknown"
+    failure_mode: str = "unknown"
+    hazard_type: str = "none"
+    affected_public_space: bool = True
+    requires_emergency_attention: bool = False
+
+
+class _EvidenceOutput(BaseModel):
+    text_evidence: List[str] = []
+    image_evidence: List[str] = []
+    missing_information: List[str] = []
+
+
+class _AlignmentFeaturesOutput(BaseModel):
+    domain: str = "unknown"
+    physical_component: str = "unknown"
+    failure_mode: str = "unknown"
+    visible_hazard: bool = False
+    objects: List[str] = []
+    actions: List[str] = []
+    location_context: List[str] = []
 
 
 class _LLMOutput(BaseModel):
     is_complaint: bool = True
     english_translation: str = ""
-    issue_type: Literal[
-        "pothole", "road_damage", "flooding", "waste_accumulation",
-        "electricity_outage", "water_outage", "telecom_outage",
-        "traffic_light", "water_pipe", "sidewalk_damage", "streetlight",
-        "traffic_incident", "public_safety", "other",
-    ] = "other"
-    category: str = "other"         # free-form — LLM can use new values
-    subcategory: str = "other"      # free-form — LLM should be specific
+    issue_type: str = "unknown"
+    category: str = "unknown"
+    subcategory: str = "unknown"
     severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"] = "LOW"
     location_mentions: List[str] = []
     keywords: List[str] = []
     summary: str = ""
     signals: _SignalsOutput = Field(default_factory=_SignalsOutput)
+    routing_features: _RoutingFeaturesOutput = Field(default_factory=_RoutingFeaturesOutput)
+    evidence: _EvidenceOutput = Field(default_factory=_EvidenceOutput)
+    alignment_features: _AlignmentFeaturesOutput = Field(default_factory=_AlignmentFeaturesOutput)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
-    semantic_domain: str = "other"       # free-form — be specific (e.g. public_space, transportation)
-    physical_component: str = "other"   # free-form — be specific
-    failure_mode: str = "other"          # free-form — be specific (e.g. broken, damaged, blocked)
+    semantic_domain: str = "unknown"
+    physical_component: str = "unknown"
+    failure_mode: str = "unknown"
 
 
-# JSON schema passed to vLLM's guided_json parameter.
-# This locks the output structure so the LLM only generates values.
 _LLM_OUTPUT_SCHEMA: dict = _LLMOutput.model_json_schema()
-
-# Whether to use guided_json constrained decoding.
-# Falls back to plain json_object mode if the endpoint rejects the parameter.
 QWEN_GUIDED: bool = os.getenv("QWEN_GUIDED", "true").lower() == "true"
-
 
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Configuration (injected via environment variables)
-# ---------------------------------------------------------------------------
-
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
-
-# RunPod Qwen endpoint — OpenAI-compatible (/v1/chat/completions)
-# Base URL must NOT include /chat/completions; the SDK appends it automatically.
-QWEN_BASE_URL: str = os.getenv(
-    "QWEN_BASE_URL",
-    "https://plp5oqfqe81tdm-8000.proxy.runpod.net/v1",
-)
+QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "https://plp5oqfqe81tdm-8000.proxy.runpod.net/v1")
 QWEN_MODEL: str = os.getenv("QWEN_MODEL", "qwen2.5-1.5b-instruct")
-QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")  # RunPod doesn't require a real key
-# Set QWEN_ENABLED=true to route ar/fr/en to Qwen on RunPod.
-# When false, GPT-4o handles ALL languages.
+QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
-
-# Arabizi is translated to English by GPT-4o first, then Qwen classifies.
-# GPT-4o is never used for full classification anymore — translation only.
 _TRANSLATE_ONLY_LANGUAGES = {"arabizi"}
 
-# ---------------------------------------------------------------------------
-# Prompt
-# ---------------------------------------------------------------------------
-
-# Translation-only prompt — used by GPT-4o for Arabizi input
 _TRANSLATE_PROMPT = """\
 You are a Lebanese dialect translator.
 Translate the Arabizi text (Arabic written with Latin letters and numbers like 3, 7, 2, 5) into natural English.
@@ -113,44 +96,79 @@ Return ONLY a JSON object with a single field:
 No explanation, no markdown.
 """
 
-# Full classification prompt — used by Qwen for all languages.
-# With guided_json the model only fills values — no need to describe JSON format.
 _SYSTEM_PROMPT = """\
-You are a Lebanese public infrastructure complaint classifier for CedarFix.
-Analyze the text and fill in the output fields.
+You are a Lebanese public infrastructure complaint fact extractor for CedarFix.
+Extract structured facts only.
+Return only a valid JSON object matching the requested fields. No markdown, no prose.
+Do not decide the responsible public entity. Do not perform routing.
+Never output routing decisions or review decisions.
+When the input is not English, fill english_translation with a natural English translation.
 
 is_complaint: true if the text describes ANY real public infrastructure or public-space problem
-(potholes, floods, garbage, power outage, water leak, streetlights, broken benches, fallen trees,
-construction rubble, stray animals causing danger, river pollution, sewage smell, missing manholes, etc.).
+in streets, sidewalks, public buildings, parks, utilities, public transport stops, drainage, sanitation,
+water, electricity, telecom, public safety, or other public/shared spaces.
 Set false ONLY for pure personal emotion, spam, or text 100% unrelated to public space.
 
-For issue_type - pick the closest match from the allowed values, or "other" if nothing fits.
+Do not classify by choosing the nearest item from examples. There is no fixed taxonomy.
+Use free-form snake_case labels based on the object and failure actually described in the text.
+
+issue_type:
+- Use a specific free-form label for the problem as written, e.g. cracked_bus_stop_shelter, sewage_overflow,
+  missing_manhole_cover, loose_pedestrian_bridge_railing, unspecified_sidewalk_hazard.
+- Do not normalize plural/singular words if the user's wording naturally suggests a different label.
+- If the complaint directly names the issue or object, base issue_type on that named issue/object instead of
+  replacing it with a broader surface, material, or nearby failure description.
+- Do not use issue_type='other' to hide a new issue. Use a precise new label instead.
+- Use issue_type='unknown' only when the text clearly gives no object or problem.
+- Use issue_type='unspecified_*' only when the object is genuinely unnamed. If the text names a specific object
+  such as pothole, road hole, crater, sewer, drain, bus stop shelter, railing, step, cable, pipe, or manhole,
+  preserve that object in issue_type instead of replacing it with a vague surface/component label.
+
+category:
+- Use a broad free-form group such as road_surface, sidewalk, sewer_network, drainage, street_furniture,
+  public_transport_stop, electrical_grid, telecom_network, water_network, waste_management, public_space,
+  structural_hazard, environmental_hazard, animal_hazard, or another accurate group.
+
+subcategory:
+- Use the most specific visible/reported object or failure, such as cracked_shelter_roof, exploded_sewer,
+  loose_railing, broken_step, exposed_wire, chemical_spill, fallen_tree, or ambiguous_sidewalk_obstacle.
+
+For vague descriptions, preserve uncertainty instead of inventing an object:
+- "big broken thing on the sidewalk" -> issue_type=unspecified_sidewalk_hazard, category=sidewalk,
+  subcategory=ambiguous_broken_object, physical_component=sidewalk.
+- "bus stop shelter roof is cracked" -> issue_type=cracked_bus_stop_shelter, category=public_transport_stop,
+  subcategory=cracked_shelter_roof. Do NOT call this streetlight.
+- "fi majrour mfajjar w ri7a ktir 2awye bl tari2" -> issue_type=sewage_overflow or burst_sewer,
+  category=sewer_network, subcategory=sewage_smell_or_overflow. Do NOT call this streetlight.
+
 For confidence - how certain you are of issue_type (0.0 = no complaint, 1.0 = certain).
+semantic_domain:
+- Use a broad domain from the facts: transportation for roads, sidewalks, traffic, public transport stops,
+  pedestrian paths, and street mobility; utilities for water, electricity, telecom, sewer, and service networks;
+  environment for waste, pollution, flooding, sewage discharge, smells, animals, or green-space hazards;
+  safety for structural/public danger when the component is not otherwise clear; other only as a last resort.
+- Do not use semantic_domain='unknown' when the text names a public component or public-space hazard.
+- If a road, sidewalk, pedestrian path, bridge used by pedestrians, stairway, or public transport stop is named,
+  use transportation unless the complaint is mainly pollution, waste, sewage, animals, or vegetation.
+- Safety risk belongs in signals and severity; do not change the domain to safety when the component domain is clear.
 
-CRITICAL RULE — when issue_type is "other":
-  issue_type MUST stay "other" (it is a fixed enum — do NOT put the real label there).
-  Instead put the real label in category and subcategory:
-  NEVER set category="other" or subcategory="other" when issue_type is "other".
-  Use snake_case labels. Examples:
-    broken bench      → issue_type: "other", category: "street_furniture",     subcategory: "broken_bench"
-    fallen tree       → issue_type: "other", category: "urban_greenery",       subcategory: "fallen_tree"
-    graffiti          → issue_type: "other", category: "vandalism",            subcategory: "graffiti"
-    stray animals     → issue_type: "other", category: "animal_hazard",        subcategory: "stray_animal_attack"
-    chemical spill    → issue_type: "other", category: "environmental_hazard", subcategory: "chemical_spill"
-    illegal dumping   → issue_type: "other", category: "waste_management",     subcategory: "illegal_dumping"
-    collapsed wall    → issue_type: "other", category: "structural_hazard",    subcategory: "collapsed_wall"
-    broken railing    → issue_type: "other", category: "street_furniture",     subcategory: "broken_railing"
-    river pollution   → issue_type: "other", category: "environmental_hazard", subcategory: "river_pollution"
-  Use the same approach for anything not in this list — describe it precisely in category + subcategory.
+physical_component:
+- Name the actual component from the text, e.g. sidewalk, sewer_network, bus_stop_shelter, shelter_roof,
+  pedestrian_bridge_railing, public_staircase, electrical_box, telecom_cable, road_surface.
 
-For semantic_domain, physical_component, failure_mode - describe what you actually observe in the text, be specific.
+failure_mode:
+- Name the actual failure/action, e.g. damage, cracked, broken, missing, overflow, sewage_smell,
+  exposed, falling_pieces, blockage, contamination, low_hanging, obstruction.
+
+summary:
+- Always provide one short factual sentence. Do not leave it empty for complaint text.
+
+Fill routing_features, evidence, and alignment_features with the same factual descriptors.
+If unsure, use the closest factual component from the text and lower confidence; do not guess a specific object.
 
 Other rules:
 - severity=CRITICAL only for imminent danger or total blockage.
 - confidence=0.0 when is_complaint=false.
-- Ogero handles telecom outages; EDL handles electricity.
-- "water waste" or "wasted water" = pipe leak: issue_type water_pipe, category water.
-- "waste" or "garbage" alone = solid trash: issue_type waste_accumulation, category sanitation.
 """
 
 
@@ -162,21 +180,18 @@ def _user_prompt(text: str, language: str) -> str:
         "arabizi": "Arabizi (Arabic written with Latin letters and numbers)",
         "unknown": "unknown language",
     }.get(language, language)
-    return f"Language hint: {lang_hint}\n\nComplaint:\n{text}"
+    extra = ""
+    if language == "arabizi":
+        extra = (
+            "\nLebanese Arabizi hints: fi=there is, majrour/sewer=sewer or drain, "
+            "mfajjar=burst/exploded, ri7a=smell, ktir/kter=very, 2awye=strong, "
+            "bl/b=on/in, tari2=road, may/maye=water, kahraba=electricity.\n"
+        )
+    return f"Language hint: {lang_hint}{extra}\nComplaint:\n{text}"
 
-
-# ---------------------------------------------------------------------------
-# JSON parsing helper
-# ---------------------------------------------------------------------------
 
 def _parse_llm_json(raw: str) -> dict:
-    """
-    Robustly extract a JSON object from an LLM response that may contain
-    markdown fences or leading/trailing prose.
-    """
-    # Strip markdown code fences if present
     raw = re.sub(r"```(?:json)?", "", raw).strip()
-    # Find first { … } block
     start = raw.find("{")
     end = raw.rfind("}") + 1
     if start == -1 or end == 0:
@@ -184,12 +199,121 @@ def _parse_llm_json(raw: str) -> dict:
     return json.loads(raw[start:end])
 
 
-# ---------------------------------------------------------------------------
-# Backend callers
-# ---------------------------------------------------------------------------
+def _string_list(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(x).strip() for x in value if str(x).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def _as_dict(value) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
+def _bool(value, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "1"}:
+            return True
+        if normalized in {"false", "no", "0"}:
+            return False
+    if value is None:
+        return default
+    return bool(value)
+
+
+def _scalar_text(value, default: str = "") -> str:
+    if value is None:
+        return default
+    if isinstance(value, (dict, list)):
+        return default
+    return str(value)
+
+
+def _coerce_llm_output(data: dict) -> dict:
+    """
+    Qwen sometimes returns a valid JSON object with loose shapes for nested
+    fields. Preserve the extracted facts and repair those shapes before
+    Pydantic validation instead of discarding the whole LLM response.
+    """
+    clean = dict(data or {})
+
+    clean["is_complaint"] = _bool(clean.get("is_complaint"), True)
+    for key in (
+        "english_translation",
+        "issue_type",
+        "category",
+        "subcategory",
+        "summary",
+        "semantic_domain",
+        "physical_component",
+        "failure_mode",
+    ):
+        clean[key] = _scalar_text(clean.get(key), _LLMOutput.model_fields[key].default)
+
+    clean["location_mentions"] = _string_list(clean.get("location_mentions"))
+    clean["keywords"] = _string_list(clean.get("keywords"))
+
+    signals = _as_dict(clean.get("signals"))
+    clean["signals"] = {
+        "public_safety_risk": _bool(signals.get("public_safety_risk")),
+        "traffic_impact": _bool(signals.get("traffic_impact")),
+        "corruption_signal": _bool(signals.get("corruption_signal")),
+        "emergency_signal": _bool(signals.get("emergency_signal")),
+    }
+
+    routing = _as_dict(clean.get("routing_features"))
+    clean["routing_features"] = {
+        "domain": routing.get("domain") or clean.get("semantic_domain") or clean.get("category") or "unknown",
+        "physical_component": routing.get("physical_component") or clean.get("physical_component") or "unknown",
+        "failure_mode": routing.get("failure_mode") or clean.get("failure_mode") or "unknown",
+        "hazard_type": routing.get("hazard_type") or "none",
+        "affected_public_space": _bool(routing.get("affected_public_space"), True),
+        "requires_emergency_attention": _bool(
+            routing.get("requires_emergency_attention"), clean["signals"]["emergency_signal"]
+        ),
+    }
+
+    evidence = clean.get("evidence")
+    if isinstance(evidence, dict):
+        clean["evidence"] = {
+            "text_evidence": _string_list(evidence.get("text_evidence")),
+            "image_evidence": _string_list(evidence.get("image_evidence")),
+            "missing_information": _string_list(evidence.get("missing_information")),
+        }
+    else:
+        clean["evidence"] = {
+            "text_evidence": _string_list(evidence),
+            "image_evidence": [],
+            "missing_information": [],
+        }
+
+    alignment = _as_dict(clean.get("alignment_features"))
+    clean["alignment_features"] = {
+        "domain": alignment.get("domain") or clean["routing_features"]["domain"],
+        "physical_component": alignment.get("physical_component") or clean["routing_features"]["physical_component"],
+        "failure_mode": alignment.get("failure_mode") or clean["routing_features"]["failure_mode"],
+        "visible_hazard": _bool(alignment.get("visible_hazard")),
+        "objects": _string_list(alignment.get("objects")),
+        "actions": _string_list(alignment.get("actions")),
+        "location_context": _string_list(alignment.get("location_context")),
+    }
+
+    severity = str(clean.get("severity", "LOW")).upper()
+    clean["severity"] = severity if severity in {"LOW", "MEDIUM", "HIGH", "CRITICAL"} else "LOW"
+
+    try:
+        clean["confidence"] = max(0.0, min(1.0, float(clean.get("confidence", 0.5))))
+    except (TypeError, ValueError):
+        clean["confidence"] = 0.5
+
+    return clean
+
 
 async def _call_gpt4o_translate(text: str) -> str:
-    """Translate Arabizi to English using GPT-4o. Returns the English string only."""
     client = AsyncOpenAI(api_key=OPENAI_API_KEY)
     response = await client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -204,14 +328,22 @@ async def _call_gpt4o_translate(text: str) -> str:
     return result.get("translation", text)
 
 
-async def _call_qwen(text: str, language: str) -> dict:
-    """Call the self-hosted Qwen on RunPod via its OpenAI-compatible endpoint.
+async def _call_gpt4o_extract(text: str, language: str) -> dict:
+    client = AsyncOpenAI(api_key=OPENAI_API_KEY, max_retries=0, timeout=35.0)
+    response = await client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": _user_prompt(text, language)},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.0,
+    )
+    data = _parse_llm_json(response.choices[0].message.content)
+    return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
 
-    When QWEN_GUIDED=true (default), passes the JSON schema as guided_json so
-    vLLM constrains token generation — the LLM only fills values, never invents
-    keys, wrong enum values, or malformed JSON.
-    Falls back to plain json_object mode if the endpoint rejects guided_json.
-    """
+
+async def _call_qwen(text: str, language: str) -> dict:
     client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=35.0)
 
     kwargs: dict = dict(
@@ -224,8 +356,6 @@ async def _call_qwen(text: str, language: str) -> dict:
     )
 
     if QWEN_GUIDED:
-        # Guided decoding: vLLM enforces the schema at token level.
-        # The model cannot output a wrong enum value or miss a required key.
         kwargs["extra_body"] = {"guided_json": _LLM_OUTPUT_SCHEMA}
     else:
         kwargs["response_format"] = {"type": "json_object"}
@@ -233,50 +363,62 @@ async def _call_qwen(text: str, language: str) -> dict:
     for attempt in range(2):
         try:
             response = await client.chat.completions.create(**kwargs)
-            raw = response.choices[0].message.content
-            data = _parse_llm_json(raw)
-            # Validate through Pydantic — coerces types and fills missing fields with defaults.
-            validated = _LLMOutput.model_validate(data)
-            return validated.model_dump()
+            data = _parse_llm_json(response.choices[0].message.content)
+            return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
         except Exception as e:
             if QWEN_GUIDED and ("guided" in str(e).lower() or "extra_body" in str(e).lower() or "422" in str(e)):
-                # Endpoint doesn't support guided_json — retry without it.
                 log.warning("[IEP-1] guided_json not supported (%s), retrying without", e)
                 kwargs.pop("extra_body", None)
                 kwargs["response_format"] = {"type": "json_object"}
                 response = await client.chat.completions.create(**kwargs)
                 data = _parse_llm_json(response.choices[0].message.content)
-                validated = _LLMOutput.model_validate(data)
-                return validated.model_dump()
+                return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
             if attempt == 0 and "timed out" in str(e).lower():
                 log.warning("[IEP-1] Qwen timeout on attempt 1, retrying (%s)", e)
                 continue
             raise
 
 
-# ---------------------------------------------------------------------------
-# Result builder
-# ---------------------------------------------------------------------------
+def _snake(value: str | None, default: str = "unknown") -> str:
+    s = (value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    s = re.sub(r"[^a-z0-9_]", "", s)
+    s = re.sub(r"_+", "_", s).strip("_")
+    return s or default
 
-_ISSUE_TO_CATEGORY = {
-    "pothole": "roads",           "road_damage": "roads",
-    "flooding": "drainage",       "waste_accumulation": "sanitation",
-    "electricity_outage": "electricity", "traffic_light": "roads",
-    "water_pipe": "water",        "water_outage": "water",
-    "sidewalk_damage": "roads",
-    "streetlight": "electricity", "telecom_outage": "telecom",
-    "traffic_incident": "roads",  "public_safety": "other",
-    "other": "other",
-}
 
-def _build_result(complaint_id: str, original_text: str, language: str,
-                  data: dict, processing_ms: int) -> TextUnderstandingResult:
-    # --- Non-complaint early exit ---
-    # LLM explicitly said this is not an infrastructure complaint.
-    # Force type=OTHER + near-zero confidence so the media-validation gate
-    # catches it as invalid_no_complaint (or needs_clarification if image disagrees).
+def _snake_or_default(value: str | None, default: str) -> str:
+    normalized = _snake(value, "unknown")
+    return default if normalized in {"", "unknown"} and default else normalized
+
+
+def _dynamic_descriptor_fallback(
+    issue_type: str,
+    category: str,
+    subcategory: str,
+    semantic_domain: str,
+    physical_component: str,
+    failure_mode: str,
+) -> tuple[str, str, str]:
+    labels = [x for x in (category, subcategory, issue_type) if x and x != "unknown"]
+    joined = "_".join(labels)
+
+    if semantic_domain in {"", "unknown", "other"} and labels:
+        semantic_domain = category if category != "unknown" else labels[0]
+
+    if physical_component in {"", "unknown", "other"} and labels:
+        physical_component = category if category != "unknown" else labels[0]
+
+    if failure_mode in {"", "unknown", "other"}:
+        for token in reversed(joined.split("_")):
+            if token and token not in {"unspecified", "ambiguous", "public", "space"}:
+                failure_mode = token
+                break
+
+    return semantic_domain, physical_component, failure_mode
+
+
+def _build_result(complaint_id: str, original_text: str, language: str, data: dict, processing_ms: int) -> TextUnderstandingResult:
     if not data.get("is_complaint", True):
-        log.info("[IEP-1] LLM flagged as non-complaint for complaint_id=%s", complaint_id)
         translation = data.get("english_translation", original_text)
         return TextUnderstandingResult(
             complaint_id=complaint_id,
@@ -285,45 +427,74 @@ def _build_result(complaint_id: str, original_text: str, language: str,
             language=language,
             english_translation=translation if language != "en" else None,
             summary=data.get("summary", "Not a complaint"),
-            category="other",
-            subcategory="not_a_complaint",
-            issue_type=ComplaintType.OTHER,
+            category="unknown",
+            subcategory="unknown",
+            issue_type="unknown",
             location=LocationJSON(raw="", normalized="", confidence=0.0, source="none"),
             severity=SeverityLevel.LOW,
-            signals=SignalsJSON(public_safety_risk=False, traffic_impact=False, emergency_signal=False),
+            signals=SignalsJSON(public_safety_risk=False, traffic_impact=False, corruption_signal=False, emergency_signal=False),
+            routing_features=RoutingFeaturesJSON(),
+            evidence=ExtractionEvidenceJSON(missing_information=["complaint_not_detected_in_text"]),
+            alignment_features=AlignmentFeaturesJSON(),
             urgency_keywords=[],
             confidence=0.0,
             processing_ms=processing_ms,
         )
 
-    # issue_type is already validated by _LLMOutput Pydantic model \u2014 guaranteed to be a
-    # known ComplaintType value (guided_json enforces this at the token level; Pydantic
-    # coerces any remaining edge cases to "other").
-    issue_raw = data.get("issue_type", "other")
-    issue_type = ComplaintType(issue_raw) if issue_raw in {ct.value for ct in ComplaintType} else ComplaintType.OTHER
-    unknown_type = (issue_raw not in {ct.value for ct in ComplaintType})
+    issue_type = _snake(data.get("issue_type"), "unknown")
+    category = _snake_or_default(data.get("category"), "unknown")
+    subcategory = _snake_or_default(data.get("subcategory"), issue_type)
+    semantic_domain = _snake_or_default(data.get("semantic_domain"), "unknown")
+    physical_component = _snake_or_default(data.get("physical_component"), "unknown")
+    failure_mode = _snake_or_default(data.get("failure_mode"), "unknown")
+    semantic_domain, physical_component, failure_mode = _dynamic_descriptor_fallback(
+        issue_type, category, subcategory, semantic_domain, physical_component, failure_mode
+    )
+
     severity_raw = data.get("severity", "LOW")
     try:
         severity = SeverityLevel(severity_raw)
     except ValueError:
-        log.warning("[IEP-1] LLM returned unknown severity=%r \u2014 using MEDIUM", severity_raw)
         severity = SeverityLevel.MEDIUM
 
-    llm_cat = data.get("category", "")
-    # Use whatever category the LLM returns \u2014 don't restrict to a hardcoded list.
-    # Only fall back to the static type\u2192category map when the LLM returned nothing.
-    category = llm_cat if llm_cat else _ISSUE_TO_CATEGORY.get(issue_raw, issue_raw or "other")
-    subcategory = data.get("subcategory", issue_raw)
     translation = data.get("english_translation", original_text)
 
     signals_raw = data.get("signals", {})
     signals = SignalsJSON(
         public_safety_risk=bool(signals_raw.get("public_safety_risk", False)),
         traffic_impact=bool(signals_raw.get("traffic_impact", False)),
+        corruption_signal=bool(signals_raw.get("corruption_signal", False)),
         emergency_signal=bool(signals_raw.get("emergency_signal", False)),
     )
 
-    # Build LocationJSON and enrich with seed lookup if possible
+    rf_raw = data.get("routing_features", {})
+    routing_features = RoutingFeaturesJSON(
+        domain=_snake_or_default(rf_raw.get("domain"), semantic_domain),
+        physical_component=_snake_or_default(rf_raw.get("physical_component"), physical_component),
+        failure_mode=_snake_or_default(rf_raw.get("failure_mode"), failure_mode),
+        hazard_type=_snake(rf_raw.get("hazard_type", "none"), "none"),
+        affected_public_space=bool(rf_raw.get("affected_public_space", True)),
+        requires_emergency_attention=bool(rf_raw.get("requires_emergency_attention", signals.emergency_signal)),
+    )
+
+    ev_raw = data.get("evidence", {})
+    evidence = ExtractionEvidenceJSON(
+        text_evidence=[str(x) for x in ev_raw.get("text_evidence", []) if str(x).strip()],
+        image_evidence=[str(x) for x in ev_raw.get("image_evidence", []) if str(x).strip()],
+        missing_information=[str(x) for x in ev_raw.get("missing_information", []) if str(x).strip()],
+    )
+
+    af_raw = data.get("alignment_features", {})
+    alignment_features = AlignmentFeaturesJSON(
+        domain=_snake_or_default(af_raw.get("domain"), routing_features.domain),
+        physical_component=_snake_or_default(af_raw.get("physical_component"), routing_features.physical_component),
+        failure_mode=_snake_or_default(af_raw.get("failure_mode"), routing_features.failure_mode),
+        visible_hazard=bool(af_raw.get("visible_hazard", False)),
+        objects=[_snake(x) for x in af_raw.get("objects", []) if str(x).strip()],
+        actions=[_snake(x) for x in af_raw.get("actions", []) if str(x).strip()],
+        location_context=[str(x).strip() for x in af_raw.get("location_context", []) if str(x).strip()],
+    )
+
     location_mentions: list = data.get("location_mentions", [])
     raw_loc = ", ".join(location_mentions)
     resolved_loc = lookup_text(raw_loc) if raw_loc else None
@@ -339,20 +510,17 @@ def _build_result(complaint_id: str, original_text: str, language: str,
         source="text_lookup" if resolved_loc else ("llm_extracted" if location_mentions else "none"),
     )
 
-    # normalized_text is the English translation — downstream IEP-1 embeds this
     normalized_text = translation if translation else original_text
-
-    raw_confidence = float(data.get("confidence", 0.7))
-    # Penalise confidence when the type was not in the allowed taxonomy
-    effective_confidence = round(raw_confidence * 0.40, 3) if unknown_type else raw_confidence
-
-    result = TextUnderstandingResult(
+    summary = str(data.get("summary") or "").strip()
+    if not summary:
+        summary = f"{issue_type.replace('_', ' ').capitalize()} reported."
+    return TextUnderstandingResult(
         complaint_id=complaint_id,
         original_text=original_text,
         normalized_text=normalized_text,
         language=language,
         english_translation=translation if language != "en" else None,
-        summary=data.get("summary", ""),
+        summary=summary,
         category=category,
         subcategory=subcategory,
         issue_type=issue_type,
@@ -360,73 +528,68 @@ def _build_result(complaint_id: str, original_text: str, language: str,
         severity=severity,
         signals=signals,
         urgency_keywords=data.get("keywords", []),
-        confidence=effective_confidence,
-        semantic_domain=data.get("semantic_domain"),
-        physical_component=data.get("physical_component"),
-        failure_mode=data.get("failure_mode"),
+        confidence=float(data.get("confidence", 0.7)),
+        semantic_domain=semantic_domain,
+        physical_component=physical_component,
+        failure_mode=failure_mode,
+        routing_features=routing_features,
+        evidence=evidence,
+        alignment_features=alignment_features,
         processing_ms=processing_ms,
     )
 
-    if unknown_type:
-        # The LLM returned an issue_type outside the taxonomy enum.
-        # Surface it in subcategory so it is visible in the JSON — do NOT lose it.
-        # subcategory already holds the LLM's own subcategory value; prepend the
-        # raw issue_type so both are preserved, e.g. "broken_fence (damaged_railing)".
-        llm_sub = data.get("subcategory", "")
-        result.subcategory = f"{issue_raw} ({llm_sub})" if llm_sub and llm_sub != issue_raw else issue_raw
-
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Public interface
-# ---------------------------------------------------------------------------
 
 class LLMExtractor:
-    """
-    Drop-in replacement for StructuredExtractor that uses LLMs.
-    Falls back to StructuredExtractor if both LLMs are unavailable.
-    """
-
     def __init__(self):
         self._fallback = StructuredExtractor()
 
-    async def extract(
-        self, complaint_id: str, text: str, language: str
-    ) -> TextUnderstandingResult:
+    async def extract(self, complaint_id: str, text: str, language: str) -> TextUnderstandingResult:
         t0 = time.time()
         data: Optional[dict] = None
-        english_text = text  # may be replaced by translation
+        english_text = text
 
-        # Step 1: Translate Arabizi → English via GPT-4o (translation only)
-        if language in _TRANSLATE_ONLY_LANGUAGES and OPENAI_API_KEY:
+        if OPENAI_API_KEY:
             try:
-                english_text = await _call_gpt4o_translate(text)
-                log.info("[IEP-1] GPT-4o translated Arabizi → English: %s", english_text[:80])
+                data = await _call_gpt4o_extract(text, language)
+                english_text = data.get("english_translation") or text
             except Exception as e:
-                log.warning("[IEP-1] GPT-4o translation failed (%s), classifying raw text", e)
+                log.warning("[IEP-1] GPT-4o extraction failed (%s), using fallback path", e)
                 english_text = text
 
-        # Step 2: Classify with Qwen (always, for all languages)
-        if QWEN_ENABLED:
+        if QWEN_ENABLED and data is None and language not in _TRANSLATE_ONLY_LANGUAGES:
             try:
-                classify_lang = "en" if language in _TRANSLATE_ONLY_LANGUAGES else language
-                data = await _call_qwen(english_text, classify_lang)
-                log.info("[IEP-1] Qwen classified language=%s", language)
+                data = await _call_qwen(english_text, language)
             except Exception as e:
                 log.warning("[IEP-1] Qwen failed (%s), falling back to rule-based", e)
+        elif QWEN_ENABLED and data is None and language in _TRANSLATE_ONLY_LANGUAGES:
+            log.warning("[IEP-1] Skipping Qwen: Arabizi is handled by GPT-4o only")
 
         processing_ms = int((time.time() - t0) * 1000)
 
         if data is None:
-            log.warning("[IEP-1] Qwen unavailable — falling back to rule-based extractor")
             result = self._fallback.extract(complaint_id, english_text)
             result.language = language
-            result.english_translation = english_text if language != "en" else None
+            result.english_translation = english_text if language != "en" and english_text != text else None
+            result.issue_type = _snake(getattr(result, "issue_type", "unknown"), "unknown")
+            result.category = _snake(getattr(result, "category", "unknown"), "unknown")
+            result.subcategory = _snake(getattr(result, "subcategory", result.issue_type), result.issue_type)
+            result.routing_features = RoutingFeaturesJSON(
+                domain=_snake(getattr(result, "semantic_domain", getattr(result, "category", "unknown")), "unknown"),
+                physical_component=_snake(getattr(result, "physical_component", "unknown"), "unknown"),
+                failure_mode=_snake(getattr(result, "failure_mode", "unknown"), "unknown"),
+                hazard_type="none",
+                affected_public_space=True,
+                requires_emergency_attention=bool(getattr(result, "signals", SignalsJSON()).emergency_signal),
+            )
+            result.evidence = ExtractionEvidenceJSON()
+            result.alignment_features = AlignmentFeaturesJSON(
+                domain=result.routing_features.domain,
+                physical_component=result.routing_features.physical_component,
+                failure_mode=result.routing_features.failure_mode,
+            )
             result.processing_ms = processing_ms
             return result
 
-        # Inject translation into data so _build_result can store it
         if language in _TRANSLATE_ONLY_LANGUAGES:
             data["english_translation"] = english_text
 

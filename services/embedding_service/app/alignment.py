@@ -1,598 +1,318 @@
-"""
-Modal Alignment Computer — IEP-3
+"""Modal alignment engine for IEP-3."""
 
-Compares the text understanding and image understanding results for the
-SAME complaint to detect whether text and image are consistent.
+from __future__ import annotations
 
-This is the *intra-complaint* alignment (is this user's image related to
-their own complaint text?).  Per-candidate reconciliation lives in IEP-4.
-
-─────────────────────────────────────────────────────────────
-ALIGNMENT SIGNAL — TWO PATHS (primary vs. fallback)
-─────────────────────────────────────────────────────────────
-
-PRIMARY (use this whenever available):
-  CLIP embeds images and text in the SAME 512-dim space.
-  When IEP-2 was called with the complaint text, it returns
-  image_result.clip_text_embedding (512-dim CLIP text encoding).
-  Cosine(clip_text_embedding, image_embedding) is a semantically
-  valid alignment score — no projection, no approximation.
-
-FALLBACK (MVP approximation only — do NOT rely on as evidence):
-  If clip_text_embedding is absent (IEP-2 called without text, or
-  an older client), we project the 512-dim CLIP image embedding into
-  the 768-dim sentence-transformer space using the random linear
-  projection matrix from fusion.py, then compute cosine with the
-  sentence-transformer text embedding.
-  This cross-model comparison is mathematically unsound because the
-  two embedding spaces are unrelated.  Scores from this path are
-  deliberately downscaled (×0.7) and the alignment is capped at
-  UNCERTAIN — it must never drive a SUPPORTS or CONTRADICTS result.
-  Its only purpose is to avoid returning NO_IMAGE when an image is
-  genuinely present.
-
-Phase 2: Replace both paths with a trained cross-modal alignment model.
-"""
-
-import math
 from typing import Optional
 
 from cedarfix_shared.schemas import (
+    AlignmentFeaturesJSON,
     AlignmentStatus,
-    ComplaintType,
     ImageUnderstandingResult,
     ReconciliationStatus,
+    RoutingFeaturesJSON,
     TextImageAlignment,
     TextUnderstandingResult,
 )
 
-# ---------------------------------------------------------------------------
-# Adjacent issue-type pairs (text ↔ image mismatch is tolerable between these)
-# ---------------------------------------------------------------------------
 
-_ADJACENT_PAIRS = {
-    frozenset({ComplaintType.POTHOLE, ComplaintType.ROAD_DAMAGE}),
-    frozenset({ComplaintType.FLOODING, ComplaintType.WATER_PIPE}),
-    frozenset({ComplaintType.ELECTRICITY, ComplaintType.STREETLIGHT}),
-    frozenset({ComplaintType.WASTE, ComplaintType.SIDEWALK}),
-}
+def _safe_set(values) -> set[str]:
+    out: set[str] = set()
+    for v in values or []:
+        s = str(v).strip().lower().replace("-", "_").replace(" ", "_")
+        if s:
+            out.add(s)
+    return out
 
-# Subcategory → ComplaintType mapping for image results
-_SUBCAT_TO_TYPE: dict = {
-    "pothole":            ComplaintType.POTHOLE,
-    "road_damage":        ComplaintType.ROAD_DAMAGE,
-    "flooding":           ComplaintType.FLOODING,
-    "waste_accumulation": ComplaintType.WASTE,
-    "outage":             ComplaintType.ELECTRICITY,
-    "traffic_light":      ComplaintType.TRAFFIC_LIGHT,
-    "pipe_leak":          ComplaintType.WATER_PIPE,
-    "sidewalk_damage":    ComplaintType.SIDEWALK,
-    "streetlight":        ComplaintType.STREETLIGHT,
-    "other":              ComplaintType.OTHER,
-}
 
-# ── Primary path (CLIP-native) thresholds ────────────────────────────────────
-_SUPPORT_THRESHOLD          = 0.55   # cosine ≥ this + compatible types → SUPPORTS
-_CONTRADICT_THRESHOLD       = 0.25   # cosine < this + incompatible types → CONTRADICTS
-_COSINE_DOMINATES_THRESHOLD = 0.65   # cosine ≥ this → SUPPORTS regardless of type labels
+def _jaccard(a: set[str], b: set[str]) -> float:
+    if not a and not b:
+        return 0.5
+    if not a or not b:
+        return 0.0
+    return len(a & b) / max(1, len(a | b))
 
-# ── Fallback path (random projection) penalty ────────────────────────────────
-# Scores from the fallback path are unreliable cross-model comparisons.
-# Scale them down so they never cross the SUPPORT threshold on their own.
-_FALLBACK_SCALE = 0.7
+
+def _derive_text_routing_features(text: TextUnderstandingResult) -> RoutingFeaturesJSON:
+    rf = getattr(text, "routing_features", None)
+    if rf is None:
+        rf = {}
+    if isinstance(rf, RoutingFeaturesJSON):
+        base = rf
+    else:
+        base = RoutingFeaturesJSON(**rf)
+    return RoutingFeaturesJSON(
+        domain=(base.domain or text.semantic_domain or text.category or "unknown"),
+        physical_component=(base.physical_component or text.physical_component or "unknown"),
+        failure_mode=(base.failure_mode or text.failure_mode or "unknown"),
+        hazard_type=(base.hazard_type or "none"),
+        affected_public_space=bool(base.affected_public_space if base.affected_public_space is not None else True),
+        requires_emergency_attention=bool(base.requires_emergency_attention or getattr(text.signals, "emergency_signal", False)),
+    )
+
+
+def _derive_text_alignment_features(text: TextUnderstandingResult, rf: RoutingFeaturesJSON) -> AlignmentFeaturesJSON:
+    af = getattr(text, "alignment_features", None)
+    if af is None:
+        af = {}
+    if isinstance(af, AlignmentFeaturesJSON):
+        base = af
+    else:
+        base = AlignmentFeaturesJSON(**af)
+    return AlignmentFeaturesJSON(
+        domain=(base.domain or rf.domain or "unknown"),
+        physical_component=(base.physical_component or rf.physical_component or "unknown"),
+        failure_mode=(base.failure_mode or rf.failure_mode or "unknown"),
+        visible_hazard=bool(base.visible_hazard),
+        objects=list(base.objects or []),
+        actions=list(base.actions or []),
+        location_context=list(base.location_context or []),
+    )
+
+
+def _derive_image_routing_features(image: ImageUnderstandingResult) -> RoutingFeaturesJSON:
+    vu = image.visual_understanding
+    src = image.vlm_analysis if image.vlm_analysis else vu
+    rf = getattr(src, "routing_features", None)
+    if rf is None:
+        rf = {}
+    if isinstance(rf, RoutingFeaturesJSON):
+        base = rf
+    else:
+        base = RoutingFeaturesJSON(**rf)
+    return RoutingFeaturesJSON(
+        domain=(base.domain or getattr(src, "semantic_domain", None) or getattr(vu, "semantic_domain", None) or vu.visual_category or "unknown"),
+        physical_component=(base.physical_component or getattr(src, "physical_component", None) or getattr(vu, "physical_component", None) or "unknown"),
+        failure_mode=(base.failure_mode or getattr(src, "failure_mode", None) or getattr(vu, "failure_mode", None) or "unknown"),
+        hazard_type=(base.hazard_type or "none"),
+        affected_public_space=bool(base.affected_public_space if base.affected_public_space is not None else True),
+        requires_emergency_attention=bool(base.requires_emergency_attention),
+    )
+
+
+def _derive_image_alignment_features(image: ImageUnderstandingResult, rf: RoutingFeaturesJSON) -> AlignmentFeaturesJSON:
+    vu = image.visual_understanding
+    src = image.vlm_analysis if image.vlm_analysis else vu
+    af = getattr(src, "alignment_features", None)
+    if af is None:
+        af = {}
+    if isinstance(af, AlignmentFeaturesJSON):
+        base = af
+    else:
+        base = AlignmentFeaturesJSON(**af)
+    inferred_objects = list(getattr(vu, "detected_objects", []) or [])
+    return AlignmentFeaturesJSON(
+        domain=(base.domain or rf.domain or "unknown"),
+        physical_component=(base.physical_component or rf.physical_component or "unknown"),
+        failure_mode=(base.failure_mode or rf.failure_mode or "unknown"),
+        visible_hazard=bool(base.visible_hazard if base.visible_hazard is not None else getattr(vu, "damage_visible", False)),
+        objects=list(base.objects or inferred_objects),
+        actions=list(base.actions or []),
+        location_context=list(base.location_context or []),
+    )
+
+
+def compute_multimodal_alignment(
+    text_output: TextUnderstandingResult,
+    image_output: Optional[ImageUnderstandingResult],
+    clip_score: float,
+    vlm_alignment: Optional[dict] = None,
+) -> dict:
+    if image_output is None or not image_output.image_present:
+        return {
+            "alignment": "NO_IMAGE",
+            "score": 0.0,
+            "matched_features": [],
+            "conflicting_features": [],
+            "reason": "No image submitted.",
+        }
+
+    if not image_output.image_quality.usable:
+        return {
+            "alignment": "NO_IMAGE",
+            "score": 0.0,
+            "matched_features": [],
+            "conflicting_features": ["image_quality"],
+            "reason": f"Image unusable: {image_output.image_quality.issues}",
+        }
+
+    t_rf = _derive_text_routing_features(text_output)
+    i_rf = _derive_image_routing_features(image_output)
+    t_af = _derive_text_alignment_features(text_output, t_rf)
+    i_af = _derive_image_alignment_features(image_output, i_rf)
+
+    matched: list[str] = []
+    conflicting: list[str] = []
+
+    clip_component = max(0.0, min(1.0, float(clip_score)))
+    if clip_component >= 0.65:
+        matched.append("clip_similarity")
+    elif clip_component <= 0.25:
+        conflicting.append("clip_similarity")
+
+    domain_match = (t_rf.domain == i_rf.domain and t_rf.domain not in ("", "unknown"))
+    component_match = (
+        t_rf.physical_component == i_rf.physical_component
+        and t_rf.physical_component not in ("", "unknown")
+    )
+    domain_component_component = (1.0 if domain_match else 0.0) * 0.5 + (1.0 if component_match else 0.0) * 0.5
+    if domain_match:
+        matched.append("domain")
+    elif t_rf.domain not in ("", "unknown") and i_rf.domain not in ("", "unknown"):
+        conflicting.append("domain")
+    if component_match:
+        matched.append("physical_component")
+    elif t_rf.physical_component not in ("", "unknown") and i_rf.physical_component not in ("", "unknown"):
+        conflicting.append("physical_component")
+
+    failure_match = (
+        t_rf.failure_mode == i_rf.failure_mode
+        and t_rf.failure_mode not in ("", "unknown")
+    )
+    hazard_match = (
+        t_rf.hazard_type == i_rf.hazard_type
+        and t_rf.hazard_type not in ("", "none", "unknown")
+    )
+    failure_hazard_component = (1.0 if failure_match else 0.0) * 0.5 + (1.0 if hazard_match else 0.0) * 0.5
+    if failure_match:
+        matched.append("failure_mode")
+    elif t_rf.failure_mode not in ("", "unknown") and i_rf.failure_mode not in ("", "unknown"):
+        conflicting.append("failure_mode")
+    if hazard_match:
+        matched.append("hazard_type")
+    elif t_rf.hazard_type not in ("", "none", "unknown") and i_rf.hazard_type not in ("", "none", "unknown"):
+        conflicting.append("hazard_type")
+
+    object_overlap = _jaccard(_safe_set(t_af.objects), _safe_set(i_af.objects))
+    action_overlap = _jaccard(_safe_set(t_af.actions), _safe_set(i_af.actions))
+    object_action_component = 0.7 * object_overlap + 0.3 * action_overlap
+    if object_overlap > 0.4:
+        matched.append("objects")
+    elif object_overlap == 0 and t_af.objects and i_af.objects:
+        conflicting.append("objects")
+    if action_overlap > 0.4:
+        matched.append("actions")
+
+    loc_text = _safe_set(text_output.location_mentions)
+    loc_img = _safe_set((image_output.vlm_analysis.location_cues.get("detected_text", []) if image_output.vlm_analysis else []))
+    loc_img |= _safe_set((image_output.vlm_analysis.location_cues.get("landmarks", []) if image_output.vlm_analysis else []))
+    loc_img |= _safe_set((image_output.vlm_analysis.location_cues.get("street_signs", []) if image_output.vlm_analysis else []))
+    loc_img |= _safe_set((image_output.vlm_analysis.location_cues.get("storefront_names", []) if image_output.vlm_analysis else []))
+    loc_img |= _safe_set(i_af.location_context)
+    location_component = _jaccard(loc_text, loc_img)
+    if location_component > 0.4:
+        matched.append("location_context")
+
+    vlm_component = 0.5
+    if vlm_alignment:
+        al = str(vlm_alignment.get("alignment", "UNCERTAIN")).upper()
+        conf = float(vlm_alignment.get("confidence", 0.5))
+        base = {
+            "CONFIRMS": 1.0,
+            "RELATED": 0.75,
+            "UNCERTAIN": 0.5,
+            "CONTRADICTS": 0.0,
+            "UNRELATED": 0.1,
+        }.get(al, 0.5)
+        vlm_component = max(0.0, min(1.0, base * (0.5 + 0.5 * conf)))
+        if al in ("CONFIRMS", "RELATED"):
+            matched.append("vlm_alignment")
+        elif al in ("CONTRADICTS", "UNRELATED"):
+            conflicting.append("vlm_alignment")
+
+    score = (
+        0.30 * clip_component
+        + 0.20 * domain_component_component
+        + 0.20 * failure_hazard_component
+        + 0.15 * object_action_component
+        + 0.10 * vlm_component
+        + 0.05 * location_component
+    )
+    score = round(max(0.0, min(1.0, score)), 4)
+
+    if clip_component < 0.2 and domain_component_component == 0 and failure_hazard_component == 0:
+        alignment = "UNRELATED"
+    elif score >= 0.72 and len(conflicting) <= 1:
+        alignment = "SUPPORTS"
+    elif score >= 0.56 and domain_component_component > 0:
+        alignment = "RELATED"
+    elif score <= 0.28 and ("domain" in conflicting or "physical_component" in conflicting):
+        alignment = "CONTRADICTS"
+    else:
+        alignment = "UNCERTAIN"
+
+    reason = (
+        f"clip={clip_component:.2f}, domain_component={domain_component_component:.2f}, "
+        f"failure_hazard={failure_hazard_component:.2f}, object_action={object_action_component:.2f}, "
+        f"vlm={vlm_component:.2f}, location={location_component:.2f}"
+    )
+
+    return {
+        "alignment": alignment,
+        "score": score,
+        "matched_features": sorted(set(matched)),
+        "conflicting_features": sorted(set(conflicting)),
+        "reason": reason,
+    }
 
 
 class ModalAlignmentComputer:
-    """
-    Produces TextImageAlignment for a single complaint.
-
-    Uses CLIP-native cosine similarity when clip_text_embedding is available
-    in image_result (preferred).  Falls back to a random-projection
-    approximation otherwise, with a reduced score and a capped status.
-    """
-
-    def compute(
-        self,
-        text_result: TextUnderstandingResult,
-        image_result: Optional[ImageUnderstandingResult],
-    ) -> TextImageAlignment:
-
-        complaint_id = text_result.complaint_id
-
-        # ── No image ─────────────────────────────────────────────────────────
+    def compute(self, text_result: TextUnderstandingResult, image_result: Optional[ImageUnderstandingResult]) -> TextImageAlignment:
         if image_result is None or not image_result.image_present:
+            res = compute_multimodal_alignment(text_result, image_result, 0.0, None)
             return TextImageAlignment(
-                complaint_id=complaint_id,
+                complaint_id=text_result.complaint_id,
                 alignment_status=AlignmentStatus.NO_IMAGE,
                 alignment_score=0.0,
                 text_issue_type=text_result.issue_type,
+                image_issue_type=None,
+                text_subcategory=text_result.subcategory,
+                image_subcategory="",
+                matched_features=res["matched_features"],
+                conflicting_features=res["conflicting_features"],
+                reason=res["reason"],
+                conflict_detected=False,
+                conflict_reason=None,
                 reconciliation_status=ReconciliationStatus.INSUFFICIENT_EVIDENCE,
                 reconciliation_note="No image submitted.",
             )
 
-        # ── Unusable image ────────────────────────────────────────────────────
-        if not image_result.image_quality.usable:
-            return TextImageAlignment(
-                complaint_id=complaint_id,
-                alignment_status=AlignmentStatus.NO_IMAGE,
-                alignment_score=0.0,
-                text_issue_type=text_result.issue_type,
-                reconciliation_status=ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-                reconciliation_note=(
-                    f"Image present but unusable: {image_result.image_quality.issues}"
-                ),
-            )
+        clip_score = 0.0
+        if image_result.clip_text_embedding and image_result.image_embedding:
+            import math
+            a = image_result.clip_text_embedding
+            b = image_result.image_embedding
+            dot = sum(x * y for x, y in zip(a, b))
+            na = math.sqrt(sum(x * x for x in a)) + 1e-8
+            nb = math.sqrt(sum(x * x for x in b)) + 1e-8
+            clip_score = dot / (na * nb)
 
-        # ── Choose alignment path ─────────────────────────────────────────────
-        clip_text_emb = image_result.clip_text_embedding
-        image_emb     = image_result.image_embedding
-        use_clip_native = bool(clip_text_emb and image_emb)
+        vlm_alignment = None
+        if image_result.vlm_analysis and image_result.vlm_analysis.vlm_alignment:
+            vlm_alignment = {
+                "alignment": str(image_result.vlm_analysis.vlm_alignment),
+                "confidence": float(image_result.vlm_analysis.vlm_alignment_confidence or 0.5),
+            }
 
-        alignment_score = 0.0
-        used_fallback   = False
-
-        if use_clip_native:
-            # PRIMARY PATH — both vectors are 512-dim CLIP, same embedding space.
-            # Direct cosine is the correct similarity measure.
-            alignment_score = round(_cosine(clip_text_emb, image_emb), 4)
-        elif image_emb and text_result.text_embedding:
-            # FALLBACK PATH — cross-model approximation (unreliable).
-            # Project 512-dim CLIP image → 768-dim sentence-transformer space
-            # via a random linear projection.  Score is scaled down and the
-            # alignment status will be capped at UNCERTAIN regardless of value.
-            from .fusion import project_image_embedding
-            image_proj      = project_image_embedding(image_emb)
-            raw_score       = _cosine(text_result.text_embedding, image_proj)
-            alignment_score = round(raw_score * _FALLBACK_SCALE, 4)
-            used_fallback   = True
-
-        # ── Resolve image issue type ──────────────────────────────────────────
-        img_subcat   = image_result.visual_understanding.visual_subcategory
-        image_issue_type: Optional[ComplaintType] = _SUBCAT_TO_TYPE.get(img_subcat)
-        text_issue_type = text_result.issue_type
-
-        types_match     = (image_issue_type == text_issue_type)
-        types_adjacent  = (
-            image_issue_type is not None
-            and frozenset({text_issue_type, image_issue_type}) in _ADJACENT_PAIRS
-        )
-        types_compatible = types_match or types_adjacent
-
-        # ── Both-OTHER subcategory comparison ─────────────────────────────────
-        # When both sides are OTHER with distinct specific subcategories, treat
-        # them as incompatible so CLIP cosine becomes the deciding signal.
-        if (text_issue_type == ComplaintType.OTHER
-                and image_issue_type == ComplaintType.OTHER):
-            text_sub = (text_result.subcategory or "").strip().lower()
-            img_sub  = (img_subcat or "").strip().lower()
-            if (text_sub and img_sub
-                    and text_sub not in ("other", "unknown")
-                    and img_sub  not in ("other", "unknown")
-                    and text_sub != img_sub):
-                types_match      = False
-                types_compatible = False
-
-        # ── Classify alignment status ─────────────────────────────────────────
-        alignment_status, conflict_detected, conflict_reason = _classify_alignment(
-            score=alignment_score,
-            types_compatible=types_compatible,
-            types_match=types_match,
-            types_adjacent=types_adjacent,
-            image_type=image_issue_type,
-            cap_at_uncertain=used_fallback,
-        )
-
-        if used_fallback and conflict_reason is None:
-            conflict_reason = (
-                "Alignment score computed via cross-model random projection "
-                "(MVP fallback — complaint text was not sent to IEP-2). "
-                "Result is indicative only; do not use as evidence."
-            )
-
-        reconciliation_status, reconciliation_note = _reconcile(
-            alignment_status=alignment_status,
-            score=alignment_score,
-            types_match=types_match,
-            types_compatible=types_compatible,
-            text_conf=text_result.confidence,
-            image_conf=image_result.visual_understanding.confidence,
-            used_fallback=used_fallback,
+        res = compute_multimodal_alignment(text_result, image_result, clip_score, vlm_alignment)
+        status = AlignmentStatus[res["alignment"]] if res["alignment"] in AlignmentStatus.__members__ else AlignmentStatus.UNCERTAIN
+        conflict = status in (AlignmentStatus.CONTRADICTS, AlignmentStatus.UNRELATED)
+        recon = ReconciliationStatus.MODAL_CONFLICT if conflict else (
+            ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT if status == AlignmentStatus.SUPPORTS else ReconciliationStatus.INSUFFICIENT_EVIDENCE
         )
 
         return TextImageAlignment(
-            complaint_id=complaint_id,
-            alignment_status=alignment_status,
-            alignment_score=alignment_score,
-            text_issue_type=text_issue_type,
-            image_issue_type=img_subcat or None,
+            complaint_id=text_result.complaint_id,
+            alignment_status=status,
+            alignment_score=float(res["score"]),
+            text_issue_type=text_result.issue_type,
+            image_issue_type=image_result.visual_understanding.visual_subcategory,
             text_subcategory=text_result.subcategory,
-            image_subcategory=img_subcat,
-            conflict_detected=conflict_detected,
-            conflict_reason=conflict_reason,
-            reconciliation_status=reconciliation_status,
-            reconciliation_note=reconciliation_note,
+            image_subcategory=image_result.visual_understanding.visual_subcategory,
+            matched_features=res["matched_features"],
+            conflicting_features=res["conflicting_features"],
+            reason=res["reason"],
+            conflict_detected=conflict,
+            conflict_reason=res["reason"] if conflict else None,
+            reconciliation_status=recon,
+            reconciliation_note=res["reason"],
         )
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _cosine(a: list, b: list) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    na  = math.sqrt(sum(x * x for x in a)) + 1e-8
-    nb  = math.sqrt(sum(x * x for x in b)) + 1e-8
-    return dot / (na * nb)
-
-
-def _classify_alignment(
-    score: float,
-    types_compatible: bool,
-    types_match: bool,
-    types_adjacent: bool,
-    image_type,
-    cap_at_uncertain: bool,
-) -> tuple:
-    """
-    Returns (AlignmentStatus, conflict_detected, conflict_reason).
-
-    When cap_at_uncertain=True (fallback path), the status is capped at
-    UNCERTAIN — the cross-model projection score is not reliable enough
-    to assert SUPPORTS or CONTRADICTS.
-    """
-    conflict_detected = False
-    conflict_reason   = None
-
-    if image_type is None:
-        return AlignmentStatus.UNCERTAIN, False, None
-
-    if cap_at_uncertain:
-        # Fallback path: acknowledge the image is present but don't assert alignment.
-        return AlignmentStatus.UNCERTAIN, False, None
-
-    # ── Cosine-dominates: very high CLIP similarity overrides label disagreement.
-    # This handles cases where text/image get different (but related) subcategory
-    # labels — e.g. "broken_bench" vs "damaged_street_furniture".  At ≥0.65 the
-    # visual content is clearly the same issue regardless of label taxonomy.
-    if score >= _COSINE_DOMINATES_THRESHOLD:
-        return AlignmentStatus.SUPPORTS, False, None
-
-    # Type match is a strong secondary signal.
-    if types_match:
-        return AlignmentStatus.SUPPORTS, False, None
-
-    if types_adjacent:
-        return AlignmentStatus.UNCERTAIN, False, None
-
-    # Types differ — use cosine as tertiary evidence.
-    if score >= _SUPPORT_THRESHOLD:
-        # High-ish cosine but labels differ — call it UNCERTAIN (not UNRELATED):
-        # the image is likely related to the complaint but the labels don't agree.
-        conflict_reason = (
-            f"CLIP similarity is high ({score:.2f}) but issue type labels differ "
-            f"(image type: {image_type}). Visual content is likely related."
-        )
-        return AlignmentStatus.UNCERTAIN, False, conflict_reason
-
-    if score < _CONTRADICT_THRESHOLD:
-        conflict_detected = True
-        conflict_reason = f"Low CLIP similarity ({score:.2f}) and mismatched types."
-        return AlignmentStatus.CONTRADICTS, conflict_detected, conflict_reason
-
-    return AlignmentStatus.UNCERTAIN, False, None
-
-
-def _reconcile(
-    alignment_status: AlignmentStatus,
-    score: float,
-    types_match: bool,
-    types_compatible: bool,
-    text_conf: float,
-    image_conf: float,
-    used_fallback: bool,
-) -> tuple:
-    if alignment_status == AlignmentStatus.NO_IMAGE:
-        return ReconciliationStatus.INSUFFICIENT_EVIDENCE, "No image."
-
-    # Fallback-path results are never promoted to TEXT_AND_IMAGE_SUPPORT.
-    if used_fallback:
-        return (
-            ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-            "Alignment computed via cross-model projection (fallback). "
-            "Re-send complaint text to IEP-2 to enable CLIP-native alignment.",
-        )
-
-    both_strong  = text_conf >= 0.70 and image_conf >= 0.70
-    image_strong = image_conf >= 0.75 and text_conf < 0.55
-    text_strong  = text_conf >= 0.75 and image_conf < 0.50
-
-    if alignment_status == AlignmentStatus.SUPPORTS and both_strong:
-        return (
-            ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT,
-            "Both text and image confidently describe the same issue (CLIP-native).",
-        )
-    if alignment_status == AlignmentStatus.SUPPORTS and image_strong:
-        return (
-            ReconciliationStatus.IMAGE_OVERRIDES_WEAK_TEXT,
-            "Image is strong; text is vague but CLIP similarity confirms same issue.",
-        )
-    if alignment_status == AlignmentStatus.SUPPORTS and text_strong:
-        return (
-            ReconciliationStatus.TEXT_OVERRIDES_WEAK_IMAGE,
-            "Text is strong; image confidence is lower but compatible.",
-        )
-    if alignment_status == AlignmentStatus.SUPPORTS:
-        return (
-            ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT,
-            "Both modalities support the same issue type (CLIP-native).",
-        )
-    if alignment_status == AlignmentStatus.CONTRADICTS:
-        return (
-            ReconciliationStatus.MODAL_CONFLICT,
-            "CLIP similarity and type comparison indicate different issues.",
-        )
-    if alignment_status in (AlignmentStatus.UNRELATED, AlignmentStatus.UNCERTAIN):
-        if text_strong:
-            return (
-                ReconciliationStatus.TEXT_OVERRIDES_WEAK_IMAGE,
-                "Text is reliable; image is ambiguous or unrelated.",
-            )
-        if image_strong:
-            return (
-                ReconciliationStatus.IMAGE_OVERRIDES_WEAK_TEXT,
-                "Image is informative; text is vague.",
-            )
-
-    return (
-        ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-        "Neither modality is strong enough to determine alignment.",
-    )
-
-
-import math
-from typing import Optional
-
-from cedarfix_shared.schemas import (
-    AlignmentStatus,
-    ComplaintType,
-    ImageUnderstandingResult,
-    ReconciliationStatus,
-    TextImageAlignment,
-    TextUnderstandingResult,
-)
-
-# ---------------------------------------------------------------------------
-# Adjacent issue-type pairs (text ↔ image mismatch is tolerable between these)
-# ---------------------------------------------------------------------------
-
-_ADJACENT_PAIRS = {
-    frozenset({ComplaintType.POTHOLE, ComplaintType.ROAD_DAMAGE}),
-    frozenset({ComplaintType.FLOODING, ComplaintType.WATER_PIPE}),
-    frozenset({ComplaintType.ELECTRICITY, ComplaintType.STREETLIGHT}),
-    frozenset({ComplaintType.WASTE, ComplaintType.SIDEWALK}),
-}
-
-# Subcategory → ComplaintType mapping for image results
-_SUBCAT_TO_TYPE: dict = {
-    "pothole":          ComplaintType.POTHOLE,
-    "road_damage":      ComplaintType.ROAD_DAMAGE,
-    "flooding":         ComplaintType.FLOODING,
-    "waste_accumulation": ComplaintType.WASTE,
-    "outage":           ComplaintType.ELECTRICITY,
-    "traffic_light":    ComplaintType.TRAFFIC_LIGHT,
-    "pipe_leak":        ComplaintType.WATER_PIPE,
-    "sidewalk_damage":  ComplaintType.SIDEWALK,
-    "streetlight":      ComplaintType.STREETLIGHT,
-    "other":            ComplaintType.OTHER,
-}
-
-# Thresholds
-_SUPPORT_THRESHOLD = 0.55        # cosine sim above this → SUPPORTS (if types compatible)
-_CONTRADICT_THRESHOLD = 0.25     # cosine sim below this AND types differ → CONTRADICTS
-
-
-# ---------------------------------------------------------------------------
-# ModalAlignmentComputer
-# ---------------------------------------------------------------------------
-
-class ModalAlignmentComputer:
-    """
-    Produces TextImageAlignment for a single complaint.
-
-    Called inside IEP-3 after both IEP-1 and IEP-2 have completed.
-    """
-
-    def compute(
-        self,
-        text_result: TextUnderstandingResult,
-        image_result: Optional[ImageUnderstandingResult],
-    ) -> TextImageAlignment:
-
-        complaint_id = text_result.complaint_id
-
-        # ── No image ─────────────────────────────────────────────────────────
-        if image_result is None or not image_result.image_present:
-            return TextImageAlignment(
-                complaint_id=complaint_id,
-                alignment_status=AlignmentStatus.NO_IMAGE,
-                alignment_score=0.0,
-                text_issue_type=text_result.issue_type,
-                reconciliation_status=ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-                reconciliation_note="No image submitted.",
-            )
-
-        # ── Unusable image ────────────────────────────────────────────────────
-        if not image_result.image_quality.usable:
-            return TextImageAlignment(
-                complaint_id=complaint_id,
-                alignment_status=AlignmentStatus.NO_IMAGE,
-                alignment_score=0.0,
-                text_issue_type=text_result.issue_type,
-                reconciliation_status=ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-                reconciliation_note=(
-                    f"Image present but unusable: {image_result.image_quality.issues}"
-                ),
-            )
-
-        # ── Compute cosine similarity between text embedding and projected image emb ──
-        text_emb = text_result.text_embedding
-        image_emb = image_result.image_embedding
-
-        alignment_score = 0.0
-        if text_emb and image_emb:
-            # Project image embedding to same 768-dim space as text using
-            # the same random projection matrix used in fusion.py
-            # (import lazily to avoid circular dependency)
-            from .fusion import project_image_embedding
-            image_proj = project_image_embedding(image_emb)
-            alignment_score = round(_cosine(text_emb, image_proj), 4)
-
-        # ── Resolve image issue type from visual subcategory ──────────────────
-        img_subcat = image_result.visual_understanding.visual_subcategory
-        image_issue_type: Optional[ComplaintType] = _SUBCAT_TO_TYPE.get(img_subcat)
-        text_issue_type = text_result.issue_type
-
-        types_match = (image_issue_type == text_issue_type)
-        types_adjacent = (
-            image_issue_type is not None
-            and frozenset({text_issue_type, image_issue_type}) in _ADJACENT_PAIRS
-        )
-        types_compatible = types_match or types_adjacent
-
-        # ── Decision rules ────────────────────────────────────────────────────
-        alignment_status, conflict_detected, conflict_reason = _classify_alignment(
-            alignment_score, types_compatible, types_match, image_issue_type
-        )
-
-        reconciliation_status, reconciliation_note = _reconcile(
-            alignment_status,
-            alignment_score,
-            types_match,
-            types_compatible,
-            text_result.confidence,
-            image_result.visual_understanding.confidence,
-        )
-
-        return TextImageAlignment(
-            complaint_id=complaint_id,
-            alignment_status=alignment_status,
-            alignment_score=alignment_score,
-            text_issue_type=text_issue_type,
-            image_issue_type=img_subcat or None,
-            text_subcategory=text_result.subcategory,
-            image_subcategory=img_subcat,
-            conflict_detected=conflict_detected,
-            conflict_reason=conflict_reason,
-            reconciliation_status=reconciliation_status,
-            reconciliation_note=reconciliation_note,
-        )
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _cosine(a: list, b: list) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    na = math.sqrt(sum(x * x for x in a)) + 1e-8
-    nb = math.sqrt(sum(x * x for x in b)) + 1e-8
-    return dot / (na * nb)
-
-
-def _classify_alignment(
-    score: float,
-    types_compatible: bool,
-    types_match: bool,
-    image_type,
-) -> tuple:
-    conflict_detected = False
-    conflict_reason = None
-
-    if image_type is None:
-        return AlignmentStatus.UNCERTAIN, False, None
-
-    if score >= _SUPPORT_THRESHOLD and types_compatible:
-        return AlignmentStatus.SUPPORTS, False, None
-
-    if score >= _SUPPORT_THRESHOLD and not types_compatible:
-        conflict_detected = True
-        conflict_reason = (
-            f"Embedding similarity is high ({score:.2f}) but "
-            f"issue types differ: text={None}, image={image_type}"
-        )
-        return AlignmentStatus.UNRELATED, conflict_detected, conflict_reason
-
-    if score < _CONTRADICT_THRESHOLD and not types_match:
-        conflict_detected = True
-        conflict_reason = (
-            f"Low embedding similarity ({score:.2f}) and mismatched types."
-        )
-        return AlignmentStatus.CONTRADICTS, conflict_detected, conflict_reason
-
-    if score < _CONTRADICT_THRESHOLD and types_match:
-        return AlignmentStatus.UNRELATED, False, "Image appears unrelated despite matching type."
-
-    return AlignmentStatus.UNCERTAIN, False, None
-
-
-def _reconcile(
-    alignment_status: AlignmentStatus,
-    score: float,
-    types_match: bool,
-    types_compatible: bool,
-    text_conf: float,
-    image_conf: float,
-) -> tuple:
-    if alignment_status == AlignmentStatus.NO_IMAGE:
-        return ReconciliationStatus.INSUFFICIENT_EVIDENCE, "No image."
-
-    both_strong = text_conf >= 0.70 and image_conf >= 0.70
-    image_strong = image_conf >= 0.75 and text_conf < 0.55
-    text_strong = text_conf >= 0.75 and image_conf < 0.50
-
-    if alignment_status == AlignmentStatus.SUPPORTS and both_strong:
-        return (
-            ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT,
-            "Both text and image confidently describe the same issue.",
-        )
-
-    if alignment_status == AlignmentStatus.SUPPORTS and image_strong:
-        return (
-            ReconciliationStatus.IMAGE_OVERRIDES_WEAK_TEXT,
-            "Image is strong; text is vague but compatible.",
-        )
-
-    if alignment_status == AlignmentStatus.SUPPORTS and text_strong:
-        return (
-            ReconciliationStatus.TEXT_OVERRIDES_WEAK_IMAGE,
-            "Text is strong; image confidence is lower but compatible.",
-        )
-
-    if alignment_status == AlignmentStatus.SUPPORTS:
-        return (
-            ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT,
-            "Both modalities support the same issue type.",
-        )
-
-    if alignment_status == AlignmentStatus.CONTRADICTS:
-        return (
-            ReconciliationStatus.MODAL_CONFLICT,
-            "Text and image describe different infrastructure issues.",
-        )
-
-    if alignment_status in (AlignmentStatus.UNRELATED, AlignmentStatus.UNCERTAIN):
-        if text_strong:
-            return (
-                ReconciliationStatus.TEXT_OVERRIDES_WEAK_IMAGE,
-                "Text is reliable; image is ambiguous or unrelated.",
-            )
-        if image_strong:
-            return (
-                ReconciliationStatus.IMAGE_OVERRIDES_WEAK_TEXT,
-                "Image is informative; text is vague.",
-            )
-
-    return (
-        ReconciliationStatus.INSUFFICIENT_EVIDENCE,
-        "Neither modality is strong enough to determine alignment.",
-    )

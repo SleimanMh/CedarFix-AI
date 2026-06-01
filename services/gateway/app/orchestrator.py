@@ -450,18 +450,74 @@ async def _call_priority_engine(client, complaint_id: str, decision: ComplaintDe
 async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDecision) -> RoutingResult | None:
     try:
         text = decision.text_analysis
+        image = decision.image_analysis
         loc = text.location if text else None
+
+        text_rf = getattr(text, "routing_features", {}) if text else {}
+        text_af = getattr(text, "alignment_features", {}) if text else {}
+        text_ev = getattr(text, "evidence", {}) if text else {}
+
+        img_vlm = image.vlm_analysis if image and image.image_present else None
+        image_rf = getattr(img_vlm, "routing_features", {}) if img_vlm else {}
+        image_af = getattr(img_vlm, "alignment_features", {}) if img_vlm else {}
+        image_ev = getattr(img_vlm, "evidence", {}) if img_vlm else {}
+
+        derived_domain = (
+            text_rf.get("domain") if isinstance(text_rf, dict) else None
+        ) or (text.semantic_domain if text else None) or (text.category if text else None) or "unknown"
+        derived_component = (
+            text_rf.get("physical_component") if isinstance(text_rf, dict) else None
+        ) or (text.physical_component if text else None) or "unknown"
+        derived_failure_mode = (
+            text_rf.get("failure_mode") if isinstance(text_rf, dict) else None
+        ) or (text.failure_mode if text else None) or "unknown"
+
+        mm = decision.text_image_alignment
+        mm_payload = {
+            "alignment": str(mm.alignment_status) if mm else "NO_IMAGE",
+            "score": float(mm.alignment_score) if mm else 0.0,
+            "matched_features": list(getattr(mm, "matched_features", []) or []),
+            "conflicting_features": list(getattr(mm, "conflicting_features", []) or []),
+            "reason": getattr(mm, "reason", None),
+        }
+
+        location_mentions = list(getattr(text, "location_mentions", []) or []) if text else []
+        if loc and loc.normalized:
+            location_mentions.append(loc.normalized)
+
         payload = {
             "complaint_id": complaint_id,
             "complaint_type": decision.complaint_type,
-            "category": text.category if text else "other",
+            "category": text.category if text else "unknown",
+            "subcategory": text.subcategory if text else "unknown",
+            "summary": text.summary if text else (decision.original_text or ""),
             "severity": decision.severity,
             "original_text": decision.original_text or "",
             "location_district": loc.district if loc else (decision.location.district if decision.location else None),
             "location_municipality": loc.municipality if loc else None,
             "location_governorate": loc.governorate if loc else None,
-            "location_mentions": ([loc.normalized] if loc and loc.normalized else []),
+            "location_mentions": location_mentions,
             "extracted_keywords": text.urgency_keywords if text else [],
+            "signals": text.signals.model_dump() if text and text.signals else {},
+            "routing_features": {
+                "text": text_rf,
+                "image": image_rf,
+                "derived": {
+                    "domain": derived_domain,
+                    "physical_component": derived_component,
+                    "failure_mode": derived_failure_mode,
+                    "hazard_type": "none",
+                    "affected_public_space": True,
+                    "requires_emergency_attention": bool(text.signals.emergency_signal) if text and text.signals else False,
+                },
+            },
+            "evidence_text": list((text_ev.get("text_evidence") if isinstance(text_ev, dict) else []) or []),
+            "evidence_image": list((image_ev.get("image_evidence") if isinstance(image_ev, dict) else []) or []),
+            "alignment_features": {
+                "text": text_af,
+                "image": image_af,
+            },
+            "multimodal_alignment": mm_payload,
         }
         resp = await client.post(f"{settings.routing_service_url}/route", json=payload)
         resp.raise_for_status()
@@ -515,6 +571,93 @@ _TYPE_TO_CATEGORY: dict = {
     "public_safety":      "other",
 }
 
+_TYPE_TO_DESCRIPTORS: dict[str, tuple[str, str, str]] = {
+    "pothole":            ("transportation", "road_surface",    "damage"),
+    "road_damage":        ("transportation", "road_surface",    "damage"),
+    "traffic_light":      ("transportation", "traffic_signal",  "damage"),
+    "sidewalk_damage":    ("transportation", "sidewalk",        "damage"),
+    "traffic_incident":   ("transportation", "road_surface",    "blockage"),
+    "flooding":           ("environment",    "drainage_system", "overflow"),
+    "waste_accumulation": ("environment",    "public_space",    "accumulation"),
+    "electricity_outage": ("utilities",      "electrical_line", "outage"),
+    "streetlight":        ("transportation", "street_light",    "damage"),
+    "water_pipe":         ("utilities",      "water_pipe",      "damage"),
+    "water_outage":       ("utilities",      "water_supply",    "outage"),
+    "telecom_outage":     ("utilities",      "electrical_line", "outage"),
+    "public_safety":      ("safety",         "public_space",    "other"),
+}
+
+_CATEGORY_ALIASES: dict[str, str] = {
+    "roads": "transportation",
+    "road_surface": "transportation",
+    "sidewalk": "transportation",
+    "traffic_signal": "transportation",
+    "street_light": "transportation",
+    "drainage": "environment",
+    "drainage_system": "environment",
+    "sanitation": "environment",
+    "public_space_issue": "environment",
+    "water": "utilities",
+    "water_network": "utilities",
+    "electricity": "utilities",
+    "electrical_grid": "utilities",
+    "electrical_line": "utilities",
+    "power_line": "utilities",
+    "utility_line": "utilities",
+    "telecom": "utilities",
+    "telecom_network": "utilities",
+    "telecom_cable": "utilities",
+    "cable": "utilities",
+    "public_transport_stop": "transportation",
+    "bike_lane": "transportation",
+    "pedestrian_infrastructure": "transportation",
+}
+
+
+def _norm_label(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower().replace("-", "_").replace(" ", "_")
+    return normalized or None
+
+
+def _display_label(value: str | None, fallback: str = "unknown") -> str:
+    return (_norm_label(value) or fallback).replace("_", " ")
+
+
+def _derive_descriptors(
+    issue_type: str | None,
+    semantic_domain: str | None,
+    physical_component: str | None,
+    failure_mode: str | None,
+    category: str | None = None,
+) -> tuple[str | None, str | None, str | None]:
+    issue_key = _norm_label(issue_type)
+    derived = _TYPE_TO_DESCRIPTORS.get(issue_key or "", (None, None, None))
+    domain = _norm_label(semantic_domain) or derived[0]
+    component = _norm_label(physical_component) or derived[1]
+    mode = _norm_label(failure_mode) or derived[2]
+    category_group = _CATEGORY_ALIASES.get(_norm_label(category) or "")
+    component_group = _CATEGORY_ALIASES.get(component or "")
+    inferred_group = component_group or category_group
+    if domain is None:
+        domain = inferred_group
+    elif inferred_group and inferred_group != domain and domain in {"other", "environment", "safety"}:
+        domain = inferred_group
+    return domain, component, mode
+
+
+def _semantic_group(
+    category: str | None,
+    semantic_domain: str | None,
+    physical_component: str | None,
+) -> str | None:
+    return (
+        _CATEGORY_ALIASES.get(_norm_label(category) or "")
+        or _CATEGORY_ALIASES.get(_norm_label(physical_component) or "")
+        or _norm_label(semantic_domain)
+    )
+
 
 def _descriptor_overlap(
     text_domain: str | None, text_component: str | None, text_mode: str | None,
@@ -539,6 +682,97 @@ def _descriptor_overlap(
     return score
 
 
+def _issues_explicitly_match(text_type: str | None, image_type: str | None) -> bool:
+    return bool(_norm_label(text_type) and _norm_label(text_type) == _norm_label(image_type))
+
+
+def _is_generic_visual_label(value: str | None) -> bool:
+    return (_norm_label(value) or "") in {"", "unknown", "other", "infrastructure_issue", "damage"}
+
+
+def _visual_issue_candidates(image_result: ImageUnderstandingResult | None) -> list[dict]:
+    if not image_result or not image_result.image_present:
+        return []
+
+    vu = image_result.visual_understanding
+    raw_candidates = list(getattr(vu, "visual_candidates", []) or [])
+    if not raw_candidates and image_result.vlm_analysis:
+        raw_candidates = list(getattr(image_result.vlm_analysis, "visual_candidates", []) or [])
+
+    candidates: list[dict] = []
+    for candidate in raw_candidates[:3]:
+        get = candidate.get if isinstance(candidate, dict) else lambda key, default=None: getattr(candidate, key, default)
+        image_type = get("visual_subcategory") or get("visual_category")
+        image_category = get("visual_category")
+        domain, component, mode = _derive_descriptors(
+            image_type,
+            get("semantic_domain"),
+            get("physical_component"),
+            get("failure_mode"),
+            image_category,
+        )
+        candidates.append({
+            "image_type": image_type,
+            "image_category": image_category,
+            "image_confidence": float(get("confidence", 0.0) or 0.0),
+            "image_semantic_domain": domain,
+            "image_physical_component": component,
+            "image_failure_mode": mode,
+        })
+
+    if candidates:
+        return candidates
+
+    vlm = image_result.vlm_analysis
+    descriptor_src = vlm if vlm else vu
+    domain, component, mode = _derive_descriptors(
+        vu.visual_subcategory or None,
+        getattr(descriptor_src, "semantic_domain", None),
+        getattr(descriptor_src, "physical_component", None),
+        getattr(descriptor_src, "failure_mode", None),
+        vu.visual_category or None,
+    )
+    return [{
+        "image_type": vu.visual_subcategory or None,
+        "image_category": vu.visual_category or None,
+        "image_confidence": float(vu.confidence),
+        "image_semantic_domain": domain,
+        "image_physical_component": component,
+        "image_failure_mode": mode,
+    }]
+
+
+def _best_image_candidate_for_text(
+    candidates: list[dict],
+    text_type: str | None,
+    text_domain: str | None,
+    text_component: str | None,
+    text_mode: str | None,
+) -> tuple[dict | None, int | None, bool]:
+    best: dict | None = None
+    best_overlap: int | None = None
+    best_exact = False
+
+    for candidate in candidates:
+        exact = _issues_explicitly_match(text_type, candidate.get("image_type"))
+        overlap = _descriptor_overlap(
+            text_domain, text_component, text_mode,
+            candidate.get("image_semantic_domain"),
+            candidate.get("image_physical_component"),
+            candidate.get("image_failure_mode"),
+        )
+        rank = (1 if exact else 0, overlap, candidate.get("image_confidence") or 0.0)
+        if best is None:
+            best, best_overlap, best_exact = candidate, overlap, exact
+            best_rank = rank
+            continue
+        if rank > best_rank:
+            best, best_overlap, best_exact = candidate, overlap, exact
+            best_rank = rank
+
+    return best, best_overlap, best_exact
+
+
 def _validate_media(
     text_result: TextUnderstandingResult | None,
     image_result: ImageUnderstandingResult | None,
@@ -561,13 +795,18 @@ def _validate_media(
         raw = text_result.issue_type
         text_type_str = raw.value if hasattr(raw, "value") else str(raw)
         text_confidence = float(text_result.confidence)
+        is_unknown_type = (text_type_str or "").strip().lower() in ("", "unknown", "other")
         text_is_complaint = (
-            text_confidence >= 0.35 and text_type_str != "other"
+            text_confidence >= 0.35 and not is_unknown_type
         ) or text_confidence >= 0.55
-        text_category = _TYPE_TO_CATEGORY.get(text_type_str)
-        text_semantic_domain = getattr(text_result, "semantic_domain", None)
-        text_physical_component = getattr(text_result, "physical_component", None)
-        text_failure_mode = getattr(text_result, "failure_mode", None)
+        text_category = getattr(text_result, "category", None) or _TYPE_TO_CATEGORY.get(text_type_str)
+        text_semantic_domain, text_physical_component, text_failure_mode = _derive_descriptors(
+            text_type_str,
+            getattr(text_result, "semantic_domain", None),
+            getattr(text_result, "physical_component", None),
+            getattr(text_result, "failure_mode", None),
+            text_category,
+        )
 
     # --- Assess image ---
     image_has_complaint = False
@@ -577,6 +816,7 @@ def _validate_media(
     image_semantic_domain: str | None = None
     image_physical_component: str | None = None
     image_failure_mode: str | None = None
+    image_candidates: list[dict] = []
     has_image = image_result is not None and image_result.image_present
 
     if has_image:
@@ -587,11 +827,16 @@ def _validate_media(
         image_type_str = vu.visual_subcategory or None
         image_category = vu.visual_category or None
         image_confidence = float(vu.confidence)
+        image_candidates = _visual_issue_candidates(image_result)
         # Prefer VLM descriptors (richer semantics); fall back to CLIP-derived ones
         descriptor_src = vlm if vlm else vu
-        image_semantic_domain = getattr(descriptor_src, "semantic_domain", None)
-        image_physical_component = getattr(descriptor_src, "physical_component", None)
-        image_failure_mode = getattr(descriptor_src, "failure_mode", None)
+        image_semantic_domain, image_physical_component, image_failure_mode = _derive_descriptors(
+            image_type_str,
+            getattr(descriptor_src, "semantic_domain", None),
+            getattr(descriptor_src, "physical_component", None),
+            getattr(descriptor_src, "failure_mode", None),
+            image_category,
+        )
 
     # --- Decision matrix ---
     # If IEP-1 service was completely unreachable, don't block — let pipeline continue
@@ -618,26 +863,55 @@ def _validate_media(
         )
 
     if text_is_complaint:
+        best_candidate, overlap, exact_type_match = _best_image_candidate_for_text(
+            image_candidates,
+            text_type_str,
+            text_semantic_domain,
+            text_physical_component,
+            text_failure_mode,
+        )
+        if best_candidate:
+            image_type_str = best_candidate.get("image_type")
+            image_category = best_candidate.get("image_category")
+            image_confidence = best_candidate.get("image_confidence")
+            image_semantic_domain = best_candidate.get("image_semantic_domain")
+            image_physical_component = best_candidate.get("image_physical_component")
+            image_failure_mode = best_candidate.get("image_failure_mode")
+        else:
+            exact_type_match = _issues_explicitly_match(text_type_str, image_type_str)
         # Compute dimensional overlap across 3 semantic descriptors.
         # When both sides have descriptors, overlap score drives the contradiction decision.
         # Fallback to category comparison when descriptors are absent (e.g. old CLIP data).
-        overlap: int | None = None
         if text_semantic_domain is not None and image_semantic_domain is not None:
-            overlap = _descriptor_overlap(
-                text_semantic_domain, text_physical_component, text_failure_mode,
-                image_semantic_domain, image_physical_component, image_failure_mode,
+            if overlap is None:
+                overlap = _descriptor_overlap(
+                    text_semantic_domain, text_physical_component, text_failure_mode,
+                    image_semantic_domain, image_physical_component, image_failure_mode,
+                )
+            generic_image = (
+                _is_generic_visual_label(image_type_str)
+                or (
+                    _is_generic_visual_label(image_semantic_domain)
+                    and _is_generic_visual_label(image_physical_component)
+                )
             )
             is_contradiction = (
                 image_has_complaint
+                and not exact_type_match
+                and not generic_image
                 and overlap == 0
                 and image_confidence is not None and image_confidence >= 0.50
             )
         else:
-            # Legacy fallback: compare top-level categories only
+            # Legacy fallback: compare normalized semantic groups rather than raw labels
+            text_group = _semantic_group(text_category, text_semantic_domain, text_physical_component)
+            image_group = _semantic_group(image_category, image_semantic_domain, image_physical_component)
             is_contradiction = (
                 image_has_complaint
-                and text_category and image_category
-                and text_category != image_category
+                and not exact_type_match
+                and not _is_generic_visual_label(image_type_str)
+                and text_group and image_group
+                and text_group != image_group
                 and image_confidence is not None and image_confidence >= 0.50
             )
 
@@ -662,19 +936,16 @@ def _validate_media(
                 reconciled_type=None,
                 reconciled_source="contradiction",
                 contradiction_reason=(
-                    f"Your text describes a {text_category} issue "
-                    f"({text_type_str.replace('_', ' ')}), but your image shows "
-                    f"a {image_category} issue ({(image_type_str or 'unknown').replace('_', ' ')}). "
+                    f"Your text describes a {_display_label(text_type_str, 'public infrastructure')} issue, "
+                    f"but your image appears to show {_display_label(image_type_str)}. "
                     f"Please resubmit with matching text and photo."
                 ),
             )
         # Both modalities are compatible — rec_source reflects degree of agreement
         if overlap is None:
-            rec_source = (
-                "both" if (image_has_complaint and image_type_str == text_type_str) else "text"
-            )
+            rec_source = "both" if (image_has_complaint and exact_type_match) else "text"
         else:
-            rec_source = "both" if (image_has_complaint and overlap >= 2) else "text"
+            rec_source = "both" if (image_has_complaint and (exact_type_match or overlap >= 2)) else "text"
         return MediaValidationResult(
             status=MediaValidationStatus.VALID,
             text_is_complaint=True,

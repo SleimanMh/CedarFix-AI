@@ -25,7 +25,7 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from cedarfix_shared.schemas import RawCandidate, ComplaintType, SeverityLevel, CanonicalLocationJSON
+from cedarfix_shared.schemas import RawCandidate, SeverityLevel, CanonicalLocationJSON
 
 QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
@@ -129,7 +129,7 @@ class QdrantStore:
             complaint_id=p.get("complaint_id", str(r.id)),
             cluster_id=p.get("cluster_id"),
             summary=p.get("summary", ""),
-            issue_type=p.get("issue_type", ComplaintType.OTHER),
+            issue_type=str(p.get("issue_type", "unknown")),
             subcategory=p.get("subcategory", ""),
             location=loc,
             timestamp=timestamp,
