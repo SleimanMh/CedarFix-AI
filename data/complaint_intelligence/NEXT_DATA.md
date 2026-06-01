@@ -44,6 +44,10 @@ Weak layers:
 - Municipal union memberships: 841 row-level rows across all 59 union IDs;
   784 rows have registry IDs and 57 source-specific text rows still need
   manual registry reconciliation.
+- Municipal union service responsibilities: 6 seed signal rows. These cover
+  union complaint/suggestion intake, a DGLAC membership guardrail, and one
+  Baalbek service-advocacy context row; they do not yet provide comprehensive
+  operator/service ownership.
 - Roads/public works, telecom, and waste/environment need deeper operational
   datasets even though their source registries are now populated from root
   source IDs.
@@ -79,12 +83,13 @@ through this exact official channel."
 Target files:
 
 - `knowledge_base/municipalities/municipal_union_memberships.csv`
-- new `knowledge_base/municipalities/municipal_union_service_responsibilities.csv`
+- `knowledge_base/municipalities/municipal_union_service_responsibilities.csv`
 
 Collect:
 
 - registry reconciliation for the remaining text-only membership rows;
-- services handled by union rather than individual municipality;
+- services handled by union rather than individual municipality, beyond the
+  current seed intake/advocacy rows;
 - waste, road, drainage, lighting, and public-space responsibility;
 - union contacts and official service announcements;
 - contractor/operator names only when publicly official.
