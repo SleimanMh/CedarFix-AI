@@ -41,7 +41,9 @@ Weak layers:
 
 - Municipality official channels: 102 rows covering only 11 municipality IDs.
 - Municipality complaint workflows: 30 rows covering only 5 municipality IDs.
-- Municipal union memberships: 67 rows, too small for 59 union records.
+- Municipal union memberships: 841 row-level rows across all 59 union IDs;
+  784 rows have registry IDs and 57 source-specific text rows still need
+  manual registry reconciliation.
 - Roads/public works, telecom, and waste/environment need deeper operational
   datasets even though their source registries are now populated from root
   source IDs.
@@ -81,7 +83,7 @@ Target files:
 
 Collect:
 
-- full union membership lists;
+- registry reconciliation for the remaining text-only membership rows;
 - services handled by union rather than individual municipality;
 - waste, road, drainage, lighting, and public-space responsibility;
 - union contacts and official service announcements;

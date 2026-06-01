@@ -14,12 +14,12 @@ Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 146 | 18.37 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 146 | 18.65 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
 | `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
-| Total under `data/` | 189 | 205.36 MB | 104 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
+| Total under `data/` | 189 | 205.64 MB | 104 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -127,8 +127,8 @@ Municipality data drives location resolution and local responsibility.
 | `municipalities/municipality_official_channels.csv` | 102 | Verified or candidate official municipality contact/reporting channels. |
 | `municipalities/municipality_complaint_workflows.csv` | 30 | Municipality complaint workflow evidence, required fields, tracking/deadline hints. |
 | `municipalities/municipality_unions.csv` | 59 | Municipality union metadata. |
-| `municipalities/municipal_union_memberships.csv` | 67 | Municipality-to-union membership rows. |
-| `municipalities/source_registry.csv` | 42 | Municipality-specific sources. |
+| `municipalities/municipal_union_memberships.csv` | 841 | Row-level municipality-to-union memberships across all 59 union IDs; 784 rows have registry IDs, 57 are text-only source-specific rows needing manual reconciliation. |
+| `municipalities/source_registry.csv` | 43 | Municipality-specific sources. |
 | `municipalities/towns_registry.csv` | 2,730 | Town-level names and references. These are town rows, not municipality rows. |
 | `municipalities/geocode_cache.json` | cache | Geocoding cache for municipality/townhall lookup. |
 | `municipalities/municipality_channel_discovery_queue_2026-06-01.csv` | 50 | Municipality channel discovery work queue. |
@@ -508,6 +508,9 @@ Known gaps and cautions:
 
 - Municipality official channel/workflow coverage is much smaller than the full
   municipality registry. This is expected but important.
+- Municipal union membership is now row-level across all 59 union IDs, but 57
+  source-specific text rows still need manual registry reconciliation and
+  shared-service responsibility evidence is still separate from membership.
 - Municipality identity columns are not fully normalized: 307 registry rows do
   not have official `municipality_id`, so runtime joins must keep using
   `registry_id` fallback.
