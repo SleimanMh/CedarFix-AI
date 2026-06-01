@@ -1,65 +1,142 @@
 {
   "entity_id": "NLWE",
-  "entity_name": "North Lebanon Water Establishment (مصلحة مياه لبنان الشمالي)",
+  "entity_name": "North Lebanon Water Establishment (مؤسسة مياه لبنان الشمالي)",
   "entity_type": "public_utility",
-  "parent_ministry": "Ministry of Energy and Water",
+  "parent_ministry": "MEW",
   "facts": [
     {
       "fact_id": "NLWE-F001",
       "fact_type": "legal_responsibility",
-      "value": "Supply, distribution, and network maintenance of water for North Lebanon and Akkar governorates.",
-      "confidence": "high",
-      "source_ids": ["SRC-011"],
+      "value": "North Lebanon Water Establishment. Manages potable water supply, customer complaints, service requests, billing/payment, and branch follow-up for North Lebanon and Akkar runtime scope. Complaint domains encoded for routing: water_outage, dirty_water, pipe_leak_public, water_pressure_low, meter_billing_dispute, new_water_connection, water_contamination, sewage_services, service_request.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "NLWE-F002",
-      "fact_type": "service_area",
-      "value": "Governorates covered: North Lebanon, Akkar. HQ in Tripoli.",
-      "confidence": "high",
-      "source_ids": ["SRC-011", "SRC-021"],
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: electricity; road_damage; private_plumbing; private_wells; storm_drain_without_sewer_evidence; LRA_irrigation_assets; private_plumbing_private_well_or_tanker_vendor_dispute; Route instead to PRIVATE_PROPERTY_OR_VENDOR_OR_HITL when Complaint concerns private source/vendor rather than public NLWE network.; local_storm_drain_or_road_flooding; Route instead to MUN_OR_MPWT_BY_ROAD_CLASS when No evidence of sewerage/wastewater network ownership.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT",
+        "SRC-LORIENT-TRIPOLI-CHOLERA-2022"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "NLWE-F003",
-      "fact_type": "operational_contact",
-      "value": "Main office: Tripoli - Salahuddine Kabbara Street, Dam w Farz. Email: comms@eeln.gov.lb. Phone: 06/430075. Branch contacts include Kobayat 06/350341, Halba 06/690095, Menieh 06/460726, Dinniyeh 06/491146, Batroun 06/642020, Koura 06/651012, Zgharta 06/660347, and Bsharri 06/672260.",
-      "confidence": "high",
-      "source_ids": ["SRC-026"],
+      "fact_type": "service_area",
+      "value": "Geographic scope: north_lebanon_and_akkar_governorates. all Tripoli Kobayat Halba Minieh-Danniyeh Batroun Koura Zgharta Bsharri central Kobayat area",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "NLWE-F004",
-      "fact_type": "legal_responsibility",
-      "value": "NOT responsible for private building plumbing — only public supply network.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "fact_type": "operational_contact",
+      "value": "Non-emergency phone: 1712;+961-6-430075; Website/form: https://eeln.gov.lb/en/contact/; HQ/address: Tripoli - Salahuddine Kabbara Street, Dam w Farz; Email: comms@eeln.gov.lb; Special channels: complaint_phone=1712;main_office=06-430075;contact_form=eeln.gov.lb;branches=Tripoli_Kobayat_Halba_Menieh_Dinniyeh_Batroun_Koura_Zgharta_Bsharri;eservices=bill_inquiry_and_payment;omt_payment=subscription_number_region_town; NLWE customer service complaints: 1712; NLWE main office: +961-6-430075; Kobayat branch: 06-350341; Halba branch: 06-690095; Menieh branch: 06-460726; Dinniyeh branch: 06-491146; Batroun branch: 06-642020; Koura branch: 06-651012; Zgharta branch: 06-660347",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "NLWE-F005",
-      "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
-      "confidence": "low",
-      "source_ids": ["SRC-022"],
+      "fact_type": "complaint_process",
+      "value": "Route water complaints from North Lebanon or Aakkar governorate here after municipality/GPS confirmation. Channel types: phone;online;walk_in;partner_agent private_or_general_complaint: 1712; required=subscriber_name;subscription_number;problem;address general_message: https://eeln.gov.lb/en/contact/; required=name;email;phone;message service_request: 06-430075; required=request_type_and_documents_by_workflow service_request: relevant_department_office; required=application_form_and_required_documents bill_inquiry_and_payment: https://eservices.eeln.gov.lb/Home1?language=en-US; required=subscription_or_bill_details_not_fully_published bill_payment: OMT_locations; required=subscription_number;region;town Required fields/documents include: subscriber_name, subscription_number, problem_description, address, name, email, phone, message, call_06_430075_or_visit_office, application_form, ownership_document_lease_investment_or_sale_contract, municipality_or_mukhtar_statement_if_unsurveyed_or_building_alliance.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
+    },
+    {
+      "fact_id": "NLWE-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Central policy: public_ticket_number_not_published;contact_form_response_within_24h Ticket/reference and process-data policy: private_or_general_complaint ticket/reference: public_ticket_number_not_published; general_message ticket/reference: contact_form_reference_not_published; service_request ticket/reference: not_applicable; bill_inquiry_and_payment ticket/reference: not_applicable; bill_payment ticket/reference: not_applicable general_message: not_published; not_for_emergencies private_or_general_complaint: not_published; call_emergency_services_first_if_life_safety",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-NLWE-ABOUT",
+        "SRC-NLWE-CONTACT",
+        "SRC-NLWE-CUSTOMER-SERVICE",
+        "SRC-NLWE-SERVICE-REQUESTS",
+        "SRC-NLWE-ESERVICES",
+        "SRC-NLWE-OMT"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["WATER (North Lebanon, Akkar)"],
+    "primary_for_sectors": [
+      "water_outage",
+      "dirty_water",
+      "pipe_leak_public",
+      "water_pressure_low",
+      "meter_billing_dispute",
+      "new_water_connection",
+      "water_contamination",
+      "sewage_services",
+      "service_request"
+    ],
     "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "electricity",
+      "road_damage",
+      "private_plumbing",
+      "private_wells",
+      "storm_drain_without_sewer_evidence",
+      "LRA_irrigation_assets"
+    ],
     "hitl_always_required": false,
-    "hitl_conditions": [
-      "Water contamination reports require HITL",
-      "Private vs public water supply ambiguity"
-    ]
+    "hitl_conditions": []
   },
-  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-026"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-NLWE-ABOUT",
+    "SRC-NLWE-CONTACT",
+    "SRC-NLWE-CUSTOMER-SERVICE",
+    "SRC-NLWE-SERVICE-REQUESTS",
+    "SRC-NLWE-ESERVICES",
+    "SRC-NLWE-OMT",
+    "SRC-LORIENT-TRIPOLI-CHOLERA-2022"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

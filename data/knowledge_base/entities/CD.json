@@ -1,97 +1,204 @@
 {
   "entity_id": "CD",
-  "entity_name": "Lebanese Civil Defense (الدفاع المدني)",
-  "entity_type": "emergency_service",
-  "parent_ministry": "Ministry of Interior and Municipalities",
+  "entity_name": "Lebanese Civil Defense (الدفاع المدني اللبناني)",
+  "entity_type": "emergency_response",
+  "parent_ministry": "MOIM",
   "facts": [
     {
       "fact_id": "CD-F001",
       "fact_type": "legal_responsibility",
-      "value": "Primary emergency rescue, fire suppression, and search-and-rescue operations across Lebanon.",
+      "value": "Emergency rescue and firefighting authority. Responds to fires, building collapses, floods, chemical/gas hazards, traffic accident rescue, mountain/sea rescue, entrapment, and mass casualty incidents. Always first responder for any life-safety emergency. Coordinates with ISF and MPWT after scene is secured. Complaint domains encoded for routing: fire_in_building, fire_public_area, building_collapse, flood_rescue, trapped_person, chemical_hazard, gas_leak, road_accident_rescue, mountain_rescue, sea_rescue, entrapment, mass_casualty, hazardous_material_spill, electrical_fire, substation_fire, landfill_fire.",
       "confidence": "high",
-      "source_ids": ["SRC-001", "SRC-016"],
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "CD-F002",
       "fact_type": "legal_responsibility",
-      "value": "Emergency medical services (EMS) and pre-hospital patient transport.",
+      "value": "Not responsible for / boundary conditions: crime_investigation(ISF); infrastructure_repair_after_emergency(MUN_MPWT); water_electricity_restoration_after_emergency(EDL_RWA); non_emergency_administrative_complaints; post_emergency_grid_repair; Route instead to EDL_OR_EDZ_BY_LOCATION when Civil Defense handles emergency safety not utility restoration.; post_emergency_repair_or_road_maintenance; Route instead to MUN_OR_MPWT when Civil Defense handles emergency response not ordinary repairs.; post_fire_cleanup_or_routine_waste_removal; Route instead to MUN_OR_MOE when Civil Defense is emergency response not cleanup authority.; post_emergency_repair_cleanup_or_local_enforcement; Route instead to MUN_OR_RELEVANT_ASSET_OWNER when Civil Defense handles emergency response not routine repairs.",
       "confidence": "high",
-      "source_ids": ["SRC-001", "SRC-016"],
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE",
+        "SRC-CD-HOME-HTTP",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MOE-MANDATE",
+        "SRC-MUNI-AUTONOMY-HANDBOOK"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "CD-F003",
-      "fact_type": "legal_responsibility",
-      "value": "First responder for structural collapses, building wall hazards, sinkhole emergencies, and flood rescues.",
-      "confidence": "high",
-      "source_ids": ["SRC-001", "SRC-022"],
+      "fact_type": "service_area",
+      "value": "Geographic scope: national_with_centers. Emergency response first then technical follow-up with infrastructure owner. Call Civil Defense first if immediate public danger and route grid isolation to EDL or EDZ by location. Civil Defense first for scene safety then EDL or EDZ for grid equipment isolation and repair. Civil Defense is first for active fire or smoke danger; municipality/MOE follow after scene safety. Civil Defense first for fire explosion gas rescue and active life-safety danger; ISF if security or traffic control is needed.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE",
+        "SRC-CD-HOME-HTTP",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDZ-CONCESSION",
+        "SRC-MOE-MANDATE",
+        "SRC-MUNI-AUTONOMY-HANDBOOK",
+        "SRC-ISF-STRATEGIC"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "CD-F004",
-      "fact_type": "emergency_instruction",
-      "value": "Emergency hotline: 125. Call immediately for any life-safety incident.",
+      "fact_type": "operational_contact",
+      "value": "Emergency hotline: 125; Non-emergency phone: 01/290029;complaints_phone_fax=01/287125; Website/form: http://www.civildefense.gov.lb/index.php?page=co; HQ/address: Forn/Furn El Chebbak, Wadi Naim Street, Bayda building opposite Center Abraj, Beirut, Lebanon, postal code 50-435; Email: info@civildefense.gov.lb;complaints@civildefense.gov.lb; Special channels: emergency_rescue=125;fire_response=125;flood_rescue=125;chemical_hazard=125;complaints_email=complaints@civildefense.gov.lb;complaints_phone_fax=01/287125;media_office=mediaoffice@civildefense.gov.lb;training_department=training@civildefense.gov.lb; Civil Defense emergency line: 125",
       "confidence": "high",
-      "source_ids": ["SRC-022", "SRC-025"],
-      "notes": "125 confirmed by domain-expert eval dataset (SRC-022). Previous internal draft erroneously used 175 — 175 is NOT the correct Civil Defense number. VERIFIED: 125.",
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE",
+        "SRC-CD-HOME-HTTP"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "CD-F005",
-      "fact_type": "operational_contact",
-      "value": "Secondary/public inquiries: civildefense.gov.lb. Official complaints channel: complaints@civildefense.gov.lb and phone/fax 01 287125. Official X account: @CivilDefenseLB.",
-      "confidence": "medium",
-      "source_ids": ["SRC-001", "SRC-016", "SRC-057", "SRC-058"],
+      "fact_type": "complaint_process",
+      "value": "Always route any life-safety emergency here first. HITL required to confirm scene and dispatch. Never delay routing for missing location — emergency address can be taken on call. Call 125 immediately. Channel types: emergency_phone;complaints_email;phone_fax;online_contact_form;walk_in electrical_fire_or_public_danger: 125; required=exact_location_and_danger_description Civil Defense 125 emergency: 125; required=RPW-REQ-LOCATION;RPW-REQ-DANGER Civil Defense emergency: 125; required=WE-REQ-LOCATION;WE-REQ-DANGER Civil Defense 125: 125; required=PSE-REQ-LOCATION;PSE-REQ-DANGER Required fields/documents include: exact_location.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE",
+        "SRC-CD-HOME-HTTP"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
     },
     {
       "fact_id": "CD-F006",
-      "fact_type": "service_area",
-      "value": "Operates nationwide through regional divisions. All Lebanese governorates covered.",
-      "confidence": "high",
-      "source_ids": ["SRC-001"],
-      "human_review_required": false,
-      "human_review_reason": null
+      "fact_type": "deadline_or_sla",
+      "value": "Central policy: emergency_dispatch_log_internal;no_public_ticket_resolution_sla_published;non_emergency_complaints_by_email_phonefax_or_contact_form Ticket/reference and process-data policy: electrical_fire_or_public_danger ticket/reference: emergency_dispatch_log_internal_not_public electrical_fire_or_rescue: emergency_call_channel; call_125_immediately emergency_fire_rescue_collapse_response: emergency_dispatch; no_public_ticket_sla fire_or_hazard_emergency: emergency_dispatch; no_public_ticket_sla fire_rescue_collapse_gas_or_life_safety: emergency_dispatch; no_public_ticket_sla",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE",
+        "SRC-CD-HOME-HTTP"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
     },
     {
       "fact_id": "CD-F007",
-      "fact_type": "deadline_or_sla",
-      "value": "Emergency dispatch target: immediate (within minutes of call). No published SLA, but operational standard is fastest possible response.",
-      "confidence": "low",
-      "source_ids": ["SRC-022"],
-      "notes": "No official published SLA. CedarFix operational classification: 'immediate emergency'.",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency instruction: use 125 only for cases in this entity's emergency scope; otherwise follow the complaint process and HITL rules.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-CD-HOMEPAGE",
+        "SRC-CD-CONTACT-PAGE",
+        "SRC-CD-HOTLINE"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime emergency/public-safety dispatch may still require HITL confirmation."
     },
     {
       "fact_id": "CD-F008",
-      "fact_type": "complaint_process",
-      "value": "For emergencies: call 125 directly. CedarFix must always trigger HITL when routing to Civil Defense and display number 125 prominently.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Human review triggers include: sewage_or_flood_entering_home_or_life_safety_risk; sparking_exposed_wire_or_electrical_box_public_space; transformer_fire_smoke_explosion_or_loud_sparking; landfill_dump_or_trash_fire; fire_explosion_gas_or_active_rescue",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-CD-HOTLINE",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDZ-CONCESSION",
+        "SRC-CD-HOME-HTTP",
+        "SRC-MOE-MANDATE",
+        "SRC-MUNI-AUTONOMY-HANDBOOK",
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-ISF-STRATEGIC"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "These are runtime HITL triggers, not unresolved dossier-data fields."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["FLOODING (rescue)", "SAFETY (structural/life-safety)", "ELECTRICITY (exposed live cables)"],
-    "secondary_for_sectors": ["ROADS (sinkhole)", "GENERAL emergency"],
+    "primary_for_sectors": [
+      "fire_in_building",
+      "fire_public_area",
+      "building_collapse",
+      "flood_rescue",
+      "trapped_person",
+      "chemical_hazard",
+      "gas_leak",
+      "road_accident_rescue",
+      "mountain_rescue",
+      "sea_rescue",
+      "entrapment",
+      "mass_casualty",
+      "hazardous_material_spill",
+      "electrical_fire",
+      "substation_fire",
+      "landfill_fire"
+    ],
+    "secondary_for_sectors": [
+      "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+      "CD",
+      "EDL_OR_EDZ_BY_LOCATION",
+      "MUN_OR_MOE",
+      "ISF"
+    ],
+    "not_responsible_for": [
+      "crime_investigation(ISF)",
+      "infrastructure_repair_after_emergency(MUN_MPWT)",
+      "water_electricity_restoration_after_emergency(EDL_RWA)",
+      "non_emergency_administrative_complaints"
+    ],
     "hitl_always_required": true,
     "hitl_conditions": [
-      "Any incident classified as life-safety emergency",
-      "Structural hazard (cracking buildings, collapsing walls)",
-      "Active flood rescue",
-      "Exposed electrical cables",
-      "Person trapped"
+      "sewage_or_flood_entering_home_or_life_safety_risk",
+      "sparking_exposed_wire_or_electrical_box_public_space",
+      "transformer_fire_smoke_explosion_or_loud_sparking",
+      "landfill_dump_or_trash_fire",
+      "fire_explosion_gas_or_active_rescue"
     ]
   },
-  "sources": ["SRC-001", "SRC-016", "SRC-022", "SRC-025", "SRC-057", "SRC-058"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-CIVILDEF-UNDP-2026",
+    "SRC-CD-HOMEPAGE",
+    "SRC-CD-CONTACT-PAGE",
+    "SRC-CD-HOTLINE",
+    "SRC-CD-HOME-HTTP",
+    "SRC-EDL-RESPONSIBILITY",
+    "SRC-MPWT-ROADS-BUILDINGS",
+    "SRC-MOE-MANDATE",
+    "SRC-MUNI-AUTONOMY-HANDBOOK",
+    "SRC-SLWE-CUSTOMER-SERVICE",
+    "SRC-BWE-CUSTOMER-SERVICE",
+    "SRC-EDZ-CONCESSION",
+    "SRC-ISF-STRATEGIC"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

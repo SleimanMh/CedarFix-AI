@@ -1,84 +1,154 @@
 {
   "entity_id": "MPWT",
   "entity_name": "Ministry of Public Works and Transport (وزارة الأشغال العامة والنقل)",
-  "entity_type": "government_ministry",
-  "parent_ministry": "self (ministry)",
+  "entity_type": "ministry",
+  "parent_ministry": "",
   "facts": [
     {
       "fact_id": "MPWT-F001",
       "fact_type": "legal_responsibility",
-      "value": "PRIMARY entity for maintenance and management of Lebanon's national roads, highways, and autostrads.",
-      "confidence": "high",
-      "source_ids": ["SRC-006", "SRC-019", "SRC-022"],
-      "notes": "LLM-RT-002 confirms MPWT (not CDR) is primary for autostrad/highway issues. CDR is primary ONLY when inside an active CDR worksite.",
+      "value": "Responsible for classified/national roads, bridges, highway maintenance, snow clearance on national routes, large public works, and transport regulation. Maintains regional offices with road units that handle citizen road complaints. Complaint domains encoded for routing: classified_road_damage, national_highway_pothole, bridge_damage, bridge_structural_risk, road_barrier_missing, traffic_sign_missing_national, snow_clearance_national_road, road_blocked_national, landslide_on_classified_road, unsafe_highway_work_zone, public_works_permit, transport_regulation, port_oversight, airport_oversight.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "MPWT-F002",
       "fact_type": "legal_responsibility",
-      "value": "Oversees public transportation infrastructure, seaports, airports (coordination), and public works projects not assigned to CDR.",
-      "confidence": "high",
-      "source_ids": ["SRC-006", "SRC-019"],
+      "value": "Not responsible for / boundary conditions: local_municipal_roads(MUN); active_CDR_project_sites(CDR); water_infrastructure; electricity_infrastructure; national_or_classified_roads_highways_bridges; Route instead to MPWT when Municipality remains secondary only for local context.; ordinary_local_neighborhood_roads_and_sidewalks; Route instead to MUN when Do not use MPWT for every pothole.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS",
+        "SRC-MUNI-AUTONOMY-HANDBOOK"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "MPWT-F003",
-      "fact_type": "legal_responsibility",
-      "value": "Four Directorates: Roads and Buildings, Land Transport, Civil Aviation, Maritime Transport.",
-      "confidence": "high",
-      "source_ids": ["SRC-019"],
+      "fact_type": "service_area",
+      "value": "Geographic scope: national. Route to MPWT when national/classified/highway evidence is present; keep HITL if road class is ambiguous. Bridge damage routes to MPWT for asset ownership review and CD if collapse or rescue danger is present.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS",
+        "SRC-CD-HOTLINE"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime routing may still need exact location, dynamic municipal resolution, or asset-owner confirmation."
     },
     {
       "fact_id": "MPWT-F004",
-      "fact_type": "service_area",
-      "value": "National road network (autostrads, highways). Does NOT cover local/municipal streets.",
-      "confidence": "high",
-      "source_ids": ["SRC-006", "SRC-022"],
+      "fact_type": "operational_contact",
+      "value": "Non-emergency phone: +961-5-459980;complaints_section=+961-5-459680; Website/form: https://mopw.gov.lb/%D8%A7%D8%AA%D8%B5%D9%84-%D8%A8%D9%86%D8%A7?lang=en-us; HQ/address: Hazmieh/Baabda area, Mount Lebanon; Email: mail@ministry.gov.lb; Special channels: contact_form=mopw.gov.lb;administrative_complaints_section=+961-5-459680; MPWT general contact and road complaints: +961-5-459980; contact_form=mopw.gov.lb; MPWT administrative complaints section: +961-5-459680",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "MPWT-F005",
-      "fact_type": "operational_contact",
-      "value": "Ministry website: transportation.gov.lb. Official contact list provides ministry phones and ministry@transportation.gov.lb, but no dedicated national road-repair citizen complaint hotline was clearly published.",
+      "fact_type": "complaint_process",
+      "value": "Route complaints on classified/national roads or bridges. If road class is ambiguous (local vs national), send to HITL. CDR handles active construction sites only. Channel types: online;phone;walk_in MPWT phone and contact form: +961-5-459980; mopw.gov.lb contact form; required=RPW-REQ-LOCATION;RPW-REQ-ROAD-CLASS;RPW-REQ-ASSET;RPW-REQ-DANGER",
       "confidence": "medium",
-      "source_ids": ["SRC-006", "SRC-054"],
-      "human_review_required": true,
-      "human_review_reason": "No public complaint hotline identified. Citizen complaint pathway for national road issues unclear. Needs research into MPWT formal complaint channel."
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
     },
     {
       "fact_id": "MPWT-F006",
       "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA for national road repair. CedarFix target varies by severity: emergency 24-48h, non-emergency 72h-2 weeks.",
+      "value": "Central policy: not_published_on_verified_source national_road_or_bridge_complaint: not_published; not_published",
       "confidence": "low",
-      "source_ids": ["SRC-022"],
-      "human_review_required": false,
-      "human_review_reason": null
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-HOME",
+        "SRC-MPWT-CONTACT",
+        "SRC-MPWT-ADMIN-COMPLAINTS"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
     },
     {
       "fact_id": "MPWT-F007",
       "fact_type": "uncertain_or_needs_human_review",
-      "value": "Boundary between MPWT and CDR jurisdiction for road projects can be ambiguous: CDR executes infrastructure on behalf of GoL but MPWT has ongoing maintenance. Active CDR project = CDR primary; maintenance after project closure = MPWT.",
+      "value": "Human review triggers include: classified_or_main_road_highway_autostrade; bridge_damage_or_structural_road_bridge_issue",
       "confidence": "medium",
-      "source_ids": ["SRC-022", "SRC-017"],
-      "human_review_required": true,
-      "human_review_reason": "MPWT vs CDR boundary requires case-by-case assessment for any road that may be part of a CDR project."
+      "source_ids": [
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MPWT-CONTACT",
+        "SRC-CD-HOTLINE"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "These are runtime HITL triggers, not unresolved dossier-data fields."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["ROADS (national highways and autostrads)"],
-    "secondary_for_sectors": ["ROADS (escalation when municipality is unclear)"],
-    "hitl_always_required": true,
+    "primary_for_sectors": [
+      "classified_road_damage",
+      "national_highway_pothole",
+      "bridge_damage",
+      "bridge_structural_risk",
+      "road_barrier_missing",
+      "traffic_sign_missing_national",
+      "snow_clearance_national_road",
+      "road_blocked_national",
+      "landslide_on_classified_road",
+      "unsafe_highway_work_zone",
+      "public_works_permit",
+      "transport_regulation",
+      "port_oversight",
+      "airport_oversight"
+    ],
+    "secondary_for_sectors": [
+      "MUN_IF_LOCAL_ROAD",
+      "CD_IF_COLLAPSE_DANGER"
+    ],
+    "not_responsible_for": [
+      "local_municipal_roads(MUN)",
+      "active_CDR_project_sites(CDR)",
+      "water_infrastructure",
+      "electricity_infrastructure"
+    ],
+    "hitl_always_required": false,
     "hitl_conditions": [
-      "All national road routing requires HITL due to MPWT/CDR ambiguity",
-      "No public hotline confirmed for automated contact"
+      "classified_or_main_road_highway_autostrade",
+      "bridge_damage_or_structural_road_bridge_issue"
     ]
   },
-  "sources": ["SRC-006", "SRC-017", "SRC-019", "SRC-022", "SRC-054"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-MPWT-ROADS-BUILDINGS",
+    "SRC-MPWT-HOME",
+    "SRC-MPWT-CONTACT",
+    "SRC-MPWT-ADMIN-COMPLAINTS",
+    "SRC-MUNI-AUTONOMY-HANDBOOK",
+    "SRC-CD-HOTLINE"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

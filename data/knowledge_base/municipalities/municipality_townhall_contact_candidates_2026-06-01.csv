@@ -1,0 +1,201 @@
+research_rank,priority_score,municipality_id,name_en,name_ar,governorate_en,district_en,candidate_website,candidate_email,candidate_phone,source_confidence,official_website_status,complaint_form_status,promotion_rule
+1,213,43597,Beirut,بيروت,Beirut,Beirut,,,(01)986001   (01)987979,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+3,207,59187,Sidon,صيدا,South,Saida,,,+9617720060,medium,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+4,190,51603,Jounieh,جونيه,Mount Lebanon,Kesrouane,http://www.jounieh.gov.lb/,,+961 9 913 000,medium,found_t1_discovery,needs_review,candidate_only_until_official_source_page_confirms_value
+5,190,52449,Tripoli,طرابلس,North,Tripoli,,,(06)431001/9,high,found_t1_discovery,needs_review,candidate_only_until_official_source_page_confirms_value
+6,182,53499,Halba,حلبا,Aakkar,Aakkar,,,+9616690025,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+7,182,58089,Baalbek,بعلبك,Baalbek-Hermel,Baalbek,https://baalbeck-municipality.org/,,+9618370214,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+8,182,50442,Bourj Hammoud,برج حمود,Mount Lebanon,Matn,,,(01)262806    (01)256404,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+9,182,50649,Dbayeh-Zouk El Khrab-Haret Blat-Aoukar,الضبيه-ذوق الخراب-حارة البلانة-عوكر,Mount Lebanon,Matn,,,+961 4 543 502;+961 4 541 301,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+12,182,50631,Sin el Fil,سن الفيل,Mount Lebanon,Matn,,,(01)511130,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+13,182,56820,Bint Jbeil,بنت جبيل,Nabatiye,Bint Jbeil,,,(07)450455    (03)984466,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+16,182,57504,Sour,صور,South,Sour,,,(07)740017   (07)742411   (03)238801,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+17,171,48015,Baabda and Louaize,بعبدا - اللويزة,Mount Lebanon,بعبدا,,,+9615920573,,not_found,needs_review,candidate_only_until_official_source_page_confirms_value
+18,165,52089,Jbeil,جبيل,Mount Lebanon,Byblos,,,(09)546888,,found_t1_discovery,needs_review,candidate_only_until_official_source_page_confirms_value
+19,162,55929,Talabayya,تعلبايا,Beqaa,Zahle,,,+9618505915;+9618505916;+9618505917,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+21,162,53418,Kousba,كوسبا,North,Koura,,,6511555.0,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+22,162,52878,Zgharta-Ehden,زغرتا-اهدن,North,Zgharta,http://www.zgharta.gov.lb/,letters@zgharta.gov.lb,+9616660248;+9616660249,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+23,162,58764,Jezzine - Ain Majdeline,جزين - عين مجدلين,South,Jezzine,,,3631638.0,,found_t1_discovery,not_found,candidate_only_until_official_source_page_confirms_value
+25,93,53697,Khreibet ej Jindi,خريبة الجندي,Aakkar,عكار,,,6690533.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+28,93,56577,Blida,بليدا,Nabatiye,مرجعيون,,,3284009.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+29,93,56604,Beni Haiyane,بني حيان,Nabatiye,مرجعيون,,,3343195.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+30,93,56586,Touline,تولين,Nabatiye,مرجعيون,,,3414033.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+31,93,56460,Houla,حولا,Nabatiye,مرجعيون,,,(03)628186,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+32,93,56622,Deir Siriane,دير سريان,Nabatiye,مرجعيون,,,3361434.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+35,93,56631,Tallouse,طلوسه,Nabatiye,مرجعيون,,,3581011.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+38,93,56514,Qabrikha,قبريخا,Nabatiye,مرجعيون,,,(03)332263,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+39,93,56640,Qantara,قنطره,Nabatiye,مرجعيون,,,3210212.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+40,93,56541,Majdel Silim,مجدل سلم,Nabatiye,مرجعيون,,,70669152.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+41,93,56568,Markaba,مركبا,Nabatiye,مرجعيون,,,(03)206378,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+42,93,56550,Meiss ej Jabal,ميس الجبل,Nabatiye,مرجعيون,,,(03)926863,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+43,87,54435,Ad Daghlah,الدغلة,Aakkar,Aakkar,,,3150154.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+45,87,54057,Ain al-Dhahab,عين الذهب,Aakkar,Aakkar,,,6805661.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+47,87,54111,Ain Yaaqub,عين يعقوب,Aakkar,Aakkar,,,6360217.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+48,87,53841,Akkar el-Atiqa,عكار العتيقة,Aakkar,Aakkar,,,(06)885057,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+50,87,53832,Al Aboudiyeh,العبودية,Aakkar,Aakkar,,,6815190.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+51,87,54039,Al Awainat,العوينات,Aakkar,Aakkar,,,3257797.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+52,87,54318,Al-Ayoun,العيون,Aakkar,Aakkar,,,6361650.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+60,87,53679,Al Hmayra,الحميرة,Aakkar,Aakkar,,,6805477.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+61,87,54165,Al-Kwashra,الكواشرة,Aakkar,Aakkar,,,(06)693684,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+62,87,54030,Al Kweikhat,الكويخات,Aakkar,Aakkar,,,3691486.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+63,87,54201,Al-Mahmara,المحمرة,Aakkar,Aakkar,,,6471441.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+64,87,54444,Al Majdal,المجدل,Aakkar,Aakkar,,,9448878.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+65,87,54345,Al-Maqeeta,المقيطع,Aakkar,Aakkar,,,6875077.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+68,87,54246,Al-Qantara,القنطرة,Aakkar,Aakkar,,,6692345.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+69,87,53913,Al Qariyat,القريات,Aakkar,Aakkar,,,3635906.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+70,87,54192,Al-Qarqaf,القرقف,Aakkar,Aakkar,,,6370171.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+71,87,53904,Al Qobeiyat,القبيات,Aakkar,Aakkar,,,(06)350005,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+72,87,54480,Al Qurnah,القرنة,Aakkar,Aakkar,,,03/440629,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+73,87,54300,Al-Rihaneya,الريحانية,Aakkar,Aakkar,,,6845516.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+75,87,53634,Al Talil,التليل,Aakkar,Aakkar,,,(06)845500,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+76,87,54408,Ammar Al-Beykat,عمار البيكات,Aakkar,Aakkar,,,3892864.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+77,87,54012,An Nafiseh,النفيسة,Aakkar,Aakkar,,,(06)691344,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+79,87,53850,Andqet,عندقت,Aakkar,Aakkar,,,(06)880310,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+81,87,54462,Ash Shuqduf,الشقدوف,Aakkar,Aakkar,,,03/937010,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+82,87,54210,Ayun al-Ghazlan,عيون الغزلان,Aakkar,Aakkar,,,6370070.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+83,87,53859,Ayyat,عيات,Aakkar,Aakkar,,,(06)361101,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+85,87,54525,Barbarah,بربارة,Aakkar,Aakkar,,,6835213.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+86,87,53535,Barkaayl,برقايل,Aakkar,Aakkar,,,(06)370100,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+89,87,53544,Bazal,بزال,Aakkar,Aakkar,,,6370736.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+90,87,53553,Bazbina,بزبينا,Aakkar,Aakkar,,,(06)360707,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+93,87,54399,Beit Younes,بيت يونس,Aakkar,Aakkar,,,70122993.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+95,87,54498,Dahr al Qanbar,ضهر القنبر,Aakkar,Aakkar,,,3518501.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+96,87,54264,Dahr Laysina,ضهر ليسينة,Aakkar,Aakkar,,,6840444.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+98,87,53706,Deir Janine,دير جنين,Aakkar,Aakkar,,,(06)835100,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+101,87,54102,Dweir Adwiya,دوير عدويه,Aakkar,Aakkar,,,6660851.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+102,87,54255,Eilat,ايلات,Aakkar,Aakkar,,,70659673.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+104,87,53886,Fnaideq,فنيدق,Aakkar,Aakkar,,,(06)895500,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+106,87,54138,Harrar,حرار,Aakkar,Aakkar,,,6865455.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+108,87,54291,Hayzouq,حيزوق,Aakkar,Aakkar,,,6835900.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+110,87,53652,Jdeideh Al Juma,جديدة الجومة,Aakkar,Aakkar,,,(06)692733,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+111,87,53661,Jdeideh Al Qaytaa,جديدة القيطع,Aakkar,Aakkar,,,3115400.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+115,87,54075,Kharba Shar,خربة شار,Aakkar,Aakkar,,,6835472.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+118,87,53949,Majdala,مجدلا,Aakkar,Aakkar,,,(06)805109,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+119,87,54174,Mamna,ممنع,Aakkar,Aakkar,,,6895200.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+120,87,53940,Mar Touma,مار توما,Aakkar,Aakkar,,,6825884.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+122,87,53958,Mazraat Bleda,مزرعة بلدة,Aakkar,Aakkar,,,(06)835294,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+123,87,54003,Minyara,منيارة,Aakkar,Aakkar,,,(06)692780,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+124,87,53985,Mishmish,مشمش,Aakkar,Aakkar,,,70554360 - 03778648,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+125,87,54066,Mushta Hamoud,مشتى حمود,Aakkar,Aakkar,,,(06)800999,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+129,87,54147,Qubayyat,قبعيت,Aakkar,Aakkar,,,6865277.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+131,87,53733,Rahba,رحبة,Aakkar,Aakkar,,,(06)890000,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+133,87,54237,Safinat Al-Qetaa,سفينة القيطع,Aakkar,Aakkar,,,70394820.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+134,87,53760,Safinet al-Dreib,سفينة الدريب,Aakkar,Aakkar,,,3815442.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+136,87,53787,Shan,شان,Aakkar,Aakkar,,,70282679.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+137,87,53805,Sharbila,شربيلا,Aakkar,Aakkar,,,(06)845299,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+138,87,53814,Sheikh Taba,الشيخ طابا,Aakkar,Aakkar,,,(06)691504,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+140,87,53778,Sissouk,سيسوق,Aakkar,Aakkar,,,(06)805051,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+141,87,53769,Swayseh,السويسة,Aakkar,Aakkar,,,6835553.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+142,87,53598,Takrit,تكريت,Aakkar,Aakkar,,,(03)745606,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+143,87,53616,Tal Abbas Al Gharbi,تل عباس الغربي,Aakkar,Aakkar,,,(06)810727,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+145,87,53625,Talmaayan,تلمعيان,Aakkar,Aakkar,,,6810688.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+146,87,54228,Tasha,تاشع,Aakkar,Aakkar,,,3922124.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+148,87,54093,Wadi al-Jamus,وادي الجاموس,Aakkar,Aakkar,,,6470620.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+150,87,53742,Zawarib,الزواريب,Aakkar,Aakkar,,,(06)690630,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+153,87,58359,Al-Ain,العين,Baalbek-Hermel,Baalbek,,,(08)325185,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+155,87,59115,Al Hermel,الهرمل,Baalbek-Hermel,Hermel,,,(08)200004,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+158,87,58413,Al-Laboue,اللبوه,Baalbek-Hermel,Baalbek,,,8372177.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+168,87,58116,Bdenayel,بدنايل,Baalbek-Hermel,Baalbek,,,(08)910803,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+169,87,58143,Bishwat,بشوات,Baalbek-Hermel,Baalbek,,,8221330.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+171,87,58134,Brital,بريتال,Baalbek-Hermel,Baalbek,,,3352925.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+172,87,58107,Btedai,بتدعي,Baalbek-Hermel,Baalbek,,,3901235.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+173,87,58251,Deir Al Ahmar,دير الأحمر,Baalbek-Hermel,Baalbek,http://www.deirelahmar.gov.lb/,,+9618320144,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+174,87,58242,Douris,دورس,Baalbek-Hermel,Baalbek,,,(08)377493,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+175,87,59124,Fissan,فيسان,Baalbek-Hermel,Hermel,,,3694155.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+177,87,58188,Hadath Baalbek,حدث بعلبك,Baalbek-Hermel,Baalbek,,,(03)825421   (03)725440,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+179,87,58197,Harbata,حربتا,Baalbek-Hermel,Baalbek,,,1738359.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+180,87,58584,Hawsh Al Nabi,حوش النبي,Baalbek-Hermel,Baalbek,,,8345610.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+181,87,58494,Hawsh Al Rafiqah,حوش الرافقة,Baalbek-Hermel,Baalbek,,,8910203.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+182,87,58530,Hawsh Saneed,حوش سنيد,Baalbek-Hermel,Baalbek,,,3184733.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+183,87,58206,Hazin,حزين,Baalbek-Hermel,Baalbek,,,3645727.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+185,87,58224,Houch Tel Safiye,حوش تل صفيه,Baalbek-Hermel,Baalbek,,,(08)379369,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+187,87,58098,Iaat,ايعات,Baalbek-Hermel,Baalbek,,,(08)379122,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+188,87,58566,Jaba'a,جبعا,Baalbek-Hermel,Baalbek,,,3919830.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+190,87,58557,Jinta,جنتا,Baalbek-Hermel,Baalbek,,,8901955.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+192,87,58593,Ma'arabun,معربون,Baalbek-Hermel,Baalbek,,,71571946.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+193,87,58422,Majdaloun,مجدلون,Baalbek-Hermel,Baalbek,,,8340985.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+194,87,58431,Mqneh,مقنه,Baalbek-Hermel,Baalbek,,,(08)350500,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+195,87,58620,Nabha Al Dumdum,نبحا الدمدوم,Baalbek-Hermel,Baalbek,,,3681554.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+198,87,58458,Nahle,نحله,Baalbek-Hermel,Baalbek,,,(08)373006,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+200,87,58539,Qarah,قرحا,Baalbek-Hermel,Baalbek,,,71479096.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+201,87,58404,Qasr Naba,قصرنبا,Baalbek-Hermel,Baalbek,,,8911700.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+203,87,58269,Serain Al Tahta,سرعين التحتا,Baalbek-Hermel,Baalbek,,,(08)335472,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+204,87,58296,Shaath,شعت,Baalbek-Hermel,Baalbek,,,(03)312442,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+206,87,58332,Talya,طليا,Baalbek-Hermel,Baalbek,,,(08)345100,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+207,87,58170,Tannin Al Foqa,تمنين الفوقا,Baalbek-Hermel,Baalbek,,,(03)714008,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+208,87,58161,Tannin Al Tahta,تمنين التحتا,Baalbek-Hermel,Baalbek,,,(08)910487,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+209,87,58323,Tariya,طاريا,Baalbek-Hermel,Baalbek,,,(08)330790,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+211,87,58485,Yunin,يونين,Baalbek-Hermel,Baalbek,,,(08)305240/1,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+212,87,58512,Zabud,زبود,Baalbek-Hermel,Baalbek,,,3757793.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+213,87,56244,Aana,عانا,Beqaa,Western Bekaa,,,(03)304881   (01)200536,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+214,87,55893,Abilh,ابلح,Beqaa,Zahle,,,(03)656830   (03)888186,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+215,87,59770,Ain Arab,عين عرب,Beqaa,Rachaiya,,,(08)564101,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+216,87,59779,Ain Ata,عين عطا,Beqaa,Rachaiya,,,(08)520069,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+218,87,59761,Ain Harsha,عين حرشه,Beqaa,Rachaiya,,,(03)490610    (03)424164,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+220,87,56271,Ain Zabda,عين زبدة,Beqaa,Western Bekaa,,,+9618670405,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+223,87,56199,Al-Khiyara,الخيارة,Beqaa,Western Bekaa,,,3670412.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+224,87,56352,Al Manara,المناره,Beqaa,Western Bekaa,,,8563106.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+225,87,56361,Al Mansoura,المنصوره,Beqaa,Western Bekaa,,,(03)739429,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+227,87,56334,Al-Muruj,المرج,Beqaa,Western Bekaa,,,(08)510286,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+231,87,56253,Ameq,عميق,Beqaa,Western Bekaa,,,(03)769538,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+232,87,56262,Aytanit,عيتنيت,Beqaa,Western Bekaa,,,(08)650427,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+233,87,56172,Ba'loul,بعلول,Beqaa,Western Bekaa,,,(08)630108,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+234,87,56163,Bab Mare',باب مارع,Beqaa,Western Bekaa,,,(08)670436,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+235,87,55749,Bar Elias,بر الياس,Beqaa,Zahle,,,+961 8 510 016,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+236,87,55911,Bawarj,بوارج,Beqaa,Zahle,,,(03)621882,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+237,87,59653,Beit Lahia,بيت لهيا,Beqaa,Rachaiya,,,(08)591288,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+238,87,59635,Bkaa,بكا,Beqaa,Rachaiya,,,8525424.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+241,87,59743,Eita Al-Fakhar,عيتا الفخار,Beqaa,Rachaiya,,,(08)566026,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+242,87,59752,Eyha,عيحا,Beqaa,Rachaiya,,,(03)307040   (05)554449,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+243,87,56019,Ferzol,فرزل,Beqaa,Zahle,,,+9618950129,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+244,87,56280,Gaza,غزة,Beqaa,Western Bekaa,,,(08)640888,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+245,87,59680,Halawa,حلوه,Beqaa,Rachaiya,,,8525123.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+246,87,56127,Hazerta,حزرتا,Beqaa,Zahle,,,8803040.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+247,87,56181,Hosh Al-Harimeh,حوش الحريمة,Beqaa,Western Bekaa,,,(08)640196,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+249,87,56154,Jaba Jenin,جب جنين,Beqaa,Western Bekaa,,,(08)660457,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+252,87,59797,Kafr Qouq,كفرقوق,Beqaa,Rachaiya,,,(08)591345,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+254,87,56298,Kamid Al-Lawz,كامد اللوز,Beqaa,Western Bekaa,,,(08)661990,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+255,87,59815,Kawkaba,كوكبا,Beqaa,Rachaiya,,,(03)739094//126,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+257,87,56190,Khirbet Qanafar,خربة قنافار,Beqaa,Western Bekaa,,,(08)645070,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+258,87,59698,Khirbet Rouha,خربة روحا,Beqaa,Rachaiya,,,(08)560201,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+259,87,56316,Lala,لالا,Beqaa,Western Bekaa,,,(08)661700,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+260,87,56325,Lubya,لبايا,Beqaa,Western Bekaa,,,(08)521250,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+261,87,56064,Majdal Anjar,مجدل عنجر,Beqaa,Zahle,,,(08)621300  (08)621190,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+262,87,59824,Majdal Bani Fadel,مجدل بلهيص,Beqaa,Rachaiya,,,(08)530142,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+264,87,56343,Mashgharah,مشغرة,Beqaa,Western Bekaa,,,(03)650000    (03)641031,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+266,87,56379,Midoun and Lussia,ميدون ولوسيا,Beqaa,Western Bekaa,,,8655001.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+267,87,56073,Mrayjet,مريجات,Beqaa,Zahle,,,(08)545464,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+268,87,59842,Mudawwara,مدوخا,Beqaa,Rachaiya,,,(03)658512,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+273,87,56046,Qousaya,قوسايا,Beqaa,Zahle,,,(08)925090,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+275,87,55992,Saadnayel,سعدنايل,Beqaa,Zahle,,,(08)506955,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+276,87,56226,Saghbin,صغبين,Beqaa,Western Bekaa,,,+9618670570,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+277,87,56208,Sahmara,سحمر,Beqaa,Western Bekaa,,,(08)635081,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+279,87,59671,Tannourine,تنوره,Beqaa,Rachaiya,,,(03)647737,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+280,87,56370,Yahmar,يحمر,Beqaa,Western Bekaa,,,7571573.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+282,87,56424,Zalaya,زلايا,Beqaa,Western Bekaa,,,3936952.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+284,87,51801,Adma and Al-Dafnah,أدما والدفنة,Mount Lebanon,Kesrouane,,,3629449.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+285,87,50667,Aeroun,عيرون,Mount Lebanon,Matn,,,(03)626100,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+286,87,52107,Ahmouch,اهمج,Mount Lebanon,Byblos,,,(09)504042,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+287,87,52278,Ain Al Gowayba,عين الغويبة,Mount Lebanon,Byblos,,,3869434.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+289,87,51315,Ain Ouzain,عين وزين,Mount Lebanon,El Chouf,,,(05)508101,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+290,87,51324,Ain Qenye,عين قني,Mount Lebanon,El Chouf,,,(03)696466,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+291,87,50532,Ain Saadeh,عين سعاده,Mount Lebanon,Matn,,,+9614872314,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+292,87,50201,Ainab,عيناب,Mount Lebanon,Aalay,,,(05)410866,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+293,87,51297,Ainab,عينبال,Mount Lebanon,El Chouf,,,(07)306110,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+294,87,51261,Ainout,عانوت,Mount Lebanon,El Chouf,,,(07)241055,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+295,87,51270,Aitryoun,عترين,Mount Lebanon,El Chouf,,,(05)303240,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+296,87,51810,Ajaltoun,عجلتون,Mount Lebanon,Kesrouane,,,(09)232448/7,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+299,87,50021,Al Bneyeh,البنية,Mount Lebanon,Aalay,,,"05410256,05410023",,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+300,87,49949,Al Bsatin,البساتين,Mount Lebanon,Aalay,,,5410410.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+306,87,52242,Al Mansaf,المنصف,Mount Lebanon,Byblos,,,(09)790812,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+308,87,50811,Al Mansouriyah - Al Maklas - Ad Daisheh,المنصورية-المكلس-الديشونية,Mount Lebanon,Matn,,,+9614400015,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+312,87,50856,Al Oyoun,العيون,Mount Lebanon,Matn,,,6361650.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+313,87,51927,Al Qulayat,القليعات,Mount Lebanon,Kesrouane,,,6875115.0,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+315,87,51279,Amatour,عماطور,Mount Lebanon,El Chouf,,,(05)311105,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+316,87,52170,Amshit,عمشيت,Mount Lebanon,Byblos,,,+9619620483,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+318,87,51828,Aramoun,عرمون,Mount Lebanon,Kesrouane,,,(05)410325,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+319,87,48032,Arsoun,أرصون,Mount Lebanon,Baabda,,,(03)228684,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+320,87,51837,Ashqout,عشقوت,Mount Lebanon,Kesrouane,,,(09)957888   (09)957800,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+322,87,50478,Baabdat,بعبدات,Mount Lebanon,Matn,,,(04)820097    (04)820400,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+324,87,51027,Baakline,بعقلين,Mount Lebanon,El Chouf,,,(05)306016   (05)300528,,not_found,not_found,candidate_only_until_official_source_page_confirms_value
+325,87,51009,Baassir,بعاصير,Mount Lebanon,El Chouf,,,(07)920120,,not_found,not_found,candidate_only_until_official_source_page_confirms_value

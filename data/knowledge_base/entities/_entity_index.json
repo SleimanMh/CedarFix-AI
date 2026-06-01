@@ -1,44 +1,1143 @@
 {
   "_meta": {
-    "version": "1.0",
-    "created": "2026-05-24",
-    "description": "Index of all CedarFix canonical entity files in data/knowledge_base/entities/. Each entity is a separate JSON file following the schema defined in _schema_definition.json.",
-    "pipeline_note": "These files replace the monolithic lebanese_public_entities_ground_truth.json as the authoritative source. The ground truth JSON is kept for legacy reference but canonical entity files take precedence."
+    "version": "2.0",
+    "created": "2026-06-01",
+    "description": "Index of all CedarFix canonical entity files in data/knowledge_base/entities/. Each entity is generated from public_entities_extended.csv plus source-backed shard evidence.",
+    "pipeline_note": "Canonical entity files follow _schema_definition.json. human_review_required marks unresolved dossier data; runtime HITL triggers are kept in notes and routing_summary.hitl_conditions."
   },
   "entities": [
-    {"entity_id": "CD",    "entity_name": "Lebanese Civil Defense",               "file": "CD.json",    "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "ISF",   "entity_name": "Internal Security Forces",             "file": "ISF.json",   "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "MUN",   "entity_name": "Lebanese Municipalities",              "file": "MUN.json",   "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "MPWT",  "entity_name": "Ministry of Public Works and Transport","file": "MPWT.json",  "overall_confidence": "high", "human_review_open": 2},
-    {"entity_id": "CDR",   "entity_name": "Council for Development and Reconstruction","file": "CDR.json","overall_confidence": "high", "human_review_open": 1},
-    {"entity_id": "EDL",   "entity_name": "Electricité du Liban",                 "file": "EDL.json",   "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "OGERO", "entity_name": "Ogero Telecom",                        "file": "OGERO.json", "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "BMLWE", "entity_name": "Beirut and Mount Lebanon Water Establishment","file": "BMLWE.json","overall_confidence": "high","human_review_open": 0},
-    {"entity_id": "NLWE",  "entity_name": "North Lebanon Water Establishment",    "file": "NLWE.json",  "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "SLWE",  "entity_name": "South Lebanon Water Establishment",    "file": "SLWE.json",  "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "BWE",   "entity_name": "Bekaa Water Establishment",            "file": "BWE.json",   "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "MEW",   "entity_name": "Ministry of Energy and Water",         "file": "MEW.json",   "overall_confidence": "high", "human_review_open": 0},
-    {"entity_id": "MOE",   "entity_name": "Ministry of Environment",              "file": "MOE.json",   "overall_confidence": "high", "human_review_open": 1}
+    {
+      "entity_id": "BMLWE",
+      "entity_name": "Beirut and Mount Lebanon Water Establishment",
+      "file": "BMLWE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "BWE",
+      "entity_name": "Bekaa Water Establishment",
+      "file": "BWE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "CD",
+      "entity_name": "Lebanese Civil Defense",
+      "file": "CD.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "CDR",
+      "entity_name": "Council for Development and Reconstruction",
+      "file": "CDR.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "CENTRAL_INSPECTION",
+      "entity_name": "Central Inspection",
+      "file": "CENTRAL_INSPECTION.json",
+      "overall_confidence": "medium",
+      "human_review_open": 2
+    },
+    {
+      "entity_id": "DGLAC",
+      "entity_name": "General Directorate of Local Administrations and Councils",
+      "file": "DGLAC.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "EDL",
+      "entity_name": "Électricité du Liban",
+      "file": "EDL.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "EDZ",
+      "entity_name": "Electricité de Zahle",
+      "file": "EDZ.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "ISF",
+      "entity_name": "Internal Security Forces",
+      "file": "ISF.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MEW",
+      "entity_name": "Ministry of Energy and Water",
+      "file": "MEW.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MOE",
+      "entity_name": "Ministry of Environment",
+      "file": "MOE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MOIM",
+      "entity_name": "Ministry of Interior and Municipalities",
+      "file": "MOIM.json",
+      "overall_confidence": "medium",
+      "human_review_open": 2
+    },
+    {
+      "entity_id": "MPWT",
+      "entity_name": "Ministry of Public Works and Transport",
+      "file": "MPWT.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "MUN",
+      "entity_name": "Lebanese Municipalities",
+      "file": "MUN.json",
+      "overall_confidence": "medium",
+      "human_review_open": 2
+    },
+    {
+      "entity_id": "NLWE",
+      "entity_name": "North Lebanon Water Establishment",
+      "file": "NLWE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "OGERO",
+      "entity_name": "Ogero Telecom",
+      "file": "OGERO.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "SLWE",
+      "entity_name": "South Lebanon Water Establishment",
+      "file": "SLWE.json",
+      "overall_confidence": "medium",
+      "human_review_open": 1
+    },
+    {
+      "entity_id": "TRA",
+      "entity_name": "Telecommunications Regulatory Authority",
+      "file": "TRA.json",
+      "overall_confidence": "high",
+      "human_review_open": 0
+    }
   ],
   "sector_to_primary_entity": {
-    "ROADS_local":       {"primary": "MUN",   "secondary": [],       "hitl": false},
-    "ROADS_national":    {"primary": "MPWT",  "secondary": ["CDR"],  "hitl": true,  "note": "CDR only if active CDR worksite"},
-    "ROADS_worksite":    {"primary": "CDR",   "secondary": ["MPWT"], "hitl": true},
-    "WASTE_regular":     {"primary": "MUN",   "secondary": [],       "hitl": false},
-    "WASTE_hazardous":   {"primary": "MOE",   "secondary": ["MUN", "ISF"], "hitl": true},
-    "WATER_beirut_ml":   {"primary": "BMLWE", "secondary": [],       "hitl": false},
-    "WATER_north":       {"primary": "NLWE",  "secondary": [],       "hitl": false},
-    "WATER_south":       {"primary": "SLWE",  "secondary": [],       "hitl": false},
-    "WATER_bekaa":       {"primary": "BWE",   "secondary": [],       "hitl": false},
-    "WATER_contamination":{"primary": "HITL", "secondary": [],       "hitl": true},
-    "WATER_private":     {"primary": "HITL",  "secondary": [],       "hitl": true},
-    "TELECOM_fixed":     {"primary": "OGERO", "secondary": [],       "hitl": false},
-    "TELECOM_mobile":    {"primary": "HITL",  "secondary": ["MOT"],  "hitl": true},
-    "ELECTRICITY_grid":  {"primary": "EDL",   "secondary": ["MEW"],  "hitl": true,  "note": "Always HITL to distinguish grid vs generator"},
-    "ELECTRICITY_emergency":{"primary": "CD", "secondary": ["EDL"],  "hitl": true},
-    "FLOODING_rescue":   {"primary": "CD",    "secondary": ["MUN"],  "hitl": true},
-    "FLOODING_drain":    {"primary": "MUN",   "secondary": ["MPWT"], "hitl": false},
-    "SAFETY_structural": {"primary": "CD",    "secondary": ["MUN","ISF"], "hitl": true},
-    "SAFETY_armed":      {"primary": "ISF",   "secondary": ["CD"],   "hitl": true}
+    "water_outage": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "dirty_water": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "pipe_leak_public": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "water_pressure_low": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "meter_billing_dispute": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "new_water_connection": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "water_contamination": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "irrigation_water_issue": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "sewage_overflow_linked_to_water_network": {
+      "primary": "BMLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "fire_in_building": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "fire_public_area": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "building_collapse": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "flood_rescue": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "trapped_person": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "chemical_hazard": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "gas_leak": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "road_accident_rescue": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "mountain_rescue": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "sea_rescue": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "entrapment": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "mass_casualty": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "hazardous_material_spill": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "electrical_fire": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "substation_fire": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "landfill_fire": {
+      "primary": "CD",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION;MUN_OR_MPWT",
+        "CD",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": true
+    },
+    "active_CDR_project_defect": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "infrastructure_project_complaint": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "reconstruction_zone_issue": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "project_worksite_hazard": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "CDR_contractor_violation": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "public_works_quality_complaint": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "CDR_funded_road_complaint": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "post_war_reconstruction_issue": {
+      "primary": "CDR",
+      "secondary": [
+        "MUN_OR_MPWT_BY_ASSET"
+      ],
+      "hitl": false
+    },
+    "corruption": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "administrative_misconduct": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "public_official_negligence": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "civil_service_violation": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "municipality_misconduct": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "public_body_non_response": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "bribery": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "conflict_of_interest": {
+      "primary": "CENTRAL_INSPECTION",
+      "secondary": [
+        "ISF_IF_CRIMINAL_THREAT;MOIM_IF_MUNICIPAL_GOVERNANCE"
+      ],
+      "hitl": false
+    },
+    "municipal_directory_lookup": {
+      "primary": "DGLAC",
+      "secondary": [
+        "MUN"
+      ],
+      "hitl": false
+    },
+    "municipal_boundary_query": {
+      "primary": "DGLAC",
+      "secondary": [
+        "MUN"
+      ],
+      "hitl": false
+    },
+    "local_council_registry": {
+      "primary": "DGLAC",
+      "secondary": [
+        "MUN"
+      ],
+      "hitl": false
+    },
+    "municipal_form_submission": {
+      "primary": "DGLAC",
+      "secondary": [
+        "MUN"
+      ],
+      "hitl": false
+    },
+    "local_election_administration": {
+      "primary": "DGLAC",
+      "secondary": [
+        "MUN"
+      ],
+      "hitl": false
+    },
+    "electricity_outage": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "power_line_fault": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "transformer_fault": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "meter_bill": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "sparking_wire_grid_side": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "public_lighting_grid": {
+      "primary": "EDL",
+      "secondary": [],
+      "hitl": false
+    },
+    "area_power_outage_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "exposed_wire_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "transformer_fault_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "meter_billing_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "street_light_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "voltage_issue_zahle": {
+      "primary": "EDZ",
+      "secondary": [
+        "CD_IF_PUBLIC_DANGER"
+      ],
+      "hitl": false
+    },
+    "crime": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "theft": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "assault": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "public_disorder": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "traffic_accident": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "road_safety_threat": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "kidnapping": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "cybercrime": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "noise_threat": {
+      "primary": "ISF",
+      "secondary": [
+        "MUN_OR_MOE",
+        "ISF",
+        "CD_IF_RESCUE_OR_FIRE"
+      ],
+      "hitl": true
+    },
+    "energy_policy_escalation": {
+      "primary": "MEW",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION",
+        "HITL",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": false
+    },
+    "water_policy_escalation": {
+      "primary": "MEW",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION",
+        "HITL",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": false
+    },
+    "electricity_regulatory_complaint": {
+      "primary": "MEW",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION",
+        "HITL",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": false
+    },
+    "generator_licensing": {
+      "primary": "MEW",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION",
+        "HITL",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": false
+    },
+    "oil_infrastructure": {
+      "primary": "MEW",
+      "secondary": [
+        "WATER_ESTABLISHMENT_BY_LOCATION",
+        "HITL",
+        "EDL_OR_EDZ_BY_LOCATION"
+      ],
+      "hitl": false
+    },
+    "air_pollution": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "industrial_pollution": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "river_pollution": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "coastal_pollution": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "illegal_quarry": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "crusher_dust": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "hazardous_waste_dumping": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "noise_from_industry": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "environmental_law_violation": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "EIA_complaint": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "pesticide_misuse": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "medical_waste_disposal": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "chemical_factory_violation": {
+      "primary": "MOE",
+      "secondary": [
+        "MUN",
+        "MUN_OR_WATER_AUTHORITY"
+      ],
+      "hitl": false
+    },
+    "municipal_non_compliance": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "inter_municipal_dispute": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "civil_affairs_complaint": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "passport_id_issue": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "local_administration_escalation": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "municipality_oversight": {
+      "primary": "MOIM",
+      "secondary": [],
+      "hitl": false
+    },
+    "classified_road_damage": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "national_highway_pothole": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "bridge_damage": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "bridge_structural_risk": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "road_barrier_missing": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "traffic_sign_missing_national": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "snow_clearance_national_road": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "road_blocked_national": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "landslide_on_classified_road": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "unsafe_highway_work_zone": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "public_works_permit": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "transport_regulation": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "port_oversight": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "airport_oversight": {
+      "primary": "MPWT",
+      "secondary": [
+        "MUN_IF_LOCAL_ROAD",
+        "CD_IF_COLLAPSE_DANGER"
+      ],
+      "hitl": false
+    },
+    "garbage_not_collected": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "illegal_dumping": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "overflowing_bins": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "local_road_pothole": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "sidewalk_damage": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "local_drainage": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "public_space": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "street_cleaning": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "noise_complaint": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "stray_animals": {
+      "primary": "MUN",
+      "secondary": [
+        "EDL_OR_EDZ_IF_GRID_SUPPLY_ISSUE",
+        "MPWT_IF_NATIONAL_ROAD_EDGE",
+        "MPWT_OR_CD_IF_MAIN_ROAD_OR_DANGER"
+      ],
+      "hitl": false
+    },
+    "sewage_services": {
+      "primary": "NLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "service_request": {
+      "primary": "NLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "fixed_internet_outage": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "landline_fault": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "dsl_vdsl_issue": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "fiber_outage": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "telecom_cabinet_damage": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "telecom_cable_cut": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "slow_fixed_internet": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "new_line_request": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "service_unresponsive_ogero": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "infrastructure_damage": {
+      "primary": "OGERO",
+      "secondary": [
+        "OGERO",
+        "MUN_IF_PUBLIC_OBSTRUCTION"
+      ],
+      "hitl": false
+    },
+    "sewage_overflow_public": {
+      "primary": "SLWE",
+      "secondary": [],
+      "hitl": false
+    },
+    "mobile_billing_or_regulatory_complaint": {
+      "primary": "TRA",
+      "secondary": [
+        "MOBILE_OPERATOR_FIRST",
+        "OGERO_OR_OPERATOR_FIRST"
+      ],
+      "hitl": false
+    },
+    "telecom_consumer_rights": {
+      "primary": "TRA",
+      "secondary": [
+        "MOBILE_OPERATOR_FIRST",
+        "OGERO_OR_OPERATOR_FIRST"
+      ],
+      "hitl": false
+    },
+    "operator_escalation": {
+      "primary": "TRA",
+      "secondary": [
+        "MOBILE_OPERATOR_FIRST",
+        "OGERO_OR_OPERATOR_FIRST"
+      ],
+      "hitl": false
+    },
+    "quality_of_service": {
+      "primary": "TRA",
+      "secondary": [
+        "MOBILE_OPERATOR_FIRST",
+        "OGERO_OR_OPERATOR_FIRST"
+      ],
+      "hitl": false
+    },
+    "false_billing": {
+      "primary": "TRA",
+      "secondary": [
+        "MOBILE_OPERATOR_FIRST",
+        "OGERO_OR_OPERATOR_FIRST"
+      ],
+      "hitl": false
+    }
   }
 }

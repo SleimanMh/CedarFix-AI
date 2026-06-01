@@ -1,0 +1,10 @@
+requirement_id,field_name,applies_to,required_level,source_ids,confidence,notes
+PSE-REQ-LOCATION,exact_location_or_gps,all_safety_enforcement_cases,required,SRC-CD-HOTLINE;SRC-ISF-FAQ;SRC-MUNI-AUTONOMY-HANDBOOK,high,Needed for emergency response local enforcement and municipality resolution.
+PSE-REQ-DANGER,immediate_danger_or_active_emergency,emergency_and_safety_cases,required,SRC-CD-HOTLINE;SRC-ISF-STRATEGIC,high,Collect whether fire collapse gas injury weapon threat or trapped person is present.
+PSE-REQ-PEOPLE,injuries_people_trapped_or_children_nearby,emergency_and_traffic_cases,required_if_known,SRC-CD-HOTLINE;SRC-CIVILDEF-UNDP-2026;SRC-ISF-FAQ,high,Determines Civil Defense rescue secondary/primary handling.
+PSE-REQ-CASE-TYPE,case_type,local_enforcement_cases,required,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-ISF-UNITS,medium_high,Examples include illegal parking noise public-space obstruction illegal construction dangerous tree/pole or stray animals.
+PSE-REQ-EVIDENCE,photo_video_time_frequency,local_enforcement_or_oversight_cases,optional_but_recommended,SRC-CIB-COMPLAINT;SRC-MUNI-AUTONOMY-HANDBOOK,medium_high,Useful for non-emergency enforcement and oversight complaints.
+PSE-REQ-ANON-CONTACT,optional_contact_phone_or_email,ISF_anonymous_complaints,optional,SRC-ISF-ANONYMOUS-COMPLAINTS,high,Official anonymous form includes optional contact fields and attachment support.
+PSE-REQ-ENTITY,public_entity_or_official_named,oversight_cases,required,SRC-CIB-MANDATE;SRC-CIB-COMPLAINT,high,Central Inspection complaints need the administration or official/context being complained about.
+PSE-REQ-REFERENCE,reference_or_registration_number,tracking_or_oversight_cases,required_if_available,SRC-CIB-COMPLAINT;SRC-DGLAC-FAQ,high,Central Inspection and DGLAC processes may use registration/reference numbers.
+PSE-REQ-MUNICIPALITY,municipality_or_local_authority,municipal_admin_cases,required_if_local,SRC-DGLAC-MUNI-DIR;SRC-DGLAC-CONTACT,high,Required to separate DGLAC tracking from local municipality follow-up.

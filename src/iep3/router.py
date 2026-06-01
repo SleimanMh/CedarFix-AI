@@ -50,6 +50,58 @@ _SECTOR_URGENCY: dict[str, float] = {
 }
 
 
+def compute_routing_risk(
+    *,
+    routing_confidence: float,
+    issue_type_confidence: float | None,
+    drift_score: int | None,
+    hitl_required: bool,
+    kb_warnings: list[str] | None = None,
+    kb_location_method: str | None = None,
+    boundary_entity: str | None = None,
+    model_rules_disagreement: bool = False,
+) -> dict:
+    """Estimate whether an auto-route is operationally unsafe.
+
+    This is intentionally interpretable rather than opaque: it behaves like a
+    small routing-risk model whose features can be shown in the admin demo.
+    """
+    factors: list[str] = []
+    risk = 0.0
+    if routing_confidence < 0.65:
+        risk += 0.30
+        factors.append("low_routing_confidence")
+    elif routing_confidence < 0.78:
+        risk += 0.12
+        factors.append("medium_routing_confidence")
+    if issue_type_confidence is not None and issue_type_confidence < 0.60:
+        risk += 0.15
+        factors.append("low_issue_confidence")
+    if (drift_score or 0) >= 2:
+        risk += 0.20
+        factors.append("language_drift")
+    if hitl_required:
+        risk += 0.20
+        factors.append("preexisting_hitl_gate")
+    if boundary_entity:
+        risk += 0.25
+        factors.append("kb_boundary_entity")
+    if kb_location_method in {"not_found", "gps_out_of_range"}:
+        risk += 0.20
+        factors.append("location_not_resolved")
+    warnings = kb_warnings or []
+    if warnings:
+        risk += min(0.18, 0.06 * len(warnings))
+        factors.append("kb_warning")
+    if model_rules_disagreement:
+        risk += 0.18
+        factors.append("model_rules_disagreement")
+    return {
+        "routing_risk_score": round(max(0.0, min(1.0, risk)), 4),
+        "routing_risk_factors": sorted(set(factors)),
+    }
+
+
 @lru_cache(maxsize=1)
 def _load_sector_map() -> dict[str, dict]:
     """Load sector_agency_map.csv once and cache."""
@@ -139,10 +191,24 @@ def route(
         hitl_required = True
         hitl_reason = "routing_confidence_below_threshold"
 
+    risk_packet = compute_routing_risk(
+        routing_confidence=conf,
+        issue_type_confidence=issue_type_confidence,
+        drift_score=drift_score,
+        hitl_required=hitl_required,
+    )
+
     shap_top3 = {
         "sector_signal": round(base_conf * 0.5, 3),
         "issue_type_conf": round((issue_type_confidence or 0.5) * 0.3, 3),
         "drift_penalty": round(-(0.15 if (drift_score or 0) >= 2 else 0.0), 3),
+        "routing_risk_score": risk_packet["routing_risk_score"],
+        "routing_risk_factors": risk_packet["routing_risk_factors"],
+        "neuro_symbolic_trace": {
+            "ai_layer": "sector_issue_confidence",
+            "symbolic_layer": "sector_agency_map",
+            "safety_layer": "hitl_thresholds",
+        },
     }
 
     return {

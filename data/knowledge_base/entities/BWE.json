@@ -1,65 +1,160 @@
 {
   "entity_id": "BWE",
-  "entity_name": "Bekaa Water Establishment (مصلحة مياه البقاع)",
+  "entity_name": "Bekaa Water Establishment (مؤسسة مياه البقاع)",
   "entity_type": "public_utility",
-  "parent_ministry": "Ministry of Energy and Water",
+  "parent_ministry": "MEW",
   "facts": [
     {
       "fact_id": "BWE-F001",
       "fact_type": "legal_responsibility",
-      "value": "Supply, distribution, and network maintenance of water for Bekaa and Baalbek-Hermel governorates.",
+      "value": "Bekaa Water Establishment. Manages potable water supply and network for Bekaa governorate (Zahle, Baalbek-Hermel, West Bekaa, Rashaya). Complaint domains encoded for routing: water_outage, dirty_water, pipe_leak_public, water_pressure_low, meter_billing_dispute, new_water_connection, water_contamination, irrigation_water_issue.",
       "confidence": "high",
-      "source_ids": ["SRC-011"],
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BWE-F002",
-      "fact_type": "service_area",
-      "value": "Governorates covered: Bekaa, Baalbek-Hermel. HQ in Zahleh.",
-      "confidence": "high",
-      "source_ids": ["SRC-011", "SRC-021"],
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: electricity; road_damage; private_plumbing; flooding; private_plumbing_private_tank_or_private_pump; Route instead to PRIVATE_PROPERTY_OR_BUILDING_MANAGEMENT when Complaint is isolated to internal building systems.; Litani_or_collective_irrigation_asset; Route instead to LRA_OR_HITL when Complaint references Litani basin collective canal or LRA-owned asset.; private_well_license_or_groundwater_permit; Route instead to MEW when Complaint asks about well license tracking or regulatory permit status.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-LRA-BASIN",
+        "SRC-LRA-GEOMAP",
+        "SRC-MEW-WELL-LICENSE-TRACKING",
+        "SRC-MEW-DG-WATER-ELECTRICITY"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "BWE-F003",
-      "fact_type": "operational_contact",
-      "value": "Main office: Zahle Highway, Abed Deyem Building, Floors 3 and 4. Email: info@bwe.gov.lb. Phone: 08/814500. Branch contacts include Zahle 08/820236, Baalbek 08/370335, Stations-YOYO 08/811389, and South Bekaa/Joub Jannine 08/663414.",
-      "confidence": "high",
-      "source_ids": ["SRC-028"],
+      "fact_type": "service_area",
+      "value": "Geographic scope: bekaa_and_baalbek_hermel_governorates. all Zahle Baalbek Western Bekaa central Zahle area Baalbek area stations near head office South Bekaa and Joub Jannine area Use BWE when the issue is within BWE ordinary service scope and no LRA asset evidence exists. Do not promise prior notice or restoration time. Explain official no-prior-notice categories if relevant.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-LRA-BASIN",
+        "SRC-BWE-FAQ",
+        "SRC-BWE-WATER-QUALITY",
+        "SRC-BWE-OMT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BWE-F004",
-      "fact_type": "legal_responsibility",
-      "value": "NOT responsible for private building plumbing — only public supply network.",
+      "fact_type": "operational_contact",
+      "value": "Non-emergency phone: +961-8-814500; Website/form: https://bwe.gov.lb/en/contact/; HQ/address: Zahle Highway, Abed Deyem Building, Floors 3 & 4; Email: info@bwe.gov.lb; Special channels: contact_form=bwe.gov.lb;main_office=+961-8-814500;zahle_branch=+961-8-820236;baalbek_branch=+961-8-370335;south_bekaa_branch=+961-8-663414; BWE invoice inquiry line: 1781; BWE main office: 08-814500; Zahle branch: 08-820236; Baalbek branch: 08-370335; Stations YOYO: 08-811389; South Bekaa branch: 08-663414",
       "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT",
+        "SRC-BWE-CUSTOMER-SERVICE"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BWE-F005",
-      "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h.",
-      "confidence": "low",
-      "source_ids": ["SRC-022"],
+      "fact_type": "complaint_process",
+      "value": "Route water complaints from Bekaa or Baalbek-Hermel governorate here. Channel types: online;phone;walk_in invoice_inquiry: 1781; required=district_or_subscriber_details_recommended general_message: https://bwe.gov.lb/en/contact/; required=name;email;phone;message new_subscription_water_testing_repair_maintenance: relevant_office branch_followup: branch_phone_numbers; required=district_or_branch_recommended water_quality_concern: relevant_office_or_branch; required=water_source_location_and_sample_context_recommended water_cutoff_explanation: https://bwe.gov.lb/en/customer-services1/; required=district_or_affected_area_recommended bill_payment: OMT_locations Required fields/documents include: name, email, phone, message, choose_district_or_concerned_center, location_source_or_sample_context_recommended.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-BWE-FAQ",
+        "SRC-BWE-WATER-QUALITY",
+        "SRC-BWE-OMT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
+    },
+    {
+      "fact_id": "BWE-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Central policy: not_published_on_verified_source Ticket/reference and process-data policy: invoice_inquiry ticket/reference: not_applicable; general_message ticket/reference: response_reference_not_published; new_subscription_water_testing_repair_maintenance ticket/reference: not_published; new_subscription_water_testing_repair_maintenance required fields: official_required_fields_not_published; branch_followup ticket/reference: not_published; water_quality_concern ticket/reference: not_published; water_cutoff_explanation ticket/reference: not_applicable; bill_payment ticket/reference: not_applicable; bill_payment required fields: required_fields_not_published invoice_inquiry: not_published; not_for_emergencies repair_maintenance_water_testing: not_published; call_emergency_services_first_if_life_safety sudden_cutoff: not_published; call_emergency_services_first_if_life_safety planned_cutoff: not_published; call_emergency_services_first_if_life_safety",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-BWE-HOME",
+        "SRC-BWE-CONTACT",
+        "SRC-BWE-CUSTOMER-SERVICE",
+        "SRC-BWE-WATER-QUALITY",
+        "SRC-BWE-FAQ"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
+    },
+    {
+      "fact_id": "BWE-F007",
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Human review triggers include: irrigation_water_issue_in_bekaa_or_baalbek_hermel",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BWE-ABOUT",
+        "SRC-LRA-BASIN",
+        "SRC-BWE-FAQ"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "These are runtime HITL triggers, not unresolved dossier-data fields."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["WATER (Bekaa, Baalbek-Hermel)"],
-    "secondary_for_sectors": [],
+    "primary_for_sectors": [
+      "water_outage",
+      "dirty_water",
+      "pipe_leak_public",
+      "water_pressure_low",
+      "meter_billing_dispute",
+      "new_water_connection",
+      "water_contamination",
+      "irrigation_water_issue"
+    ],
+    "secondary_for_sectors": [
+      "LRA_IF_LITANI_ASSET_OR_COLLECTIVE_NETWORK_AMBIGUOUS"
+    ],
+    "not_responsible_for": [
+      "electricity",
+      "road_damage",
+      "private_plumbing",
+      "flooding"
+    ],
     "hitl_always_required": false,
     "hitl_conditions": [
-      "Water contamination reports require HITL",
-      "Private vs public water supply ambiguity"
+      "irrigation_water_issue_in_bekaa_or_baalbek_hermel"
     ]
   },
-  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-028"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-BWE-ABOUT",
+    "SRC-BWE-HOME",
+    "SRC-BWE-CONTACT",
+    "SRC-BWE-CUSTOMER-SERVICE",
+    "SRC-LRA-BASIN",
+    "SRC-LRA-GEOMAP",
+    "SRC-MEW-WELL-LICENSE-TRACKING",
+    "SRC-MEW-DG-WATER-ELECTRICITY",
+    "SRC-BWE-FAQ",
+    "SRC-BWE-WATER-QUALITY",
+    "SRC-BWE-OMT"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

@@ -1,0 +1,136 @@
+{
+  "entity_id": "DGLAC",
+  "entity_name": "General Directorate of Local Administrations and Councils (المديرية العامة للإدارات والمجالس المحلية)",
+  "entity_type": "directorate",
+  "parent_ministry": "MOIM",
+  "facts": [
+    {
+      "fact_id": "DGLAC-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Official local-administration portal, municipal directory, local-council departments and transaction/form tracking context. Complaint domains encoded for routing: municipal_directory_lookup, municipal_boundary_query, local_council_registry, municipal_form_submission, local_election_administration.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "DGLAC-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: field_service_delivery; local_service_delivery_or_emergency_dispatch; Route instead to MUN_OR_CD_OR_ISF when DGLAC is local-administration registry/form context not field dispatch.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ",
+        "SRC-MUNI-AUTONOMY-HANDBOOK"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
+    },
+    {
+      "fact_id": "DGLAC-F003",
+      "fact_type": "service_area",
+      "value": "Geographic scope: national. Use DGLAC only for DGLAC/local-administration registration or form tracking; otherwise municipality remains first.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "DGLAC-F004",
+      "fact_type": "operational_contact",
+      "value": "Non-emergency phone: +961-1-610120;+961-1-610130;+961-1-610140; Website/form: https://www.dglac.gov.lb/; HQ/address: Adlieh, Beirut; Email: dglac.contact@moim.gov.lb; Special channels: whatsapp_or_contact_number=+961-1-610140;municipality_credentials_email=dglac.contact@moim.gov.lb;media_contact=Faten.abouhassan@moim.gov.lb; DGLAC local-administration contact: +961-1-610120; +961-1-610130; +961-1-610140",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "DGLAC-F005",
+      "fact_type": "complaint_process",
+      "value": "Use as registry/source-discovery evidence; only use as intake channel if specific DGLAC form behavior is verified. Channel types: online;phone;whatsapp;walk_in Ticket/reference policy: submitted_forms_can_be_tracked_by_registration_number DGLAC contact and tracking: +961-1-610140; dglac.contact@moim.gov.lb; required=PSE-REQ-REFERENCE;PSE-REQ-MUNICIPALITY",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "DGLAC-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Central policy: submitted_forms_can_be_tracked_by_registration_number registration_or_form_tracking: registration_number_tracking; response_time_not_published",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-DGLAC-MUNI-DIR",
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-CONTACT",
+        "SRC-DGLAC-FAQ"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
+    },
+    {
+      "fact_id": "DGLAC-F007",
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Human review triggers include: local_administration_form_or_registration_tracking",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-DGLAC-HOME",
+        "SRC-DGLAC-FAQ",
+        "SRC-DGLAC-CONTACT"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "These are runtime HITL triggers, not unresolved dossier-data fields."
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "municipal_directory_lookup",
+      "municipal_boundary_query",
+      "local_council_registry",
+      "municipal_form_submission",
+      "local_election_administration"
+    ],
+    "secondary_for_sectors": [
+      "MUN"
+    ],
+    "not_responsible_for": [
+      "field_service_delivery"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "local_administration_form_or_registration_tracking"
+    ]
+  },
+  "sources": [
+    "SRC-DGLAC-MUNI-DIR",
+    "SRC-DGLAC-HOME",
+    "SRC-DGLAC-CONTACT",
+    "SRC-DGLAC-FAQ",
+    "SRC-MUNI-AUTONOMY-HANDBOOK"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
+}

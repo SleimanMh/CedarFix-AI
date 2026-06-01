@@ -1,94 +1,89 @@
 {
   "_meta": {
-    "version": "1.0",
+    "version": "1.1",
     "created": "2026-05-31",
+    "revised": "2026-06-01",
+    "revision_note": "v1.1 — sector_distribution, row counts, and overlap facts recomputed directly from the live JSONL files. v1.0 numbers (train=91169, ADMIN/OTHER_MIXED/WATER=11736 buckets, language_mix) were stale and did not match the data on disk; they have been replaced with verified values.",
     "project": "CedarFix AI — Lebanese Arabizi Complaint Classifier",
     "base_model_family": "instruction-tuned LLM (provider TBD)",
     "task": "Multi-label complaint classification: is_municipal_complaint, sector, issue_type, confidence, evidence_terms",
     "vocab_version": "v14 (6340 terms)",
-    "notes": "telecom_eval_locked is NOT used in training — reserved for TELECOM sector evaluation only"
+    "label_field": "label is read from metadata.label, else parsed from assistant message JSON; sector = substring before '/'",
+    "notes": "telecom_eval_locked is NOT used in training — reserved for TELECOM sector evaluation only. It shares 150 rows with val by construction (see val_vs_telecom_eval_locked overlap); treat it as a val-derived diagnostic slice, not an independent holdout."
   },
   "splits": {
     "train": {
       "file": "data/training/cidarfix_v29_batch8_train_v14_enriched.jsonl",
-      "rows": 91169,
+      "rows": 91150,
+      "sha256": "4d3d41bfbba1979e57b0645e4ee5fc770a366aacc3a18d65899622208993067e",
       "role": "primary training set",
       "schema": "messages (system/user/assistant) with assistant JSON output",
       "sector_distribution": {
+        "OTHER": 23136,
         "ROADS": 12183,
-        "WATER": 11736,
         "SAFETY": 11403,
-        "WASTE": 10965,
-        "ELECTRICITY": 9250,
-        "TELECOM": 5466,
-        "ADMIN": 18,
-        "OTHER_MIXED": 30148
-      },
-      "language_mix": {
-        "arabizi": 90795,
-        "english_or_latin": 374
+        "WASTE": 10961,
+        "WATER": 10366,
+        "ELECTRICITY": 9252,
+        "FLOODING": 8402,
+        "TELECOM": 5447
       },
       "exact_overlap_with_val": 0,
-      "exact_overlap_with_test": 0
+      "exact_overlap_with_test": 0,
+      "exact_overlap_with_telecom_eval": 0
     },
     "val": {
       "file": "data/training/cidarfix_v29_batch8_val_v14_enriched.jsonl",
       "rows": 10562,
+      "sha256": "b2fa5d695e140fedfac19430038b2ceab7cc9167680c240c892a262e586e97b1",
       "role": "validation set (used for loss monitoring during training)",
       "sector_distribution": {
+        "OTHER": 2336,
         "ROADS": 1528,
-        "WATER": 1380,
         "SAFETY": 1367,
         "WASTE": 1291,
-        "ELECTRICITY": 1241,
-        "TELECOM": 612,
-        "ADMIN": 4,
-        "OTHER_MIXED": 3139
-      },
-      "language_mix": {
-        "arabizi": 10519,
-        "english_or_latin": 43
+        "ELECTRICITY": 1239,
+        "WATER": 1215,
+        "FLOODING": 974,
+        "TELECOM": 612
       }
     },
     "test_locked": {
       "file": "data/training/cidarfix_v29_batch7_model_final_test_locked.jsonl",
       "rows": 7940,
+      "sha256": "80c79ddaf08e654d9ca123876f565a32b899e862f1418d7d5a753c46e43f3d40",
       "role": "LOCKED holdout — never used in training or val; final accuracy benchmark",
       "sector_distribution": {
         "ROADS": 1418,
         "SAFETY": 1328,
-        "WATER": 1294,
+        "WATER": 1127,
+        "FLOODING": 1092,
+        "OTHER": 1000,
         "ELECTRICITY": 997,
-        "WASTE": 978,
-        "TELECOM": 0,
-        "OTHER_MIXED": 1925
+        "WASTE": 978
       },
-      "language_mix": {
-        "arabizi": 7920,
-        "english_or_latin": 20
-      },
-      "notes": "No TELECOM rows — use telecom_eval_locked for TELECOM sector evaluation"
+      "notes": "No TELECOM rows — use telecom_eval_locked for TELECOM sector evaluation."
     },
     "telecom_eval_locked": {
       "file": "data/training/cidarfix_telecom_eval_locked.jsonl",
       "rows": 150,
-      "role": "LOCKED TELECOM eval slice — stratified by issue_type, sourced from val (0 overlap with train)",
+      "sha256": "96728ed9e02bd32d6c78986cf0ac366c613a7dc2376856af17f136ed503a0f5c",
+      "role": "LOCKED TELECOM eval slice — sourced from val (0 overlap with train)",
       "sector_distribution": {
         "TELECOM": 150
       },
-      "issue_type_distribution": {
-        "connectivity_issue": 42,
-        "slow_internet": 38,
-        "service_unresponsive": 25,
-        "line_fault": 24,
-        "infrastructure_damage": 21
-      },
-      "language_mix": {
-        "arabizi": 144,
-        "english_or_latin": 6
-      },
-      "source": "stratified sample from val TELECOM rows; seed=42; created 2026-05-31"
+      "source": "stratified sample from val TELECOM rows; created 2026-05-31",
+      "independence_caveat": "Shares all 150 rows with val (val_vs_telecom_eval_locked = 150). Diagnostic only; NOT an independent final holdout. Rebuild from train+val-unseen rows to promote to independent eval."
     }
+  },
+  "overlap_proof": {
+    "train_vs_val": 0,
+    "train_vs_test_locked": 0,
+    "train_vs_telecom_eval_locked": 0,
+    "val_vs_test_locked": 0,
+    "val_vs_telecom_eval_locked": 150,
+    "method": "sha256 over whitespace-normalized, lowercased user message text",
+    "verified": "2026-06-01"
   },
   "readiness_gates": {
     "minimum_train_rows": 80000,
@@ -96,20 +91,20 @@
     "telecom_locked_eval_required": true,
     "zero_train_val_overlap": true,
     "vocab_version_minimum": "v14",
-    "all_sectors_represented": ["ROADS", "WATER", "SAFETY", "WASTE", "ELECTRICITY", "TELECOM"],
+    "all_sectors_represented": ["ROADS", "WATER", "SAFETY", "WASTE", "ELECTRICITY", "FLOODING", "TELECOM", "OTHER"],
     "status": {
-      "minimum_train_rows": "PASS (91169 >= 80000)",
+      "minimum_train_rows": "PASS (91150 >= 80000)",
       "minimum_val_rows": "PASS (10562 >= 8000)",
-      "telecom_locked_eval_required": "PASS (150 rows created)",
-      "zero_train_val_overlap": "PASS (verified 2026-05-31)",
+      "telecom_locked_eval_required": "PASS (150 rows)",
+      "zero_train_val_overlap": "PASS (verified 2026-06-01)",
       "vocab_version_minimum": "PENDING (production still v13.7.2 — promote v14 before finetuning)",
-      "all_sectors_represented": "PASS"
+      "all_sectors_represented": "PASS (8 sectors across train/val; test_locked has no TELECOM by design)"
     }
   },
   "known_gaps": {
-    "arabic_script_rows": "Near-zero — model will be Arabizi-only; Arabic support requires separate data collection",
-    "test_locked_telecom": "test_locked has 0 TELECOM rows — use telecom_eval_locked for TELECOM benchmarking",
-    "admin_sector_low": "ADMIN rows extremely low (18 train, 4 val) — not suitable for ADMIN classification claims",
-    "airport_bias_in_hard_benchmark": "Existing 134-case hard benchmark is airport-dominated; expand to 300-500 for robust eval"
+    "test_locked_telecom": "test_locked has 0 TELECOM rows — use telecom_eval_locked for TELECOM benchmarking.",
+    "telecom_eval_not_independent": "telecom_eval_locked overlaps val by 150/150 rows; rebuild from unseen rows for a true holdout.",
+    "no_admin_sector": "Earlier manifest claimed an ADMIN sector (18/4 rows). No ADMIN sector exists in the data; do not claim ADMIN classification.",
+    "airport_bias_in_hard_benchmark": "Existing hard benchmark is airport-dominated; expand for robust eval."
   }
 }

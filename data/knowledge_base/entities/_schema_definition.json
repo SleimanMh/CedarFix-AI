@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "description": "Canonical entity schema definition for CedarFix Lebanese public entities. Every entity JSON must follow this structure.",
+    "description": "Canonical entity schema definition for CedarFix Lebanese public entities. Every entity JSON must follow this structure. human_review_required marks unresolved dossier data; runtime HITL routing triggers belong in routing_summary.hitl_conditions or fact notes.",
     "fact_types": [
       "legal_responsibility",
       "operational_contact",
@@ -20,9 +20,9 @@
     "human_review_triggers": [
       "Contact number changed or conflicting across sources",
       "Deadline source is weak (no official SLA published)",
-      "Entity responsibility overlaps with another entity",
-      "Geographic coverage boundary is ambiguous",
-      "Private vs public actor confusion possible",
+      "Entity responsibility source is unresolved or conflicting",
+      "Geographic coverage source is unresolved or conflicting",
+      "Private vs public actor boundary is not source-backed",
       "Source is blocked and unverified"
     ]
   },

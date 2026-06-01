@@ -1,0 +1,135 @@
+{
+  "entity_id": "CD",
+  "entity_name": "Lebanese Civil Defense (الدفاع المدني اللبناني)",
+  "entity_type": "emergency_service",
+  "parent_ministry": "Ministry of Interior and Municipalities",
+  "facts": [
+    {
+      "fact_id": "CD-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Primary emergency rescue, fire suppression, and search-and-rescue operations across Lebanon. Also provides guidance on earthquake preparedness, explosion aftermath, and flood/disaster response.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CIVILDEF-UNDP-2026"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Emergency medical services (EMS) and pre-hospital patient transport.",
+      "confidence": "medium",
+      "source_ids": ["SRC-CIVILDEF-UNDP-2026"],
+      "human_review_required": true,
+      "human_review_reason": "Registered source supports Civil Defense emergency-response role, but operational medical eligibility should not be inferred without human review."
+    },
+    {
+      "fact_id": "CD-F003",
+      "fact_type": "legal_responsibility",
+      "value": "First responder for: structural collapses, cracking or collapsing building walls, sinkhole emergencies, flood rescues, fire incidents, person trapped, exposed live electrical cables, explosion scenes, maritime/coastal emergencies.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CD-CONTACT-PAGE", "SRC-CIVILDEF-UNDP-2026"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F004",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency hotline: 125. Call immediately for any life-safety incident. 125 is the ONLY correct Civil Defense emergency number — 175 is incorrect.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CD-CONTACT-PAGE", "SRC-CD-HOTLINE"],
+      "notes": "125 confirmed prominently on civildefense.gov.lb homepage and contact page on 2026-05-31. Previous internal draft erroneously used 175 — VERIFIED: correct number is 125.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F005",
+      "fact_type": "operational_contact",
+      "value": "Website: civildefense.gov.lb. HQ address: Forn El Chebbak, Wadi Naim Bayda Street, opposite Central building, Beirut. Postal code: 50-435. Main phone: 01/290029 (international: +961 1 290029). Main fax: 01/290022. Main email: info@civildefense.gov.lb. Complaints channel: complaints@civildefense.gov.lb / phone-fax 01/287125. Media office: mediaoffice@civildefense.gov.lb / 01/290029 ext.108. Training department: training@civildefense.gov.lb / 01/284319. Online contact form at civildefense.gov.lb/index.php?page=co — fields: Name, Email, Address, Message (CAPTCHA required). Social media: Facebook (87K followers), Twitter (@CivilDefenseLB), YouTube.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-CONTACT-PAGE"],
+      "notes": "All contacts verified on civildefense.gov.lb/index.php?page=co on 2026-05-31. complaints@civildefense.gov.lb and 01/287125 confirmed (previously medium confidence, now high). Online contact form confirmed with CAPTCHA.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F006",
+      "fact_type": "service_area",
+      "value": "Nationwide through regional centers. Confirmed regional structure from official Centers page: (1) Beirut and suburbs (بيروت وضواحيها), (2) Bekaa (البقاع), (3) Mountain/Mount Lebanon (الجبل), (4) South (الجنوب), (5) North (الشمال), (6) North Lebanon (لبنان الشمالي), (7) Naval/maritime unit (الأنهر البحري). Full center distribution and affiliated sub-centers available at civildefense.gov.lb under المراكز section.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CD-CENTERS-PAGE", "SRC-CIVILDEF-UNDP-2026"],
+      "notes": "Regional structure confirmed from Centers dropdown menu on civildefense.gov.lb on 2026-05-31.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "Emergency dispatch: immediate (within minutes of 125 call). No published SLA — operational standard is fastest possible response. Non-emergency complaints via complaints@civildefense.gov.lb have no published response time.",
+      "confidence": "low",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CD-CONTACT-PAGE"],
+      "notes": "No official published SLA. CedarFix operational classification: immediate emergency.",
+      "human_review_required": true,
+      "human_review_reason": "No official published response SLA was verified."
+    },
+    {
+      "fact_id": "CD-F008",
+      "fact_type": "complaint_process",
+      "value": "For life-safety emergencies: call 125 immediately — this must always be the first action. For non-emergency complaints about Civil Defense conduct or service: email complaints@civildefense.gov.lb or call/fax 01/287125. Alternatively use the online contact form at civildefense.gov.lb/index.php?page=co. CedarFix must always trigger HITL when routing to Civil Defense and display number 125 prominently in the citizen-facing response.",
+      "confidence": "high",
+      "source_ids": ["SRC-CD-HOMEPAGE", "SRC-CD-CONTACT-PAGE"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "CD-F009",
+      "fact_type": "service_area",
+      "value": "150+ stations nationwide across all governorates (Beirut, Mount Lebanon, North, Akkar, Baalbek-Hermel, Bekaa, South, Nabatiyeh). Stations operate in 4 capability tiers: (1) Land Fire Fighting only, (2) Land Fire Fighting + Ambulance (most common), (3) Sea Rescue Unit, (4) Sea Rescue Unit + Ambulance. Confirmed sea rescue station locations: Tyre Marine Station (South — Sea Rescue + Ambulance), Jounieh Kaslik (Mount Lebanon — Sea Rescue + Ambulance), Al Abde (North coast — Sea Rescue). For maritime emergencies, route to the nearest sea rescue station. Station coverage is dense enough that virtually every Lebanese caza has at least one CD station. Note: station map data sourced from April 2010 — some stations may have opened or closed since.",
+      "confidence": "medium",
+      "source_ids": ["SRC-CD-STATIONS-MAP-2010"],
+      "notes": "Extracted from official Lebanese Civil Defense stations map PDF (prepared by M.S., dated 1.04.2010). Sea rescue stations confirmed at Tyre, Jounieh/Kaslik, Al Abde. Medium confidence due to 2010 date — verify current station list via civildefense.gov.lb المراكز section.",
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "EMERGENCY_fire — active fire anywhere",
+      "EMERGENCY_rescue — person trapped, buried, or missing",
+      "EMERGENCY_structural — building collapse, cracking walls, imminent structural failure",
+      "EMERGENCY_flood — active flood rescue (not drain blockage)",
+      "EMERGENCY_explosion — explosion scene response",
+      "EMERGENCY_medical — pre-hospital EMS transport",
+      "ELECTRICITY_downed — exposed or downed live electrical cables (always co-notified with EDL)"
+    ],
+    "secondary_for_sectors": [
+      "ROADS_sinkhole — sinkhole with risk to persons",
+      "FLOODING_non_emergency — co-notified with municipality for severe weather flooding"
+    ],
+    "not_responsible_for": [
+      "Non-emergency infrastructure complaints — route to MUN, EDL, MPWT, or water establishments",
+      "Crime or public order — route to ISF",
+      "Routine electrical outages with no life-safety risk — route to EDL",
+      "Drain blockages with no rescue risk — route to MUN"
+    ],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "Any incident classified as life-safety emergency — always show 125 prominently",
+      "Structural hazard (cracking buildings, collapsing walls)",
+      "Active flood rescue",
+      "Exposed or downed live electrical cables — co-notify EDL simultaneously",
+      "Person trapped",
+      "Fire of any scale",
+      "Explosion scene"
+    ]
+  },
+  "sources": [
+    "SRC-CD-HOMEPAGE",
+    "SRC-CD-CONTACT-PAGE",
+    "SRC-CD-CENTERS-PAGE",
+    "SRC-CD-STATIONS-MAP-2010",
+    "SRC-CD-HOTLINE",
+    "SRC-CIVILDEF-UNDP-2026"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-31"
+}

@@ -1,0 +1,7 @@
+boundary_id,entity_id,not_responsible_for,responsible_entity,source_ids,confidence,notes
+PSE-NRF-CD-REPAIR,CD,post_emergency_repair_cleanup_or_local_enforcement,MUN_OR_RELEVANT_ASSET_OWNER,SRC-CD-HOTLINE;SRC-MUNI-AUTONOMY-HANDBOOK,high,Civil Defense handles emergency response not routine repairs.
+PSE-NRF-ISF-REPAIR,ISF,infrastructure_repair_or_municipal_service_delivery,MUN_OR_MPWT_OR_UTILITY,SRC-ISF-STRATEGIC;SRC-MUNI-AUTONOMY-HANDBOOK,high,ISF handles security law enforcement and traffic/public order.
+PSE-NRF-MUN-CRIME,MUN,crime_weapon_threat_or_serious_public_order,ISF,SRC-ISF-STRATEGIC;SRC-MUNI-AUTONOMY-HANDBOOK,high,Municipality is not the primary law-enforcement route for serious threats.
+PSE-NRF-MPOLICE-EMERGENCY,MUNICIPAL_POLICE,fire_rescue_active_collapse_weapon_or_serious_accident,CD_OR_ISF,SRC-CD-HOTLINE;SRC-ISF-STRATEGIC,high,Municipal police/local enforcement should not replace emergency services.
+PSE-NRF-CIB-FIELD,CENTRAL_INSPECTION,ordinary_field_service_or_emergency_dispatch,MUN_OR_CD_OR_ISF,SRC-CIB-MANDATE;SRC-CD-HOTLINE;SRC-ISF-STRATEGIC,high,Central Inspection is oversight and administrative complaint path.
+PSE-NRF-DGLAC-FIELD,DGLAC,local_service_delivery_or_emergency_dispatch,MUN_OR_CD_OR_ISF,SRC-DGLAC-HOME;SRC-MUNI-AUTONOMY-HANDBOOK,high,DGLAC is local-administration registry/form context not field dispatch.

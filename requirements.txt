@@ -9,6 +9,7 @@ uvicorn[standard]>=0.29
 redis>=5.0
 sqlalchemy[asyncio]>=2.0
 asyncpg>=0.29
+aiosqlite>=0.20
 python-multipart>=0.0.9
 
 # ── Phase 2-3: IEP-1 embedding + IEP-2 dedup / IEP-3 calibrated routing ──
@@ -23,9 +24,9 @@ scikit-learn>=1.5
 # ── Phase 4: IEP-4 LLM explanation + MLOps ───────────────────────────────
 # openai>=1.25
 # mlflow>=2.13
-# prometheus-client>=0.20
+prometheus-client>=0.20
 
-# ── Phase 5: IEP-1 vision signal (CLIP ViT-B/32) ─────────────────────────
-# Pillow>=10.3
-# transformers>=4.41
-# torch>=2.3 --index-url https://download.pytorch.org/whl/cpu
+# ── Phase 5: IEP-6 vision signal (CLIP ViT-B/32) ─────────────────────────
+Pillow>=10.3
+transformers>=4.41
+torch>=2.3

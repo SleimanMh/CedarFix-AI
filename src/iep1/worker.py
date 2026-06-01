@@ -26,6 +26,7 @@ from src.eep.db import Complaint, SessionLocal
 from src.eep.models import ComplaintState
 from src.eep.queue import STREAM_IEP1, STREAM_IEP2
 from src.iep1.extractor import extract
+from src.shared import metrics as M
 from src.shared.schemas import IEP1LanguageSignal
 
 logger = logging.getLogger("iep1.worker")
@@ -97,6 +98,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         "routing_sector": result["routing_sector"],
         "normalized_text": result["normalized_text"],
         "text_embedding_ref": result["text_embedding_ref"],
+        "text_embedding_vector": result.get("_embedding_vector"),
         "iep1_signal_json": result["iep1_signal_json"],
         "state": next_state.value,
         "updated_at": datetime.now(timezone.utc),
@@ -111,7 +113,16 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         )
         await session.commit()
 
-    # Enqueue IEP-2 even if HITL is required; dedup evidence still helps the reviewer.
+    # Observability: drift distribution, OOV pressure, and HITL escalations.
+    M.IEP1_DRIFT_SCORE.labels(language=result["language"]).observe(result["drift_score"])
+    oov_rate = float((signal_json or {}).get("oov_token_rate", 0.0) or 0.0)
+    risk_level = "high" if oov_rate >= 0.30 else "medium" if oov_rate >= 0.10 else "low"
+    M.OOV_TOKEN_RATE.labels(risk_level=risk_level).set(oov_rate)
+    if force_hitl:
+        M.HITL_REQUIRED.labels(
+            sector=result.get("routing_sector") or "unknown",
+            reason="language_drift_or_high_risk_oov",
+        ).inc()
     embedding = result.get("_embedding_vector")
     iep2_payload: dict = {
         "complaint_id": complaint_id,

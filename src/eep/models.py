@@ -33,8 +33,11 @@ class ComplaintState(str, Enum):
     PARTIALLY_PROCESSED = "PARTIALLY_PROCESSED"
     FULLY_PROCESSED = "FULLY_PROCESSED"
     ROUTED = "ROUTED"
+    AUTO_ROUTED = "AUTO_ROUTED"
     HITL_REQUIRED = "HITL_REQUIRED"
+    HITL_IN_REVIEW = "HITL_IN_REVIEW"
     RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
     ARCHIVED = "ARCHIVED"
 
 
@@ -116,10 +119,16 @@ class ComplaintStatus(BaseModel):
     drift_score: Optional[int] = None
     issue_type: Optional[str] = None
     issue_type_confidence: Optional[float] = None
+    iep1_signal_json: Optional[dict] = None
 
     # IEP-2 fields
     is_duplicate: Optional[bool] = None
     incident_id: Optional[str] = None
+    iep2_incident_json: Optional[dict] = None
+
+    # IEP-6 fields
+    image_issue_type: Optional[str] = None
+    image_fusion_json: Optional[dict] = None
 
     # IEP-3 fields
     routing_sector: Optional[str] = None
@@ -128,8 +137,83 @@ class ComplaintStatus(BaseModel):
     priority_score: Optional[float] = None
     hitl_required: Optional[bool] = None
     hitl_reason: Optional[str] = None
+    iep3_routing_json: Optional[dict] = None
 
     # IEP-4 fields
     citizen_explanation: Optional[str] = None
+    admin_explanation: Optional[str] = None
+    iep4_explanation_json: Optional[dict] = None
 
     error_flags: list[str] = Field(default_factory=list)
+
+
+# ── Dossier (AI decision trace) ───────────────────────────────────────────────
+
+class DossierLayer(BaseModel):
+    """A single AI layer's decision trace within the full dossier."""
+    layer: str
+    decision: Optional[str] = None
+    confidence: Optional[float] = None
+    evidence: list[str] = Field(default_factory=list)
+    safety_flags: list[str] = Field(default_factory=list)
+
+
+class ComplaintDossier(BaseModel):
+    """Full AI decision dossier for GET /complaints/{id}/dossier."""
+    complaint_id: str
+    status: ComplaintState
+    submitted_text: str
+    pipeline_complete: bool
+    layers: list[DossierLayer] = Field(default_factory=list)
+    final_sector: Optional[str] = None
+    final_entity: Optional[str] = None
+    final_decision: str = "PENDING"
+    hitl_reason: Optional[str] = None
+    routing_confidence: Optional[float] = None
+    drift_score: Optional[int] = None
+    priority_score: Optional[float] = None
+
+
+# ── Active learning feedback ───────────────────────────────────────────────────
+
+class ComplaintFeedback(BaseModel):
+    """Human correction submitted via POST /complaints/{id}/feedback.
+
+    The human reviewer (operator or HITL agent) provides the corrected routing
+    decision.  The EEP persists a RetrainingCandidate record so that periodic
+    model retraining can incorporate the correction.
+    """
+    corrected_sector: Optional[str] = Field(
+        None, description="Sector the reviewer believes is correct (e.g. 'WATER')."
+    )
+    corrected_entity: Optional[str] = Field(
+        None, description="Primary entity the reviewer selected (e.g. 'BWE')."
+    )
+    correction_notes: Optional[str] = Field(
+        None,
+        max_length=512,
+        description="Free-text notes from the reviewer explaining the correction.",
+    )
+    reviewer_id: Optional[str] = Field(
+        None,
+        max_length=64,
+        description="Identifier for the human reviewer (anonymised).",
+    )
+
+
+class RetrainingQueueItem(BaseModel):
+    """One entry in the active learning retraining queue."""
+    candidate_id: str
+    complaint_id: str
+    source: str
+    reason: Optional[str] = None
+    original_routing: Optional[dict] = None
+    status: str
+    created_at: str
+
+
+class RetrainingQueue(BaseModel):
+    """Response body for GET /retraining-queue."""
+    count: int
+    items: list[RetrainingQueueItem]
+

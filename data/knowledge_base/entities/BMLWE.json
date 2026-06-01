@@ -1,75 +1,146 @@
 {
   "entity_id": "BMLWE",
-  "entity_name": "Beirut and Mount Lebanon Water Establishment (مصلحة مياه بيروت وجبل لبنان)",
+  "entity_name": "Beirut and Mount Lebanon Water Establishment (مؤسسة مياه بيروت وجبل لبنان)",
   "entity_type": "public_utility",
-  "parent_ministry": "Ministry of Energy and Water",
+  "parent_ministry": "MEW",
   "facts": [
     {
       "fact_id": "BMLWE-F001",
       "fact_type": "legal_responsibility",
-      "value": "Supply, distribution, and network maintenance of potable and non-potable water for Beirut and Mount Lebanon governorates.",
-      "confidence": "high",
-      "source_ids": ["SRC-011", "SRC-020"],
+      "value": "Beirut and Mount Lebanon Water Establishment. Manages potable water supply, billing, and pipe network for Beirut city and Mount Lebanon governorate. Handles water outages, pipe leaks, dirty water, billing disputes, and new connection requests in its service area. Complaint domains encoded for routing: water_outage, dirty_water, pipe_leak_public, water_pressure_low, meter_billing_dispute, new_water_connection, water_contamination, irrigation_water_issue, sewage_overflow_linked_to_water_network.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BMLWE-F002",
-      "fact_type": "service_area",
-      "value": "Governorates covered: Beirut, Mount Lebanon, Keserwan-Jbeil (per Law 221/2000). Does NOT cover North, South, Bekaa, Nabatieh.",
-      "confidence": "high",
-      "source_ids": ["SRC-011", "SRC-021"],
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: electricity(EDL); road_damage(MUN_MPWT); private_building_plumbing; rainfall_flooding(CD_MUN); private_building_plumbing_or_rooftop_tank; Route instead to PRIVATE_PROPERTY_OR_BUILDING_MANAGEMENT when No public meter public pipe public source or neighborhood-wide evidence.; local_rainwater_storm_drain_or_road_drainage; Route instead to MUN_OR_MPWT_BY_ROAD_CLASS when Complaint is rainwater/stormwater without sewer or public water network evidence.; electricity_fault_powering_pumps; Route instead to EDL_OR_EDZ_CONTEXT_ONLY when Complaint is solely grid electricity; public water outage remains BMLWE if citizen lacks water.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT",
+        "SRC-BMLWE-FAQ",
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MEW-NWSS-2024-2035",
+        "SRC-UNICEF-WASH-PROGRAMME"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "BMLWE-F003",
-      "fact_type": "legal_responsibility",
-      "value": "NOT responsible for private building plumbing, internal water pipes, or rooftop tanks and pumps. Only responsible for the public supply network.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
-      "notes": "LLM-RT-020 explicitly tests public vs private water distinction.",
+      "fact_type": "service_area",
+      "value": "Geographic scope: beirut_and_mount_lebanon_governorates. all Beirut Metn Baabda Aley Jbeil Keserwan central Beirut north Beirut south coastal Metn",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT",
+        "SRC-BMLWE-FAQ",
+        "SRC-BMLWE-FORMS",
+        "SRC-BMLWE-OMT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BMLWE-F004",
       "fact_type": "operational_contact",
-      "value": "Hotline: 1713. Head office: Beirut - Badaro - Sami Soloh Street, EBML Building. Email: info@ebml.gov.lb. Phone: +961 1 386760/1/2. Official departments listed for Beirut North, Beirut South, Coast of Metn, Metn, Baabda, Aley, Jbeil, and Keserwan.",
-      "confidence": "high",
-      "source_ids": ["SRC-023"],
+      "value": "Emergency hotline: 1713; Non-emergency phone: 1713;+961-1-386760/+961-1-386761/+961-1-386762; Website/form: https://ebml.gov.lb/contactus.php?lang=en; HQ/address: Beirut - Badaro - Sami Soloh Street, EBML Building; Email: info@ebml.gov.lb; Special channels: hotline=1713;ticketing_system=website_or_app;department_offices=contact_page; EBML hotline: 1713; EBML head office: +961-1-386760/+961-1-386761/+961-1-386762; Beirut North Department: https://ebml.gov.lb/contactus.php?lang=en; Beirut South Department: https://ebml.gov.lb/contactus.php?lang=en; Coast of Metn Department: https://ebml.gov.lb/contactus.php?lang=en; Metn Department: https://ebml.gov.lb/contactus.php?lang=en; Baabda Department: https://ebml.gov.lb/contactus.php?lang=en; Aley Department: https://ebml.gov.lb/contactus.php?lang=en",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "BMLWE-F005",
       "fact_type": "complaint_process",
-      "value": "Citizen calls BMLWE regional office for water supply issues. CedarFix routes to BMLWE based on GPS→governorate lookup.",
+      "value": "Route water complaints from Beirut or Mount Lebanon governorate here. Confirm governorate via GPS. Channel types: phone;online;app;walk_in Ticket/reference policy: ticketing_system_available_on_website_or_app faults_or_leaks: 1713 faults_or_leaks: https://ebml.gov.lb/user_ticket.php?lang=en subscriptions_meter_transfer_cancellation: https://ebml.gov.lb/forms.php?lang=en; required=see_required_fields_csv account_billing_alerts_and_fault_ticket: My EBML Android/iOS app service_requests_and_forms: department_offices; required=see_required_fields_csv general_message: https://ebml.gov.lb/contactus.php?lang=en; required=contact_information_and_message bill_payment: OMT_locations; required=subscription_number;subscription_type;region;town Required fields/documents include: exact_location_or_department_area, copy_of_subscription_receipt, stamps, copy_of_id, title_or_lease_deed, electricity_receipt_or_subscription_receipt, detection_fee, copy_of_rent_contract, sale_contract_or_sale_contract_ratified_by_notary, lease_contract_ratified_by_municipality, attestation_of_domiciliation_from_locality_mayor, cession_of_remaining_heirs_rights_if_transfer_to_heir.",
       "confidence": "medium",
-      "source_ids": ["SRC-021"],
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT",
+        "SRC-BMLWE-FAQ",
+        "SRC-BMLWE-TICKET",
+        "SRC-BMLWE-FORMS",
+        "SRC-BMLWE-GPLAY",
+        "SRC-BMLWE-APPSTORE",
+        "SRC-BMLWE-OMT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
     },
     {
       "fact_id": "BMLWE-F006",
       "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
+      "value": "Central policy: ticketing_system_available_on_website_or_app Ticket/reference and process-data policy: faults_or_leaks ticket/reference: phone_reference_not_published; faults_or_leaks required fields: location_and_problem_recommended;official_required_fields_not_published; faults_or_leaks ticket/reference: ticketing_system_available_but_reference_policy_not_public; faults_or_leaks required fields: login_required_fields_not_public; subscriptions_meter_transfer_cancellation ticket/reference: not_applicable; account_billing_alerts_and_fault_ticket ticket/reference: ticketing_system_available_but_reference_policy_not_published; account_billing_alerts_and_fault_ticket required fields: app_account_or_ticket_details_not_verified_in_app; service_requests_and_forms ticket/reference: not_applicable; general_message ticket/reference: response_reference_not_published; bill_payment ticket/reference: not_applicable faults_or_leaks: not_published; call_emergency_services_first_if_life_safety service_request_forms: not_published; not_for_emergencies",
       "confidence": "low",
-      "source_ids": ["SRC-022"],
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT",
+        "SRC-BMLWE-FAQ",
+        "SRC-BMLWE-FORMS"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
+    },
+    {
+      "fact_id": "BMLWE-F007",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency instruction: use 1713 only for cases in this entity's emergency scope; otherwise follow the complaint process and HITL rules.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-BMLWE-ABOUT",
+        "SRC-BMLWE-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["WATER (Beirut, Mount Lebanon, Keserwan-Jbeil)"],
+    "primary_for_sectors": [
+      "water_outage",
+      "dirty_water",
+      "pipe_leak_public",
+      "water_pressure_low",
+      "meter_billing_dispute",
+      "new_water_connection",
+      "water_contamination",
+      "irrigation_water_issue",
+      "sewage_overflow_linked_to_water_network"
+    ],
     "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "electricity(EDL)",
+      "road_damage(MUN_MPWT)",
+      "private_building_plumbing",
+      "rainfall_flooding(CD_MUN)"
+    ],
     "hitl_always_required": false,
-    "hitl_conditions": [
-      "Water contamination reports always require HITL",
-      "GPS returns ambiguous boundary with NLWE coverage"
-    ]
+    "hitl_conditions": []
   },
-  "sources": ["SRC-011", "SRC-020", "SRC-021", "SRC-022", "SRC-023"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-BMLWE-ABOUT",
+    "SRC-BMLWE-CONTACT",
+    "SRC-BMLWE-FAQ",
+    "SRC-MPWT-ROADS-BUILDINGS",
+    "SRC-MEW-NWSS-2024-2035",
+    "SRC-UNICEF-WASH-PROGRAMME",
+    "SRC-BMLWE-FORMS",
+    "SRC-BMLWE-OMT",
+    "SRC-BMLWE-TICKET",
+    "SRC-BMLWE-GPLAY",
+    "SRC-BMLWE-APPSTORE"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

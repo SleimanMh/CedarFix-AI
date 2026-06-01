@@ -1,66 +1,174 @@
 {
   "entity_id": "SLWE",
-  "entity_name": "South Lebanon Water Establishment (مصلحة مياه لبنان الجنوبي)",
+  "entity_name": "South Lebanon Water Establishment (مؤسسة مياه لبنان الجنوبي)",
   "entity_type": "public_utility",
-  "parent_ministry": "Ministry of Energy and Water",
+  "parent_ministry": "MEW",
   "facts": [
     {
       "fact_id": "SLWE-F001",
       "fact_type": "legal_responsibility",
-      "value": "Supply, distribution, and network maintenance of water for South Lebanon and Nabatieh governorates.",
+      "value": "South Lebanon Water Establishment. Manages drinking-water distribution, wastewater collection/treatment/disposal, customer-service faults, billing, e-payment, and district distribution follow-up for South Lebanon and Nabatieh. Complaint domains encoded for routing: water_outage, dirty_water, pipe_leak_public, water_pressure_low, meter_billing_dispute, new_water_connection, water_contamination, sewage_overflow_public, service_request.",
       "confidence": "high",
-      "source_ids": ["SRC-011"],
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "SLWE-F002",
-      "fact_type": "service_area",
-      "value": "Governorates covered: South Lebanon, Nabatieh. HQ in Sidon.",
-      "confidence": "high",
-      "source_ids": ["SRC-011", "SRC-021"],
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: electricity; road_damage; private_plumbing; storm_drain_without_sewer_evidence; Litani_Qasimiya_RasAlAin_irrigation_assets; Route instead to LRA_OR_HITL when Complaint references LRA project canal collective irrigation or Qasimiya/Ras Al Ain context.; private_plumbing_or_building_tank; Route instead to PRIVATE_PROPERTY_OR_BUILDING_MANAGEMENT when No public network or district-wide evidence.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ",
+        "SRC-LRA-ORGANIGRAM",
+        "SRC-LRA-BASIN",
+        "SRC-LRA-CONTACT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "SLWE-F003",
-      "fact_type": "operational_contact",
-      "value": "Hotline: 1785. Department contacts: Sidon 07-757000, Zahrani 07-420206, Jezzine 07-781725, Nabatieh 07-530018, Bint Jbeil 07-450006, Marjeyoun-Hasbaya 07-830016, Tyre 07-740196.",
-      "confidence": "high",
-      "source_ids": ["SRC-027"],
+      "fact_type": "service_area",
+      "value": "Geographic scope: south_lebanon_and_nabatiyeh_governorates. all Saida Zahrani Jezzine Nabatieh Bint Jbeil Marjayoun;Hasbaya Tyre Saida area Zahrani area Jezzine area",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ",
+        "SRC-SLWE-SUBSCRIPTION-DRINKING-WATER",
+        "SRC-SLWE-CANCEL-SUBSCRIPTION",
+        "SRC-SLWE-TRANSFER-SUBSCRIPTION",
+        "SRC-SLWE-WATER-QUANTITY-ADJUSTMENT",
+        "SRC-SLWE-ARREARS-INSTALLMENT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "SLWE-F004",
-      "fact_type": "legal_responsibility",
-      "value": "NOT responsible for private building plumbing — only public supply network. Contamination reports require HITL.",
+      "fact_type": "operational_contact",
+      "value": "Non-emergency phone: 1785;07-757000;07-420206;07-781725;07-530018;07-450006;07-830016;07-740196; Website/form: https://www.slwe.gov.lb/contact.php?lang=ar; HQ/address: Saida, Lebanon; Email: info@slwe.gov.lb; Special channels: hotline=1785;district_distribution_phones=Saida_Zahrani_Jezzine_Nabatieh_BintJbeil_MarjayounHasbaya_Tyre;epayment=customer_no_service_center;visit_registration=full_name_phone_customer_number_property_number_service_center;omt_payment=subscription_or_old_receipt;faq_cutoff_causes=sudden_failure_pollution_emergency_repairs_force_majeure_planned_works_sterilization_maintenance_rationing; SLWE customer-service hotline: 1785; Saida water department: 07-757000; Zahrani water department: 07-420206; Jezzine water department: 07-781725; Nabatieh water department: 07-530018; Bint Jbeil water department: 07-450006; Marjayoun Hasbaya water department: 07-830016; Tyre water department: 07-740196",
       "confidence": "high",
-      "source_ids": ["SRC-022"],
-      "notes": "LLM-RT-008 tests contamination scenario for SLWE (Nabatieh area).",
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "SLWE-F005",
-      "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA. CedarFix target: supply interruption 24-48h; contamination — escalated/HITL.",
-      "confidence": "low",
-      "source_ids": ["SRC-022"],
+      "fact_type": "complaint_process",
+      "value": "Route water complaints from South Lebanon or Nabatiyeh governorate here after municipality/GPS confirmation; keep Litani/Qasimiya/Ras Al Ain irrigation as LRA/HITL boundary. Channel types: phone;online;walk_in;partner_agent faults_or_problems: 1785 district_followup: distribution_office_numbers; required=municipality_or_district_recommended bill_inquiry: https://www.slwe.gov.lb/details.php?id=9&key=%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1-%D8%B9%D9%86-%D9%81%D8%A7%D8%AA%D9%88%D8%B1%D8%A9&lang=ar bill_payment: https://slwe.gov.lb/payapi/enter_customer_no.php; required=customer_no;service_center customer_service_visit: https://www.slwe.gov.lb/register_visit.php; required=full_name;phone;customer_number;property_number;service_center bill_payment: OMT_locations; required=subscription_number_or_old_receipt service_requests: district_distribution_offices Required fields/documents include: subscription_number_or_old_receipt, customer_no, service_center, full_name, phone, customer_number, property_number, copy_of_id, title_deed_or_surveyed_sale_contract, municipality_statement_of_apartment_area, preliminary_sale_contract, notary_declaration.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ",
+        "SRC-SLWE-SUBSCRIPTION-DRINKING-WATER",
+        "SRC-SLWE-CANCEL-SUBSCRIPTION",
+        "SRC-SLWE-TRANSFER-SUBSCRIPTION",
+        "SRC-SLWE-WATER-QUANTITY-ADJUSTMENT",
+        "SRC-SLWE-ARREARS-INSTALLMENT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
+    },
+    {
+      "fact_id": "SLWE-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "Central policy: public_ticket_number_not_published Ticket/reference and process-data policy: faults_or_problems ticket/reference: public_ticket_number_not_published; faults_or_problems required fields: official_required_fields_not_published; district_followup ticket/reference: public_ticket_number_not_published; bill_inquiry ticket/reference: not_applicable; bill_inquiry required fields: subscription_details_not_visible_in_static_fetch; bill_payment ticket/reference: not_applicable; customer_service_visit ticket/reference: not_applicable; service_requests ticket/reference: not_published; service_requests required fields: official_required_fields_not_published faults_or_problems: not_published; call_emergency_services_first_if_life_safety bill_payment_or_visit_registration: not_published; not_for_emergencies",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-SLWE-ABOUT",
+        "SRC-SLWE-CONTACT",
+        "SRC-SLWE-CUSTOMER-SERVICE",
+        "SRC-SLWE-BILLING",
+        "SRC-SLWE-EPAYMENT",
+        "SRC-SLWE-VISIT-REGISTER",
+        "SRC-SLWE-OMT",
+        "SRC-SLWE-FAQ"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["WATER (South Lebanon, Nabatieh)"],
+    "primary_for_sectors": [
+      "water_outage",
+      "dirty_water",
+      "pipe_leak_public",
+      "water_pressure_low",
+      "meter_billing_dispute",
+      "new_water_connection",
+      "water_contamination",
+      "sewage_overflow_public",
+      "service_request"
+    ],
     "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "electricity",
+      "road_damage",
+      "private_plumbing",
+      "storm_drain_without_sewer_evidence",
+      "Litani_Qasimiya_RasAlAin_irrigation_assets"
+    ],
     "hitl_always_required": false,
-    "hitl_conditions": [
-      "Water contamination reports require HITL",
-      "Private vs public water supply ambiguity"
-    ]
+    "hitl_conditions": []
   },
-  "sources": ["SRC-011", "SRC-021", "SRC-022", "SRC-027"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-SLWE-ABOUT",
+    "SRC-SLWE-CONTACT",
+    "SRC-SLWE-CUSTOMER-SERVICE",
+    "SRC-SLWE-BILLING",
+    "SRC-SLWE-EPAYMENT",
+    "SRC-SLWE-VISIT-REGISTER",
+    "SRC-SLWE-OMT",
+    "SRC-SLWE-FAQ",
+    "SRC-LRA-ORGANIGRAM",
+    "SRC-LRA-BASIN",
+    "SRC-LRA-CONTACT",
+    "SRC-SLWE-SUBSCRIPTION-DRINKING-WATER",
+    "SRC-SLWE-CANCEL-SUBSCRIPTION",
+    "SRC-SLWE-TRANSFER-SUBSCRIPTION",
+    "SRC-SLWE-WATER-QUANTITY-ADJUSTMENT",
+    "SRC-SLWE-ARREARS-INSTALLMENT"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

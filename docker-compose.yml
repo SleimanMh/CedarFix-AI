@@ -162,6 +162,102 @@ services:
       timeout: 5s
       retries: 5
 
+  iep5:
+    build:
+      context: .
+      dockerfile: src/iep5/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: .env.cedarfix
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cedarfix}:${POSTGRES_PASSWORD:-cedarfix}@postgres:5432/${POSTGRES_DB:-cedarfix}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8005:8005"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  iep6:
+    build:
+      context: .
+      dockerfile: src/iep6/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: .env.cedarfix
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cedarfix}:${POSTGRES_PASSWORD:-cedarfix}@postgres:5432/${POSTGRES_DB:-cedarfix}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8006:8006"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8006/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  iep7:
+    build:
+      context: .
+      dockerfile: src/iep7/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: .env.cedarfix
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cedarfix}:${POSTGRES_PASSWORD:-cedarfix}@postgres:5432/${POSTGRES_DB:-cedarfix}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8007:8007"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8007/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  iep8:
+    build:
+      context: .
+      dockerfile: src/iep8/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: .env.cedarfix
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cedarfix}:${POSTGRES_PASSWORD:-cedarfix}@postgres:5432/${POSTGRES_DB:-cedarfix}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8008:8008"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── MLOps ───────────────────────────────────────────────────────────────────
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.13.0

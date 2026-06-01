@@ -1,75 +1,185 @@
 {
   "entity_id": "ISF",
   "entity_name": "Internal Security Forces (قوى الأمن الداخلي)",
-  "entity_type": "law_enforcement",
-  "parent_ministry": "Ministry of Interior and Municipalities",
+  "entity_type": "security_force",
+  "parent_ministry": "MOIM",
   "facts": [
     {
       "fact_id": "ISF-F001",
       "fact_type": "legal_responsibility",
-      "value": "Law enforcement, public order, crime investigation, and traffic regulation across Lebanon.",
+      "value": "Responsible for internal security, law enforcement, public order, traffic regulation, crime prevention, and investigative police work. HITL always required — never auto-route criminal or safety matters. Complaint domains encoded for routing: crime, theft, assault, public_disorder, traffic_accident, road_safety_threat, kidnapping, cybercrime, noise_threat.",
       "confidence": "high",
-      "source_ids": ["SRC-002"],
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "ISF-F002",
-      "fact_type": "emergency_instruction",
-      "value": "Emergency/police hotline: 112. Official contact page also lists headquarters phones 01/422000 and 01/425250, email isf@isf.gov.lb, and service number 1745.",
+      "fact_type": "legal_responsibility",
+      "value": "Not responsible for / boundary conditions: roads_infrastructure(MPWT_MUN); water_electricity_utilities; environmental_violations(MOE); building_permits; road_infrastructure_repair_without_security_or_accident_issue; Route instead to MUN_OR_MPWT when Use ISF for traffic accident crime or public-order emergency.; waste_cleanup_without_crime_or_security_issue; Route instead to MUN_OR_MOE when ISF only where safety crime or public order is involved.; infrastructure_repair_or_municipal_service_delivery; Route instead to MUN_OR_MPWT_OR_UTILITY when ISF handles security law enforcement and traffic/public order.; crime_weapon_threat_or_serious_public_order; Route instead to ISF when Municipality is not the primary law-enforcement route for serious threats.",
       "confidence": "high",
-      "source_ids": ["SRC-002", "SRC-030"],
-      "notes": "Verified on official ISF contact page on 2026-05-24. Do not treat 999 as primary without a current official source.",
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT",
+        "SRC-MPWT-ROADS-BUILDINGS",
+        "SRC-MOE-MANDATE",
+        "SRC-MUNI-AUTONOMY-HANDBOOK"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "ISF-F003",
-      "fact_type": "legal_responsibility",
-      "value": "NOT responsible for civic infrastructure (roads, water, waste). Public safety threats, armed persons, criminal activity are ISF scope.",
+      "fact_type": "service_area",
+      "value": "Geographic scope: national_with_regional_units. Use ISF for threat violence or public-order danger; environmental cleanup follows after safety. Civil Defense first for fire explosion gas rescue and active life-safety danger; ISF if security or traffic control is needed. ISF first for threat weapon assault theft shooting or public order; Civil Defense only if rescue/fire/medical hazard is present. ISF handles traffic/security control; Civil Defense if trapped injured or rescue needed.",
       "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT",
+        "SRC-MOE-COMPLAINTS",
+        "SRC-CD-HOTLINE",
+        "SRC-CIVILDEF-UNDP-2026"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "ISF-F004",
-      "fact_type": "complaint_process",
-      "value": "Call 112 for emergencies. ISF commissariats handle non-emergency reports. ISF Information Department receives confidential complaints/tips through intelligence@isfid.gov.lb and free hotline 1788. Cybercrime/online blackmail can be reported to 01 293293 or the ISF Anonymous Complaints form. HITL always required when CedarFix routes to ISF.",
+      "fact_type": "operational_contact",
+      "value": "Emergency hotline: 112; Non-emergency phone: 01422000;01425250;nearest_ISF_station;1745_domestic_violence_hotline; Website/form: https://isf.gov.lb/anonymous-complaints/; HQ/address: Ibrahim Al-Khoury Barracks - Adeeb Ishaq Street, Achrafieh - Beirut; Email: isf@isf.gov.lb; Special channels: emergency=112;domestic_violence=1745;hq_contact=01422000_01425250_isf@isf.gov.lb;anonymous_complaints_form=isf.gov.lb/anonymous-complaints;form_categories=crime_cybercrime_drugs_traffic_cyberbullying_violence;optional_contact_fields=phone_email;attachments_supported; ISF emergency and traffic/security response: 112; ISF emergency/security line: 112; ISF headquarters contact: 01422000;01425250;isf@isf.gov.lb",
       "confidence": "high",
-      "source_ids": ["SRC-022", "SRC-059", "SRC-060"],
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "ISF-F005",
-      "fact_type": "service_area",
-      "value": "Nationwide. Organized by commissariat regions across all governorates.",
+      "fact_type": "complaint_process",
+      "value": "HITL always required. Reviewer confirms entity and urgency before any action. ISF for criminal and public safety matters. Channel types: phone;walk_in;online;email Ticket/reference policy: police_reports_have_report_copy_or_station_reference;criminal_safety_routes_are_HITL_only ISF 112 emergency/security: 112; required=RPW-REQ-LOCATION;RPW-REQ-DANGER ISF emergency/security: 112; required=WE-REQ-LOCATION;WE-REQ-DANGER ISF 112: 112; required=PSE-REQ-LOCATION;PSE-REQ-DANGER;PSE-REQ-PEOPLE ISF anonymous complaints form: https://isf.gov.lb/anonymous-complaints/; required=PSE-REQ-CASE-TYPE;PSE-REQ-LOCATION;PSE-REQ-EVIDENCE;PSE-REQ-ANON-CONTACT",
       "confidence": "high",
-      "source_ids": ["SRC-002"],
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "ISF-F006",
       "fact_type": "deadline_or_sla",
-      "value": "Immediate dispatch for criminal/armed threats. No published SLA for non-emergency complaints.",
+      "value": "Central policy: police_reports_have_report_copy_or_station_reference;criminal_safety_routes_are_HITL_only security_or_crime_related_dumping: emergency_dispatch_or_station_report; no_public_cleanup_sla crime_threat_or_traffic_accident: emergency_dispatch_or_station_report; no_public_cleanup_sla",
       "confidence": "low",
-      "source_ids": ["SRC-022"],
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
+    },
+    {
+      "fact_id": "ISF-F007",
+      "fact_type": "emergency_instruction",
+      "value": "Emergency instruction: use 112 only for cases in this entity's emergency scope; otherwise follow the complaint process and HITL rules.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-UNITS",
+        "SRC-ISF-FAQ",
+        "SRC-ISF-ANONYMOUS-COMPLAINTS",
+        "SRC-ISF-CONTACT"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime emergency/public-safety dispatch may still require HITL confirmation."
+    },
+    {
+      "fact_id": "ISF-F008",
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Human review triggers include: illegal_dumping_with_threat_weapon_or_public_disorder; fire_explosion_gas_or_active_rescue; crime_threat_weapon_or_public_order; traffic_accident_or_blocked_road_with_safety_issue",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-ISF-STRATEGIC",
+        "SRC-ISF-FAQ",
+        "SRC-MOE-COMPLAINTS",
+        "SRC-CD-HOTLINE",
+        "SRC-CIVILDEF-UNDP-2026",
+        "SRC-ISF-UNITS"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null,
+      "notes": "These are runtime HITL triggers, not unresolved dossier-data fields."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["SAFETY (armed threat, criminal activity)"],
-    "secondary_for_sectors": ["FLOODING (scene control if needed)", "SAFETY (structural — scene perimeter)"],
+    "primary_for_sectors": [
+      "crime",
+      "theft",
+      "assault",
+      "public_disorder",
+      "traffic_accident",
+      "road_safety_threat",
+      "kidnapping",
+      "cybercrime",
+      "noise_threat"
+    ],
+    "secondary_for_sectors": [
+      "MUN_OR_MOE",
+      "ISF",
+      "CD_IF_RESCUE_OR_FIRE",
+      "CD_IF_INJURY_OR_RESCUE"
+    ],
+    "not_responsible_for": [
+      "roads_infrastructure(MPWT_MUN)",
+      "water_electricity_utilities",
+      "environmental_violations(MOE)",
+      "building_permits"
+    ],
     "hitl_always_required": true,
     "hitl_conditions": [
-      "All ISF routing requires HITL — never auto-route criminal/safety matters",
-      "Civil Defense also involved if injuries/rescues required alongside ISF scene"
+      "illegal_dumping_with_threat_weapon_or_public_disorder",
+      "fire_explosion_gas_or_active_rescue",
+      "crime_threat_weapon_or_public_order",
+      "traffic_accident_or_blocked_road_with_safety_issue"
     ]
   },
-  "sources": ["SRC-002", "SRC-022", "SRC-030", "SRC-059", "SRC-060", "SRC-061"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-ISF-STRATEGIC",
+    "SRC-ISF-UNITS",
+    "SRC-ISF-FAQ",
+    "SRC-ISF-ANONYMOUS-COMPLAINTS",
+    "SRC-ISF-CONTACT",
+    "SRC-MPWT-ROADS-BUILDINGS",
+    "SRC-MOE-MANDATE",
+    "SRC-MUNI-AUTONOMY-HANDBOOK",
+    "SRC-MOE-COMPLAINTS",
+    "SRC-CD-HOTLINE",
+    "SRC-CIVILDEF-UNDP-2026"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

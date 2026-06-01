@@ -42,28 +42,48 @@ _trash/
 #  to rebuild and verify the water routing pack from a clean checkout)
 !scripts/build_water_resolution_and_evals.py
 !scripts/evaluate_electricity_routing.py
-!scripts/evaluate_public_safety_enforcement_routing.py
-!scripts/generate_entity_dossiers.py
-!scripts/audit_entity_reliability.py
-!scripts/evaluate_roads_public_works_routing.py
-!scripts/evaluate_telecom_routing.py
 !scripts/evaluate_water_routing.py
 !scripts/validate_electricity_kb.py
-!scripts/validate_public_safety_enforcement_kb.py
-!scripts/validate_roads_public_works_kb.py
-!scripts/validate_telecom_kb.py
 !scripts/validate_water_establishments_kb.py
-!scripts/validate_waste_environment_kb.py
-!scripts/audit_entity_accuracy.py
 !scripts/audit_water_production_pack.py
 !scripts/scrape_water_establishment_coverage.py
 !scripts/triage_water_inventory_candidates.py
-!scripts/expand_routing_evals.py
-!scripts/_patch_routing_eval_prompts.py
-!scripts/build_civil_defense_entity_resolution.py
 !data/eval/electricity_routing_eval_v1.jsonl
-!data/eval/public_safety_enforcement_routing_eval_v1.jsonl
-!data/eval/roads_public_works_routing_eval_v1.jsonl
-!data/eval/telecom_routing_eval_v1.jsonl
-!data/eval/waste_environment_routing_eval_v1.jsonl
 !data/eval/water_establishments_routing_eval_v1.jsonl
+# Force-include the remaining per-sector routing eval packs + evaluators so the
+# full routing eval suite (every trained sector) rebuilds from a clean checkout.
+!scripts/evaluate_telecom_routing.py
+!scripts/evaluate_roads_public_works_routing.py
+!scripts/evaluate_waste_environment_routing.py
+!scripts/evaluate_public_safety_enforcement_routing.py
+!scripts/evaluate_flooding_routing.py
+!data/eval/telecom_routing_eval_v1.jsonl
+!data/eval/roads_public_works_routing_eval_v1.jsonl
+!data/eval/waste_environment_routing_eval_v1.jsonl
+!data/eval/public_safety_enforcement_routing_eval_v1.jsonl
+!data/eval/flooding_routing_eval_v1.jsonl
+!data/eval/flooding_routing_known_divergences_v1.jsonl
+
+# Force-include observability + IEP-5/6/7 evidence (new tests, fixtures, seed,
+# and the judge-facing readiness report) so CI runs them and reviewers see them.
+# NOTE: scripts/* and scripts/tests were previously ignored, which meant CI's
+# `unittest discover` found ZERO tests on a fresh clone. Re-include the tests
+# directory and every test module (but keep __pycache__ ignored) so the test
+# suite is real in CI.
+!scripts/tests/
+!scripts/tests/*.py
+scripts/tests/__pycache__/
+!scripts/seed_demo_pipeline.py
+!scripts/demo_civic_compiler.py
+!scripts/evaluate_ai_ablation.py
+!data/eval/image_hazard_fusion_eval_v1.jsonl
+!data/eval/resolution_grounding_eval_v1.jsonl
+# reports/ is excluded above; re-include only the judge-facing readiness report
+!reports/
+reports/*
+!reports/production_readiness_2026-06-01.md
+!reports/ai_ablation_report_2026-06-01.md
+!reports/ai_ablation_report_2026-06-01.json
+
+# Generated demo artifact (rebuilt by scripts/seed_demo_pipeline.py)
+cedarfix_demo.db

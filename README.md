@@ -21,8 +21,19 @@ citizen submission
   -> IEP-1 — multilingual extraction, Lebanese arabizi NLP, sector/issue classification
   -> IEP-2 — near-duplicate detection and complaint fusion
   -> IEP-3 — calibrated routing to municipality or public entity
-  -> IEP-4 — citizen-facing explanation and HITL audit narrative
+  -> IEP-6 — multimodal CLIP image↔text fusion (only when a photo is attached)
+  -> IEP-4 — citizen-facing explanation and HITL audit narrative (terminal)
+  -> IEP-5 — incident lifecycle + "reopen = retraining signal"
+  -> IEP-8 — source-grounded resolution plan with faithfulness verification
+
+IEP-7 — standalone calibration & drift monitor (ECE / Brier per sector)
+Civic Intelligence Compiler — proof-carrying incident program tying every IEP
+into one auditable autonomy decision
 ```
+
+All services emit Prometheus metrics on `/metrics`; Prometheus scrapes every
+service and Grafana renders the pipeline, language-quality, routing, and
+calibration dashboards. See `docs/MONITORING_SIGNALS.md`.
 
 ## Current State
 
@@ -33,7 +44,12 @@ citizen submission
 | IEP-2 | ✅ Built | Similarity-hashing deduplication service, worker, Dockerfile |
 | IEP-3 | ✅ Built | Municipality/entity routing service, router, worker, Dockerfile |
 | IEP-4 | ✅ Built | Explainer service, citizen narrative generation, worker, Dockerfile |
-| Monitoring | ✅ Configured | Prometheus scrape config + Grafana dashboard provisioning in `infra/` |
+| IEP-5 | ✅ Built | Incident lifecycle (event-sourced) + reopen→retraining-candidate signal |
+| IEP-6 | ✅ Built | Multimodal CLIP zero-shot image↔text late fusion (agree/conflict/disambiguate) |
+| IEP-7 | ✅ Built | Calibration & drift monitor — per-sector ECE/Brier, Prometheus gauges |
+| IEP-8 | ✅ Built | Grounded resolution co-pilot — KB retrieval, citation verifier, abstention |
+| Civic Compiler | ✅ Built | Belief state, proof obligations, counterfactuals, active sensing, autonomy governor |
+| Monitoring | ✅ Live | Every service exposes `/metrics`; Prometheus scrape + Grafana provisioning in `infra/` |
 | Deployment | ✅ Configured | `azure.yaml` maps all services to Azure Container Apps via `azd` |
 | Knowledge base | ✅ Complete | 1107 municipalities, 63 complaint types, 69 routing rules, 5772-term language bank |
 | Training data | ✅ Ready | v29 batch8 train (75,555) + val (8,997), senzi sets, telecom batch |
@@ -42,7 +58,7 @@ citizen submission
 
 ```text
 .github/workflows/         CI pipeline (lint, test, Docker build)
-azure.yaml                 Azure Developer CLI deployment config (eep + iep1-4 → Container Apps)
+azure.yaml                 Azure Developer CLI deployment config (eep + iep1-7 → Container Apps)
 docker-compose.yml         Local dev stack (all services + redis, postgres, prometheus, grafana)
 infra/                     Prometheus scrape config + Grafana provisioning
 requirements.txt           Python dependencies
@@ -54,7 +70,11 @@ src/
   iep2/                    Deduplication Service — near-duplicate detection
   iep3/                    Routing Service — municipality and public entity mapping
   iep4/                    Explainer Service — citizen-facing resolution narratives
-  shared/                  Common schemas, arabizi_features, arabizi_lexical_policy
+  iep5/                    Incident Lifecycle — event-sourced timeline + retraining signal
+  iep6/                    Multimodal Fusion — CLIP zero-shot image↔text fusion
+  iep7/                    Calibration & Drift Monitor — per-sector ECE/Brier
+  iep8/                    Grounded Resolution Co-Pilot — retrieval + faithfulness verifier
+  shared/                  Common schemas, metrics, civic_compiler, arabizi_features, arabizi_lexical_policy
 
 data/
   knowledge_base/
@@ -138,6 +158,10 @@ Local services:
 | IEP-2 | `http://127.0.0.1:8002/health` |
 | IEP-3 | `http://127.0.0.1:8003/health` |
 | IEP-4 | `http://127.0.0.1:8004/health` |
+| IEP-5 | `http://127.0.0.1:8005/health` |
+| IEP-6 | `http://127.0.0.1:8006/health` |
+| IEP-7 | `http://127.0.0.1:8007/calibration/latest` |
+| IEP-8 | `http://127.0.0.1:8008/health` (POST `/resolve` for a grounded plan) |
 | Prometheus | `http://127.0.0.1:9090` |
 | Grafana | `http://127.0.0.1:3000` |
 | PostgreSQL | `127.0.0.1:5432` |
@@ -152,7 +176,7 @@ azd auth login
 azd up
 ```
 
-All five services (eep, iep1-iep4) deploy as Azure Container Apps as defined in `azure.yaml`.
+All services (eep, iep1-iep8) deploy as Azure Container Apps as defined in `azure.yaml`.
 
 ## CI
 
@@ -168,3 +192,93 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push:
 - `data/knowledge_base/municipalities/municipality_service_mappings.csv`
 - `data/knowledge_base/municipalities/national_municipality_registry.csv`
 - `data/knowledge_base/arabizi_vocabulary.json`
+
+### IEP-3 and `route_complaint.py`
+
+IEP-3 does **not** duplicate routing logic. Its worker imports the canonical,
+source-backed router from `src/route_complaint.py` (`kb_route`) and wraps it with
+`_route_with_kb()`: the knowledge-base route is *promoted* over the legacy
+sector→agency map only for vetted sectors (`_KB_PROMOTION_SECTORS`), and falls
+back to the legacy decision when the KB router is uncertain or errors. This keeps
+a single source of truth for entity mappings while letting IEP-3 add calibration,
+priority scoring, and HITL gating on top.
+
+### IEP-8 — Grounded Resolution Co-Pilot
+
+IEP-8 is the trust-critical answer to "what should actually happen about this
+complaint?" — without hallucinating. After a complaint is routed, IEP-8:
+
+1. **Retrieves** the most relevant *verified* facts from the entity KB using
+   TF-IDF (`src/iep8/retriever.py`).
+2. **Synthesises** an extractive plan where every step carries `[fact_id · source]`
+   citations it was built from.
+3. **Verifies** each step via a conservative lexical entailment proxy
+   (`support_score`). Hallucinated steps — claims not in retrieved evidence — are
+   dropped before any plan is issued.
+4. **Detects conflicts**: when two facts of the same sensitive type (contact
+   hotline, SLA, emergency instruction) carry irreconcilable values, IEP-8 flags
+   the contradiction and defers to a human rather than advising arbitrarily.
+5. **Diagnoses gaps**: every abstention emits a structured `EvidenceGap` naming
+   the missing fact types and uncovered query terms. `GET /gaps` aggregates these
+   into a **citizen-impact-ranked acquisition backlog** — a self-maintaining
+   roadmap for growing the KB moat.
+6. **Decides with calibrated confidence**: issues a plan (with `plan_confidence`
+   and `ops_brief` for the reviewer) only when verified groundedness ≥ 0.80.
+   For life-safety sectors, no-KB-coverage, low groundedness, or irreconcilable
+   evidence it **abstains** and forces human review — never weakening the HITL spine.
+
+**Guaranteed, not claimed**: `test_iep8_grounding_benchmark.py` over the 14-case
+`resolution_grounding_eval_v1.jsonl` fixture proves **zero hallucinated citations**
+across every case. Try it live: `POST http://127.0.0.1:8008/resolve`.
+
+## Demo Seeding
+
+To populate the incident-lifecycle timeline (IEP-5) and calibration snapshots
+(IEP-7) for a live demo without standing up the full async stack:
+
+```powershell
+$env:PYTHONUTF8=1
+.\.venv\Scripts\python.exe scripts/seed_demo_pipeline.py
+```
+
+This writes a small set of complaints, incidents (including a reopen →
+retraining candidate), and routing outcomes into the configured database so
+`GET /incidents/{id}/timeline` and `GET /calibration/latest` return real data.
+
+## Civic Intelligence Compiler Demo
+
+To show the strongest AI story in one artifact:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/demo_civic_compiler.py
+```
+
+The script compiles IEP-1/2/3/4/5/6/7/8 signals into a proof-carrying incident
+program: belief state, evidence atoms, proof obligations, counterfactual routes,
+active-sensing questions, and the final autonomy decision.
+
+## Recent Hardening (Round-2 — 2026-06-01)
+
+Summary of the most recent safety, multilingual, KB, and active-learning hardening
+work done in this repo.
+
+- **Safety / Routing**: Added a FLOODING HITL gate and targeted FLOODING
+   regexes to ensure life-safety cases (indoor emergency / immediate danger)
+   escalate to human review and civil-defence workflows rather than being auto-routed.
+- **IEP-1 (Multilingual)**: Rewrote the sector/issue classifier into a
+   multilingual cascade: Arabic/Arabizi keyword scoring + optional embedding-based
+   fall-back (toggle with `CEDARFIX_IEP1_USE_MULTILINGUAL=1`). This fixes near-
+   zero recall on Arabic-script inputs from the prior char-gram-only model.
+- **IEP-8 (Grounding)**: TF-IDF retriever now applies Arabic/Arabizi
+   normalization and tokenization so KB evidence is returned for Arabic queries.
+- **Active learning**: EEP exposes a feedback endpoint and persists
+   `RetrainingCandidate` records so human corrections seed a retraining queue.
+- **KB hygiene**: Municipality CSVs received backfills (registry IDs added)
+   and expansions to channel/workflow rows to improve routing completeness.
+- **Evals & tests**: Added/expanded eval fixtures (flooding, Arabic multilingual,
+   image fusion, grounding) and updated tests. Current validated test run:
+   **143 passed, 12 skipped, 0 failures**.
+
+Next actions: per-IEP README files were added under `src/iep*/README.md` to
+explain purpose, inputs/outputs, env toggles, and test commands; consider
+adding a retraining consumer to automate model updates from the retraining queue.

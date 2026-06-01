@@ -15,3 +15,15 @@ services:
   iep4:
     project:
       host: ContainerApp
+  iep5:
+    project:
+      host: ContainerApp
+  iep6:
+    project:
+      host: ContainerApp
+  iep7:
+    project:
+      host: ContainerApp
+  iep8:
+    project:
+      host: ContainerApp

@@ -19,7 +19,7 @@ from sqlalchemy import select, update
 from src.eep.db import Complaint, SessionLocal
 from src.eep.models import ComplaintState
 from src.eep.queue import STREAM_IEP2, STREAM_IEP3
-from src.iep2.dedup import classify_pair
+from src.iep2.dedup import build_incident_intelligence, classify_pair
 
 logger = logging.getLogger("iep2.worker")
 
@@ -65,9 +65,12 @@ async def _fetch_candidates(complaint_id: str, issue_type: str | None) -> list[d
                 Complaint.id,
                 Complaint.incident_id,
                 Complaint.text_embedding_ref,
+                Complaint.text_embedding_vector,
                 Complaint.gps_lat,
                 Complaint.gps_lon,
                 Complaint.issue_type,
+                Complaint.image_issue_type,
+                Complaint.created_at,
             )
             .where(Complaint.id != complaint_id)
             .where(Complaint.incident_id.is_not(None))
@@ -79,10 +82,12 @@ async def _fetch_candidates(complaint_id: str, issue_type: str | None) -> list[d
             {
                 "complaint_id": r.id,
                 "incident_id": r.incident_id,
-                "text_embedding_ref": r.text_embedding_ref,
+                "text_embedding_ref": r.text_embedding_vector or r.text_embedding_ref,
                 "gps_lat": r.gps_lat,
                 "gps_lon": r.gps_lon,
                 "issue_type": r.issue_type,
+                "image_issue_type": r.image_issue_type,
+                "created_at": r.created_at,
             }
             for r in rows
         ]
@@ -91,14 +96,21 @@ async def _fetch_candidates(complaint_id: str, issue_type: str | None) -> list[d
 async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
     complaint_id: str = data.get("complaint_id", "")
     issue_type: str | None = data.get("issue_type") or None
-    embedding_ref: str | None = data.get("embedding_ref") or None
+    embedding_ref: str | list[float] | None = data.get("embedding_ref") or data.get("embedding") or None
 
     logger.info("IEP-2 processing complaint=%s", complaint_id)
 
     # Fetch current complaint's GPS
     async with SessionLocal() as session:
         result = await session.execute(
-            select(Complaint.gps_lat, Complaint.gps_lon, Complaint.text_embedding_ref)
+            select(
+                Complaint.gps_lat,
+                Complaint.gps_lon,
+                Complaint.text_embedding_ref,
+                Complaint.text_embedding_vector,
+                Complaint.image_issue_type,
+                Complaint.created_at,
+            )
             .where(Complaint.id == complaint_id)
         )
         row = result.one_or_none()
@@ -108,7 +120,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
             return
         gps_lat, gps_lon = row.gps_lat, row.gps_lon
         if embedding_ref is None:
-            embedding_ref = row.text_embedding_ref
+            embedding_ref = row.text_embedding_vector or row.text_embedding_ref
 
     try:
         candidates = await _fetch_candidates(complaint_id, issue_type)
@@ -119,7 +131,10 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
             lon=gps_lon,
             issue_type=issue_type,
             candidates=candidates,
+            created_at=row.created_at,
+            image_issue_type=row.image_issue_type,
         )
+        incident_intelligence = build_incident_intelligence(complaint_id, decision, candidates)
     except Exception as exc:
         logger.error("IEP-2 dedup failed complaint=%s: %s", complaint_id, exc, exc_info=True)
         await _set_error_flag(complaint_id, f"iep2_dedup_error:{type(exc).__name__}")
@@ -135,6 +150,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
             .values(
                 is_duplicate=decision["is_duplicate"],
                 incident_id=decision["incident_id"],
+                iep2_incident_json=incident_intelligence,
                 state=next_state.value,
                 updated_at=datetime.now(timezone.utc),
             )

@@ -8,6 +8,7 @@ Consumer group: iep4-workers
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime, timezone
@@ -17,8 +18,9 @@ from sqlalchemy import select, update
 
 from src.eep.db import Complaint, SessionLocal
 from src.eep.models import ComplaintState
-from src.eep.queue import STREAM_IEP4
+from src.eep.queue import STREAM_IEP4, enqueue_iep5, enqueue_iep8
 from src.iep4.explainer import explain
+from src.shared import metrics as M
 
 logger = logging.getLogger("iep4.worker")
 
@@ -62,6 +64,13 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
     async with SessionLocal() as session:
         result = await session.execute(
             select(
+                Complaint.text_raw,
+                Complaint.language,
+                Complaint.iep1_signal_json,
+                Complaint.iep2_incident_json,
+                Complaint.iep3_routing_json,
+                Complaint.image_fusion_json,
+                Complaint.shap_top3,
                 Complaint.routing_sector,
                 Complaint.routing_entity,
                 Complaint.routing_confidence,
@@ -70,6 +79,8 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
                 Complaint.gps_lat,
                 Complaint.gps_lon,
                 Complaint.hitl_required,
+                Complaint.hitl_reason,
+                Complaint.incident_id,
             ).where(Complaint.id == complaint_id)
         )
         row = result.one_or_none()
@@ -89,6 +100,14 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
             gps_lat=row.gps_lat,
             gps_lon=row.gps_lon,
             hitl_required=bool(row.hitl_required),
+            language=row.language,
+            text_raw=row.text_raw,
+            hitl_reason=row.hitl_reason,
+            iep1_signal_json=row.iep1_signal_json,
+            iep2_incident_json=row.iep2_incident_json,
+            iep3_routing_json=row.iep3_routing_json,
+            image_fusion_json=row.image_fusion_json,
+            shap_top3=row.shap_top3,
         )
     except Exception as exc:
         logger.error("IEP-4 explain failed complaint=%s: %s", complaint_id, exc, exc_info=True)
@@ -109,6 +128,7 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
             .values(
                 citizen_explanation=explanations["citizen_explanation"],
                 admin_explanation=explanations["admin_explanation"],
+                iep4_explanation_json=explanations["iep4_explanation_json"],
                 state=final_state.value,
                 updated_at=datetime.now(timezone.utc),
             )
@@ -121,6 +141,49 @@ async def _process_message(r: aioredis.Redis, msg_id: str, data: dict) -> None:
         complaint_id,
         final_state.value,
     )
+
+    # Terminal-state observability: count processed complaints by sector + state.
+    M.COMPLAINTS_PROCESSED.labels(
+        sector=row.routing_sector or "unknown",
+        state=final_state.value,
+    ).inc()
+    if row.hitl_required:
+        M.HITL_REQUIRED.labels(
+            sector=row.routing_sector or "unknown",
+            reason=row.hitl_reason or "unspecified",
+        ).inc()
+
+    # Hand off to IEP-5 for incident lifecycle tracking (terminal -> lifecycle).
+    incident_id = getattr(row, "incident_id", None) or complaint_id
+    routing_snapshot = json.dumps(
+        {
+            "routing_sector": row.routing_sector,
+            "routing_entity": row.routing_entity,
+            "routing_confidence": row.routing_confidence,
+            "priority_score": row.priority_score,
+            "hitl_required": bool(row.hitl_required),
+        }
+    )
+    try:
+        await enqueue_iep5(
+            complaint_id,
+            incident_id,
+            event="route",
+            routing_json=routing_snapshot,
+        )
+    except Exception as exc:  # noqa: BLE001 - lifecycle is best-effort, never block
+        logger.warning("IEP-4 could not enqueue IEP-5 complaint=%s: %s", complaint_id, exc)
+
+    # Hand off to IEP-8 for a grounded, evidence-cited resolution plan.
+    try:
+        await enqueue_iep8(
+            complaint_id,
+            routing_sector=row.routing_sector or "",
+            routing_entity=row.routing_entity or "",
+            text=row.text_raw or "",
+        )
+    except Exception as exc:  # noqa: BLE001 - resolution co-pilot is best-effort
+        logger.warning("IEP-4 could not enqueue IEP-8 complaint=%s: %s", complaint_id, exc)
 
 
 async def run_worker() -> None:

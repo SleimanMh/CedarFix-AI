@@ -27,3 +27,23 @@ scrape_configs:
     static_configs:
       - targets: ['iep4:8004']
     metrics_path: /metrics
+
+  - job_name: iep5
+    static_configs:
+      - targets: ['iep5:8005']
+    metrics_path: /metrics
+
+  - job_name: iep6
+    static_configs:
+      - targets: ['iep6:8006']
+    metrics_path: /metrics
+
+  - job_name: iep7
+    static_configs:
+      - targets: ['iep7:8007']
+    metrics_path: /metrics
+
+  - job_name: iep8
+    static_configs:
+      - targets: ['iep8:8008']
+    metrics_path: /metrics

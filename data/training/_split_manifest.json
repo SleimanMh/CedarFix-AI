@@ -1,0 +1,125 @@
+{
+  "generated_at": "2026-05-31T20:02:02.199050+00:00",
+  "generator": "scripts/fix_train_split_overlap.py",
+  "files": {
+    "cidarfix_v29_batch8_train_v14_enriched.jsonl": {
+      "role": "train",
+      "rows": 91150,
+      "sha256": "4d3d41bfbba1979e57b0645e4ee5fc770a366aacc3a18d65899622208993067e",
+      "sector_counts": {
+        "UNKNOWN": 91150
+      }
+    },
+    "cidarfix_v29_batch8_val_v14_enriched.jsonl": {
+      "role": "val",
+      "rows": 10562,
+      "sha256": "b2fa5d695e140fedfac19430038b2ceab7cc9167680c240c892a262e586e97b1",
+      "sector_counts": {
+        "UNKNOWN": 10562
+      }
+    },
+    "cidarfix_v29_batch7_model_final_test_locked.jsonl": {
+      "role": "locked_test",
+      "rows": 7940,
+      "sha256": "80c79ddaf08e654d9ca123876f565a32b899e862f1418d7d5a753c46e43f3d40",
+      "sector_counts": {
+        "UNKNOWN": 7940
+      }
+    },
+    "cidarfix_telecom_eval_locked.jsonl": {
+      "role": "locked_telecom_eval_DIAGNOSTIC",
+      "rows": 150,
+      "sha256": "96728ed9e02bd32d6c78986cf0ac366c613a7dc2376856af17f136ed503a0f5c",
+      "sector_counts": {
+        "UNKNOWN": 150
+      },
+      "note": "Shares 150 rows with val by construction. Treat as a val-derived diagnostic slice, NOT as an independent final holdout. To promote to independent eval, rebuild from rows unseen by both train and val."
+    }
+  },
+  "overlap_proof_after_fix": {
+    "train_vs_val": 0,
+    "train_vs_telecom_eval": 0,
+    "train_vs_test_locked": 0,
+    "val_vs_telecom_eval": 150,
+    "val_vs_test_locked": 0,
+    "test_locked_vs_telecom_eval": 0
+  },
+  "drop_reason_counts": {
+    "val": 19,
+    "telecom_eval": 2,
+    "test_locked": 0
+  },
+  "dropped_examples_first_10": [
+    {
+      "user_text": "Ya baladiye la vitesse est nulle — el internet bati2 ktir men tlet iyem",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "Le téléphone ne marche pas men t2riban sbou3, ma 7ada byradd",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "3am natle2 3al ogero w ma 7ada byradd men sbou3 mne7tej 7al",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "Ya baladiye le cabinet est endommagé bel me7alle — ma 7ada byradd ma ba2a fina",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "Ya baladiye le cabinet est endommagé bel nabatieh — ma 7ada byradd",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "Baddna nballigh: 3am natle2 3al ogero w ma 7ada byradd men ams 3an jad",
+      "reasons": [
+        "val",
+        "telecom_eval"
+      ]
+    },
+    {
+      "user_text": "On a ouvert un ticket men sbou3en — mesh la2ine 7al khabrou 7ada",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "3endna mashhad — le technicien n'est pas venu men ams",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "Ya baladiye la connexion est lente — el internet bati2 ktir men tlet iyem",
+      "reasons": [
+        "val"
+      ]
+    },
+    {
+      "user_text": "El cabinet mfassar w l kablat barra bel mante2a",
+      "reasons": [
+        "val"
+      ]
+    }
+  ],
+  "gates": {
+    "train_vs_val_required": 0,
+    "train_vs_locked_test_required": 0,
+    "train_vs_telecom_eval_required": 0
+  },
+  "gate_status": {
+    "train_vs_val": "PASS",
+    "train_vs_locked_test": "PASS",
+    "train_vs_telecom_eval": "PASS"
+  }
+}

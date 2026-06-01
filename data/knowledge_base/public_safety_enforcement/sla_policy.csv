@@ -1,0 +1,6 @@
+sla_id,entity_id,service_case,public_sla,published_status,source_ids,confidence,notes
+PSE-SLA-CD-EMERGENCY,CD,fire_rescue_collapse_gas_or_life_safety,emergency_dispatch,no_public_ticket_sla,SRC-CD-HOTLINE,high,Call 125 immediately; no repair SLA is encoded.
+PSE-SLA-ISF-EMERGENCY,ISF,crime_threat_or_traffic_accident,emergency_dispatch_or_station_report,no_public_cleanup_sla,SRC-ISF-FAQ;SRC-ISF-STRATEGIC,high,Use 112 for emergencies and station/report process for non-emergency follow-up.
+PSE-SLA-MUN-LOCAL,MUN,local_public_safety_or_enforcement_issue,not_published,not_published,SRC-MUNI-AUTONOMY-HANDBOOK,medium,No universal municipal enforcement response SLA is encoded.
+PSE-SLA-CIB-COMPLAINT,CENTRAL_INSPECTION,oversight_complaint,reference_slip_or_submission_reference,response_time_not_published,SRC-CIB-COMPLAINT;SRC-CIB-CONTACT,high,Central Inspection process includes registered complaint/reference handling but no generic resolution SLA here.
+PSE-SLA-DGLAC,DGLAC,registration_or_form_tracking,registration_number_tracking,response_time_not_published,SRC-DGLAC-FAQ;SRC-DGLAC-CONTACT,high,DGLAC FAQ/contact evidence supports tracking by registration number.

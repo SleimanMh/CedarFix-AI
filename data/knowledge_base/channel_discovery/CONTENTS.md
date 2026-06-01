@@ -54,3 +54,4 @@ Municipalities already in the KB were not duplicated (Tripoli, Zahle, Ras El-Mat
 - `../telecom/` holds the structured telecom routing shard for Ogero, TRA, mobile-operator boundaries, private CPE, and private ISP cases.
 - `../roads_public_works/` holds the structured roads/public-works routing shard for local roads, MPWT national/classified road boundaries, CDR project ambiguity, and road-safety escalation.
 - `../waste_environment/` holds the structured waste/environment routing shard for municipal waste, MOE environmental complaints, hazardous waste, river/quarry pollution, and emergency fire/hazard boundaries.
+- `../public_safety_enforcement/` holds the structured public-safety/enforcement shard for Civil Defense, ISF, municipal police, municipal enforcement, DGLAC, MOIM, and Central Inspection boundaries.

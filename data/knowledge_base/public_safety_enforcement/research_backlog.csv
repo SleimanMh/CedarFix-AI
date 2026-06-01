@@ -1,0 +1,6 @@
+task_id,topic,priority,status,source_ids,notes
+PSE-RB-001,municipal police channel coverage by municipality,high,open,SRC-DGLAC-MUNI-DIR;SRC-MUNI-AUTONOMY-HANDBOOK,Needed to route local enforcement to exact municipal police contact where available.
+PSE-RB-002,official Civil Defense incident categories and dispatch workflow,medium,open,SRC-CD-HOTLINE;SRC-CIVILDEF-UNDP-2026,Improve beyond hotline-only evidence if official pages expose details.
+PSE-RB-003,ISF station coverage and traffic unit mapping,high,open,SRC-ISF-UNITS;SRC-ISF-FAQ,Needed for regional routing after ISF selection.
+PSE-RB-004,building safety and urban planning escalation map,medium,open,SRC-MUNI-AUTONOMY-HANDBOOK;SRC-MOIM-ABOUT,Needed to separate municipal engineering urban planning and security escalation.
+PSE-RB-005,Central Inspection online complaint required fields,medium,open,SRC-CIB-COMPLAINT;SRC-CIB-CONTACT,Need form-field scrape/manual verification for exact input requirements.

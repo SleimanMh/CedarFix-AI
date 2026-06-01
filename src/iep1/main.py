@@ -13,6 +13,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 
 from src.iep1.worker import run_worker
+from src.shared import metrics as M
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +42,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+M.add_metrics_route(app, "iep1")
 
 
 @app.get("/health", tags=["ops"])

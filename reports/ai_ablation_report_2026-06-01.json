@@ -1,0 +1,159 @@
+{
+  "generated": "2026-06-01T02:52:51",
+  "summaries": {
+    "rules_only": {
+      "system": "rules_only",
+      "n": 1000,
+      "sector_accuracy": 0.668,
+      "label_accuracy": 0.0,
+      "false_auto_route": 136,
+      "review_rate": 0.588,
+      "auto_route_coverage": 0.412,
+      "auto_route_precision": 0.6699,
+      "auto_route_total": 412,
+      "per_sector_accuracy": {
+        "ELECTRICITY": 0.8049,
+        "FLOODING": 0.3187,
+        "ROADS": 0.8026,
+        "SAFETY": 0.4912,
+        "WASTE": 0.75,
+        "WATER": 0.8802
+      }
+    },
+    "model_only": {
+      "system": "model_only",
+      "n": 1000,
+      "sector_accuracy": 1.0,
+      "label_accuracy": 0.992,
+      "false_auto_route": 0,
+      "review_rate": 0.786,
+      "auto_route_coverage": 0.214,
+      "auto_route_precision": 1.0,
+      "auto_route_total": 214,
+      "per_sector_accuracy": {
+        "ELECTRICITY": 1.0,
+        "FLOODING": 1.0,
+        "ROADS": 1.0,
+        "SAFETY": 1.0,
+        "WASTE": 1.0,
+        "WATER": 1.0
+      }
+    },
+    "hybrid": {
+      "system": "hybrid",
+      "n": 1000,
+      "sector_accuracy": 0.964,
+      "label_accuracy": 0.833,
+      "false_auto_route": 0,
+      "review_rate": 0.996,
+      "auto_route_coverage": 0.004,
+      "auto_route_precision": 1.0,
+      "auto_route_total": 4,
+      "per_sector_accuracy": {
+        "ELECTRICITY": 0.9675,
+        "FLOODING": 0.9011,
+        "ROADS": 0.9828,
+        "SAFETY": 0.9649,
+        "WASTE": 0.9839,
+        "WATER": 0.988
+      }
+    }
+  },
+  "hybrid_confusions": [
+    {
+      "expected": "FLOODING",
+      "predicted": "WATER",
+      "count": 8
+    },
+    {
+      "expected": "FLOODING",
+      "predicted": "ROADS",
+      "count": 4
+    },
+    {
+      "expected": "SAFETY",
+      "predicted": "ROADS",
+      "count": 3
+    },
+    {
+      "expected": "WASTE",
+      "predicted": "ROADS",
+      "count": 2
+    },
+    {
+      "expected": "FLOODING",
+      "predicted": "WASTE",
+      "count": 2
+    },
+    {
+      "expected": "ROADS",
+      "predicted": "TELECOM",
+      "count": 2
+    },
+    {
+      "expected": "ELECTRICITY",
+      "predicted": "SAFETY",
+      "count": 2
+    },
+    {
+      "expected": "FLOODING",
+      "predicted": "SAFETY",
+      "count": 2
+    },
+    {
+      "expected": "ELECTRICITY",
+      "predicted": "ROADS",
+      "count": 1
+    },
+    {
+      "expected": "FLOODING",
+      "predicted": "OTHER",
+      "count": 1
+    },
+    {
+      "expected": "WATER",
+      "predicted": "WASTE",
+      "count": 1
+    },
+    {
+      "expected": "ROADS",
+      "predicted": "SAFETY",
+      "count": 1
+    },
+    {
+      "expected": "ELECTRICITY",
+      "predicted": "WATER",
+      "count": 1
+    },
+    {
+      "expected": "ROADS",
+      "predicted": "WASTE",
+      "count": 1
+    },
+    {
+      "expected": "SAFETY",
+      "predicted": "TELECOM",
+      "count": 1
+    },
+    {
+      "expected": "SAFETY",
+      "predicted": "ELECTRICITY",
+      "count": 1
+    },
+    {
+      "expected": "WATER",
+      "predicted": "FLOODING",
+      "count": 1
+    },
+    {
+      "expected": "SAFETY",
+      "predicted": "WATER",
+      "count": 1
+    },
+    {
+      "expected": "FLOODING",
+      "predicted": "TELECOM",
+      "count": 1
+    }
+  ]
+}

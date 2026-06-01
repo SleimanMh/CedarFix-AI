@@ -1,86 +1,160 @@
 {
   "entity_id": "EDL",
-  "entity_name": "Électricité du Liban - EDL (كهرباء لبنان)",
+  "entity_name": "Électricité du Liban (كهرباء لبنان)",
   "entity_type": "public_utility",
-  "parent_ministry": "Ministry of Energy and Water",
+  "parent_ministry": "MEW",
   "facts": [
     {
       "fact_id": "EDL-F001",
       "fact_type": "legal_responsibility",
-      "value": "State monopoly on electricity generation, transmission, and distribution across Lebanon.",
+      "value": "Operates and maintains the national electricity grid: generation, transmission, distribution. Handles grid-side outages, power line faults, transformer failures, meter issues, and public lighting on EDL-owned infrastructure. Complaint domains encoded for routing: electricity_outage, power_line_fault, transformer_fault, meter_bill, sparking_wire_grid_side, public_lighting_grid.",
       "confidence": "high",
-      "source_ids": ["SRC-004", "SRC-012", "SRC-014"],
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "EDL-F002",
       "fact_type": "legal_responsibility",
-      "value": "NOT responsible for private generators (moualid/مولد). Private generator issues are outside EDL scope.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "value": "Not responsible for / boundary conditions: private_generator_faults; internal_building_wiring; zahle_district(use_EDZ); mobile_network_infrastructure; zahle_concession_area_faults; Route instead to EDZ when If complaint location is Zahle district or EDZ concession area do not route to EDL.; private_generator_faults_or_subscription_disputes; Route instead to HITL_PRIVATE_GENERATOR_OR_LOCAL_REGULATOR when Private generator equipment and subscription disputes are not EDL grid faults.; internal_building_wiring_or_private_breaker_faults; Route instead to HITL_PRIVATE_PROPERTY when Faults after the private meter or inside the building are not ordinary EDL dispatch.; streetlight_fixture_out_without_grid_hazard; Route instead to MUN when Local public lighting fixture complaints default to municipality unless supply/grid hazard is visible.; areas_outside_zahle_concession; Route instead to EDL when Use EDZ only for confirmed Zahle concession area.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP",
+        "SRC-EDZ-CONCESSION",
+        "SRC-EDZ-ABOUT-FETCH",
+        "SRC-MUNI-AUTONOMY-HANDBOOK",
+        "SRC-ARAB-REFORM-MUNI-2025"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime cases may still require HITL when asset ownership, location, or public/private responsibility is ambiguous."
     },
     {
       "fact_id": "EDL-F003",
-      "fact_type": "emergency_instruction",
-      "value": "For exposed or downed power lines: DO NOT APPROACH. Call Civil Defense 125 FIRST, then EDL 1444.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
-      "notes": "Life-safety protocol confirmed in eval LLM-RT-013.",
+      "fact_type": "service_area",
+      "value": "Geographic scope: national_except_zahle_EDZ_concession.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP",
+        "SRC-EDL-HOME-HTTP",
+        "SRC-CD-HOME-HTTP"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "EDL-F004",
       "fact_type": "operational_contact",
-      "value": "EDL customer hotline: 1444.",
-      "confidence": "high",
-      "source_ids": ["SRC-004"],
+      "value": "Emergency hotline: 1444; Non-emergency phone: 1444;01-442720_to_01-442729;customer_service_KVA=01-260999;customer_service_NEU=01-571671;customer_service_BUS=06-642742; Website/form: http://www.edl.gov.lb/page.php?lang=en&pid=2; HQ/address: Al Nahr Street - Beirut; Email: info@edl.gov.lb; Special channels: emergency_faults=1444;customer_service=1444;head_office_phone=01-442720_to_01-442729;fax=01-443828_01-443968_01-583084;customer_service_offices=KVA_01-260999_NEU_01-571671_BUS_06-642742;local_offices_by_district;LRESRP_project_grievance=+961-1-585956_Iresr-grm@edl.gov.lb_online_form_project_only; EDL faults and customer hotline: 1444; EDL public portal: http://www.edl.gov.lb/",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP",
+        "SRC-EDL-HOME-HTTP"
+      ],
       "human_review_required": false,
       "human_review_reason": null
     },
     {
       "fact_id": "EDL-F005",
-      "fact_type": "service_area",
-      "value": "National grid coverage. Load-shedding schedule varies by region (12-22+ hours/day depending on location and crisis level).",
-      "confidence": "high",
-      "source_ids": ["SRC-004", "SRC-014"],
+      "fact_type": "complaint_process",
+      "value": "Route grid-side electricity faults here. HITL required to confirm EDL vs private generator. Exception: Zahle district → EDZ not EDL. Channel types: phone;online;walk_in grid_outage_or_line_fault: 1444; required=exact_location;municipality;hazard_description_recommended general_grid_service: http://www.edl.gov.lb/ Required fields/documents include: municipality_and_exact_location, hazard_description_and_photo_if_available.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP",
+        "SRC-EDL-HOME-HTTP",
+        "SRC-CD-HOME-HTTP"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Unresolved ticket/reference, required-field, and SLA markers are consolidated into the deadline_or_sla review fact."
     },
     {
       "fact_id": "EDL-F006",
       "fact_type": "deadline_or_sla",
-      "value": "No officially published SLA for grid fault repair. CedarFix operational target: 12-48h for localized outages.",
+      "value": "Central policy: general_grid_fault_ticket_policy_not_published;LRESRP_project_grievance_form_available Ticket/reference and process-data policy: grid_outage_or_line_fault ticket/reference: public_reference_policy_not_published; general_grid_service ticket/reference: not_published; general_grid_service required fields: required_fields_not_verified area_power_outage: not_published; call_1444_for_fault_and_125_if_public_danger exposed_wire_or_sparking_box: not_published; Civil_Defense_first_if_immediate_danger_then_EDL_grid_isolation",
       "confidence": "low",
-      "source_ids": ["SRC-022"],
-      "notes": "LLM-RT-014 explicitly states 'no verified official SLA'. deadline_basis='CedarFix operational target'.",
-      "human_review_required": false,
-      "human_review_reason": null
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP",
+        "SRC-CD-HOME-HTTP"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
     },
     {
       "fact_id": "EDL-F007",
-      "fact_type": "complaint_process",
-      "value": "Call 1444 for outage/fault reports. HITL required for all CedarFix electricity routing due to EDL/generator ambiguity.",
-      "confidence": "high",
-      "source_ids": ["SRC-022"],
+      "fact_type": "emergency_instruction",
+      "value": "Emergency instruction: use 1444 only for cases in this entity's emergency scope; otherwise follow the complaint process and HITL rules.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-EDL-MISSION",
+        "SRC-EDL-RESPONSIBILITY",
+        "SRC-EDL-CONTACT",
+        "SRC-EDL-FAQ",
+        "SRC-EDL-GRIEVANCE-LRESRP"
+      ],
       "human_review_required": false,
-      "human_review_reason": null
+      "human_review_reason": null,
+      "notes": "Runtime emergency/public-safety dispatch may still require HITL confirmation."
     }
   ],
   "routing_summary": {
-    "primary_for_sectors": ["ELECTRICITY (grid outage, downed lines)"],
+    "primary_for_sectors": [
+      "electricity_outage",
+      "power_line_fault",
+      "transformer_fault",
+      "meter_bill",
+      "sparking_wire_grid_side",
+      "public_lighting_grid"
+    ],
     "secondary_for_sectors": [],
-    "hitl_always_required": true,
-    "hitl_conditions": [
-      "All electricity routing requires HITL to disambiguate EDL grid vs private generator (moualid)",
-      "Exposed or downed live wires — Civil Defense first",
-      "Neighborhood-wide blackout with no visible damage — HITL before EDL ticket"
-    ]
+    "not_responsible_for": [
+      "private_generator_faults",
+      "internal_building_wiring",
+      "zahle_district(use_EDZ)",
+      "mobile_network_infrastructure"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": []
   },
-  "sources": ["SRC-004", "SRC-012", "SRC-014", "SRC-022"],
-  "overall_confidence": "high",
-  "last_reviewed": "2026-05-24"
+  "sources": [
+    "SRC-EDL-MISSION",
+    "SRC-EDL-RESPONSIBILITY",
+    "SRC-EDL-CONTACT",
+    "SRC-EDL-FAQ",
+    "SRC-EDL-GRIEVANCE-LRESRP",
+    "SRC-EDZ-CONCESSION",
+    "SRC-EDZ-ABOUT-FETCH",
+    "SRC-MUNI-AUTONOMY-HANDBOOK",
+    "SRC-ARAB-REFORM-MUNI-2025",
+    "SRC-EDL-HOME-HTTP",
+    "SRC-CD-HOME-HTTP"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
 }

@@ -1,0 +1,2 @@
+source_id,title,publisher,source_type,url,reliability_tier,primary_use,notes,scheme_note
+SRC-ISF-CONTACT,ISF Contact Us,Internal Security Forces,official_contact,https://isf.gov.lb/contact-us/,T0_official,ISF headquarters address phone emergency number official email and station-directory page.,Use for ISF official headquarters contact and email; emergencies still use 112 and safety matters remain HITL.,SRC-ENTITY-DESCRIPTOR scheme. Separate from legacy SRC-NNN complaint-intelligence sources (SRC-001…SRC-041+). Do not merge IDs.
