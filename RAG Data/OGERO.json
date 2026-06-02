@@ -1,0 +1,118 @@
+{
+  "entity_id": "OGERO",
+  "entity_name": "Ogero Telecom (Office de Gestion et d'Exploitation du Réseau de Télécommunications)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Telecommunications",
+  "facts": [
+    {
+      "fact_id": "OGERO-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Owns and operates Lebanon's fixed-line telephone network and DSL/fiber (FTTx) internet infrastructure under Law 431/2002. OGERO is the backbone infrastructure for all telecom networks in Lebanon, including the physical cables used by Mobile Operators, Data Service Providers (DSPs), and Internet Service Providers (ISPs). However, OGERO does NOT operate mobile services — those are Touch and Alfa under Ministry of Telecommunications supervision. OGERO is transitioning toward becoming Liban Telecom.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-015", "SRC-OGERO-MEET-PAGE"],
+      "notes": "Clarified from ogero.gov.lb/meet.php on 2026-05-31: OGERO is backbone infrastructure for mobile operators (physical cables) but NOT the mobile services themselves. Law 431/2002 governs OGERO mandate. Liban Telecom transition underway.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Manages submarine cable landing points (I-ME-WE, etc.) for Lebanon's international internet connectivity. Expanding fiber (FTTx) network to homes, schools, and businesses nationwide.",
+      "confidence": "high",
+      "source_ids": ["SRC-015", "SRC-OGERO-MEET-PAGE"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for mobile network outages or mobile service complaints. Mobile operators Touch and Alfa are separate entities under Ministry of Telecommunications supervision. A complaint about mobile data or mobile signal should NOT be routed to OGERO.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-088", "SRC-089", "SRC-090"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F004",
+      "fact_type": "operational_contact",
+      "value": "Customer Care hotline: 1515 (every day, 8:00AM–10:00PM). HQ address: Beirut, Bir Hasan, Ziad Rahbani Avenue. Phone: +961 1 840000. Fax: +961 1 826823. Email: ThePeople@ogero.gov.lb. PO Box: 11-1226 Lebanon 1107 2070. Chairman (2025–): Ahmad Bassam Oueidat. Social media: Facebook, Twitter, Instagram. Point of Sale offices exist in regions (e.g. Tyr) for in-person subscription applications.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-OGERO-CONTACT-PAGE", "SRC-OGERO-MEET-PAGE"],
+      "notes": "All contacts verified on ogero.gov.lb/contact.php and ogero.gov.lb/meet.php on 2026-05-31. Fax and PO Box were missing from previous version — now confirmed. Chairman Ahmad Bassam Oueidat appointed end of June 2025 by Council of Ministers.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F005",
+      "fact_type": "complaint_process",
+      "value": "Four complaint/service channels: (1) Call 1515 — customer care hotline, 8AM–10PM daily. (2) Online contact form at ogero.gov.lb/meet.php — fields: Full Name, Email, Mobile, Message. (3) MY OGERO portal (ogero.gov.lb) — logged-in complaint submission and service requests. (4) Visit a Point of Sale office in person (Tyr confirmed, others exist). Useful citizen tools on ogero.gov.lb: DIRECTORY button (find any Lebanese landline number) and SPEED TEST button (test internet speed, useful for DSL quality complaints). FAQ available via 'Try our FAQs' link.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-OGERO-CONTACT-PAGE", "SRC-OGERO-MEET-PAGE"],
+      "notes": "Contact form and MY OGERO portal confirmed on 2026-05-31. DIRECTORY and SPEED TEST tools confirmed as citizen-facing utilities on ogero.gov.lb.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F006",
+      "fact_type": "service_area",
+      "value": "Nationwide fixed-line and DSL/fiber coverage across all Lebanese governorates. Mobile networks are NOT Ogero scope. Point of Sale offices confirmed in at least Tyr (South) in addition to Beirut HQ — likely in all major cities.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-015", "SRC-OGERO-MEET-PAGE"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "Official fault repair window for DSL/fixed line: 3 working days (per Ogero FAQ). If not resolved within 3 working days, customer should escalate via 1515 or MY OGERO portal.",
+      "confidence": "high",
+      "source_ids": ["SRC-024"],
+      "notes": "Verified on official Ogero FAQ on 2026-05-24.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "OGERO-F008",
+      "fact_type": "complaint_process",
+      "value": "Complaint taxonomy for CedarFix routing: (1) No dial tone / dead landline line → OGERO via 1515. (2) No DSL / no internet (fixed line) → OGERO via 1515. (3) Slow DSL speed → OGERO, direct citizen to SPEED TEST tool first then 1515. (4) Fiber (FTTx) issues → OGERO via 1515. (5) Mobile signal/data issues → NOT OGERO, route to Touch or Alfa. (6) Billing dispute (landline/DSL) → OGERO via 1515 or MY OGERO portal. HITL not always required — landline/DSL complaints can be auto-routed to OGERO if complaint type is clearly fixed-line.",
+      "confidence": "high",
+      "source_ids": ["SRC-003", "SRC-022", "SRC-OGERO-CONTACT-PAGE"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "TELECOM_landline — no dial tone, dead line, landline fault",
+      "TELECOM_dsl — no internet, slow DSL, fixed broadband fault",
+      "TELECOM_fiber — FTTx fiber connection issues",
+      "TELECOM_billing — landline or DSL billing dispute"
+    ],
+    "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "Mobile network outages — route to Touch or Alfa (not OGERO)",
+      "Mobile data/signal issues — route to Touch or Alfa",
+      "Mobile billing — route to Touch or Alfa",
+      "Internet via mobile data — not OGERO scope"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Complaint is ambiguous between fixed-line and mobile — HITL to clarify before routing",
+      "National or multi-governorate outage — HITL before routing",
+      "Complaint mentions both landline and mobile issues simultaneously"
+    ]
+  },
+  "sources": [
+    "SRC-003",
+    "SRC-015",
+    "SRC-022",
+    "SRC-024",
+    "SRC-088",
+    "SRC-089",
+    "SRC-090",
+    "SRC-OGERO-CONTACT-PAGE",
+    "SRC-OGERO-MEET-PAGE"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-31"
+}

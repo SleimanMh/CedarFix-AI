@@ -1,0 +1,137 @@
+{
+  "entity_id": "EDL",
+  "entity_name": "Électricité du Liban - EDL (كهرباء لبنان)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "EDL-F001",
+      "fact_type": "legal_responsibility",
+      "value": "State monopoly on electricity generation, transmission, and distribution across Lebanon. Distribution activities partially outsourced to Distribution Service Providers (DSPs) under the DSP project approved by Ministry of Energy and Water in June 2010.",
+      "confidence": "high",
+      "source_ids": ["SRC-004", "SRC-012", "SRC-014", "SRC-EDL-DSP-PAGE"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private generators (moualid/مولد). Private generator issues are outside EDL scope and should be directed to the generator operator or municipality. NOT responsible for electricity in Zahle city — Zahle is served by Électricité de Zahle (EDZ), a private concession.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-EDL-LOCAL-OFFICES"],
+      "notes": "Zahle absence confirmed by its omission from the official EDL local offices list. All other Bekaa districts (Baalbek, Chtoura, Hermel, Mashghara, Rachaya, Reyak, Hasbaya) are covered by EDL.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F003",
+      "fact_type": "emergency_instruction",
+      "value": "For exposed or downed power lines: DO NOT APPROACH. Call Civil Defense 125 FIRST, then EDL 1444.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "notes": "Life-safety protocol confirmed in eval LLM-RT-013.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F004",
+      "fact_type": "operational_contact",
+      "value": "Main customer hotline: 1444. HQ address: Al Nahr Street, Beirut. HQ phone: 01/442720. HQ fax: 01/443828, 01/443968, 01/583084. Email: info@edl.gov.lb. Website: edl.gov.lb. Customer Service Divisions: (1) KVA — Beirut and Bekaa customers: 01/260999. (2) NEU — South Maten, Aley, Chouf, South and Nabatieh districts: 01/571671. (3) BUS — North Maten, Keserwan, Jbail, and North district: 06/642742.",
+      "confidence": "high",
+      "source_ids": ["SRC-004", "SRC-EDL-CONTACT-PAGE"],
+      "notes": "All contacts verified on edl.gov.lb/page.php?pid=2 on 2026-05-31.",
+      "human_review_required": false,
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F005",
+      "fact_type": "service_area",
+      "value": "National grid coverage across all Lebanese governorates except Zahle city (served by EDZ). Load-shedding schedule varies by region (12-22+ hours/day depending on location and crisis level). Confirmed local offices in: Mount Lebanon (Antelias, Baabdat, Bkfaya, Bhamdoun, Beit Eldine, Aley, Wadi Zeine, Amchit, Kartaba, Jounieh, Ajaltoun, Jbail), North Lebanon (Tripoli, Sir, Batroun, Zgharta, Halba, Amyoun, Abdeh, Kobayat), South Lebanon (Zahrani, Saida, Sour, Nabatieh, Marjeoun, Tebnin, Jezine, Jwaya, Bent Jbail, Nakoura), Bekaa (Hermel, Baalbek, Chtoura, Mashghara, Jib Jinnin, Ras Baalbek, Rachaya, Reyak, Hasbaya). No office listed for Zahle — served by EDZ.",
+      "confidence": "high",
+      "source_ids": ["SRC-004", "SRC-014", "SRC-EDL-LOCAL-OFFICES"],
+      "notes": "Local offices list extracted from edl.gov.lb on 2026-05-31.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F006",
+      "fact_type": "service_area",
+      "value": "Complete EDL local office directory with phone numbers. Mount Lebanon: Antelias 04/411941, Baabdat 04/820476 & 04/820276, Bkfaya 04/980556, Bhamdoun 05/260113 & 05/261706, Beit Eldine 05/300051 & 05/300151, Aley 05/554594, Wadi Zeine 07/971281, Amchit 09/620040, Kartaba 09/405018, Jounieh 09/915135 & 09/915136, Ajaltoun 09/230015 & 09/230014, Jbail 09/620040. North: Tripoli 06/432433 & 06/442014, Sir 06/490095, Batroun 06/642245, Zgharta 06/665596, Halba 06/690126 & 06/692195, Amyoun 06/950103, Abdeh 06/470016, Kobayat 06/350162. South: Zahrani 07/260616 & 07/260636, Saida 07/723194 & 07/724036, Sour 07/740399 & 07/395288, Nabatieh 07/532297 & 07/760016, Marjeoun 07/831025 & 07/830024, Tebnin-Maintenance 07/325228, Jezine 07/780218, Jwaya 07/410724, Bent Jbail 07/452502, Nakoura 07/460015. Bekaa: Hermel 08/200548, Baalbek 08/371111 & 08/371310, Chtoura 08/541924 & 08/541000, Mashghara 08/650040 & 08/650120, Jib Jinnin 08/660022 & 08/660081, Ras Baalbek 08/230436, Rachaya 08/595087, Reyak 08/900891, Hasbaya 07/550280.",
+      "confidence": "high",
+      "source_ids": ["SRC-EDL-LOCAL-OFFICES"],
+      "notes": "Full office list extracted from edl.gov.lb local offices page on 2026-05-31. Note: Beirut offices not listed separately — handled via HQ and KVA division (01/260999).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA for grid fault repair. CedarFix operational target: 12-48h for localized outages.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "notes": "LLM-RT-014 explicitly states 'no verified official SLA'. deadline_basis='CedarFix operational target'.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F008",
+      "fact_type": "complaint_process",
+      "value": "Complaint channels: (1) Call 1444 — main customer hotline for outage and fault reports. (2) For Beirut/Bekaa customers: call KVA 01/260999. (3) For South Maten/Aley/Chouf/South/Nabatieh: call NEU 01/571671. (4) For North Maten/Keserwan/Jbail/North: call BUS 06/642742. (5) Call local district office directly using the office directory. (6) Email: info@edl.gov.lb. (7) Grievance Mechanism – LRESRP: formal PDF-based complaints process linked to the World Bank Lebanon Reform Recovery and Reconstruction Framework (LRESRP). PDF downloadable at edl.gov.lb/decisions.php?did=31. A separate 'Grievance Mechanism Complaints' submission button exists on the edl.gov.lb sidebar. No simple online outage reporting form exists — Electronic Services section covers procurement (Bids, Bids Types), Daily Supply schedule, Net Metering registration, and Customer Services information only. HITL required for all CedarFix electricity routing due to EDL/generator ambiguity.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-EDL-CONTACT-PAGE", "SRC-EDL-DSP-PAGE", "SRC-EDL-ELECTRONIC-SERVICES", "SRC-EDL-GRIEVANCE-PAGE"],
+      "notes": "Confirmed on 2026-05-31: Electronic Services has no citizen outage form. Grievance Mechanism is a PDF process (edl.gov.lb/decisions.php?did=31), not an online form. Primary complaint channel remains 1444 and district office calls.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "EDL-F009",
+      "fact_type": "legal_responsibility",
+      "value": "EDL DSP project scope includes: network survey, distribution network design and maintenance, advanced metering infrastructure (smart meters), meter reading, bill collection. This means billing disputes and meter issues are also within EDL/DSP scope.",
+      "confidence": "high",
+      "source_ids": ["SRC-EDL-DSP-PAGE"],
+      "notes": "DSP project page confirms metering and billing are EDL responsibilities even when executed by contracted DSP operators.",
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "ELECTRICITY_outage — area-wide or building-level grid outage (not generator)",
+      "ELECTRICITY_fault — downed lines, transformer fault, grid infrastructure damage",
+      "ELECTRICITY_meter — faulty meter, billing dispute, meter reading issue",
+      "ELECTRICITY_connection — new connection request, illegal connection report"
+    ],
+    "secondary_for_sectors": [
+      "ELECTRICITY_streetlight — street lighting faults may be EDL or MUN depending on ownership; requires HITL"
+    ],
+    "not_responsible_for": [
+      "Private generator (moualid) issues — not EDL scope",
+      "Zahle city electricity — route to EDZ (Électricité de Zahle)",
+      "Water, roads, waste — route to respective entities",
+      "Downed live wire scene safety — Civil Defense 125 first, EDL second"
+    ],
+    "geographic_exceptions": [
+      "Zahle city → EDZ, not EDL (no EDL local office in Zahle confirmed)"
+    ],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All electricity routing requires HITL to disambiguate EDL grid vs private generator (moualid)",
+      "Exposed or downed live wires — Civil Defense 125 first, then EDL",
+      "Street lighting faults — HITL to determine EDL vs municipality ownership",
+      "Neighborhood-wide blackout with no visible damage — HITL before EDL ticket",
+      "Zahle electricity complaints — HITL to confirm EDZ routing"
+    ]
+  },
+  "sources": [
+    "SRC-004",
+    "SRC-012",
+    "SRC-014",
+    "SRC-022",
+    "SRC-EDL-CONTACT-PAGE",
+    "SRC-EDL-LOCAL-OFFICES",
+    "SRC-EDL-DSP-PAGE"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-31"
+}
