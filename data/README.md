@@ -124,8 +124,8 @@ Municipality data drives location resolution and local responsibility.
 | `municipalities/national_municipality_registry.csv` | 1,107 | Canonical municipality registry rows, names, districts, coordinates, source status, research priority, townhall fields, and quality flags. Every row has a unique `registry_id`; 800 rows currently have a populated `municipality_id`. |
 | `municipalities/municipality_aliases.csv` | 3,870 | Name variants mapped to registry/municipality IDs for text lookup. These are alias rows, not municipality rows. |
 | `municipalities/municipality_service_mappings.csv` | 1,107 | Registry-row-to-water/electricity/telecom/road entity hints used by routing. Every row has `registry_id`; rows without official `municipality_id` route through registry-ID fallback. |
-| `municipalities/municipality_official_channels.csv` | 102 | Verified or candidate official municipality contact/reporting channels. These now resolve to 21 numeric municipality IDs, plus union and national/sentinel rows; 8 rows still need registry/fallback reconciliation. |
-| `municipalities/municipality_complaint_workflows.csv` | 30 | Municipality complaint workflow evidence, required fields, tracking/deadline hints. These now resolve to 16 numeric municipality IDs, plus union and national/sentinel rows; 2 rows still need registry/fallback reconciliation. |
+| `municipalities/municipality_official_channels.csv` | 102 | Verified or candidate official municipality contact/reporting channels. Rows now carry `registry_id`: 24 registry-backed municipality identities, 21 numeric municipality IDs, plus union/national/sentinel rows; 1 row remains true `JOIN_REQUIRED` and candidate-only. |
+| `municipalities/municipality_complaint_workflows.csv` | 28 | Municipality complaint workflow and guarded contact-fallback evidence. Rows now carry `registry_id`: 16 registry-backed municipality identities, 15 numeric municipality IDs, plus union/national/sentinel rows; unverified guessed in-person workflows were removed. |
 | `municipalities/municipality_unions.csv` | 59 | Municipality union metadata. |
 | `municipalities/municipal_union_memberships.csv` | 841 | Row-level municipality-to-union membership evidence across all 59 union IDs; 821 rows now have registry IDs, 820 have numeric municipality IDs, and 20 source-specific rows still need manual reconciliation. Some rows are second-source evidence for the same union/member pair. |
 | `municipalities/municipal_union_service_responsibilities.csv` | 6 | Seed union responsibility-signal rows: union complaint/suggestion intake, DGLAC membership guardrail, and one Baalbek service-advocacy context row. |
@@ -148,13 +148,20 @@ count different concepts. Use the precise label instead of saying only
 | 307 | Registry rows without official `municipality_id`; these route through `registry_id` fallback. | Missing operational coverage. |
 | 3,870 | Alias rows in `municipality_aliases.csv`, covering all 1,107 unique `registry_id` values. | Number of municipalities. |
 | 2,730 | Town rows in `towns_registry.csv`. | Number of municipalities. |
-| 102 / 30 | Official-channel rows and complaint-workflow rows. They now resolve to 21 and 16 numeric municipality IDs respectively, with a few registry-fallback rows still unresolved. | Registry coverage. |
+| 102 / 28 | Official-channel rows and complaint-workflow/contact-fallback rows. They now resolve to 24 and 16 registry-backed municipality identities respectively; only 21 and 15 of those identities have numeric official `municipality_id` values. | Registry coverage. |
 
 For joins, prefer `registry_id` when working inside the municipality registry and
 municipality support files because it is populated for all 1,107 registry rows.
 Use `municipality_id` only when the target file actually requires it. The
 project-wide operational municipality count is now 1,107 registry rows; the 800
 number is official-ID coverage, not routing coverage.
+
+For production complaint guidance, do not treat candidate rows as usable intake
+paths. Rows with `candidate_unverified`, `candidate_likely_official`,
+`inferred_from_source`, `needs_manual_review`, or partial-field statuses are
+research or guarded guidance until their source evidence is upgraded. If an
+official phone or website is present but no complaint workflow is published,
+describe it as a contact fallback, not as a formal workflow.
 
 ### Arabizi and Language Assets
 
@@ -514,9 +521,10 @@ Strengths:
 Known gaps and cautions:
 
 - Municipality official channel/workflow coverage is much smaller than the full
-  municipality registry: 102 channel rows resolve to 21 numeric municipality
-  IDs, and 30 workflow rows resolve to 16 numeric municipality IDs. This is
-  expected but important.
+  municipality registry: 102 channel rows cover 24 registry-backed municipality
+  identities, but only 21 numeric municipality IDs; 28 workflow/contact-fallback
+  rows cover 16 registry-backed municipality identities, but only 15 numeric
+  municipality IDs. This is expected but important.
 - Municipal union membership is now row-level across all 59 union IDs. 821 rows
   have registry IDs, 820 have numeric municipality IDs, and 20 source-specific
   text rows still need manual registry reconciliation. Some source-specific

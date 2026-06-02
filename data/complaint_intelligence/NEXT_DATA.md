@@ -39,12 +39,15 @@ Strong layers:
 
 Weak layers:
 
-- Municipality official channels: 102 rows now resolve to 21 numeric
-  municipality IDs, plus union and national/sentinel rows; 8 rows remain
-  `JOIN_REQUIRED` because they need registry/fallback reconciliation.
-- Municipality complaint workflows: 30 rows now resolve to 16 numeric
-  municipality IDs, plus union and national/sentinel rows; 2 rows remain
-  `JOIN_REQUIRED`.
+- Municipality official channels: 102 rows now carry `registry_id`, covering 24
+  registry-backed municipality identities and 21 numeric municipality IDs, plus
+  union and national/sentinel rows. One Marjayoun candidate remains true
+  `JOIN_REQUIRED` and is blocked from production use until official ownership
+  and registry join are proven.
+- Municipality complaint workflows/contact fallbacks: 28 rows now carry
+  `registry_id`, covering 16 registry-backed municipality identities and 15
+  numeric municipality IDs, plus union and national/sentinel rows. Low-quality
+  guessed in-person workflows were removed instead of being treated as fact.
 - Municipal union memberships: 841 row-level evidence rows across all 59 union
   IDs; 821 rows have registry IDs, 820 have numeric municipality IDs, and 20
   source-specific text rows still need manual registry reconciliation. Some
@@ -72,8 +75,10 @@ Target files:
 
 Collect:
 
-- registry reconciliation for the remaining unresolved official-channel and
-  workflow rows where numeric `municipality_id` is absent or ambiguous;
+- registry reconciliation for the remaining unresolved official-channel rows
+  where both numeric `municipality_id` and safe `registry_id` are absent;
+- official-ID reconciliation for registry-backed rows whose numeric
+  `municipality_id` is absent, without forcing unsafe IDs;
 - official website, email, phone, WhatsApp, contact form, complaint form, app;
 - official social page only when municipality-owned or clearly authenticated;
 - accepted complaint types;
@@ -301,7 +306,8 @@ Use this path for every new fact:
 ## Two-Week Sprint Recommendation
 
 1. Verify and promote the first 200 municipality contact candidates.
-2. Expand municipality workflows from 5 municipalities toward 100.
+2. Expand municipality workflows/contact fallbacks from 16 registry-backed
+   municipality identities toward 100, but only with source-backed fields.
 3. Complete municipal union memberships and create a service-responsibility
    table for shared services.
 4. Build the first road-class/project-owner index for MPWT and CDR boundaries.
