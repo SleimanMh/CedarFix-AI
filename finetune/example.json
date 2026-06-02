@@ -1,0 +1,43 @@
+{
+  "is_complaint": true,
+  "english_translation": "",
+  "issue_type": "cracked_bus_stop_shelter",
+  "category": "public_transport_stop",
+  "subcategory": "cracked_shelter_roof",
+  "severity": "MEDIUM",
+  "location_mentions": ["Hamra", "Beirut"],
+  "keywords": ["cracked", "dangerous", "bus stop"],
+  "summary": "The bus stop shelter roof is cracked in Hamra.",
+  "signals": {
+    "public_safety_risk": true,
+    "traffic_impact": false,
+    "corruption_signal": false,
+    "emergency_signal": false
+  },
+  "routing_features": {
+    "domain": "transportation",
+    "physical_component": "bus_stop_shelter",
+    "failure_mode": "cracked",
+    "hazard_type": "none",
+    "affected_public_space": true,
+    "requires_emergency_attention": false
+  },
+  "evidence": {
+    "text_evidence": ["bus stop shelter roof is cracked"],
+    "image_evidence": [],
+    "missing_information": []
+  },
+  "alignment_features": {
+    "domain": "transportation",
+    "physical_component": "bus_stop_shelter",
+    "failure_mode": "cracked",
+    "visible_hazard": true,
+    "objects": ["bus_stop_shelter", "shelter_roof"],
+    "actions": ["cracking"],
+    "location_context": ["hamra"]
+  },
+  "confidence": 0.93,
+  "semantic_domain": "transportation",
+  "physical_component": "bus_stop_shelter",
+  "failure_mode": "cracked"
+}
