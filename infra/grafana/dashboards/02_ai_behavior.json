@@ -5,7 +5,7 @@
   "tags": ["cedarfix", "ai", "models"],
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "1m",
   "panels": [
     {
@@ -14,10 +14,7 @@
       "type": "piechart",
       "gridPos": {"x": 0, "y": 0, "w": 8, "h": 8},
       "targets": [
-        {
-          "expr": "cedarfix_severity_distribution_total",
-          "legendFormat": "{{level}}"
-        }
+        {"expr": "cedarfix_severity_distribution_total", "legendFormat": "{{level}}"}
       ]
     },
     {
@@ -26,10 +23,7 @@
       "type": "piechart",
       "gridPos": {"x": 8, "y": 0, "w": 8, "h": 8},
       "targets": [
-        {
-          "expr": "cedarfix_routing_entity_total",
-          "legendFormat": "{{entity}}"
-        }
+        {"expr": "cedarfix_routing_entity_total", "legendFormat": "{{entity}}"}
       ]
     },
     {
@@ -38,10 +32,7 @@
       "type": "piechart",
       "gridPos": {"x": 16, "y": 0, "w": 8, "h": 8},
       "targets": [
-        {
-          "expr": "cedarfix_duplicate_detections_total",
-          "legendFormat": "{{status}}"
-        }
+        {"expr": "cedarfix_duplicate_detections_total", "legendFormat": "{{status}}"}
       ]
     },
     {
@@ -50,14 +41,8 @@
       "type": "timeseries",
       "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
       "targets": [
-        {
-          "expr": "histogram_quantile(0.5, rate(cedarfix_routing_confidence_bucket[10m]))",
-          "legendFormat": "Median confidence"
-        },
-        {
-          "expr": "histogram_quantile(0.1, rate(cedarfix_routing_confidence_bucket[10m]))",
-          "legendFormat": "P10 (low confidence)"
-        }
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_routing_confidence_bucket[10m])) by (le))", "legendFormat": "Median confidence"},
+        {"expr": "histogram_quantile(0.1, sum(rate(cedarfix_routing_confidence_bucket[10m])) by (le))", "legendFormat": "P10 confidence"}
       ]
     },
     {
@@ -66,10 +51,7 @@
       "type": "timeseries",
       "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
       "targets": [
-        {
-          "expr": "rate(cedarfix_low_confidence_routing_total[5m]) * 60",
-          "legendFormat": "Low confidence routes/min"
-        }
+        {"expr": "rate(cedarfix_low_confidence_routing_total[5m]) * 60", "legendFormat": "Low confidence routes/min"}
       ]
     },
     {
@@ -78,10 +60,7 @@
       "type": "histogram",
       "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
       "targets": [
-        {
-          "expr": "rate(cedarfix_priority_score_bucket[10m])",
-          "legendFormat": "{{le}}"
-        }
+        {"expr": "rate(cedarfix_priority_score_bucket[10m])", "legendFormat": "{{le}}"}
       ]
     },
     {
@@ -90,10 +69,207 @@
       "type": "histogram",
       "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
       "targets": [
-        {
-          "expr": "rate(cedarfix_image_relevance_score_bucket[10m])",
-          "legendFormat": "{{le}}"
-        }
+        {"expr": "rate(cedarfix_image_relevance_score_bucket[10m])", "legendFormat": "{{le}}"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Text Confidence",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_text_confidence_score_bucket[10m])) by (le))", "legendFormat": "Median"},
+        {"expr": "histogram_quantile(0.1, sum(rate(cedarfix_text_confidence_score_bucket[10m])) by (le))", "legendFormat": "P10"}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Text Quality Gaps",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum(rate(cedarfix_text_unknown_type_total[5m])) * 60", "legendFormat": "Unknown type/min"},
+        {"expr": "sum(rate(cedarfix_text_missing_location_total[5m])) * 60", "legendFormat": "Missing location/min"},
+        {"expr": "rate(cedarfix_text_not_complaint_total[5m]) * 60", "legendFormat": "Not complaint/min"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Text Extraction Source",
+      "type": "piechart",
+      "gridPos": {"x": 0, "y": 32, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_text_extraction_source_total", "legendFormat": "{{source}}"}
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Text Extraction Failures",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 32, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "sum by (source, error_type) (rate(cedarfix_text_extraction_failure_total[5m])) * 60", "legendFormat": "{{source}} {{error_type}}/min"}
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Image Input Outcomes",
+      "type": "piechart",
+      "gridPos": {"x": 16, "y": 32, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_image_input_total", "legendFormat": "{{status}}"}
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Image / VLM Outcomes",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 40, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum by (outcome) (rate(cedarfix_image_vlm_request_total[5m])) * 60", "legendFormat": "VLM {{outcome}}/min"},
+        {"expr": "sum by (damage_visible) (rate(cedarfix_image_damage_visible_total[5m])) * 60", "legendFormat": "Damage visible={{damage_visible}}/min"}
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Image Visual Confidence",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 40, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_image_visual_confidence_bucket[10m])) by (le))", "legendFormat": "Median"},
+        {"expr": "histogram_quantile(0.1, sum(rate(cedarfix_image_visual_confidence_bucket[10m])) by (le))", "legendFormat": "P10"}
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Text-Image Alignment Decisions",
+      "type": "piechart",
+      "gridPos": {"x": 0, "y": 48, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_text_image_alignment_total", "legendFormat": "{{status}}"}
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Text-Image Alignment Score",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 48, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_text_image_alignment_score_bucket[10m])) by (le))", "legendFormat": "Median"},
+        {"expr": "histogram_quantile(0.1, sum(rate(cedarfix_text_image_alignment_score_bucket[10m])) by (le))", "legendFormat": "P10"}
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Text-Image Conflict Features",
+      "type": "piechart",
+      "gridPos": {"x": 16, "y": 48, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_text_image_conflict_feature_total", "legendFormat": "{{feature}}"}
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Embedding Candidate Count",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 56, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_embedding_candidate_count_bucket[10m])) by (le, modality))", "legendFormat": "{{modality}} median"},
+        {"expr": "histogram_quantile(0.95, sum(rate(cedarfix_embedding_candidate_count_bucket[10m])) by (le, modality))", "legendFormat": "{{modality}} P95"}
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Retrieval Source Hits",
+      "type": "piechart",
+      "gridPos": {"x": 8, "y": 56, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_retrieval_source_hits_total", "legendFormat": "{{source}}"}
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Qdrant Latency P95",
+      "type": "timeseries",
+      "gridPos": {"x": 16, "y": 56, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum(rate(cedarfix_qdrant_operation_duration_seconds_bucket[5m])) by (le, operation))", "legendFormat": "{{operation}}"}
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Matching Confidence",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 64, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_matching_decision_confidence_bucket[10m])) by (le, decision))", "legendFormat": "{{decision}} median"},
+        {"expr": "histogram_quantile(0.1, sum(rate(cedarfix_matching_decision_confidence_bucket[10m])) by (le, decision))", "legendFormat": "{{decision}} P10"}
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Matching Candidate Count / Top Score",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 64, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_matching_candidate_count_bucket[10m])) by (le))", "legendFormat": "Candidates median"},
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_matching_top_score_bucket[10m])) by (le))", "legendFormat": "Top score median"}
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Matching Review Reasons",
+      "type": "piechart",
+      "gridPos": {"x": 16, "y": 64, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_matching_review_total", "legendFormat": "{{reason}}"}
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Routing Source",
+      "type": "piechart",
+      "gridPos": {"x": 0, "y": 72, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_routing_source_total", "legendFormat": "{{source}}"}
+      ]
+    },
+    {
+      "id": 25,
+      "title": "RAG Candidate Count / No Candidates",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 72, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_rag_candidate_count_bucket[10m])) by (le))", "legendFormat": "Candidate count median"},
+        {"expr": "sum(rate(cedarfix_rag_no_candidates_total[5m])) * 60", "legendFormat": "No candidates/min"}
+      ]
+    },
+    {
+      "id": 26,
+      "title": "RAG Latency / Top Score",
+      "type": "timeseries",
+      "gridPos": {"x": 16, "y": 72, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum(rate(cedarfix_rag_retrieval_duration_seconds_bucket[5m])) by (le, status))", "legendFormat": "{{status}} P95 latency"},
+        {"expr": "histogram_quantile(0.5, sum(rate(cedarfix_rag_top_score_bucket[10m])) by (le))", "legendFormat": "Top score median"}
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Routing Review Reasons",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 80, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum by (source, reason) (rate(cedarfix_routing_review_total[5m])) * 60", "legendFormat": "{{source}} {{reason}}/min"}
+      ]
+    },
+    {
+      "id": 28,
+      "title": "RAG Retrieval Errors",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 80, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum by (error_type) (rate(cedarfix_rag_retrieval_errors_total[5m])) * 60", "legendFormat": "{{error_type}}/min"}
       ]
     }
   ]

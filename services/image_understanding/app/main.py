@@ -26,7 +26,15 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from prometheus_client import make_asgi_app
 from cedarfix_shared.schemas import ImageUnderstandingResult
-from cedarfix_shared.metrics import IMAGE_ANALYSIS_DURATION, IMAGE_RELEVANCE
+from cedarfix_shared.metrics import (
+    IMAGE_ANALYSIS_DURATION,
+    IMAGE_DAMAGE_VISIBLE_TOTAL,
+    IMAGE_INPUT_TOTAL,
+    IMAGE_QUALITY_FAILURE_TOTAL,
+    IMAGE_RELEVANCE,
+    IMAGE_VISUAL_CONFIDENCE,
+    IMAGE_VLM_REQUEST_TOTAL,
+)
 from .model import ImageUnderstandingModel
 
 app = FastAPI(title="IEP-2: Image Understanding", version="0.2.0")
@@ -70,4 +78,26 @@ async def analyze_image(request: ImageAnalysisRequest):
     IMAGE_ANALYSIS_DURATION.observe(elapsed_ms / 1000)
     relevance = result.visual_understanding.confidence if result.image_present else 0.0
     IMAGE_RELEVANCE.observe(relevance)
+    if not result.image_present:
+        IMAGE_INPUT_TOTAL.labels(status="missing_or_unreadable").inc()
+    elif not result.image_quality.usable:
+        IMAGE_INPUT_TOTAL.labels(status="unusable").inc()
+        for issue in result.image_quality.issues or ["unknown"]:
+            IMAGE_QUALITY_FAILURE_TOTAL.labels(issue=issue).inc()
+    else:
+        IMAGE_INPUT_TOTAL.labels(status="usable").inc()
+
+    visual = result.visual_understanding
+    category = visual.visual_category or "unknown"
+    subcategory = visual.visual_subcategory or "unknown"
+    IMAGE_VISUAL_CONFIDENCE.labels(category=category, subcategory=subcategory).observe(visual.confidence)
+    IMAGE_DAMAGE_VISIBLE_TOTAL.labels(damage_visible=str(bool(visual.damage_visible)).lower()).inc()
+
+    if result.image_present and result.image_quality.usable:
+        if model.vlm_analyzer is None:
+            IMAGE_VLM_REQUEST_TOTAL.labels(outcome="disabled").inc()
+        elif result.vlm_analysis is not None:
+            IMAGE_VLM_REQUEST_TOTAL.labels(outcome="success").inc()
+        else:
+            IMAGE_VLM_REQUEST_TOTAL.labels(outcome="failure_or_empty").inc()
     return result

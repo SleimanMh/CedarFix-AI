@@ -26,7 +26,14 @@ from pydantic import BaseModel
 from typing import Optional, List
 from prometheus_client import make_asgi_app
 from cedarfix_shared.schemas import RoutingResult, RoutingEntity
-from cedarfix_shared.metrics import ROUTING_CONFIDENCE, LOW_CONFIDENCE_ROUTING, ROUTING_ENTITY
+from cedarfix_shared.metrics import (
+    LOW_CONFIDENCE_ROUTING,
+    RAG_NO_CANDIDATES_TOTAL,
+    ROUTING_CONFIDENCE,
+    ROUTING_ENTITY,
+    ROUTING_REVIEW_TOTAL,
+    ROUTING_SOURCE_TOTAL,
+)
 from .router import ComplaintRouter
 
 AUTO_ROUTE_THRESHOLD = float(os.getenv("AUTO_ROUTE_THRESHOLD", "0.85"))
@@ -37,6 +44,21 @@ metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
 router = ComplaintRouter(AUTO_ROUTE_THRESHOLD, REVIEW_THRESHOLD)
+
+
+def _review_reason_label(result: RoutingResult) -> str:
+    reason = (result.review_reason or "").lower()
+    if result.rag_no_candidates:
+        return "rag_no_candidates"
+    if "conflict" in result.routing_source or "rag suggests" in reason:
+        return "rag_static_conflict"
+    if "low" in reason and "confidence" in reason:
+        return "low_confidence"
+    if result.primary_confidence < REVIEW_THRESHOLD:
+        return "low_confidence"
+    if "human" in reason:
+        return "llm_requested_review"
+    return "unspecified"
 
 
 @app.get("/health")
@@ -92,6 +114,14 @@ async def route_complaint(request: RoutingRequest):
 
     ROUTING_CONFIDENCE.observe(result.primary_confidence)
     ROUTING_ENTITY.labels(entity=result.primary_entity).inc()
+    ROUTING_SOURCE_TOTAL.labels(source=result.routing_source).inc()
+    if result.rag_no_candidates:
+        RAG_NO_CANDIDATES_TOTAL.labels(complaint_type=request.complaint_type or "unknown").inc()
+    if result.requires_review:
+        ROUTING_REVIEW_TOTAL.labels(
+            source=result.routing_source,
+            reason=_review_reason_label(result),
+        ).inc()
     if result.primary_confidence < REVIEW_THRESHOLD:
         LOW_CONFIDENCE_ROUTING.inc()
 

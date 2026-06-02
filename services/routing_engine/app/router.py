@@ -27,6 +27,12 @@ from typing import Optional, List
 import httpx
 from cedarfix_shared.schemas import RoutingResult, RoutingEntity
 from cedarfix_shared.location import haversine_km
+from cedarfix_shared.metrics import (
+    RAG_CANDIDATE_COUNT,
+    RAG_RETRIEVAL_DURATION,
+    RAG_RETRIEVAL_ERRORS_TOTAL,
+    RAG_TOP_SCORE,
+)
 
 log = logging.getLogger(__name__)
 
@@ -252,6 +258,7 @@ def _build_query_text(
 
 
 def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
+    start = time.time()
     try:
         model = _get_embed_model()
         qdrant = _get_qdrant()
@@ -263,8 +270,23 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
             limit=top_k,
             with_payload=True,
         )
-        return [r.payload for r in results]
+        docs = []
+        top_score = 0.0
+        for r in results:
+            payload = dict(r.payload or {})
+            score = float(getattr(r, "score", 0.0) or 0.0)
+            payload["_rag_score"] = score
+            top_score = max(top_score, score)
+            docs.append(payload)
+        RAG_CANDIDATE_COUNT.observe(len(docs))
+        if docs:
+            RAG_TOP_SCORE.observe(top_score)
+        RAG_RETRIEVAL_DURATION.labels(status="success").observe(time.time() - start)
+        return docs
     except Exception as e:
+        RAG_CANDIDATE_COUNT.observe(0)
+        RAG_RETRIEVAL_ERRORS_TOTAL.labels(error_type=_error_type(e)).inc()
+        RAG_RETRIEVAL_DURATION.labels(status="error").observe(time.time() - start)
         log.warning("[IEP-6] RAG retrieval failed: %s", e)
         return []
 
@@ -374,6 +396,18 @@ def _resolve_entity(name: Optional[str]) -> Optional[RoutingEntity]:
     if not name:
         return None
     return _NAME_TO_ENTITY.get(name.lower().strip()) or _NAME_TO_ENTITY.get(name.strip())
+
+
+def _error_type(exc: Exception) -> str:
+    name = exc.__class__.__name__.lower()
+    text = str(exc).lower()
+    if "timeout" in name or "timeout" in text:
+        return "timeout"
+    if "connection" in name or "connect" in text:
+        return "connection"
+    if "not found" in text or "missing" in text:
+        return "missing_collection"
+    return name or "unknown"
 
 
 # ---------------------------------------------------------------------------

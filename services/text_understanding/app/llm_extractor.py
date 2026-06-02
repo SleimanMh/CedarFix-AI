@@ -20,6 +20,7 @@ from cedarfix_shared.schemas import (
     TextUnderstandingResult,
 )
 from cedarfix_shared.location import lookup_text
+from cedarfix_shared.metrics import TEXT_EXTRACTION_FAILURE_TOTAL, TEXT_EXTRACTION_SOURCE_TOTAL
 from .extractor import StructuredExtractor
 
 
@@ -87,6 +88,18 @@ QWEN_MODEL: str = os.getenv("QWEN_MODEL", "qwen2.5-1.5b-instruct")
 QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 _TRANSLATE_ONLY_LANGUAGES = {"arabizi"}
+
+
+def _error_type(exc: Exception) -> str:
+    name = exc.__class__.__name__.lower()
+    text = str(exc).lower()
+    if "timeout" in name or "timeout" in text:
+        return "timeout"
+    if "connection" in name or "connect" in text:
+        return "connection"
+    if "json" in name or "json" in text:
+        return "json_parse"
+    return name or "unknown"
 
 _TRANSLATE_PROMPT = """\
 You are a Lebanese dialect translator.
@@ -552,14 +565,18 @@ class LLMExtractor:
             try:
                 data = await _call_gpt4o_extract(text, language)
                 english_text = data.get("english_translation") or text
+                TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="gpt4o").inc()
             except Exception as e:
+                TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="gpt4o", error_type=_error_type(e)).inc()
                 log.warning("[IEP-1] GPT-4o extraction failed (%s), using fallback path", e)
                 english_text = text
 
         if QWEN_ENABLED and data is None and language not in _TRANSLATE_ONLY_LANGUAGES:
             try:
                 data = await _call_qwen(english_text, language)
+                TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="qwen").inc()
             except Exception as e:
+                TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="qwen", error_type=_error_type(e)).inc()
                 log.warning("[IEP-1] Qwen failed (%s), falling back to rule-based", e)
         elif QWEN_ENABLED and data is None and language in _TRANSLATE_ONLY_LANGUAGES:
             log.warning("[IEP-1] Skipping Qwen: Arabizi is handled by GPT-4o only")
@@ -567,6 +584,7 @@ class LLMExtractor:
         processing_ms = int((time.time() - t0) * 1000)
 
         if data is None:
+            TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="rule_based_fallback").inc()
             result = self._fallback.extract(complaint_id, english_text)
             result.language = language
             result.english_translation = english_text if language != "en" and english_text != text else None
