@@ -14,12 +14,12 @@ Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 149 | 18.68 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 152 | 18.72 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
 | `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
-| Total under `data/` | 192 | 205.68 MB | 107 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
+| Total under `data/` | 195 | 205.72 MB | 110 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -105,7 +105,7 @@ force HITL review.
 | `knowledge_base/public_entities_extended.csv` | 21 | Canonical public entities/categories, responsibilities, contact fields, routing roles, and production status. |
 | `knowledge_base/entity_service_area_mapping.csv` | 11 | Service family and location condition mappings to entities. |
 | `knowledge_base/entity_boundary_conditions.csv` | 12 | Cross-entity routing guardrails and HITL boundaries. |
-| `knowledge_base/source_registry.csv` | 132 | Root source registry for official/institutional evidence IDs. |
+| `knowledge_base/source_registry.csv` | 135 | Root source registry for official/institutional evidence IDs. |
 | `knowledge_base/municipality_responsibility_map.csv` | 43 | District/governorate-level water authority and municipality responsibility hints. |
 
 Use these files when the question is:
@@ -291,10 +291,11 @@ Folder: `knowledge_base/telecom/`
 
 | File | Rows | Meaning |
 | --- | ---: | --- |
-| `contact_points.csv` | 6 | OGERO/TRA contacts and handoffs. |
-| `complaint_channels.csv` | 7 | Fixed telecom and regulatory channels. |
-| `source_registry.csv` | 5 | Telecom shard source evidence copied from root source IDs for local Copilot/agent lookup. |
-| `required_fields.csv` | 8 | OGERO fixed-fault and TRA escalation fields. |
+| `contact_points.csv` | 12 | OGERO, TRA, Alfa, Touch, and municipal public-space handoff contacts. |
+| `complaint_channels.csv` | 7 | Fixed telecom, mobile operator-first, and regulatory channels. |
+| `mobile_operator_channels.csv` | 7 | Seed Alfa/Touch first-line support channels plus TRA 1739 escalation row. |
+| `source_registry.csv` | 8 | Telecom shard source evidence copied from root source IDs plus Alfa/Touch/TRA consumer complaint evidence for local Copilot/agent lookup. |
+| `required_fields.csv` | 11 | OGERO fixed-fault, Alfa/Touch mobile operator-first, and TRA escalation fields. |
 | `boundary_conditions.csv` | 8 | OGERO vs mobile/TRA/private device/ISP boundaries. |
 | `not_responsible_for.csv` | 6 | Negative responsibility boundaries. |
 | `sla_policy.csv` | 4 | SLA policy; do not invent repair times. |
@@ -359,12 +360,14 @@ Folder: `knowledge_base/waste_environment/`
 | --- | ---: | --- |
 | `contact_points.csv` | 6 | Municipality/MOE/CD handoff contacts. |
 | `complaint_channels.csv` | 5 | Waste/environment channels. |
-| `source_registry.csv` | 16 | Waste/environment source evidence copied from root source IDs for local Copilot/agent lookup. |
+| `source_registry.csv` | 28 | Waste/environment source evidence copied from root source IDs plus shard-local event evidence for operator/site seeds. |
+| `waste_operator_coverage.csv` | 6 | Seed operator/context layer for routine municipality guardrail plus Tripoli/Lavajet, Saida, Beirut-Metn/Jdeideh, and Dbayeh contractor/multi-actor signals. |
+| `waste_site_registry.csv` | 7 | Seed site/hotspot layer for Jdeideh, Saida, Bchannine, Erzi, Burj al-Shamali, Deir Ammar, and Abu Ali River dumping cleanup contexts. |
 | `required_fields.csv` | 7 | Required fields. |
 | `boundary_conditions.csv` | 9 | Routine waste vs hazardous/industrial/river/fire/crime boundaries. |
 | `not_responsible_for.csv` | 5 | Negative boundaries. |
 | `sla_policy.csv` | 4 | SLA policy; avoids invented service times. |
-| `research_backlog.csv` | 4 | Remaining tasks. |
+| `research_backlog.csv` | 5 | Remaining tasks. |
 
 Key documents:
 
@@ -521,7 +524,8 @@ Known gaps and cautions:
   `registry_id` fallback.
 - Roads/public works, telecom, and waste/environment still need deeper
   operational datasets: road-class ownership, CDR project areas, waste
-  operators/sites, mobile-operator channels, and outcome evidence.
+  operator/site expansion, exact mobile form/ticket/SLA details, and outcome
+  evidence.
 - Several canonical entity JSON files still carry medium confidence and open
   human-review items.
 - Candidate/research files are intentionally noisy. Promote them only after
@@ -549,11 +553,12 @@ Start with these P0 lanes:
    and `cdr_project_service_areas.csv` now covers 6 CDR guardrail/project rows,
    but official classified-road geometry, MPWT operational contacts, full CDR
    project inventory, and project-boundary geometry still need expansion.
-4. Build waste/environment operations data: waste operators, union coverage,
-   landfill/dump/transfer/sorting sites, and MoE category-specific fields.
-5. Deepen telecom data: OGERO form/app/1515 fields, Alfa/Touch official
-   channels, TRA escalation field/deadline wording, and private-device/private
-   ISP exclusions.
+4. Continue waste/environment operations data: seed operator and site files now
+   exist, but full contract coverage, union coverage, permit status, site
+   geometry, and MoE category-specific fields still need expansion.
+5. Deepen telecom data: OGERO form/app/1515 fields, exact Alfa/Touch form,
+   email, ticket, status, and restoration details, TRA complaint field/legal
+   wording, and private-device/private ISP exclusions.
 6. Start outcome and human-override capture using
    `complaint_resolution_event.schema.json` so real accepted/rejected/resolved
    routes can calibrate IEP-7 and future evals.

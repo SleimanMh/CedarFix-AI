@@ -7,27 +7,32 @@
     {
       "fact_id": "MOBILE_OPERATOR-F001",
       "fact_type": "legal_responsibility",
-      "value": "Category placeholder for the relevant mobile/cellular provider when a complaint concerns cellular signal, mobile data, SIM/package service, or operator billing rather than fixed OGERO infrastructure.",
-      "confidence": "medium",
-      "source_ids": [
-        "SRC-TRA-MANDATE",
-        "SRC-TRA-COMPLAINT"
-      ],
-      "human_review_required": true,
-      "human_review_reason": "Specific operator must be identified before direct operator dispatch."
-    },
-    {
-      "fact_id": "MOBILE_OPERATOR-F002",
-      "fact_type": "complaint_process",
-      "value": "Use operator-first handling when provider is known; escalate to TRA for regulatory or unresolved consumer complaints. Fixed internet, landline, cabinet, copper, and fiber faults remain OGERO-first.",
+      "value": "Operator category for the relevant mobile/cellular provider when a complaint concerns cellular signal, mobile data, SIM/package service, or operator billing rather than fixed OGERO infrastructure. Alfa and Touch first-line channel seeds are normalized in telecom/mobile_operator_channels.csv.",
       "confidence": "medium",
       "source_ids": [
         "SRC-TRA-MANDATE",
         "SRC-TRA-COMPLAINT",
+        "SRC-ALFA-SUPPORT-FAQ",
+        "SRC-TOUCH-CONTACT-FORM"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "Specific operator must be identified before direct operator dispatch; exact form fields and ticket behavior are still partial."
+    },
+    {
+      "fact_id": "MOBILE_OPERATOR-F002",
+      "fact_type": "complaint_process",
+      "value": "Use operator-first handling when provider is known; Alfa and Touch public support channels are seeded. Escalate to TRA for regulatory or unresolved consumer complaints. Fixed internet, landline, cabinet, copper, and fiber faults remain OGERO-first.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-TRA-MANDATE",
+        "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS",
+        "SRC-ALFA-SUPPORT-FAQ",
+        "SRC-TOUCH-CONTACT-FORM",
         "SRC-OGERO-MISSION"
       ],
       "human_review_required": true,
-      "human_review_reason": "Operator-specific channels are not yet normalized in the KB."
+      "human_review_reason": "Operator-specific channels are seeded but exact form fields ticket behavior and restoration SLAs are not yet normalized."
     }
   ],
   "routing_summary": {
@@ -55,8 +60,11 @@
   "sources": [
     "SRC-TRA-MANDATE",
     "SRC-TRA-COMPLAINT",
+    "SRC-TRA-CONSUMER-COMPLAINTS",
+    "SRC-ALFA-SUPPORT-FAQ",
+    "SRC-TOUCH-CONTACT-FORM",
     "SRC-OGERO-MISSION"
   ],
-  "overall_confidence": "medium",
-  "last_reviewed": "2026-06-01"
+  "overall_confidence": "medium_high",
+  "last_reviewed": "2026-06-02"
 }

@@ -11,7 +11,8 @@
       "confidence": "high",
       "source_ids": [
         "SRC-TRA-MANDATE",
-        "SRC-TRA-COMPLAINT"
+        "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS"
       ],
       "human_review_required": false,
       "human_review_reason": null
@@ -24,6 +25,7 @@
       "source_ids": [
         "SRC-TRA-MANDATE",
         "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS",
         "SRC-OGERO-CONTACT"
       ],
       "human_review_required": false,
@@ -33,11 +35,14 @@
     {
       "fact_id": "TRA-F003",
       "fact_type": "service_area",
-      "value": "Geographic scope: national. Do not route mobile network issues to Ogero. Use operator first and TRA for regulatory escalation. Use TRA for regulatory escalation when provider complaint failed or mobile billing dispute is clear.",
+      "value": "Geographic scope: national. Do not route mobile network issues to Ogero. Use Alfa/Touch operator first when the provider is named and TRA for regulatory escalation after provider handling fails or regulatory context is clear. Use TRA for regulatory escalation when provider complaint failed or mobile billing dispute is clear.",
       "confidence": "medium",
       "source_ids": [
         "SRC-TRA-MANDATE",
         "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS",
+        "SRC-ALFA-SUPPORT-FAQ",
+        "SRC-TOUCH-CONTACT-FORM",
         "SRC-OGERO-MISSION"
       ],
       "human_review_required": false,
@@ -46,11 +51,12 @@
     {
       "fact_id": "TRA-F004",
       "fact_type": "operational_contact",
-      "value": "Non-emergency phone: 1739; Website/form: https://www.tra.gov.lb/Filing-complaint-with-TRA; HQ/address: TRA, Beirut; Email: info@tra.gov.lb; Special channels: consumer_protection_directorate=1739;complaint_after_provider_deadline_or_unsatisfactory_resolution; TRA Consumer Protection Directorate hotline: 1739; TRA online complaint page: https://www.tra.gov.lb/Filing-complaint-with-TRA",
+      "value": "Non-emergency phone: 1739; Website/form: https://www.tra.gov.lb/Protecting-your-rights-Resolving-your-complaints; HQ/address: TRA, Beirut; Email: info@tra.gov.lb; Special channels: consumer_protection_directorate=1739;provider_first_10_day_acknowledgment_20_day_escalation_signal; TRA Consumer Protection Directorate hotline: 1739; TRA online complaint page: https://www.tra.gov.lb/Protecting-your-rights-Resolving-your-complaints",
       "confidence": "high",
       "source_ids": [
         "SRC-TRA-MANDATE",
-        "SRC-TRA-COMPLAINT"
+        "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS"
       ],
       "human_review_required": false,
       "human_review_reason": null
@@ -58,11 +64,12 @@
     {
       "fact_id": "TRA-F005",
       "fact_type": "complaint_process",
-      "value": "Use after provider complaint is unresolved or for regulatory/billing consumer complaints. Fixed-line technical faults go to OGERO first. Channel types: phone;online Ticket/reference policy: escalate_after_provider_unsatisfactory_resolution_or_missed_applicable_deadline;consumer_protection_directorate_1739 consumer_or_regulatory_escalation: 1739;https://www.tra.gov.lb/Filing-complaint-with-TRA; required=provider_name;prior_provider_attempt;complaint_summary;billing_or_service_evidence Required fields/documents include: provider_name, prior_provider_attempt_or_deadline_failure, bill_or_service_evidence.",
+      "value": "Use after provider complaint is unresolved or for regulatory/billing consumer complaints. Fixed-line technical faults go to OGERO first. Channel types: phone;online Ticket/reference policy: provider_first_then_TRA_after_unsatisfactory_resolution_no_acknowledgment_or_20_day_escalation_threshold;consumer_protection_directorate_1739 consumer_or_regulatory_escalation: 1739;https://www.tra.gov.lb/Protecting-your-rights-Resolving-your-complaints; required=provider_name;prior_provider_attempt;complaint_summary;billing_or_service_evidence;provider_acknowledgment_or_no_response_timing Required fields/documents include: provider_name, prior_provider_attempt_or_deadline_failure, bill_or_service_evidence.",
       "confidence": "medium",
       "source_ids": [
         "SRC-TRA-MANDATE",
-        "SRC-TRA-COMPLAINT"
+        "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS"
       ],
       "human_review_required": false,
       "human_review_reason": null
@@ -70,11 +77,12 @@
     {
       "fact_id": "TRA-F006",
       "fact_type": "deadline_or_sla",
-      "value": "Central policy: escalate_after_provider_unsatisfactory_resolution_or_missed_applicable_deadline;consumer_protection_directorate_1739 Ticket/reference and process-data policy: consumer_or_regulatory_escalation ticket/reference: escalate_after_provider_unsatisfactory_resolution_or_missed_applicable_deadline;CPD_1739_intake consumer_or_regulatory_escalation: provider_deadline_or_unsatisfactory_resolution_required; not_for_emergency_dispatch",
+      "value": "Central policy: provider_first_with_10_day_acknowledgment_and_20_day_escalation_signal;consumer_protection_directorate_1739 Ticket/reference and process-data policy: consumer_or_regulatory_escalation ticket/reference: provider_first_then_TRA_after_unsatisfactory_resolution_no_acknowledgment_or_20_day_escalation_threshold;CPD_1739_intake consumer_or_regulatory_escalation: provider_first_with_10_day_acknowledgment_and_20_day_escalation_signal_captured; not_for_emergency_dispatch",
       "confidence": "medium",
       "source_ids": [
         "SRC-TRA-MANDATE",
-        "SRC-TRA-COMPLAINT"
+        "SRC-TRA-COMPLAINT",
+        "SRC-TRA-CONSUMER-COMPLAINTS"
       ],
       "human_review_required": false,
       "human_review_reason": null
@@ -106,9 +114,12 @@
   "sources": [
     "SRC-TRA-MANDATE",
     "SRC-TRA-COMPLAINT",
+    "SRC-TRA-CONSUMER-COMPLAINTS",
+    "SRC-ALFA-SUPPORT-FAQ",
+    "SRC-TOUCH-CONTACT-FORM",
     "SRC-OGERO-CONTACT",
     "SRC-OGERO-MISSION"
   ],
   "overall_confidence": "high",
-  "last_reviewed": "2026-06-01"
+  "last_reviewed": "2026-06-02"
 }

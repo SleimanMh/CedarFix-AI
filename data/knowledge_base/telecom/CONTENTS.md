@@ -1,6 +1,6 @@
 # telecom/ - What's in this folder
 
-Generated: 2026-05-31
+Generated: 2026-06-02
 
 This folder keeps telecom-specific routing research separate from the general entity registry.
 
@@ -11,17 +11,20 @@ Source-backed routing dossier for Ogero fixed telecom faults, TRA consumer escal
 
 ### `source_registry.csv`
 Telecom shard source registry. It mirrors the relevant root source IDs
-(`SRC-OGERO-*`, `SRC-TRA-*`) to avoid duplicate IDs while still making local
+(`SRC-OGERO-*`, `SRC-TRA-*`, `SRC-ALFA-*`, `SRC-TOUCH-*`) to avoid duplicate IDs while still making local
 source evidence visible inside the telecom folder.
 
 ### `contact_points.csv`
-Ogero and TRA contact points plus boundary handoffs.
+Ogero, TRA, Alfa, and Touch contact points plus boundary handoffs.
 
 ### `complaint_channels.csv`
 Complaint and service channels by entity and telecom complaint type.
 
+### `mobile_operator_channels.csv`
+Operator-first Alfa/Touch support channels plus the TRA 1739 escalation row for mobile/fixed consumer complaints. This is a seed table: phone channels and official online references are encoded, while exact form fields, email endpoints, ticket behavior, and restoration SLAs remain backlog items.
+
 ### `required_fields.csv`
-Fields needed for Ogero fixed faults and TRA escalation.
+Fields needed for Ogero fixed faults, Alfa/Touch operator-first mobile support, and TRA escalation.
 
 ### `boundary_conditions.csv`
 Routing guardrails for Ogero versus mobile operators/TRA, private router/device issues, private ISP/satellite service, public cable/cabinet damage, and missing location/line details.

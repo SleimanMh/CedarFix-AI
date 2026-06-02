@@ -49,8 +49,10 @@ Weak layers:
   Baalbek service-advocacy context row; they do not yet provide comprehensive
   operator/service ownership.
 - Roads/public works, telecom, and waste/environment need deeper operational
-  datasets even though their source registries are now populated from root
-  source IDs.
+  datasets even though their source registries are now populated. Telecom now
+  has a seed Alfa/Touch operator-channel layer, but exact form fields, email
+  endpoints, status histories, ticket behavior, and restoration SLAs remain
+  open.
 - Outcome data exists as a schema, not a live calibration feed.
 
 ## Highest-Value Data To Get Next
@@ -143,16 +145,33 @@ same as a bridge collapse, highway defect, or active CDR worksite.
 
 Target files:
 
-- new `knowledge_base/waste_environment/waste_operator_coverage.csv`
-- new `knowledge_base/waste_environment/waste_site_registry.csv`
+- `knowledge_base/waste_environment/waste_operator_coverage.csv`
+- `knowledge_base/waste_environment/waste_site_registry.csv`
 - `knowledge_base/waste_environment/required_fields.csv`
 - `knowledge_base/waste_environment/boundary_conditions.csv`
+
+Current state:
+
+- `waste_operator_coverage.csv` now has 6 seed rows: municipality-first
+  guardrail plus event-backed Tripoli/Lavajet, Saida/IBC, Saida collection
+  disruption, Beirut-Metn/Jdeideh, and Dbayeh/Ramco-City Blue signals.
+- `waste_site_registry.csv` now has 7 seed rows: Jdeideh landfill access,
+  Saida landfill fire, Bchannine landfill fire fallout, Erzi waste dump fire,
+  Burj al-Shamali landfill fire, Deir Ammar random waste dump fires, and Abu
+  Ali River dumping cleanup.
+- These are seed routing layers, not a full contract map, permit registry, or
+  site-geometry inventory.
 
 Collect:
 
 - municipality or union waste operators;
+- current contractor names, procuring authority, date range, public contract or
+  tender evidence, and whether the operator covers collection, sweeping,
+  transfer, treatment, landfill, or cleanup;
 - transfer stations, sorting sites, landfills, dump sites, and open-burning
   hotspots when official or reputable sources support them;
+- official coordinates or generalized public-asset locations, permit/status
+  evidence, operator if public, and emergency/fire history where sourced;
 - hazardous, medical, chemical, industrial, river, quarry, and crusher process
   boundaries;
 - MoE required fields by complaint category.
@@ -168,14 +187,27 @@ Target files:
 
 - `knowledge_base/telecom/required_fields.csv`
 - `knowledge_base/telecom/complaint_channels.csv`
-- new `knowledge_base/telecom/mobile_operator_channels.csv`
+- `knowledge_base/telecom/mobile_operator_channels.csv`
+
+Current state:
+
+- `mobile_operator_channels.csv` now has 7 seed rows: Alfa 111, Alfa
+  +961-3-391111, Alfa official online support reference, Touch 111, Touch
+  +961-3-800111, Touch official contact form, and TRA 1739 escalation.
+- TRA provider-first handling now captures a 10-day acknowledgment and 20-day
+  escalation signal from the local source-target evidence.
+- Ogero fixed-line routing already captures 1515/contact-form context and the
+  3-working-day wait-before-followup signal for landline/DSL line fixes.
+- These are seed operational rows, not full form-field, email, status-page,
+  ticket-reference, or restoration-SLA coverage.
 
 Collect:
 
 - OGERO 1515/app/form fields and reference behavior;
 - fixed line, DSL, fiber, cabinet, cable, and exchange-area evidence;
-- Alfa and Touch official channels;
-- TRA escalation required fields and deadline wording;
+- exact Alfa and Touch form fields, email endpoints, ticket behavior, status
+  histories, and restoration SLA evidence;
+- TRA escalation required fields and exact legal deadline wording;
 - private ISP, home router, device, and satellite-service exclusion cases.
 
 Why:
@@ -260,7 +292,8 @@ Use this path for every new fact:
 4. Build the first road-class/project-owner index for MPWT and CDR boundaries.
 5. Add waste operator/site queue rows for the highest population municipalities
    and known union/shared-service areas.
-6. Capture OGERO, TRA, Alfa, and Touch channel/field details.
+6. Finish OGERO, TRA, Alfa, and Touch field/ticket/status/SLA details after the
+   current channel seeds.
 7. Start outcome and override logging using the existing resolution-event schema.
 8. Add targeted v2 eval cases only for source-backed or stable synthetic
    boundary cases.

@@ -20,7 +20,7 @@
     {
       "fact_id": "OGERO-F002",
       "fact_type": "legal_responsibility",
-      "value": "Not responsible for / boundary conditions: mobile_network_issues(Alfa_Touch); mobile_billing_disputes(TRA); satellite_internet; private_ISP_issues_beyond_last_mile; mobile_network_coverage_4g_5g_or_cellular_signal; Route instead to TRA_OR_MOBILE_OPERATOR when Do not route Alfa Touch or cellular coverage complaints to Ogero.; mobile_billing_roaming_or_operator_consumer_dispute; Route instead to TRA when Mobile billing/regulatory disputes go to operator then TRA escalation.; private_router_wifi_password_device_or_home_lan; Route instead to HITL_PRIVATE_CPE when Ask whether the Ogero line itself is affected before routing.; private_isp_reseller_satellite_or_non_ogero_service; Route instead to HITL_PRIVATE_ISP when Confirm provider and Ogero last-mile evidence before routing.; routine_fixed_internet_or_landline_technical_fault; Route instead to OGERO when Use Ogero first for fixed technical faults unless provider failure/regulatory dispute is described.",
+      "value": "Not responsible for / boundary conditions: mobile_network_issues(Alfa_Touch); mobile_billing_disputes(TRA); satellite_internet; private_ISP_issues_beyond_last_mile; mobile_network_coverage_4g_5g_or_cellular_signal; Route instead to MOBILE_OPERATOR_FIRST_THEN_TRA when Do not route Alfa Touch or cellular coverage complaints to Ogero. Use named operator first and TRA only for escalation or regulatory context.; mobile_billing_roaming_or_operator_consumer_dispute; Route instead to TRA when Mobile billing/regulatory disputes go to operator then TRA escalation.; private_router_wifi_password_device_or_home_lan; Route instead to HITL_PRIVATE_CPE when Ask whether the Ogero line itself is affected before routing.; private_isp_reseller_satellite_or_non_ogero_service; Route instead to HITL_PRIVATE_ISP when Confirm provider and Ogero last-mile evidence before routing.; routine_fixed_internet_or_landline_technical_fault; Route instead to OGERO when Use Ogero first for fixed technical faults unless provider failure/regulatory dispute is described.",
       "confidence": "medium",
       "source_ids": [
         "SRC-OGERO-MISSION",
@@ -28,6 +28,8 @@
         "SRC-OGERO-FAQ",
         "SRC-TRA-MANDATE",
         "SRC-TRA-COMPLAINT",
+        "SRC-ALFA-SUPPORT-FAQ",
+        "SRC-TOUCH-CONTACT-FORM",
         "SRC-MUNI-AUTONOMY-HANDBOOK"
       ],
       "human_review_required": false,
@@ -86,7 +88,7 @@
         "SRC-OGERO-FAQ"
       ],
       "human_review_required": true,
-      "human_review_reason": "No official public SLA was verified, or the response policy is explicitly unpublished."
+      "human_review_reason": "Ogero fixed line wait-before-followup is captured for landline/DSL line fixes; public cable/cabinet repair timing remains unpublished."
     },
     {
       "fact_id": "OGERO-F007",
@@ -155,9 +157,11 @@
     "SRC-OGERO-FAQ",
     "SRC-TRA-MANDATE",
     "SRC-TRA-COMPLAINT",
+    "SRC-ALFA-SUPPORT-FAQ",
+    "SRC-TOUCH-CONTACT-FORM",
     "SRC-MUNI-AUTONOMY-HANDBOOK",
     "SRC-CD-HOTLINE"
   ],
   "overall_confidence": "medium",
-  "last_reviewed": "2026-06-01"
+  "last_reviewed": "2026-06-02"
 }
