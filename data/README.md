@@ -14,12 +14,12 @@ Counts below were taken from the local filesystem on 2026-06-02.
 
 | Area | Files | Size | Purpose |
 | --- | ---: | ---: | --- |
-| `knowledge_base/` | 152 | 18.72 MB | Runtime and source-backed civic knowledge. |
+| `knowledge_base/` | 152 | 18.73 MB | Runtime and source-backed civic knowledge. |
 | `training/` | 9 | 182.02 MB | Model train/validation/test JSONL plus manifests and backup. |
 | `eval/` | 14 | 0.32 MB | Locked routing, grounding, image-fusion, and language fixtures. |
 | `review_queue/` | 5 | 3.31 MB | Human review queues from legacy corpus audits. |
-| `complaint_intelligence/` | 14 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
-| Total under `data/` | 195 | 205.72 MB | 110 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
+| `complaint_intelligence/` | 15 | 1.32 MB | Source research, normalized civic events, discovery leads, and next-data acquisition planning. |
+| Total under `data/` | 196 | 205.73 MB | 111 CSV, 35 JSON, 19 JSONL, 28 Markdown, 3 `.gitkeep`. |
 
 ## The Short Version
 
@@ -124,12 +124,12 @@ Municipality data drives location resolution and local responsibility.
 | `municipalities/national_municipality_registry.csv` | 1,107 | Canonical municipality registry rows, names, districts, coordinates, source status, research priority, townhall fields, and quality flags. Every row has a unique `registry_id`; 800 rows currently have a populated `municipality_id`. |
 | `municipalities/municipality_aliases.csv` | 3,870 | Name variants mapped to registry/municipality IDs for text lookup. These are alias rows, not municipality rows. |
 | `municipalities/municipality_service_mappings.csv` | 1,107 | Registry-row-to-water/electricity/telecom/road entity hints used by routing. Every row has `registry_id`; rows without official `municipality_id` route through registry-ID fallback. |
-| `municipalities/municipality_official_channels.csv` | 102 | Verified or candidate official municipality contact/reporting channels. |
-| `municipalities/municipality_complaint_workflows.csv` | 30 | Municipality complaint workflow evidence, required fields, tracking/deadline hints. |
+| `municipalities/municipality_official_channels.csv` | 102 | Verified or candidate official municipality contact/reporting channels. These now resolve to 21 numeric municipality IDs, plus union and national/sentinel rows; 8 rows still need registry/fallback reconciliation. |
+| `municipalities/municipality_complaint_workflows.csv` | 30 | Municipality complaint workflow evidence, required fields, tracking/deadline hints. These now resolve to 16 numeric municipality IDs, plus union and national/sentinel rows; 2 rows still need registry/fallback reconciliation. |
 | `municipalities/municipality_unions.csv` | 59 | Municipality union metadata. |
-| `municipalities/municipal_union_memberships.csv` | 841 | Row-level municipality-to-union memberships across all 59 union IDs; 784 rows have registry IDs, 57 are text-only source-specific rows needing manual reconciliation. |
+| `municipalities/municipal_union_memberships.csv` | 841 | Row-level municipality-to-union membership evidence across all 59 union IDs; 821 rows now have registry IDs, 820 have numeric municipality IDs, and 20 source-specific rows still need manual reconciliation. Some rows are second-source evidence for the same union/member pair. |
 | `municipalities/municipal_union_service_responsibilities.csv` | 6 | Seed union responsibility-signal rows: union complaint/suggestion intake, DGLAC membership guardrail, and one Baalbek service-advocacy context row. |
-| `municipalities/source_registry.csv` | 44 | Municipality-specific sources. |
+| `municipalities/source_registry.csv` | 55 | Municipality-specific sources. |
 | `municipalities/towns_registry.csv` | 2,730 | Town-level names and references. These are town rows, not municipality rows. |
 | `municipalities/geocode_cache.json` | cache | Geocoding cache for municipality/townhall lookup. |
 | `municipalities/municipality_channel_discovery_queue_2026-06-01.csv` | 50 | Municipality channel discovery work queue. |
@@ -148,7 +148,7 @@ count different concepts. Use the precise label instead of saying only
 | 307 | Registry rows without official `municipality_id`; these route through `registry_id` fallback. | Missing operational coverage. |
 | 3,870 | Alias rows in `municipality_aliases.csv`, covering all 1,107 unique `registry_id` values. | Number of municipalities. |
 | 2,730 | Town rows in `towns_registry.csv`. | Number of municipalities. |
-| 102 / 30 | Official-channel rows and complaint-workflow rows. These currently cover a much smaller set of municipalities. | Registry coverage. |
+| 102 / 30 | Official-channel rows and complaint-workflow rows. They now resolve to 21 and 16 numeric municipality IDs respectively, with a few registry-fallback rows still unresolved. | Registry coverage. |
 
 For joins, prefer `registry_id` when working inside the municipality registry and
 municipality support files because it is populated for all 1,107 registry rows.
@@ -455,6 +455,7 @@ truth.
 | --- | ---: | --- |
 | `NEXT_DATA.md` | doc | Prioritized next-data acquisition plan for humans and code assistants. |
 | `next_data_acquisition_queue.csv` | 20 | Machine-readable P0/P1/P2 acquisition queue for channels, unions, roads, waste, telecom, outcomes, evals, and privacy. |
+| `routing_override_review_queue.csv` | 0 | Empty structured queue for human-corrected routing overrides, reason codes, missing fields, privacy status, and future eval-candidate flags. |
 | `source_targets.csv` | 169 | Source targets and search/discovery planning. |
 | `discovered_complaint_leads.csv` | 156 | Leads discovered from public/official sources. |
 | `municipality_research_tracker.csv` | 800 | Municipality research status rows. This is research coverage, not the full registry count. |
@@ -513,9 +514,13 @@ Strengths:
 Known gaps and cautions:
 
 - Municipality official channel/workflow coverage is much smaller than the full
-  municipality registry. This is expected but important.
-- Municipal union membership is now row-level across all 59 union IDs, but 57
-  source-specific text rows still need manual registry reconciliation.
+  municipality registry: 102 channel rows resolve to 21 numeric municipality
+  IDs, and 30 workflow rows resolve to 16 numeric municipality IDs. This is
+  expected but important.
+- Municipal union membership is now row-level across all 59 union IDs. 821 rows
+  have registry IDs, 820 have numeric municipality IDs, and 20 source-specific
+  text rows still need manual registry reconciliation. Some source-specific
+  rows intentionally corroborate an existing DGLAC union/member pair.
 - Municipal union service responsibility is only seeded. The current service
   responsibility file proves intake/advocacy signals, not full operator or
   field-service ownership for every union.

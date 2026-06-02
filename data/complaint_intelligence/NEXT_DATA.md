@@ -39,11 +39,16 @@ Strong layers:
 
 Weak layers:
 
-- Municipality official channels: 102 rows covering only 11 municipality IDs.
-- Municipality complaint workflows: 30 rows covering only 5 municipality IDs.
-- Municipal union memberships: 841 row-level rows across all 59 union IDs;
-  784 rows have registry IDs and 57 source-specific text rows still need
-  manual registry reconciliation.
+- Municipality official channels: 102 rows now resolve to 21 numeric
+  municipality IDs, plus union and national/sentinel rows; 8 rows remain
+  `JOIN_REQUIRED` because they need registry/fallback reconciliation.
+- Municipality complaint workflows: 30 rows now resolve to 16 numeric
+  municipality IDs, plus union and national/sentinel rows; 2 rows remain
+  `JOIN_REQUIRED`.
+- Municipal union memberships: 841 row-level evidence rows across all 59 union
+  IDs; 821 rows have registry IDs, 820 have numeric municipality IDs, and 20
+  source-specific text rows still need manual registry reconciliation. Some
+  source-specific rows now corroborate an existing DGLAC union/member pair.
 - Municipal union service responsibilities: 6 seed signal rows. These cover
   union complaint/suggestion intake, a DGLAC membership guardrail, and one
   Baalbek service-advocacy context row; they do not yet provide comprehensive
@@ -67,6 +72,8 @@ Target files:
 
 Collect:
 
+- registry reconciliation for the remaining unresolved official-channel and
+  workflow rows where numeric `municipality_id` is absent or ambiguous;
 - official website, email, phone, WhatsApp, contact form, complaint form, app;
 - official social page only when municipality-owned or clearly authenticated;
 - accepted complaint types;
@@ -89,7 +96,7 @@ Target files:
 
 Collect:
 
-- registry reconciliation for the remaining text-only membership rows;
+- registry reconciliation for the remaining 20 text-only membership rows;
 - services handled by union rather than individual municipality, beyond the
   current seed intake/advocacy rows;
 - waste, road, drainage, lighting, and public-space responsibility;
@@ -221,8 +228,16 @@ service, private providers, private devices, and public-space hazards.
 Target files:
 
 - `complaint_intelligence/complaint_resolution_event.schema.json`
-- new `complaint_intelligence/routing_override_review_queue.csv`
+- `complaint_intelligence/routing_override_review_queue.csv`
 - `complaint_intelligence/normalized/`
+
+Current state:
+
+- `routing_override_review_queue.csv` now exists as an empty structured queue.
+  It captures original route, corrected route, HITL change, reason code,
+  missing field, privacy status, reviewer, and whether a future eval case should
+  be created.
+- No live CedarFix outcomes are captured yet.
 
 Collect:
 
