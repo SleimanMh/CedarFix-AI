@@ -1,0 +1,136 @@
+{
+  "entity_id": "ISF",
+  "entity_name": "Internal Security Forces (قوى الأمن الداخلي)",
+  "entity_type": "law_enforcement",
+  "parent_ministry": "Ministry of Interior and Municipalities",
+  "facts": [
+    {
+      "fact_id": "ISF-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Law enforcement, public order, crime investigation, and traffic regulation across Lebanon.",
+      "confidence": "high",
+      "source_ids": ["SRC-002"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Official complaint taxonomy accepted by ISF (from anonymous complaints form at isf.gov.lb/ar/anonymous-complaints/). Cybercrime: online extortion (تنتر الكتروني), electronic blackmail (ابتزاز الكتروني), electronic identity fraud (تزوير الهوية الإلكترونية), account hacking (اختراق الحساب), information theft (سرقة المعلومات), child exploitation with indecent material (استغلال الأطفال بمواد إباحية), other cybercrime. Other crimes: murder (قتل), assault and battery (الاعتداء والضرب), sexual assault (اعتداء جنسي), domestic violence (العنف الأسري), disturbance and public nuisance (إزعاج وإقلاق راحة), kidnapping (خطف), theft (سرقة), fraud (الاحتيال), counterfeit currency (عملة مزيفة), identity theft (سرقة هوية - انتحال صفة), weapons use (استخدام سلاح), drugs (مخدرات), prostitution (دعارة), traffic violation (مخالفة سير), building violation (مخالفة بناء), hunting violation (مخالفة صيد), violations of laws and regulations (مخالفة القوانين والأنظمة), encroachment on public property (التعدي على الأملاك العامة), human smuggling (تهريب أشخاص), terrorism (الإرهاب), dealing with the enemy (التعامل مع العدو), other (غير ذلك).",
+      "confidence": "high",
+      "source_ids": ["SRC-ISF-ANON-FORM"],
+      "notes": "Extracted directly from the official ISF anonymous complaints dropdown on 2026-05-30. URL: isf.gov.lb/ar/anonymous-complaints/",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F003",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for civic infrastructure (roads, water, waste, electricity). Public safety threats, armed persons, criminal activity, and traffic violations are ISF scope.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F004",
+      "fact_type": "legal_responsibility",
+      "value": "ISF handles traffic violations and traffic management including: traffic violation penalties (القرارات الجزائية بمخالفات السير) and radar speed violations (مخالفات سرعة الرادار). Dedicated citizen portals exist for both on isf.gov.lb under citizen services.",
+      "confidence": "high",
+      "source_ids": ["SRC-ISF-CITIZEN-SERVICES"],
+      "notes": "Confirmed from citizen services menu on isf.gov.lb on 2026-05-30.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F005",
+      "fact_type": "operational_contact",
+      "value": "Emergency hotline: 112. Service number: 1745. HQ phones: 01422000 / 01425250. Email: isf@isf.gov.lb. HQ address: Ibrahim Khoury Barracks (تكنة إبراهيم الخوري), Adib Ishaq Street, Ashrafieh, Beirut. Intelligence tip line (free, confidential): 1788 / intelligence@isfid.gov.lb. Cybercrime unit: 01-293293.",
+      "confidence": "high",
+      "source_ids": ["SRC-002", "SRC-030", "SRC-ISF-CONTACT-PAGE"],
+      "notes": "All contacts verified on official ISF contact page isf.gov.lb/ar/contact-us/ on 2026-05-30.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F006",
+      "fact_type": "complaint_process",
+      "value": "Four complaint channels: (1) Emergency: call 112. (2) Anonymous online complaint form at isf.gov.lb/ar/anonymous-complaints/ — accepts report type, optional contact info, description text, and file attachments. Covers cybercrime and all crime categories. (3) Balligh app (بلّغ) — official ISF citizen reporting mobile app available on iOS and Android, accessible from isf.gov.lb. (4) General contact form at isf.gov.lb/ar/contact-us/ — fields: Name, Email, Subject, Description. ISF commissariats also handle walk-in non-emergency reports. HITL always required when CedarFix routes to ISF.",
+      "confidence": "high",
+      "source_ids": ["SRC-ISF-CONTACT-PAGE", "SRC-ISF-ANON-FORM", "SRC-ISF-CITIZEN-SERVICES"],
+      "notes": "Complaint form URL and Balligh app confirmed on 2026-05-30. Anonymous form asks if reporter wants to be contacted (yes/no toggle).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F007",
+      "fact_type": "service_area",
+      "value": "Nationwide across all Lebanese governorates. Confirmed operational presence in: Beirut, Mount Lebanon (Baabda, Metn, Hadeth, Fanar, Aley, Chouf), North Lebanon (Tripoli, Tel, Minieh, Zgharta, Batroun), South Lebanon (Sidon, Tyre), Bekaa (Zahle, Baalbek), Akkar. Center locator map available at isf.gov.lb/ar/contact-us/ with searchable commissariat locations.",
+      "confidence": "high",
+      "source_ids": ["SRC-002", "SRC-ISF-CONTACT-PAGE", "SRC-ISF-PRESSRELEASES-2026"],
+      "notes": "Geographic coverage confirmed from both the official centers map and press release analysis (237 press releases Jan-Sep 2026 covering all regions).",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F008",
+      "fact_type": "deadline_or_sla",
+      "value": "Immediate dispatch for criminal/armed threats. No officially published SLA for non-emergency complaints. Press release evidence shows typical arrest resolution within days to weeks of incident report.",
+      "confidence": "low",
+      "source_ids": ["SRC-022", "SRC-ISF-PRESSRELEASES-2026"],
+      "notes": "No official SLA published. Operational timeline inferred from press release patterns only.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "ISF-F009",
+      "fact_type": "emergency_instruction",
+      "value": "For emergencies (armed threat, active crime, serious traffic accident): call 112 immediately. For confidential crime tips: call 1788 (free) or email intelligence@isfid.gov.lb. For cybercrime and online blackmail: call 01-293293 or use the anonymous complaint form.",
+      "confidence": "high",
+      "source_ids": ["SRC-002", "SRC-ISF-CONTACT-PAGE", "SRC-ISF-ANON-FORM"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "SAFETY_armed — armed threat, weapons use, active crime scene",
+      "SAFETY_crime — theft, robbery, assault, murder, kidnapping, fraud, drugs, terrorism",
+      "SAFETY_cyber — cybercrime, online extortion, blackmail, hacking, identity theft",
+      "TRAFFIC_violation — traffic violations, radar speed fines, traffic accident response",
+      "TRAFFIC_management — road closures and traffic measures for public works or events"
+    ],
+    "secondary_for_sectors": [
+      "FLOODING — scene control and public order if needed alongside Civil Defense",
+      "SAFETY_structural — scene perimeter alongside Civil Defense for collapse risk"
+    ],
+    "not_responsible_for": [
+      "Roads, potholes, road damage — route to MUN or MPWT",
+      "Water supply, pipe leaks — route to water establishments",
+      "Electricity outages — route to EDL",
+      "Waste collection — route to MUN",
+      "Building violations — shared with MUN; ISF only if enforcement action needed"
+    ],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All ISF routing requires HITL — never auto-route criminal or safety matters",
+      "Civil Defense must be co-notified if injuries or rescue is involved",
+      "Traffic violation fines (radar/penalty decisions) have self-serve portals — direct citizen there instead of routing as a complaint",
+      "Domestic violence and sexual assault require sensitivity review before routing"
+    ]
+  },
+  "sources": [
+    "SRC-002",
+    "SRC-022",
+    "SRC-030",
+    "SRC-059",
+    "SRC-060",
+    "SRC-061",
+    "SRC-ISF-CONTACT-PAGE",
+    "SRC-ISF-ANON-FORM",
+    "SRC-ISF-CITIZEN-SERVICES",
+    "SRC-ISF-PRESSRELEASES-2026"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-30"
+}

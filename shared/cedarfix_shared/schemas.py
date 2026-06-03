@@ -6,7 +6,7 @@ All services import from here so the contract is single-source-of-truth.
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 import uuid
 
@@ -95,16 +95,26 @@ class RoutingEntity(str, Enum):
     MINISTRY_PUBLIC_WORKS = "Ministry of Public Works"
     BEIRUT_MUNICIPALITY = "Beirut Municipality"
     EDL = "Electricite Du Liban"
+    EDZ = "Electricite de Zahle"
     WATER_AUTHORITY = "Beirut Water Authority"
     WATER_NORTH = "North Lebanon Water Establishment"
     WATER_SOUTH = "South Lebanon Water Establishment"
     WATER_BEKAA = "Bekaa Water Establishment"
     INTERNAL_SECURITY = "Internal Security Forces"
+    CIVIL_DEFENSE = "Lebanese Civil Defense"
     MINISTRY_ENVIRONMENT = "Ministry of Environment"
+    MINISTRY_ENERGY_WATER = "Ministry of Energy and Water"
+    MINISTRY_INTERIOR_MUNICIPALITIES = "Ministry of Interior and Municipalities"
     NORTH_MUNICIPALITY = "North Lebanon Municipality"
     SOUTH_MUNICIPALITY = "South Lebanon Municipality"
     MOUNT_LEBANON_MUNICIPALITY = "Mount Lebanon Municipality"
     BEKAA_MUNICIPALITY = "Bekaa Municipality"
+    MUNICIPAL_POLICE = "Municipal Police"
+    CENTRAL_INSPECTION = "Central Inspection"
+    DGLAC = "General Directorate of Local Administrations and Councils"
+    TRA = "Telecommunications Regulatory Authority"
+    MOBILE_OPERATOR = "Mobile Network Operators"
+    LRA = "Litani River Authority"
     OGERO = "Ogero"
     CDR = "Council for Development and Reconstruction"
     GENERIC_MUNICIPALITY = "Local Municipality"
@@ -325,6 +335,10 @@ class ModerationResult(BaseModel):
 
 class RoutingKnowledgeDoc(BaseModel):
     doc_id: str
+    doc_type: str = "responsibility"
+    route_mode: str = "routing_candidate"
+    route_authority: str = "authoritative"
+    source_reliability: str = "unknown"
     entity_name: str
     entity_enum: str          # matches RoutingEntity value
     entity_type: str          # ministry | municipality | utility | security | other
@@ -339,6 +353,20 @@ class RoutingKnowledgeDoc(BaseModel):
     description: str = ""
     confidence_prior: float = 0.85
     hotline: Optional[str] = None
+    source_ids: List[str] = []
+    source_files: List[str] = []
+    hitl_always_required: bool = False
+    hitl_conditions: List[str] = []
+    last_reviewed: Optional[str] = None
+    responsibility_level: str = "primary"  # primary | secondary | boundary
+    location_precision: Optional[str] = None
+    exact_match_terms: List[str] = []
+    negative_signals: List[str] = []
+    structured_fields: Dict[str, Any] = {}
+    retrieval_weight: float = 1.0
+    source_entity_id: Optional[str] = None
+    source_entity_aliases: List[str] = []
+    source_profile: str = "compiled"
     qdrant_point_id: Optional[str] = None
 
 

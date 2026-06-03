@@ -7,6 +7,8 @@ Inserts Lebanese public-sector routing documents into:
   - Qdrant      → "routing_knowledge" collection (768-dim embeddings)
 
 Usage:
+    python scripts/compile_routing_knowledge.py
+    python scripts/validate_routing_knowledge.py
     python scripts/seed_routing_knowledge.py
 
 Requirements (run inside or alongside the running stack):
@@ -16,6 +18,7 @@ Environment variables (defaults match docker-compose.yml):
     DATABASE_URL  — PostgreSQL connection string
     QDRANT_HOST   — Qdrant host (default: localhost)
     QDRANT_PORT   — Qdrant port (default: 6333)
+    ROUTING_KNOWLEDGE_DOCS — compiled JSONL path
 
 The script is idempotent: re-running it upserts documents without creating
 duplicates (it deletes and re-inserts by doc_id).
@@ -25,6 +28,11 @@ import json
 import os
 import uuid
 import sys
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_docs.jsonl"
 
 # ---------------------------------------------------------------------------
 # Routing knowledge documents
@@ -419,15 +427,43 @@ ROUTING_DOCS = [
 
 
 # ---------------------------------------------------------------------------
-# Build embedding text for each document
+# Load compiled documents and build embedding text
 # ---------------------------------------------------------------------------
+
+
+def _load_compiled_docs(path: Path) -> list[dict[str, Any]]:
+    docs: list[dict[str, Any]] = []
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            doc = json.loads(line)
+        except Exception as exc:
+            raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
+        docs.append(doc)
+    return docs
+
+
+def _routing_docs() -> list[dict[str, Any]]:
+    configured = os.getenv("ROUTING_KNOWLEDGE_DOCS")
+    path = Path(configured).resolve() if configured else DEFAULT_COMPILED_DOCS
+    if path.exists():
+        print(f"Loading compiled routing knowledge: {path}")
+        return _load_compiled_docs(path)
+    print("WARNING: compiled routing knowledge file not found; using legacy hardcoded ROUTING_DOCS")
+    return ROUTING_DOCS
+
 
 def _build_embedding_text(doc: dict) -> str:
     parts = [
         doc["description"],
         f"Entity: {doc['entity_name']}",
+        f"Document type: {doc.get('doc_type', 'responsibility')}",
+        f"Route mode: {doc.get('route_mode', 'routing_candidate')}",
+        f"Route authority: {doc.get('route_authority', 'authoritative')}",
+        f"Source reliability: {doc.get('source_reliability', 'unknown')}",
         f"Complaint types: {', '.join(doc['complaint_types'])}",
-        f"Keywords: {', '.join(doc['keywords'][:15])}",
+        f"Keywords: {', '.join(doc['keywords'][:30])}",
     ]
     if doc.get("governorates"):
         parts.append(f"Geographic scope: {', '.join(doc['governorates'])}")
@@ -435,6 +471,16 @@ def _build_embedding_text(doc: dict) -> str:
         parts.append(f"Districts: {', '.join(doc['districts'][:5])}")
     if doc.get("municipalities"):
         parts.append(f"Municipalities: {', '.join(doc['municipalities'][:5])}")
+    if doc.get("not_responsible_for"):
+        parts.append(f"Not responsible for: {', '.join(doc['not_responsible_for'][:12])}")
+    if doc.get("exact_match_terms"):
+        parts.append(f"Exact match terms: {', '.join(doc['exact_match_terms'][:20])}")
+    if doc.get("negative_signals"):
+        parts.append(f"Negative signals: {', '.join(doc['negative_signals'][:20])}")
+    if doc.get("hitl_conditions"):
+        parts.append(f"Human review conditions: {', '.join(doc['hitl_conditions'][:10])}")
+    if doc.get("source_ids"):
+        parts.append(f"Source ids: {', '.join(doc['source_ids'][:10])}")
     return " | ".join(parts)
 
 
@@ -454,6 +500,7 @@ def main():
         "MODEL_NAME",
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
     )
+    routing_docs = _routing_docs()
 
     print(f"Loading embedding model: {embedding_model}")
     try:
@@ -512,16 +559,44 @@ def main():
             description     TEXT,
             confidence_prior FLOAT DEFAULT 0.85,
             hotline         VARCHAR(50),
+            source_ids      JSONB DEFAULT '[]',
+            source_files    JSONB DEFAULT '[]',
+            hitl_conditions JSONB DEFAULT '[]',
+            last_reviewed   VARCHAR(20),
+            source_profile  VARCHAR(50),
+            doc_type        VARCHAR(60) DEFAULT 'responsibility',
+            route_mode      VARCHAR(80) DEFAULT 'routing_candidate',
+            route_authority VARCHAR(80) DEFAULT 'authoritative',
+            source_reliability VARCHAR(80) DEFAULT 'unknown',
+            location_precision VARCHAR(80),
+            exact_match_terms JSONB DEFAULT '[]',
+            negative_signals JSONB DEFAULT '[]',
+            structured_fields JSONB DEFAULT '{}',
+            retrieval_weight FLOAT DEFAULT 1.0,
             qdrant_point_id VARCHAR(50),
             updated_at      TIMESTAMP DEFAULT NOW()
         )
     """)
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_ids JSONB DEFAULT '[]'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_files JSONB DEFAULT '[]'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS hitl_conditions JSONB DEFAULT '[]'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS last_reviewed VARCHAR(20)")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_profile VARCHAR(50)")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS doc_type VARCHAR(60) DEFAULT 'responsibility'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS route_mode VARCHAR(80) DEFAULT 'routing_candidate'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS route_authority VARCHAR(80) DEFAULT 'authoritative'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_reliability VARCHAR(80) DEFAULT 'unknown'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS location_precision VARCHAR(80)")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS exact_match_terms JSONB DEFAULT '[]'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS negative_signals JSONB DEFAULT '[]'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS structured_fields JSONB DEFAULT '{}'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS retrieval_weight FLOAT DEFAULT 1.0")
     conn.commit()
 
     points = []
-    print(f"\nEmbedding and seeding {len(ROUTING_DOCS)} documents...\n")
+    print(f"\nEmbedding and seeding {len(routing_docs)} documents...\n")
 
-    for doc in ROUTING_DOCS:
+    for doc in routing_docs:
         embed_text = _build_embedding_text(doc)
         embedding = model.encode(embed_text, normalize_embeddings=True).tolist()
 
@@ -533,17 +608,39 @@ def main():
                 (id, entity_name, entity_enum, entity_type, short_name,
                  governs_nat, governorates, districts, municipalities,
                  complaint_types, keywords, not_responsible, description,
-                 confidence_prior, hotline, qdrant_point_id, updated_at)
+                 confidence_prior, hotline, source_ids, source_files, hitl_conditions,
+                 last_reviewed, source_profile, doc_type, route_mode, route_authority,
+                 source_reliability, location_precision, exact_match_terms,
+                 negative_signals, structured_fields, retrieval_weight,
+                 qdrant_point_id, updated_at)
             VALUES
                 (%s, %s, %s, %s, %s,
                  %s, %s, %s, %s,
                  %s, %s, %s, %s,
-                 %s, %s, %s, NOW())
+                 %s, %s, %s, %s,
+                 %s, %s, %s, %s, %s,
+                 %s, %s, %s,
+                 %s, %s, %s,
+                 %s, %s, NOW())
             ON CONFLICT (id) DO UPDATE SET
                 description     = EXCLUDED.description,
                 complaint_types = EXCLUDED.complaint_types,
                 keywords        = EXCLUDED.keywords,
                 confidence_prior= EXCLUDED.confidence_prior,
+                source_ids      = EXCLUDED.source_ids,
+                source_files    = EXCLUDED.source_files,
+                hitl_conditions = EXCLUDED.hitl_conditions,
+                last_reviewed   = EXCLUDED.last_reviewed,
+                source_profile  = EXCLUDED.source_profile,
+                doc_type        = EXCLUDED.doc_type,
+                route_mode      = EXCLUDED.route_mode,
+                route_authority = EXCLUDED.route_authority,
+                source_reliability = EXCLUDED.source_reliability,
+                location_precision = EXCLUDED.location_precision,
+                exact_match_terms = EXCLUDED.exact_match_terms,
+                negative_signals = EXCLUDED.negative_signals,
+                structured_fields = EXCLUDED.structured_fields,
+                retrieval_weight = EXCLUDED.retrieval_weight,
                 qdrant_point_id = EXCLUDED.qdrant_point_id,
                 updated_at      = NOW()
         """, (
@@ -562,6 +659,20 @@ def main():
             doc["description"],
             doc.get("confidence_prior", 0.85),
             doc.get("hotline"),
+            json.dumps(doc.get("source_ids", [])),
+            json.dumps(doc.get("source_files", [])),
+            json.dumps(doc.get("hitl_conditions", [])),
+            doc.get("last_reviewed"),
+            doc.get("source_profile", "legacy"),
+            doc.get("doc_type", "responsibility"),
+            doc.get("route_mode", "routing_candidate"),
+            doc.get("route_authority", "authoritative"),
+            doc.get("source_reliability", "unknown"),
+            doc.get("location_precision"),
+            json.dumps(doc.get("exact_match_terms", [])),
+            json.dumps(doc.get("negative_signals", [])),
+            json.dumps(doc.get("structured_fields", {})),
+            doc.get("retrieval_weight", 1.0),
             point_id,
         ))
 
@@ -577,11 +688,27 @@ def main():
             "districts":       doc.get("districts", []),
             "municipalities":  doc.get("municipalities", []),
             "complaint_types": doc["complaint_types"],
-            "keywords":        doc["keywords"][:10],
+            "keywords":        doc["keywords"][:30],
             "not_responsible_for": doc.get("not_responsible_for", []),
             "description":     doc["description"],
             "confidence_prior": doc.get("confidence_prior", 0.85),
             "hotline":         doc.get("hotline"),
+            "source_ids":      doc.get("source_ids", []),
+            "source_files":    doc.get("source_files", []),
+            "hitl_conditions": doc.get("hitl_conditions", []),
+            "hitl_always_required": doc.get("hitl_always_required", False),
+            "last_reviewed":   doc.get("last_reviewed"),
+            "responsibility_level": doc.get("responsibility_level", "legacy"),
+            "source_entity_id": doc.get("source_entity_id"),
+            "doc_type":        doc.get("doc_type", "responsibility"),
+            "route_mode":      doc.get("route_mode", "routing_candidate"),
+            "route_authority": doc.get("route_authority", "authoritative"),
+            "source_reliability": doc.get("source_reliability", "unknown"),
+            "location_precision": doc.get("location_precision"),
+            "exact_match_terms": doc.get("exact_match_terms", []),
+            "negative_signals": doc.get("negative_signals", []),
+            "structured_fields": doc.get("structured_fields", {}),
+            "retrieval_weight": doc.get("retrieval_weight", 1.0),
         }
 
         points.append(PointStruct(id=point_id, vector=embedding, payload=payload))

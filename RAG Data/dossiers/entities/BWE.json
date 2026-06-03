@@ -1,0 +1,120 @@
+{
+  "entity_id": "BWE",
+  "entity_name": "Bekaa Water Establishment (مؤسسة مياه البقاع)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "BWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of potable water and wastewater/sewage services for Bekaa and Baalbek-Hermel governorates. Established under Law 221 dated 1/5/2000. One of four Lebanese water establishments under Ministry of Energy and Water supervision.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-BWE-FACEBOOK"],
+      "notes": "Wastewater scope inferred from Law 221/2000 which mandates same scope for all 4 water establishments. Confirmed operational as of June 2026 from Facebook procurement post.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing, internal water pipes, rooftop tanks, or building pumps. Responsible only for the public water supply and sewage network up to the building connection point.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F003",
+      "fact_type": "service_area",
+      "value": "Covers Bekaa governorate and Baalbek-Hermel governorate — all districts: Zahle, West Bekaa, Rashaya, Baalbek, Hermel. Does NOT cover Beirut/Mount Lebanon (→ BMLWE), North Lebanon/Akkar (→ NLWE), or South Lebanon/Nabatiyeh (→ SLWE). Note: Zahle city electricity is served by EDZ (private concession), not EDL — but water is served by BWE.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F004",
+      "fact_type": "operational_contact",
+      "value": "Website: bwe.gov.lb (temporarily unavailable as of June 2026 — use Facebook page as alternative). Facebook: facebook.com/BekaaWaterEst (active, 5.8K followers). Complaints hotline: 1781 (from any landline — confirmed from official BWE Facebook featured post June 2024). HQ address: Zahle Highway, Abed Deyem Building, Floors 3 and 4. Main office phone: 08/814500. Email: info@bwe.gov.lb. Working hours: not confirmed — call 1781.",
+      "confidence": "high",
+      "source_ids": ["SRC-028", "SRC-BWE-FACEBOOK"],
+      "notes": "Hotline 1781 confirmed from BWE Facebook featured post (June 24, 2024) showing official graphic: 'للشكاوى الإتصال على الرقم 1781 من أي خط أرضي'. Website bwe.gov.lb confirmed referenced in May 2026 procurement document but temporarily unreachable. Working hours not published on Facebook.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F005",
+      "fact_type": "service_area",
+      "value": "4 confirmed branch offices with phone numbers: (1) Zahle — 08/820236. (2) Baalbek — 08/370335. (3) Stations/YOYO — 08/811389. (4) South Bekaa/Joub Jannine — 08/663414. Main office: 08/814500. Complaints hotline: 1781. Additional branches may exist — verify when website is restored.",
+      "confidence": "medium",
+      "source_ids": ["SRC-028"],
+      "notes": "4 branches from existing source SRC-028. Medium confidence because website is unavailable to verify current branch list. Facebook page does not publish branch directory.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F006",
+      "fact_type": "complaint_process",
+      "value": "Three channels: (1) Call 1781 — dedicated complaints hotline from any landline. (2) Call branch directly by GPS location: Zahle 08/820236, Baalbek 08/370335, Stations 08/811389, South Bekaa 08/663414. (3) Email info@bwe.gov.lb. No online complaint form confirmed (website unavailable). Facebook page (facebook.com/BekaaWaterEst) is active and can be used for non-urgent contact. For CedarFix: route by GPS → identify district → direct to 1781 or nearest branch number.",
+      "confidence": "medium",
+      "source_ids": ["SRC-028", "SRC-BWE-FACEBOOK"],
+      "notes": "Medium confidence because website is temporarily unavailable — online form existence not confirmed. 1781 hotline is confirmed from Facebook.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F007",
+      "fact_type": "legal_responsibility",
+      "value": "Water supply interruption classification (same framework as all 4 Lebanese water establishments under Law 221/2000): (A) UNPLANNED cut — no prior notice — sudden network fault, contamination, emergency maintenance, force majeure → valid infrastructure complaint → route to BWE via 1781. (B) PLANNED cut — with prior notice — network extensions, upgrades, maintenance, efficiency programs → planned outage, inform citizen, do NOT route as complaint. (C) ADMINISTRATIVE cut — with warning — subscriber failed to pay bills within deadline → billing issue, NOT infrastructure complaint → direct to billing/payment at branch.",
+      "confidence": "high",
+      "source_ids": ["SRC-022", "SRC-SLWE-FAQ-PAGE"],
+      "notes": "Applied from SLWE FAQ (confirmed) and Law 221/2000 framework shared by all 4 water establishments. Critical for CedarFix to disambiguate 'no water' complaints before routing.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "BWE-F008",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA. CedarFix targets: supply interruption 24-48h; pipe burst 24h; contamination — immediate HITL escalation; sewage overflow — immediate HITL escalation.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "WATER_supply — no water, supply interruption, low pressure (Bekaa + Baalbek-Hermel)",
+      "WATER_pipe — burst pipe, water leak from public network",
+      "WATER_contamination — unsafe, discolored, or smelly water",
+      "WATER_meter — faulty meter, billing dispute",
+      "WASTEWATER_overflow — sewage overflow, blocked public sewer",
+      "WATER_connection — new connection, illegal connection report"
+    ],
+    "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "Private building plumbing or internal pipes — private contractor",
+      "Rooftop tanks or building pumps — private responsibility",
+      "Water issues in Beirut or Mount Lebanon — route to BMLWE",
+      "Water issues in North Lebanon or Akkar — route to NLWE",
+      "Water issues in South Lebanon or Nabatiyeh — route to SLWE",
+      "Zahle city electricity — route to EDZ not EDL (water is still BWE)"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports — always HITL, potential public health emergency",
+      "Sewage overflow into streets or public spaces — HITL, public health risk",
+      "Complaint is ambiguous between unplanned outage and billing disconnection — HITL to clarify"
+    ]
+  },
+  "sources": [
+    "SRC-011",
+    "SRC-021",
+    "SRC-022",
+    "SRC-028",
+    "SRC-BWE-FACEBOOK",
+    "SRC-SLWE-FAQ-PAGE"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
+}
