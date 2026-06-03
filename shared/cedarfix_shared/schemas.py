@@ -568,7 +568,7 @@ class VisualIssueCandidate(BaseModel):
     semantic_domain: Optional[str] = None
     physical_component: Optional[str] = None
     failure_mode: Optional[str] = None
-    confidence: float = 0.0
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence: str = ""
 
 
@@ -584,7 +584,7 @@ class VisualUnderstandingJSON(BaseModel):
     semantic_domain: Optional[str] = None
     physical_component: Optional[str] = None
     failure_mode: Optional[str] = None
-    visual_candidates: List[VisualIssueCandidate] = []
+    visual_candidates: List[VisualIssueCandidate] = Field(default_factory=list, max_length=3)
 
 
 class VLMImageAnalysis(BaseModel):
@@ -616,7 +616,7 @@ class VLMImageAnalysis(BaseModel):
     routing_features: RoutingFeaturesJSON = Field(default_factory=RoutingFeaturesJSON)
     evidence: ExtractionEvidenceJSON = Field(default_factory=ExtractionEvidenceJSON)
     alignment_features: AlignmentFeaturesJSON = Field(default_factory=AlignmentFeaturesJSON)
-    visual_candidates: List[VisualIssueCandidate] = []
+    visual_candidates: List[VisualIssueCandidate] = Field(default_factory=list, max_length=3)
 
 
 class ImageUnderstandingResult(BaseModel):

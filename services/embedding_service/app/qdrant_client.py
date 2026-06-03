@@ -3,10 +3,10 @@ Qdrant client wrapper — two collections for independent retrieval.
 
 Collections:
   text_embeddings  (768-dim)  — one point per complaint (MPNet)
-  clip_embeddings  (512-dim)  — up to two points per complaint:
+  clip_embeddings  (512-dim)  — multimodal CLIP-space points:
                                  one clip_text entry (always)
                                  one clip_image entry (when image is present)
-                                 payload field `vector_type` = "clip_text" | "clip_image"
+                                 up to three clip_image_candidate caption entries
 """
 
 import os
@@ -42,6 +42,11 @@ def _stable_id(complaint_id: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, complaint_id))
 
 
+def _text_candidate_id(complaint_id: str, index: int) -> str:
+    """Deterministic UUID for an image-candidate MPNet text entry."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"text_candidate_{complaint_id}_{index}"))
+
+
 def _clip_text_id(complaint_id: str) -> str:
     """Deterministic UUID for the clip_text entry in clip_embeddings."""
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_text_{complaint_id}"))
@@ -50,6 +55,11 @@ def _clip_text_id(complaint_id: str) -> str:
 def _clip_image_id(complaint_id: str) -> str:
     """Deterministic UUID for the clip_image entry in clip_embeddings."""
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_image_{complaint_id}"))
+
+
+def _clip_candidate_id(complaint_id: str, index: int) -> str:
+    """Deterministic UUID for an image-candidate CLIP text entry."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_candidate_{complaint_id}_{index}"))
 
 
 class QdrantStore:
@@ -84,6 +94,22 @@ class QdrantStore:
             )],
         )
 
+    async def store_text_candidate(self, complaint_id: str, index: int, vector: List[float], payload: Dict):
+        """Store MPNet text encoding for one VLM image issue candidate."""
+        self.client.upsert(
+            collection_name=TEXT_COLLECTION,
+            points=[PointStruct(
+                id=_text_candidate_id(complaint_id, index),
+                vector=vector,
+                payload={
+                    "complaint_id": complaint_id,
+                    "vector_type": "image_candidate_text",
+                    "candidate_index": index,
+                    **payload,
+                },
+            )],
+        )
+
     async def store_clip_text(self, complaint_id: str, vector: List[float], payload: Dict):
         """Store the CLIP text encoding of a complaint's text in clip_embeddings."""
         self.client.upsert(
@@ -106,6 +132,22 @@ class QdrantStore:
             )],
         )
 
+    async def store_clip_image_candidate(self, complaint_id: str, index: int, vector: List[float], payload: Dict):
+        """Store CLIP text encoding for one VLM image issue candidate caption."""
+        self.client.upsert(
+            collection_name=CLIP_COLLECTION,
+            points=[PointStruct(
+                id=_clip_candidate_id(complaint_id, index),
+                vector=vector,
+                payload={
+                    "complaint_id": complaint_id,
+                    "vector_type": "clip_image_candidate",
+                    "candidate_index": index,
+                    **payload,
+                },
+            )],
+        )
+
     # ------------------------------------------------------------------
     # Search
     # ------------------------------------------------------------------
@@ -122,7 +164,10 @@ class QdrantStore:
         timestamp = None
         if ts_str:
             try:
-                timestamp = datetime.fromisoformat(ts_str)
+                if isinstance(ts_str, (int, float)):
+                    timestamp = datetime.fromtimestamp(ts_str)
+                else:
+                    timestamp = datetime.fromisoformat(str(ts_str))
             except Exception:
                 pass
         return RawCandidate(
@@ -177,10 +222,10 @@ class QdrantStore:
             score = round(r.score, 4)
             if query_type == "clip_text":
                 c.raw_clip_text_sim = score
-                c.clip_text_is_xmodal = (hit_vector_type == "clip_image")
+                c.clip_text_is_xmodal = (hit_vector_type in {"clip_image", "clip_image_candidate"})
             else:  # clip_image
                 c.raw_clip_image_sim = score
-                c.clip_image_is_xmodal = (hit_vector_type == "clip_text")
+                c.clip_image_is_xmodal = (hit_vector_type in {"clip_text", "clip_image_candidate"})
             candidates.append(c)
         return candidates
 

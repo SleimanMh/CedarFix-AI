@@ -1,5 +1,5 @@
-"""
-IEP-0 — Moderation Gate
+﻿"""
+IEP-0 â€” Moderation Gate
 ========================
 Three-layer content moderation applied BEFORE the main pipeline.
 
@@ -16,14 +16,14 @@ Layer 3: VLM image moderation (async, only when image present AND flagged)
   - Qwen2.5-VL: harmful image detection
 
 Decision:
-  PASS   → proceed to pipeline normally
-  FLAG   → proceed + add to human review queue
-  REJECT → block, audit-log, return 400
+  PASS   â†’ proceed to pipeline normally
+  FLAG   â†’ proceed + add to human review queue
+  REJECT â†’ block, audit-log, return 400
 
 Key policy rules (from spec):
-  - Political content → FLAG not REJECT
-  - AI-generated image → weak signal, never hard-reject alone
-  - Spam / hate / explicit → REJECT
+  - Political content â†’ FLAG not REJECT
+  - AI-generated image â†’ weak signal, never hard-reject alone
+  - Spam / hate / explicit â†’ REJECT
 """
 
 from __future__ import annotations
@@ -34,6 +34,8 @@ import logging
 import os
 import re
 from typing import Optional, List
+
+from sqlalchemy import text
 
 from cedarfix_shared.schemas import ModerationDecisionEnum, ModerationResult
 
@@ -50,7 +52,7 @@ QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 LLM_THRESHOLD: float = float(os.getenv("MODERATION_LLM_THRESHOLD", "0.75"))
 
 # ---------------------------------------------------------------------------
-# Layer 1 — Heuristics
+# Layer 1 â€” Heuristics
 # ---------------------------------------------------------------------------
 
 _MIN_TEXT_LEN = 8       # characters
@@ -62,7 +64,7 @@ _HATE_KEYWORDS: set[str] = {
     # English hate/explicit
     "kill", "bomb", "terrorist", "fuck", "shit", "bitch", "whore",
     # Arabic hate
-    "اقتل", "انفجار", "إرهابي", "لعنة",
+    "Ø§Ù‚ØªÙ„", "Ø§Ù†ÙØ¬Ø§Ø±", "Ø¥Ø±Ù‡Ø§Ø¨ÙŠ", "Ù„Ø¹Ù†Ø©",
 }
 _SPAM_PATTERNS = [
     re.compile(r"(.)\1{6,}"),                # repeated characters: "aaaaaaa"
@@ -72,16 +74,35 @@ _SPAM_PATTERNS = [
     re.compile(r"\b(\w+)\b(\s+\1){3,}", re.I),  # word repeated 4+ times
 ]
 
-# ---------------------------------------------------------------------------
-# In-memory recent-hash store (used for exact-duplicate detection within session)
-# For production: use Redis SET with TTL
-# ---------------------------------------------------------------------------
-_recent_hashes: dict[str, int] = {}
-_MAX_HASH_CACHE = 10_000
-
 
 def _text_hash(text: str) -> str:
     return hashlib.sha256(text.strip().lower().encode()).hexdigest()[:16]
+
+
+async def _record_text_hash(text_value: str, user_id: Optional[str]) -> bool:
+    """
+    Store the normalized text hash in Postgres.
+    Returns True when this exact text has already been seen.
+    """
+    from .database import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            text("""
+                INSERT INTO moderation_text_hashes
+                    (text_hash, first_seen_at, last_seen_at, seen_count, last_user_id)
+                VALUES
+                    (:text_hash, NOW(), NOW(), 1, :user_id)
+                ON CONFLICT (text_hash) DO UPDATE SET
+                    last_seen_at = NOW(),
+                    seen_count = moderation_text_hashes.seen_count + 1,
+                    last_user_id = EXCLUDED.last_user_id
+                RETURNING seen_count
+            """),
+            {"text_hash": _text_hash(text_value), "user_id": user_id},
+        )
+        await session.commit()
+        return int(result.scalar_one()) > 1
 
 
 def _heuristic_check(text: str) -> tuple[ModerationDecisionEnum, list[str]]:
@@ -117,20 +138,6 @@ def _heuristic_check(text: str) -> tuple[ModerationDecisionEnum, list[str]]:
             flags.append("spam_pattern")
             break
 
-    # Exact-duplicate hash
-    h = _text_hash(text)
-    if h in _recent_hashes:
-        flags.append("exact_duplicate")
-        # don't reject — could be retry; flag only
-    else:
-        if len(_recent_hashes) >= _MAX_HASH_CACHE:
-            # Evict oldest 1000 entries (simple LRU approximation)
-            oldest = sorted(_recent_hashes, key=lambda k: _recent_hashes[k])[:1000]
-            for k in oldest:
-                del _recent_hashes[k]
-        import time as _time
-        _recent_hashes[h] = int(_time.time())
-
     # Decision
     hard_flags = {"text_too_short", "text_too_long"}
     hate_flags = {f for f in flags if f.startswith("keyword:")}
@@ -146,7 +153,7 @@ def _heuristic_check(text: str) -> tuple[ModerationDecisionEnum, list[str]]:
 
 
 # ---------------------------------------------------------------------------
-# Layer 2 — LLM text moderation
+# Layer 2 â€” LLM text moderation
 # ---------------------------------------------------------------------------
 
 _LLM_SYSTEM = """\
@@ -157,7 +164,7 @@ Analyse the text and return ONLY valid JSON (no markdown):
   "is_abusive": <true|false>,
   "is_political": <true|false>,
   "decision": "<PASS|FLAG|REJECT>",
-  "confidence": <0.0–1.0>,
+  "confidence": <0.0â€“1.0>,
   "reason": "<1 sentence>"
 }
 
@@ -165,8 +172,8 @@ Rules:
 - REJECT: clear hate speech, explicit abuse, personal attacks, marketing spam.
 - FLAG: political opinions/commentary, borderline content, unclear complaint.
 - PASS: genuine infrastructure complaint (road, water, electricity, garbage, etc.).
-- is_political = true does NOT mean REJECT. Political content → FLAG only.
-- Lebanese dialect (Levantine Arabic, Arabizi) is normal — do not flag language itself.
+- is_political = true does NOT mean REJECT. Political content â†’ FLAG only.
+- Lebanese dialect (Levantine Arabic, Arabizi) is normal â€” do not flag language itself.
 """
 
 
@@ -203,13 +210,13 @@ async def _llm_moderate_text(text: str) -> Optional[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Layer 3 — VLM image moderation (checks harmful image content)
+# Layer 3 â€” VLM image moderation (checks harmful image content)
 # ---------------------------------------------------------------------------
 
 async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
     """
     Only called when an image is present AND the text was flagged.
-    Reuses VLMAnalyzer's is_harmful detection (lightweight — no full analysis).
+    Reuses VLMAnalyzer's is_harmful detection (lightweight â€” no full analysis).
     """
     vlm_base = os.getenv("VLM_BASE_URL", "")
     if not vlm_base:
@@ -296,8 +303,15 @@ async def moderate(
             vlm_checked=False,
         )
 
-    # ── Layer 1: Heuristics ───────────────────────────────────────────────────
+    # â”€â”€ Layer 1: Heuristics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     heuristic_decision, heuristic_flags = _heuristic_check(complaint_text)
+    try:
+        if await _record_text_hash(complaint_text, user_id):
+            heuristic_flags.append("exact_duplicate")
+            if heuristic_decision == ModerationDecisionEnum.PASS:
+                heuristic_decision = ModerationDecisionEnum.FLAG
+    except Exception as e:
+        log.warning("[IEP-0] Postgres duplicate hash check failed: %s", e)
 
     is_spam = False
     is_abusive = False
@@ -308,7 +322,7 @@ async def moderate(
     final_decision = heuristic_decision
     reason = f"Heuristics: {', '.join(heuristic_flags)}" if heuristic_flags else "Clean"
 
-    # ── Layer 2: LLM (only when heuristics flagged anything) ─────────────────
+    # â”€â”€ Layer 2: LLM (only when heuristics flagged anything) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if heuristic_flags and QWEN_BASE_URL:
         llm_data = await _llm_moderate_text(complaint_text)
         llm_checked = True
@@ -328,23 +342,23 @@ async def moderate(
                 except ValueError:
                     pass  # keep heuristic decision
 
-            # Political → FLAG not REJECT (policy rule)
+            # Political â†’ FLAG not REJECT (policy rule)
             if is_political and final_decision == ModerationDecisionEnum.REJECT:
                 final_decision = ModerationDecisionEnum.FLAG
                 reason = f"Political content detected (downgraded from REJECT): {reason}"
 
-    # ── Layer 3: VLM image moderation ────────────────────────────────────────
+    # â”€â”€ Layer 3: VLM image moderation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if image_filename and final_decision != ModerationDecisionEnum.PASS:
         vlm_data = await _vlm_moderate_image(image_filename)
         vlm_checked = True
         if vlm_data:
             is_harmful_img = bool(vlm_data.get("is_harmful", False))
             if is_harmful_img:
-                # Harmful image → escalate to REJECT unless already
+                # Harmful image â†’ escalate to REJECT unless already
                 final_decision = ModerationDecisionEnum.REJECT
                 reason = f"Harmful image detected: {vlm_data.get('reason', '')}; {reason}"
 
-    # AI-generated image is a weak signal — note it but never reject alone
+    # AI-generated image is a weak signal â€” note it but never reject alone
     # (VLMAnalyzer in model.py sets is_ai_generated on the full analysis)
 
     log.info(
@@ -363,3 +377,4 @@ async def moderate(
         llm_checked=llm_checked,
         vlm_checked=vlm_checked,
     )
+

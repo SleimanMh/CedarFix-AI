@@ -1,5 +1,5 @@
-"""
-Image Understanding Model — CLIP-based structured scene analysis.
+﻿"""
+Image Understanding Model â€” CLIP-based structured scene analysis.
 AI Engineer 2 owns and improves this file.
 
 Phase 1: CLIP zero-shot + rule-based quality assessment (see analyzer.py).
@@ -47,7 +47,7 @@ class ImageUnderstandingModel:
                 self.vlm_aligner = VLMAlignmentChecker()
                 log.info("[IEP-2] VLM analyzer initialised (model: %s)", os.getenv("VLM_MODEL", "Qwen2.5-VL"))
             except Exception as e:
-                log.warning("[IEP-2] VLM init failed — VLM disabled: %s", e)
+                log.warning("[IEP-2] VLM init failed â€” VLM disabled: %s", e)
 
     async def analyze(
         self,
@@ -62,7 +62,7 @@ class ImageUnderstandingModel:
         intra-complaint cosine similarity without any cross-model projection.
 
         When VLM is enabled:
-          - VLMAnalyzer runs for all valid images → vlm_analysis field populated.
+          - VLMAnalyzer runs for all valid images â†’ vlm_analysis field populated.
           - VLMAlignmentChecker runs when CLIP alignment is UNCERTAIN or CONTRADICTS.
         """
         # Support both local paths and GCS signed/public URLs
@@ -110,7 +110,7 @@ class ImageUnderstandingModel:
         # 4. Image embedding (512-dim CLIP)
         embedding = self.analyzer.get_image_embedding(image)
 
-        # 5. VLM Phase 2 — richer semantic analysis (async, non-blocking on CLIP path)
+        # 5. VLM Phase 2 â€” richer semantic analysis (async, non-blocking on CLIP path)
         vlm_analysis = None
         if self.vlm_analyzer:
             # Primary image understanding must remain image-only. Text is used
@@ -146,34 +146,12 @@ class ImageUnderstandingModel:
                         "vlm_alignment_confidence": vlm_align_data.get("confidence"),
                     })
 
-        # 6. CLIP text embedding — same 512-dim space as the image embedding.
-        #    If VLM produced a caption, use it as the image-side text signal for
-        #    alignment. Otherwise fall back to a CLIP-friendly prompt by subcategory.
-        _SUBCAT_TO_CLIP_PROMPT = {
-            "pothole":            "a photo of road damage or pothole",
-            "road_damage":        "a photo of cracked or broken road surface",
-            "flooding":           "a photo of street flooding or standing water",
-            "waste_accumulation": "a photo of garbage or waste accumulation on the street",
-            "outage":             "a photo of electricity or power outage, dark street",
-            "traffic_light":      "a photo of a broken or non-functioning traffic light",
-            "pipe_leak":          "a photo of a burst or leaking water pipe",
-            "sidewalk_damage":    "a photo of a cracked or broken sidewalk",
-            "streetlight":        "a photo of a broken or dark street lamp",
-            "other":              "a photo of public infrastructure damage",
-        }
+        # 6. CLIP text embedding: same 512-dim space as the image embedding.
+        #    This field represents the citizen complaint text, not the VLM caption.
+        #    IEP-3 uses it for text-to-image duplicate retrieval.
         clip_text_emb: list = []
         if complaint_text:
-            vlm_caption = (vlm_analysis.caption if vlm_analysis else "") or ""
-            if vlm_caption.strip():
-                clip_prompt = vlm_caption.strip()
-            else:
-                detected_subcat = visual.visual_subcategory if visual else "other"
-                clip_prompt = _SUBCAT_TO_CLIP_PROMPT.get(
-                    detected_subcat,
-                    f"a photo of {detected_subcat.replace('_', ' ')}",
-                )
-            clip_text_emb = self.analyzer.get_text_embedding(clip_prompt)
-
+            clip_text_emb = self.analyzer.get_text_embedding(complaint_text)
         return ImageUnderstandingResult(
             complaint_id=complaint_id,
             image_present=True,
@@ -184,4 +162,5 @@ class ImageUnderstandingModel:
             clip_text_embedding=clip_text_emb,
             vlm_analysis=vlm_analysis,
         )
+
 

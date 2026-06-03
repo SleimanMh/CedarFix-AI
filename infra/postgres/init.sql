@@ -102,6 +102,18 @@ CREATE INDEX IF NOT EXISTS idx_hrq_created_at  ON human_review_queue(created_at)
 CREATE INDEX IF NOT EXISTS idx_hrq_status      ON human_review_queue(validation_status);
 
 
+CREATE TABLE IF NOT EXISTS moderation_text_hashes (
+    text_hash       VARCHAR(64) PRIMARY KEY,
+    first_seen_at   TIMESTAMP DEFAULT NOW(),
+    last_seen_at    TIMESTAMP DEFAULT NOW(),
+    seen_count      INTEGER DEFAULT 1,
+    last_user_id    VARCHAR(100)
+);
+
+CREATE INDEX IF NOT EXISTS idx_moderation_text_hashes_last_seen
+    ON moderation_text_hashes(last_seen_at);
+
+
 CREATE TABLE IF NOT EXISTS model_performance_log (
     id              SERIAL PRIMARY KEY,
     logged_at       TIMESTAMP DEFAULT NOW(),

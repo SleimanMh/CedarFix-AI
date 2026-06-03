@@ -36,6 +36,19 @@ async def init_db():
                 routing_json JSONB
             )
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS moderation_text_hashes (
+                text_hash VARCHAR(64) PRIMARY KEY,
+                first_seen_at TIMESTAMP DEFAULT NOW(),
+                last_seen_at TIMESTAMP DEFAULT NOW(),
+                seen_count INTEGER DEFAULT 1,
+                last_user_id VARCHAR(100)
+            )
+        """))
+        await conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_moderation_text_hashes_last_seen
+            ON moderation_text_hashes(last_seen_at)
+        """))
 
 
 async def save_complaint(decision: ComplaintDecision):

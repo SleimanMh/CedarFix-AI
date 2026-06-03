@@ -1,5 +1,5 @@
-"""
-Pipeline Orchestrator — calls IEPs in the correct order.
+﻿"""
+Pipeline Orchestrator â€” calls IEPs in the correct order.
 IEP-1 and IEP-2 run in parallel (text and image are independent).
 IEP-3 through IEP-6 run sequentially (each depends on prior results).
 """
@@ -23,6 +23,8 @@ from .config import settings
 from .moderation import moderate, ModerationDecisionEnum
 
 TIMEOUT = httpx.Timeout(60.0)
+SINGLE_MODAL_REVIEW_CONFIDENCE = 0.85
+IMAGE_CANDIDATE_CONFIDENCE_THRESHOLD = 0.40
 
 
 async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> ComplaintDecision:
@@ -70,6 +72,10 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         # Catches: no complaint in text, text/image contradictions, ambiguous submissions.
         validation = _validate_media(text_result, image_result)
         decision.media_validation = validation
+        force_review_after_pipeline = False
+
+        if validation.reconciled_type:
+            decision.complaint_type = validation.reconciled_type
 
         if validation.status == MediaValidationStatus.CONTRADICTION:
             decision.status = PipelineStatus.CONTRADICTION
@@ -83,7 +89,10 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         if validation.status == MediaValidationStatus.HUMAN_REVIEW:
             decision.status = PipelineStatus.REVIEW_REQUIRED
             await _add_to_human_review(client, complaint_id, request, validation)
-            return decision
+            if validation.text_is_complaint or validation.image_has_complaint:
+                force_review_after_pipeline = True
+            else:
+                return decision
 
         if validation.status == MediaValidationStatus.INVALID_NO_COMPLAINT:
             decision.status = PipelineStatus.INVALID_NO_COMPLAINT
@@ -179,7 +188,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         decision.explanation = explanation_result
 
     decision.status = PipelineStatus.REVIEW_REQUIRED if (
-        routing_result and routing_result.requires_review
+        force_review_after_pipeline or (routing_result and routing_result.requires_review)
     ) else PipelineStatus.COMPLETED
 
     return decision
@@ -461,16 +470,33 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
         image_rf = getattr(img_vlm, "routing_features", {}) if img_vlm else {}
         image_af = getattr(img_vlm, "alignment_features", {}) if img_vlm else {}
         image_ev = getattr(img_vlm, "evidence", {}) if img_vlm else {}
+        validation = decision.media_validation
+        use_image_for_routing = (
+            validation is not None
+            and getattr(validation, "reconciled_source", None) == "image"
+            and getattr(validation, "reconciled_type", None)
+        )
 
-        derived_domain = (
-            text_rf.get("domain") if isinstance(text_rf, dict) else None
-        ) or (text.semantic_domain if text else None) or (text.category if text else None) or "unknown"
-        derived_component = (
-            text_rf.get("physical_component") if isinstance(text_rf, dict) else None
-        ) or (text.physical_component if text else None) or "unknown"
-        derived_failure_mode = (
-            text_rf.get("failure_mode") if isinstance(text_rf, dict) else None
-        ) or (text.failure_mode if text else None) or "unknown"
+        if use_image_for_routing:
+            derived_domain = getattr(validation, "image_semantic_domain", None) or (
+                image_rf.get("domain") if isinstance(image_rf, dict) else None
+            ) or "unknown"
+            derived_component = getattr(validation, "image_physical_component", None) or (
+                image_rf.get("physical_component") if isinstance(image_rf, dict) else None
+            ) or "unknown"
+            derived_failure_mode = getattr(validation, "image_failure_mode", None) or (
+                image_rf.get("failure_mode") if isinstance(image_rf, dict) else None
+            ) or "unknown"
+        else:
+            derived_domain = (
+                text_rf.get("domain") if isinstance(text_rf, dict) else None
+            ) or (text.semantic_domain if text else None) or (text.category if text else None) or "unknown"
+            derived_component = (
+                text_rf.get("physical_component") if isinstance(text_rf, dict) else None
+            ) or (text.physical_component if text else None) or "unknown"
+            derived_failure_mode = (
+                text_rf.get("failure_mode") if isinstance(text_rf, dict) else None
+            ) or (text.failure_mode if text else None) or "unknown"
 
         mm = decision.text_image_alignment
         mm_payload = {
@@ -488,9 +514,21 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
         payload = {
             "complaint_id": complaint_id,
             "complaint_type": decision.complaint_type,
-            "category": text.category if text else "unknown",
-            "subcategory": text.subcategory if text else "unknown",
-            "summary": text.summary if text else (decision.original_text or ""),
+            "category": (
+                validation.image_detected_category
+                if use_image_for_routing
+                else (text.category if text else "unknown")
+            ),
+            "subcategory": (
+                validation.image_detected_type
+                if use_image_for_routing
+                else (text.subcategory if text else "unknown")
+            ),
+            "summary": (
+                f"Image shows a {(validation.image_detected_type or 'public infrastructure issue').replace('_', ' ')}."
+                if use_image_for_routing
+                else (text.summary if text else (decision.original_text or ""))
+            ),
             "severity": decision.severity,
             "original_text": decision.original_text or "",
             "location_district": loc.district if loc else (decision.location.district if decision.location else None),
@@ -554,7 +592,7 @@ async def _call_explanation_service(
 # Media Validation Gate helpers
 # ---------------------------------------------------------------------------
 
-# Maps issue_type → broad visual category for contradiction detection
+# Maps issue_type â†’ broad visual category for contradiction detection
 _TYPE_TO_CATEGORY: dict = {
     "pothole":            "roads",
     "road_damage":        "roads",
@@ -665,10 +703,10 @@ def _descriptor_overlap(
 ) -> int:
     """
     Count how many of the 3 semantic dimensions (domain, physical_component, failure_mode)
-    match between text and image.  Returns 0–3.
+    match between text and image.  Returns 0â€“3.
 
     0 = completely incompatible (strong contradiction signal)
-    1 = same broad domain only (weak agreement — trust text)
+    1 = same broad domain only (weak agreement â€” trust text)
     2 = same domain + component (good compatibility)
     3 = full match (strong agreement)
     """
@@ -695,9 +733,13 @@ def _visual_issue_candidates(image_result: ImageUnderstandingResult | None) -> l
         return []
 
     vu = image_result.visual_understanding
-    raw_candidates = list(getattr(vu, "visual_candidates", []) or [])
-    if not raw_candidates and image_result.vlm_analysis:
-        raw_candidates = list(getattr(image_result.vlm_analysis, "visual_candidates", []) or [])
+    raw_candidates = (
+        list(getattr(image_result.vlm_analysis, "visual_candidates", []) or [])
+        if image_result.vlm_analysis
+        else []
+    )
+    if not raw_candidates:
+        raw_candidates = list(getattr(vu, "visual_candidates", []) or [])
 
     candidates: list[dict] = []
     for candidate in raw_candidates[:3]:
@@ -740,6 +782,14 @@ def _visual_issue_candidates(image_result: ImageUnderstandingResult | None) -> l
         "image_physical_component": component,
         "image_failure_mode": mode,
     }]
+
+
+def _confident_specific_image_candidates(candidates: list[dict]) -> list[dict]:
+    return [
+        candidate for candidate in candidates
+        if (candidate.get("image_confidence") or 0.0) >= IMAGE_CANDIDATE_CONFIDENCE_THRESHOLD
+        and not _is_generic_visual_label(candidate.get("image_type"))
+    ]
 
 
 def _best_image_candidate_for_text(
@@ -839,7 +889,7 @@ def _validate_media(
         )
 
     # --- Decision matrix ---
-    # If IEP-1 service was completely unreachable, don't block — let pipeline continue
+    # If IEP-1 service was completely unreachable, don't block â€” let pipeline continue
     if text_service_failed:
         return MediaValidationResult(
             status=MediaValidationStatus.VALID,
@@ -899,7 +949,7 @@ def _validate_media(
                 image_has_complaint
                 and not exact_type_match
                 and not generic_image
-                and overlap == 0
+                and (overlap is None or overlap < 2)
                 and image_confidence is not None and image_confidence >= 0.50
             )
         else:
@@ -941,7 +991,38 @@ def _validate_media(
                     f"Please resubmit with matching text and photo."
                 ),
             )
-        # Both modalities are compatible — rec_source reflects degree of agreement
+        # Both modalities are compatible â€” rec_source reflects degree of agreement
+        if (
+            has_image
+            and not image_has_complaint
+            and text_confidence is not None
+            and text_confidence >= SINGLE_MODAL_REVIEW_CONFIDENCE
+        ):
+            return MediaValidationResult(
+                status=MediaValidationStatus.HUMAN_REVIEW,
+                text_is_complaint=True,
+                image_has_complaint=False,
+                text_detected_type=text_type_str,
+                text_detected_category=text_category,
+                text_confidence=text_confidence,
+                image_detected_type=image_type_str,
+                image_detected_category=image_category,
+                image_confidence=image_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                modality_overlap_score=None,
+                reconciled_type=text_type_str,
+                reconciled_source="text",
+                clarification_question=(
+                    f"Your text clearly describes a {_display_label(text_type_str, 'public infrastructure')} issue, "
+                    "but the image does not clearly show a public infrastructure problem. "
+                    "A human reviewer will verify the submission."
+                ),
+            )
         if overlap is None:
             rec_source = "both" if (image_has_complaint and exact_type_match) else "text"
         else:
@@ -967,10 +1048,56 @@ def _validate_media(
             reconciled_source=rec_source,
         )
 
-    # Text is NOT a complaint — check image
+    # Text is NOT a complaint â€” check image
     if image_has_complaint:
+        confident_candidates = _confident_specific_image_candidates(image_candidates)
+        if len(confident_candidates) > 1:
+            issue_labels = [
+                _display_label(candidate.get("image_type"), "infrastructure issue")
+                for candidate in confident_candidates[:3]
+            ]
+            return MediaValidationResult(
+                status=MediaValidationStatus.NEEDS_CLARIFICATION,
+                text_is_complaint=False,
+                image_has_complaint=True,
+                text_detected_type=text_type_str,
+                text_detected_category=text_category,
+                text_confidence=text_confidence,
+                image_detected_type=image_type_str,
+                image_detected_category=image_category,
+                image_confidence=image_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                modality_overlap_score=None,
+                reconciled_type=None,
+                reconciled_source=None,
+                clarification_question=(
+                    "Your text doesn't clearly describe which issue you are reporting, "
+                    f"and the image appears to show multiple issues: {', '.join(issue_labels)}. "
+                    "Please specify which one you want to report."
+                ),
+            )
+
+        if len(confident_candidates) == 1:
+            selected = confident_candidates[0]
+            image_type_str = selected.get("image_type")
+            image_category = selected.get("image_category")
+            image_confidence = selected.get("image_confidence")
+            image_semantic_domain = selected.get("image_semantic_domain")
+            image_physical_component = selected.get("image_physical_component")
+            image_failure_mode = selected.get("image_failure_mode")
+
+        status = (
+            MediaValidationStatus.HUMAN_REVIEW
+            if image_confidence is not None and image_confidence >= SINGLE_MODAL_REVIEW_CONFIDENCE
+            else MediaValidationStatus.NEEDS_CLARIFICATION
+        )
         return MediaValidationResult(
-            status=MediaValidationStatus.NEEDS_CLARIFICATION,
+            status=status,
             text_is_complaint=False,
             image_has_complaint=True,
             text_detected_type=text_type_str,
@@ -1017,7 +1144,7 @@ def _validate_media(
             reconciled_type=None,
             reconciled_source=None,
             clarification_question=(
-                "Your submission is unclear — neither the text nor the image clearly "
+                "Your submission is unclear â€” neither the text nor the image clearly "
                 "shows a public infrastructure problem. A human reviewer will assess it."
             ),
         )
@@ -1068,7 +1195,7 @@ async def _add_to_human_review(
     except Exception as e:
         print(f"[WARN] Could not queue human review item: {e}")
     """
-    Full EEP → IEP orchestration.
+    Full EEP â†’ IEP orchestration.
     Returns a complete ComplaintDecision.
     """
     decision = ComplaintDecision(
@@ -1167,3 +1294,4 @@ async def _add_to_human_review(
     ) else PipelineStatus.COMPLETED
 
     return decision
+
