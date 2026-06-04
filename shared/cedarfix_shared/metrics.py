@@ -29,6 +29,42 @@ LANGUAGE_DISTRIBUTION = Counter(
     "Detected language counts",
     ["lang"],
 )
+TEXT_CONFIDENCE_SCORE = Histogram(
+    "cedarfix_text_confidence_score",
+    "IEP-1 complaint classification confidence",
+    ["category", "issue_type"],
+    buckets=[0.1, 0.3, 0.5, 0.65, 0.75, 0.85, 0.95, 1.0],
+)
+TEXT_LOCATION_CONFIDENCE = Histogram(
+    "cedarfix_text_location_confidence",
+    "IEP-1 extracted location confidence",
+    ["source"],
+    buckets=[0.0, 0.3, 0.5, 0.65, 0.8, 0.95, 1.0],
+)
+TEXT_UNKNOWN_TYPE_TOTAL = Counter(
+    "cedarfix_text_unknown_type_total",
+    "Complaints classified with unknown issue type",
+    ["category"],
+)
+TEXT_MISSING_LOCATION_TOTAL = Counter(
+    "cedarfix_text_missing_location_total",
+    "Complaints where IEP-1 could not extract or resolve a location",
+    ["issue_type"],
+)
+TEXT_NOT_COMPLAINT_TOTAL = Counter(
+    "cedarfix_text_not_complaint_total",
+    "Texts classified as not being complaints",
+)
+TEXT_EXTRACTION_SOURCE_TOTAL = Counter(
+    "cedarfix_text_extraction_source_total",
+    "IEP-1 extraction path used",
+    ["source"],
+)
+TEXT_EXTRACTION_FAILURE_TOTAL = Counter(
+    "cedarfix_text_extraction_failure_total",
+    "IEP-1 extractor failures by source",
+    ["source", "error_type"],
+)
 
 # --- Image Understanding ---
 IMAGE_ANALYSIS_DURATION = Histogram(
@@ -41,6 +77,32 @@ IMAGE_RELEVANCE = Histogram(
     "Distribution of image relevance scores",
     buckets=[0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
 )
+IMAGE_INPUT_TOTAL = Counter(
+    "cedarfix_image_input_total",
+    "IEP-2 image input outcomes",
+    ["status"],
+)
+IMAGE_QUALITY_FAILURE_TOTAL = Counter(
+    "cedarfix_image_quality_failure_total",
+    "Image quality failure reasons",
+    ["issue"],
+)
+IMAGE_VISUAL_CONFIDENCE = Histogram(
+    "cedarfix_image_visual_confidence",
+    "IEP-2 visual classification confidence",
+    ["category", "subcategory"],
+    buckets=[0.1, 0.3, 0.5, 0.65, 0.75, 0.85, 0.95, 1.0],
+)
+IMAGE_DAMAGE_VISIBLE_TOTAL = Counter(
+    "cedarfix_image_damage_visible_total",
+    "IEP-2 damage-visible decisions",
+    ["damage_visible"],
+)
+IMAGE_VLM_REQUEST_TOTAL = Counter(
+    "cedarfix_image_vlm_request_total",
+    "VLM analyzer outcomes in IEP-2",
+    ["outcome"],
+)
 
 # --- Embedding Service ---
 SIMILARITY_SCORE = Histogram(
@@ -48,10 +110,73 @@ SIMILARITY_SCORE = Histogram(
     "Top similarity score distribution",
     buckets=[0.5, 0.65, 0.75, 0.85, 0.92, 0.99],
 )
+TEXT_IMAGE_ALIGNMENT_TOTAL = Counter(
+    "cedarfix_text_image_alignment_total",
+    "Text-image alignment decisions from IEP-3",
+    ["status", "reconciliation_status", "conflict_detected"],
+)
+TEXT_IMAGE_ALIGNMENT_SCORE = Histogram(
+    "cedarfix_text_image_alignment_score",
+    "Text-image alignment score distribution",
+    ["status"],
+    buckets=[0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 1.0],
+)
+TEXT_IMAGE_CONFLICT_FEATURE_TOTAL = Counter(
+    "cedarfix_text_image_conflict_feature_total",
+    "Conflicting text-image feature counts",
+    ["feature"],
+)
+EMBEDDING_CANDIDATE_COUNT = Histogram(
+    "cedarfix_embedding_candidate_count",
+    "IEP-3 candidate count after retrieval and fusion",
+    ["modality"],
+    buckets=[0, 1, 2, 5, 10, 20, 40],
+)
+RETRIEVAL_SOURCE_HITS = Counter(
+    "cedarfix_retrieval_source_hits_total",
+    "IEP-3 retrieved candidates by source after merge",
+    ["source"],
+)
+QDRANT_OPERATION_DURATION = Histogram(
+    "cedarfix_qdrant_operation_duration_seconds",
+    "Qdrant operation latency",
+    ["operation", "collection"],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 3.0],
+)
+QDRANT_OPERATION_ERRORS = Counter(
+    "cedarfix_qdrant_operation_errors_total",
+    "Qdrant operation errors",
+    ["operation", "collection"],
+)
 DUPLICATE_RATE = Counter(
     "cedarfix_duplicate_detections_total",
     "Duplicate/near-duplicate complaints detected",
     ["status"],  # DUPLICATE | NEAR_DUPLICATE | NEW
+)
+MATCHING_CANDIDATE_COUNT = Histogram(
+    "cedarfix_matching_candidate_count",
+    "IEP-4 duplicate matching candidate count",
+    buckets=[0, 1, 2, 5, 10, 20, 40],
+)
+MATCHING_DECISION_CONFIDENCE = Histogram(
+    "cedarfix_matching_decision_confidence",
+    "IEP-4 duplicate decision confidence",
+    ["decision"],
+    buckets=[0.1, 0.3, 0.5, 0.65, 0.75, 0.85, 0.92, 0.98, 1.0],
+)
+MATCHING_TOP_SCORE = Histogram(
+    "cedarfix_matching_top_score",
+    "Top multimodal duplicate score before final decision",
+    buckets=[0.1, 0.3, 0.5, 0.65, 0.75, 0.85, 0.92, 0.98, 1.0],
+)
+MATCHING_REVIEW_TOTAL = Counter(
+    "cedarfix_matching_review_total",
+    "IEP-4 duplicate decisions requiring admin review",
+    ["reason"],
+)
+MATCHING_RECHECK_TOTAL = Counter(
+    "cedarfix_matching_recheck_total",
+    "IEP-4 candidates that triggered multimodal recheck logic",
 )
 
 # --- Priority Engine ---
@@ -80,6 +205,42 @@ ROUTING_ENTITY = Counter(
     "cedarfix_routing_entity_total",
     "Complaints routed per entity",
     ["entity"],
+)
+ROUTING_SOURCE_TOTAL = Counter(
+    "cedarfix_routing_source_total",
+    "Routing decisions by source",
+    ["source"],
+)
+ROUTING_REVIEW_TOTAL = Counter(
+    "cedarfix_routing_review_total",
+    "Routing decisions that require human review",
+    ["source", "reason"],
+)
+RAG_RETRIEVAL_DURATION = Histogram(
+    "cedarfix_rag_retrieval_duration_seconds",
+    "IEP-6 routing RAG retrieval latency",
+    ["status"],
+    buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 3.0, 10.0],
+)
+RAG_CANDIDATE_COUNT = Histogram(
+    "cedarfix_rag_candidate_count",
+    "IEP-6 routing RAG candidate count",
+    buckets=[0, 1, 2, 3, 5, 10, 20],
+)
+RAG_TOP_SCORE = Histogram(
+    "cedarfix_rag_top_score",
+    "Top routing RAG retrieval score",
+    buckets=[0.1, 0.3, 0.5, 0.65, 0.75, 0.85, 0.95, 1.0],
+)
+RAG_NO_CANDIDATES_TOTAL = Counter(
+    "cedarfix_rag_no_candidates_total",
+    "Routing requests where RAG returned zero candidates",
+    ["complaint_type"],
+)
+RAG_RETRIEVAL_ERRORS_TOTAL = Counter(
+    "cedarfix_rag_retrieval_errors_total",
+    "Routing RAG retrieval failures",
+    ["error_type"],
 )
 
 # --- Monitoring / Drift ---

@@ -22,11 +22,18 @@ import logging
 import os
 import re
 import time
+import unicodedata
 from typing import Optional, List
 
 import httpx
 from cedarfix_shared.schemas import RoutingResult, RoutingEntity
 from cedarfix_shared.location import haversine_km
+from cedarfix_shared.metrics import (
+    RAG_CANDIDATE_COUNT,
+    RAG_RETRIEVAL_DURATION,
+    RAG_RETRIEVAL_ERRORS_TOTAL,
+    RAG_TOP_SCORE,
+)
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +47,7 @@ QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 
 RAG_ENABLED: bool = os.getenv("ROUTING_RAG_ENABLED", "true").lower() == "true"
-RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "5"))
+RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "8"))
 QDRANT_HOST: str = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
 RAG_COLLECTION: str = os.getenv("ROUTING_QDRANT_COLLECTION", "routing_knowledge")
@@ -132,6 +139,18 @@ Rules:
 - You MUST choose primary_entity from the provided candidates. Do not invent entities.
 - secondary_entity is optional — only set if two entities genuinely share responsibility.
 - confidence < 0.65 → set requires_human_review: true.
+- Prefer candidates whose responsibility_level is primary, whose route_mode is routing_candidate,
+  routing_rule, or geo_service_route, and whose handles match the complaint.
+- Do NOT choose a candidate for issues listed under does NOT handle.
+- Treat contact_fallback_only, audit_context, contact_context, query_and_type_expansion,
+  resolution_context, resolution_policy, supporting_context, and staging_not_production
+  records as supporting context only, not production routing authority.
+- Do NOT auto-route from docs marked fallback_only_not_auto_route, staging_not_production,
+  blocker, supporting_audit, or validation_guardrail.
+- If all matching docs are support-only or hitl_always_required, choose Human Review Queue
+  when available, otherwise set requires_human_review: true.
+- If the best matching candidate is Human Review Queue or the candidate HITL rules apply,
+  choose Human Review Queue when available, otherwise set requires_human_review: true.
 - If the location is outside Beirut, prefer the correct regional entity over Beirut Municipality.
 - Telecom issues (internet/wifi/DSL) → Ogero. Electricity issues → EDL.
 - Traffic accidents/police matters → Internal Security Forces.
@@ -151,9 +170,24 @@ def _build_routing_prompt(
         f"Candidate {i+1}:\n"
         f"  entity_name: {d['entity_name']}\n"
         f"  entity_type: {d['entity_type']}\n"
+        f"  doc_type: {d.get('doc_type', 'responsibility')}\n"
+        f"  route_mode: {d.get('route_mode', 'routing_candidate')}\n"
+        f"  route_authority: {d.get('route_authority', 'authoritative')}\n"
+        f"  source_reliability: {d.get('source_reliability', 'unknown')}\n"
+        f"  responsibility_level: {d.get('responsibility_level', 'primary')}\n"
+        f"  retrieval_weight: {d.get('retrieval_weight', 'unknown')}\n"
+        f"  confidence_prior: {d.get('confidence_prior', 'unknown')}\n"
         f"  geographic_scope: {d.get('governorates') or 'nationwide'}\n"
+        f"  municipalities: {', '.join(d.get('municipalities', [])[:8])}\n"
         f"  handles: {', '.join(d.get('complaint_types', []))}\n"
+        f"  keywords: {', '.join(d.get('keywords', [])[:12])}\n"
+        f"  exact_match_terms: {', '.join(d.get('exact_match_terms', [])[:10])}\n"
+        f"  negative_signals: {', '.join(d.get('negative_signals', [])[:10])}\n"
         f"  does NOT handle: {', '.join(d.get('not_responsible_for', []))}\n"
+        f"  hitl_always_required: {d.get('hitl_always_required', False)}\n"
+        f"  human_review_conditions: {', '.join(d.get('hitl_conditions', []))}\n"
+        f"  source_ids: {', '.join(d.get('source_ids', [])[:6])}\n"
+        f"  last_reviewed: {d.get('last_reviewed') or 'unknown'}\n"
         f"  description: {d['description']}"
         for i, d in enumerate(docs)
     ])
@@ -251,7 +285,109 @@ def _build_query_text(
     return " | ".join(parts)
 
 
+_AUTO_ROUTE_MODES = {
+    "routing_candidate",
+    "routing_rule",
+    "geo_service_route",
+    "complaint_intake_or_channel",
+    "service_catalog",
+    "shared_service_context",
+}
+_SUPPORT_ONLY_MODES = {
+    "audit_context",
+    "contact_context",
+    "contact_fallback_only",
+    "geo_service_area",
+    "geo_union_context",
+    "human_review_gate",
+    "human_review_user_assist",
+    "manual_review_only",
+    "negative_boundary",
+    "operator_context",
+    "query_and_type_expansion",
+    "resolution_context",
+    "resolution_policy",
+    "routing_guardrail",
+    "supporting_context",
+}
+_BLOCKING_AUTHORITIES = {
+    "blocker",
+    "fallback_only_not_auto_route",
+    "manual_review_gate",
+    "staging_not_production",
+    "supporting_audit",
+    "validation_guardrail",
+}
+_ROUTE_MODE_BOOSTS = {
+    "geo_service_route": 0.16,
+    "routing_rule": 0.14,
+    "routing_candidate": 0.12,
+    "complaint_intake_or_channel": 0.05,
+    "service_catalog": 0.04,
+    "contact_fallback_only": -0.18,
+    "audit_context": -0.16,
+    "query_and_type_expansion": -0.10,
+    "resolution_context": -0.10,
+    "resolution_policy": -0.10,
+    "supporting_context": -0.08,
+}
+
+
+def _tokens(value: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9_+-]{3,}", value.lower()))
+
+
+def _doc_allows_auto_route(doc: dict) -> bool:
+    route_mode = str(doc.get("route_mode") or "routing_candidate")
+    authority = str(doc.get("route_authority") or "authoritative")
+    if bool(doc.get("hitl_always_required")):
+        return False
+    if authority in _BLOCKING_AUTHORITIES or route_mode in _SUPPORT_ONLY_MODES:
+        return False
+    return route_mode in _AUTO_ROUTE_MODES or doc.get("responsibility_level") in {"primary", "secondary"}
+
+
+def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
+    query_lower = query_text.lower()
+    query_tokens = _tokens(query_text)
+    ranked: list[dict] = []
+
+    for doc in docs:
+        route_mode = str(doc.get("route_mode") or "routing_candidate")
+        weight = float(doc.get("retrieval_weight") or 1.0)
+        base_score = float(doc.get("_rag_score") or 0.0)
+        score = base_score * max(0.1, min(weight, 2.0))
+        score += _ROUTE_MODE_BOOSTS.get(route_mode, 0.0)
+
+        exact_matches = 0
+        for term in doc.get("exact_match_terms", [])[:20]:
+            term_text = str(term).lower().strip()
+            if len(term_text) >= 3 and term_text in query_lower:
+                exact_matches += 1
+        score += min(0.25, exact_matches * 0.05)
+
+        keyword_tokens = _tokens(" ".join(str(k) for k in doc.get("keywords", [])[:30]))
+        if keyword_tokens:
+            overlap = len(query_tokens & keyword_tokens)
+            score += min(0.18, overlap * 0.015)
+
+        if not _doc_allows_auto_route(doc):
+            score -= 0.12
+        if doc.get("responsibility_level") == "primary":
+            score += 0.04
+        elif doc.get("responsibility_level") == "secondary":
+            score += 0.015
+
+        enriched = dict(doc)
+        enriched["_rerank_score"] = round(score, 6)
+        ranked.append(enriched)
+
+    ranked.sort(key=lambda d: (float(d.get("_rerank_score") or 0.0), float(d.get("_rag_score") or 0.0)), reverse=True)
+    return ranked[:top_k]
+
+
 def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
+    start = time.time()
     try:
         model = _get_embed_model()
         qdrant = _get_qdrant()
@@ -260,11 +396,26 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
         results = qdrant.search(
             collection_name=RAG_COLLECTION,
             query_vector=query_vec,
-            limit=top_k,
+            limit=max(top_k * 3, top_k),
             with_payload=True,
         )
-        return [r.payload for r in results]
+        docs = []
+        for r in results:
+            payload = dict(r.payload or {})
+            score = float(getattr(r, "score", 0.0) or 0.0)
+            payload["_rag_score"] = score
+            docs.append(payload)
+        docs = _rerank_docs(query_text, docs, top_k=top_k)
+        top_score = max((float(d.get("_rag_score") or 0.0) for d in docs), default=0.0)
+        RAG_CANDIDATE_COUNT.observe(len(docs))
+        if docs:
+            RAG_TOP_SCORE.observe(top_score)
+        RAG_RETRIEVAL_DURATION.labels(status="success").observe(time.time() - start)
+        return docs
     except Exception as e:
+        RAG_CANDIDATE_COUNT.observe(0)
+        RAG_RETRIEVAL_ERRORS_TOTAL.labels(error_type=_error_type(e)).inc()
+        RAG_RETRIEVAL_DURATION.labels(status="error").observe(time.time() - start)
         log.warning("[IEP-6] RAG retrieval failed: %s", e)
         return []
 
@@ -355,17 +506,47 @@ _NAME_TO_ENTITY.update({
     "ministry of public works":        RoutingEntity.MINISTRY_PUBLIC_WORKS,
     "ministry of public works and transport": RoutingEntity.MINISTRY_PUBLIC_WORKS,
     "electricite du liban":            RoutingEntity.EDL,
+    "electricite de liban":            RoutingEntity.EDL,
+    "electricité du liban":            RoutingEntity.EDL,
     "edl":                             RoutingEntity.EDL,
+    "electricite de zahle":            RoutingEntity.EDZ,
+    "electricité de zahle":            RoutingEntity.EDZ,
+    "edz":                             RoutingEntity.EDZ,
     "ogero":                           RoutingEntity.OGERO,
+    "ogero telecom":                   RoutingEntity.OGERO,
     "internal security forces":        RoutingEntity.INTERNAL_SECURITY,
     "isf":                             RoutingEntity.INTERNAL_SECURITY,
+    "lebanese civil defense":          RoutingEntity.CIVIL_DEFENSE,
+    "civil defense":                   RoutingEntity.CIVIL_DEFENSE,
+    "cd":                              RoutingEntity.CIVIL_DEFENSE,
     "ministry of environment":         RoutingEntity.MINISTRY_ENVIRONMENT,
+    "ministry of energy and water":    RoutingEntity.MINISTRY_ENERGY_WATER,
+    "ministry of interior and municipalities": RoutingEntity.MINISTRY_INTERIOR_MUNICIPALITIES,
     "beirut water authority":          RoutingEntity.WATER_AUTHORITY,
+    "beirut and mount lebanon water establishment": RoutingEntity.WATER_AUTHORITY,
+    "beirut and mount lebanon water establishment - ebml": RoutingEntity.WATER_AUTHORITY,
+    "bmlwe":                           RoutingEntity.WATER_AUTHORITY,
+    "ebml":                            RoutingEntity.WATER_AUTHORITY,
     "north lebanon water establishment": RoutingEntity.WATER_NORTH,
+    "nlwe":                            RoutingEntity.WATER_NORTH,
     "south lebanon water establishment": RoutingEntity.WATER_SOUTH,
+    "slwe":                            RoutingEntity.WATER_SOUTH,
     "bekaa water establishment":       RoutingEntity.WATER_BEKAA,
+    "bwe":                             RoutingEntity.WATER_BEKAA,
     "council for development and reconstruction": RoutingEntity.CDR,
+    "cdr":                             RoutingEntity.CDR,
+    "central inspection":              RoutingEntity.CENTRAL_INSPECTION,
+    "general directorate of local administrations and councils": RoutingEntity.DGLAC,
+    "telecommunications regulatory authority": RoutingEntity.TRA,
+    "tra":                             RoutingEntity.TRA,
+    "mobile network operators":        RoutingEntity.MOBILE_OPERATOR,
+    "mobile operators":                RoutingEntity.MOBILE_OPERATOR,
+    "litani river authority":          RoutingEntity.LRA,
+    "lra":                             RoutingEntity.LRA,
+    "municipal police":                RoutingEntity.MUNICIPAL_POLICE,
+    "municipal enforcement units":     RoutingEntity.MUNICIPAL_POLICE,
     "local municipality":              RoutingEntity.GENERIC_MUNICIPALITY,
+    "lebanese municipalities":         RoutingEntity.GENERIC_MUNICIPALITY,
     "human review queue":              RoutingEntity.HUMAN_REVIEW,
 })
 
@@ -373,7 +554,30 @@ _NAME_TO_ENTITY.update({
 def _resolve_entity(name: Optional[str]) -> Optional[RoutingEntity]:
     if not name:
         return None
-    return _NAME_TO_ENTITY.get(name.lower().strip()) or _NAME_TO_ENTITY.get(name.strip())
+    raw = str(name).strip()
+    without_parens = re.sub(r"\([^)]*\)", "", raw)
+    without_suffix = re.sub(r"\s+-\s+[A-Za-z0-9]+$", "", without_parens).strip()
+    normalized = unicodedata.normalize("NFKD", without_suffix)
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    normalized = re.sub(r"\s+", " ", normalized).lower().strip()
+    return (
+        _NAME_TO_ENTITY.get(raw)
+        or _NAME_TO_ENTITY.get(raw.lower())
+        or _NAME_TO_ENTITY.get(without_suffix.lower())
+        or _NAME_TO_ENTITY.get(normalized)
+    )
+
+
+def _error_type(exc: Exception) -> str:
+    name = exc.__class__.__name__.lower()
+    text = str(exc).lower()
+    if "timeout" in name or "timeout" in text:
+        return "timeout"
+    if "connection" in name or "connect" in text:
+        return "connection"
+    if "not found" in text or "missing" in text:
+        return "missing_collection"
+    return name or "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -461,12 +665,27 @@ class ComplaintRouter:
 
             if docs:
                 retrieved_sources = [d.get("doc_id", "") for d in docs]
-                prompt = _build_routing_prompt(
-                    ct, original_text,
-                    location_district, location_governorate, location_municipality,
-                    keywords, docs,
-                )
-                llm_data = await _call_llm_routing(prompt)
+                if not any(_doc_allows_auto_route(d) for d in docs):
+                    routing_source = "rag_support_only"
+                    final_primary = RoutingEntity.HUMAN_REVIEW
+                    final_secondary = None
+                    final_conf = min(static_conf, 0.55)
+                    requires_review = True
+                    review_reason = (
+                        "RAG retrieved only support-only, fallback, audit, or manual-review "
+                        "documents. No production routing authority was found."
+                    )
+                    rationale = [
+                        "Retrieved RAG docs were useful context but not production routing authority.",
+                        f"Static fallback was: {'; '.join(static_rationale)}",
+                    ]
+                else:
+                    prompt = _build_routing_prompt(
+                        ct, original_text,
+                        location_district, location_governorate, location_municipality,
+                        keywords, docs,
+                    )
+                    llm_data = await _call_llm_routing(prompt)
 
             if llm_data:
                 llm_entity = _resolve_entity(llm_data.get("primary_entity"))

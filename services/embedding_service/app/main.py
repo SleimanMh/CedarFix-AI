@@ -34,7 +34,14 @@ from cedarfix_shared.schemas import (
     SignalsJSON,
     TextUnderstandingResult,
 )
-from cedarfix_shared.metrics import SIMILARITY_SCORE
+from cedarfix_shared.metrics import (
+    EMBEDDING_CANDIDATE_COUNT,
+    RETRIEVAL_SOURCE_HITS,
+    SIMILARITY_SCORE,
+    TEXT_IMAGE_ALIGNMENT_SCORE,
+    TEXT_IMAGE_ALIGNMENT_TOTAL,
+    TEXT_IMAGE_CONFLICT_FEATURE_TOTAL,
+)
 
 from .alignment import ModalAlignmentComputer
 from .qdrant_client import QdrantStore
@@ -204,6 +211,16 @@ async def embed(request: EmbedRequest):
 
     # ── 1. Intra-complaint modal alignment ───────────────────────────────────
     alignment = aligner.compute(text_result, image_result)
+    TEXT_IMAGE_ALIGNMENT_TOTAL.labels(
+        status=alignment.alignment_status.value,
+        reconciliation_status=alignment.reconciliation_status.value,
+        conflict_detected=str(bool(alignment.conflict_detected)).lower(),
+    ).inc()
+    TEXT_IMAGE_ALIGNMENT_SCORE.labels(status=alignment.alignment_status.value).observe(
+        alignment.alignment_score
+    )
+    for feature in alignment.conflicting_features:
+        TEXT_IMAGE_CONFLICT_FEATURE_TOTAL.labels(feature=feature).inc()
 
     # ── 2. Build canonical complaint ─────────────────────────────────────────
     loc = text_result.location
@@ -289,6 +306,11 @@ async def embed(request: EmbedRequest):
         clip_text_embedding=clip_text_emb,
         image_present=image_present,
     )
+    modality = "text_and_image" if image_present else "text_only"
+    EMBEDDING_CANDIDATE_COUNT.labels(modality=modality).observe(len(candidates))
+    for candidate in candidates:
+        for source in candidate.sources:
+            RETRIEVAL_SOURCE_HITS.labels(source=source).inc()
 
     elapsed_ms = int((time.time() - start) * 1000)
     top_score = max(

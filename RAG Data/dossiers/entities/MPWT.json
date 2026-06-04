@@ -1,0 +1,120 @@
+{
+  "entity_id": "MPWT",
+  "entity_name": "Ministry of Public Works and Transport (وزارة الأشغال العامة والنقل)",
+  "entity_type": "government_ministry",
+  "parent_ministry": "self (ministry)",
+  "facts": [
+    {
+      "fact_id": "MPWT-F001",
+      "fact_type": "legal_responsibility",
+      "value": "PRIMARY entity for maintenance and management of Lebanon's national roads, highways, and autostrads.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-019", "SRC-022"],
+      "notes": "LLM-RT-002 confirms MPWT (not CDR) is primary for autostrad/highway issues. CDR is primary ONLY when inside an active CDR worksite.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F002",
+      "fact_type": "legal_responsibility",
+      "value": "Oversees public transportation infrastructure, seaports, airports (coordination), and public works projects not assigned to CDR. Also responsible for urban planning coordination (General Directorate of Urban Planning) and land & maritime transport licensing.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-019", "SRC-MPWT-ADMIN-UNITS"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F003",
+      "fact_type": "legal_responsibility",
+      "value": "Five administrative units confirmed from official site: (1) Shared Administrative Directorate (المديرية الإدارية المشتركة) — accounting and legal affairs. (2) General Directorate of Roads & Buildings (المديرية العامة للطرق و المباني) — the unit responsible for national road maintenance, with sub-units: Roads Directorate (Construction, Design & Programming, Studies, Maintenance departments) and Buildings Directorate. Also has Regional Directorates (المديريات الإقليمية). (3) General Directorate of Urban Planning (المديرية العامة للتنظيم المدني). (4) General Directorate of Land & Maritime Transport (المديرية العامة للنقل البري و البحري). (5) General Directorate of Civil Aviation (المديرية العامة للطيران المدني). For CedarFix road complaints: the relevant unit is General Directorate of Roads & Buildings → Roads Directorate → Maintenance Department (مصلحة الصيانة).",
+      "confidence": "high",
+      "source_ids": ["SRC-019", "SRC-MPWT-ADMIN-UNITS"],
+      "notes": "Administrative units confirmed from mopw.gov.lb/الوحدات-الإدارية-(1) on 2026-05-31. Previous fact had incorrect count of 4 directorates.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F004",
+      "fact_type": "service_area",
+      "value": "National road network (autostrads, highways, national roads) across all Lebanese governorates. Does NOT cover local/municipal streets — those are municipality responsibility. Regional Directorates (المديريات الإقليمية) exist under the General Directorate of Roads & Buildings for regional coverage, but specific regional office contacts not yet published on website.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-022", "SRC-MPWT-ADMIN-UNITS"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F005",
+      "fact_type": "operational_contact",
+      "value": "Website: mopw.gov.lb. Phone: +(961) 5 455821 / +(961) 5 455822 (two lines). Email: ministry@mopw.gov.lb. Minister (2026): Fayez Rasamny. Social media: Twitter, Facebook. No dedicated citizen complaint hotline exists — all road complaints go to the main ministry number. No online complaint form exists on mopw.gov.lb.",
+      "confidence": "high",
+      "source_ids": ["SRC-006", "SRC-MPWT-CONTACT-PAGE", "SRC-MPWT-ADMIN-UNITS"],
+      "notes": "Contacts confirmed from Arabic version footer at mopw.gov.lb on 2026-05-31. English version showed different numbers (459980, mail@ministry.gov.lb) — Arabic footer is authoritative. No citizen complaint form or hotline exists on the site.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F006",
+      "fact_type": "deadline_or_sla",
+      "value": "No officially published SLA for national road repair. CedarFix target varies by severity: emergency (downed bridge, collapsed road) 24-48h, non-emergency (pothole, crack) 72h-2 weeks.",
+      "confidence": "low",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "MPWT-F007",
+      "fact_type": "uncertain_or_needs_human_review",
+      "value": "Boundary between MPWT and CDR jurisdiction for road projects can be ambiguous: CDR executes infrastructure on behalf of GoL but MPWT has ongoing maintenance. Active CDR project = CDR primary; maintenance after project closure = MPWT.",
+      "confidence": "medium",
+      "source_ids": ["SRC-022", "SRC-017"],
+      "human_review_required": true,
+      "human_review_reason": "MPWT vs CDR boundary requires case-by-case assessment for any road that may be part of a CDR project."
+    },
+    {
+      "fact_id": "MPWT-F008",
+      "fact_type": "complaint_process",
+      "value": "No dedicated citizen complaint channel exists. Complaint process: (1) Call main ministry lines: 05/455821 or 05/455822. (2) Email: ministry@mopw.gov.lb. (3) Visit General Directorate of Roads & Buildings directly and reach the Maintenance Department (مصلحة الصيانة). No online form, no WhatsApp channel, no dedicated road complaint hotline confirmed on mopw.gov.lb as of 2026-05-31. HITL always required before any MPWT routing — citizen must be directed to call the ministry directly.",
+      "confidence": "high",
+      "source_ids": ["SRC-MPWT-CONTACT-PAGE", "SRC-MPWT-ADMIN-UNITS"],
+      "notes": "Confirmed absence of citizen complaint form from full review of mopw.gov.lb Arabic version on 2026-05-31. Arabic site has more content than English version.",
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "ROADS_national — autostrads, highways, national roads (not local streets)",
+      "ROADS_bridge — bridge damage or collapse on national network",
+      "TRANSPORT_maritime — seaport infrastructure complaints",
+      "TRANSPORT_civil_aviation — airport infrastructure (coordination)"
+    ],
+    "secondary_for_sectors": [
+      "ROADS_local — escalation when municipality is unclear or unresponsive",
+      "ROADS_construction — if not an active CDR worksite"
+    ],
+    "not_responsible_for": [
+      "Local/residential streets — route to MUN",
+      "Active CDR project worksites — route to CDR",
+      "Electricity on roads — route to EDL",
+      "Water under roads — route to relevant water establishment"
+    ],
+    "hitl_always_required": true,
+    "hitl_conditions": [
+      "All MPWT routing requires HITL — no automated complaint channel exists",
+      "MPWT vs CDR ambiguity on any road that may be part of a CDR project",
+      "Road class ambiguity — local road vs national road boundary",
+      "Citizen must be directed to call 05/455821-22 or email ministry@mopw.gov.lb directly"
+    ]
+  },
+  "sources": [
+    "SRC-006",
+    "SRC-017",
+    "SRC-019",
+    "SRC-022",
+    "SRC-054",
+    "SRC-MPWT-CONTACT-PAGE",
+    "SRC-MPWT-ADMIN-UNITS"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-05-31"
+}

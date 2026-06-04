@@ -1,0 +1,112 @@
+{
+  "entity_id": "NLWE",
+  "entity_name": "North Lebanon Water Establishment - EELN (مؤسسة مياه لبنان الشمالي)",
+  "entity_type": "public_utility",
+  "parent_ministry": "Ministry of Energy and Water",
+  "facts": [
+    {
+      "fact_id": "NLWE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Supply, distribution, and network maintenance of potable water, irrigation water, drainage, and sanitation for North Lebanon and Akkar governorates. Established under Law No. 221 dated 21/05/2000. Produces water through approximately 100 wells and 60 springs at an estimated 170,000 cubic meters (170 million liters) per day.",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-NLWE-ABOUT-PAGE"],
+      "notes": "Confirmed from eeln.gov.lb/en/about/ on 2026-06-01. Also covers drainage, irrigation, and sanitation — not just potable water.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F002",
+      "fact_type": "legal_responsibility",
+      "value": "NOT responsible for private building plumbing, internal water pipes, rooftop tanks, or building pumps. Responsible only for the public water supply network up to the building connection point.",
+      "confidence": "high",
+      "source_ids": ["SRC-022"],
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F003",
+      "fact_type": "service_area",
+      "value": "Covers North Lebanon governorate and Akkar governorate — all districts: Tripoli, Koura, Zgharta-Ehden, Bsharri, Batroun, Minnieh-Dennieh, Akkar (Halba, Qobayat). Serves more than 110,000 families. Southern boundary: Madfoun area (Batroun/Jbeil boundary) — south of this is BMLWE territory. Does NOT cover Beirut, Mount Lebanon, Keserwan-Jbeil (→ BMLWE), South Lebanon/Nabatiyeh (→ SLWE), or Bekaa/Baalbek-Hermel (→ BWE).",
+      "confidence": "high",
+      "source_ids": ["SRC-011", "SRC-021", "SRC-NLWE-ABOUT-PAGE", "SRC-NLWE-CONTACT-PAGE"],
+      "notes": "Coverage confirmed from branch locations on eeln.gov.lb/en/contact/ on 2026-06-01. Batroun branch confirms Batroun district is NLWE, not BMLWE.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F004",
+      "fact_type": "operational_contact",
+      "value": "Website: eeln.gov.lb. HQ address: Tripoli, Salahuddine Kabbara Street, Dam w Farz. HQ phone: 06/430 075. Email: comms@eeln.gov.lb. Working hours: Monday–Thursday 8:00AM–2:00PM only (Friday closed). Social media: Facebook, Instagram, YouTube. Online contact form at eeln.gov.lb/en/contact/ — fields: Name, Email, Phone, Message. Published response commitment: 24 hours.",
+      "confidence": "high",
+      "source_ids": ["SRC-026", "SRC-NLWE-CONTACT-PAGE"],
+      "notes": "All contacts verified from eeln.gov.lb/en/contact/ on 2026-06-01. Working hours are significantly shorter than BMLWE (8AM-2PM vs 8AM-4PM). Online contact form confirmed with Send Now button.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F005",
+      "fact_type": "service_area",
+      "value": "9 branches with confirmed addresses and phone numbers: (1) Tripoli — Salahuddine Kabbara Street, Dam w Farz | 06/430 075. (2) Kobayat — Zouk Street, Mtanios Majid Al-Sayah Building | 06/350 341. (3) Halba — Main Road, Naeem Center | 06/690 095. (4) Menieh — New Minieh-Dennieh Highway, Hafez Aref Alam El-Din Building | 06/460 726. (5) Dinniyeh — Sir, Main Road, Aladdin King Building | 06/491 146. (6) Batroun — Old sea road, opposite Government Saray | 06/642 020. (7) Koura — Amyoun, Main Road, opposite Bank Audi, George Nassif Building | 06/651 012. (8) Zgharta — Main Road, Al-Saray Building | 06/660 347. (9) Bsharri — Main Road, Mar Chaaya Street, Najib Jabour Building | 06/672 260.",
+      "confidence": "high",
+      "source_ids": ["SRC-NLWE-CONTACT-PAGE"],
+      "notes": "All 9 branch addresses and phone numbers confirmed from eeln.gov.lb/en/contact/ on 2026-06-01. Unlike BMLWE, NLWE publishes phone numbers per branch.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F006",
+      "fact_type": "complaint_process",
+      "value": "Three complaint channels: (1) Call branch directly — use branch phone number matching complaint GPS location (see F005 for branch numbers by district). (2) Online contact form at eeln.gov.lb/en/contact/ — fields: Name, Email, Phone, Message. Published 24-hour response commitment. (3) Visit branch in person during working hours (Mon–Thu 8AM–2PM). No national hotline equivalent to BMLWE's 1713 — citizen must call the correct regional branch. For CedarFix: route by GPS → identify district → direct to relevant branch phone number.",
+      "confidence": "high",
+      "source_ids": ["SRC-NLWE-CONTACT-PAGE"],
+      "notes": "No national hotline confirmed on eeln.gov.lb. Branch-level routing is the primary mechanism.",
+      "human_review_required": false,
+      "human_review_reason": null
+    },
+    {
+      "fact_id": "NLWE-F007",
+      "fact_type": "deadline_or_sla",
+      "value": "Published response commitment: 'We respond to all messages within 24 hours' (from eeln.gov.lb/en/contact/). This applies to online contact form messages. No published SLA for physical infrastructure repair. CedarFix targets: supply interruption 24-48h; contamination — immediate HITL escalation.",
+      "confidence": "medium",
+      "source_ids": ["SRC-NLWE-CONTACT-PAGE"],
+      "notes": "24-hour response is for contact form messages — confirmed directly from website on 2026-06-01. Physical repair SLA not published. Upgraded from low to medium confidence based on published commitment.",
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "WATER_supply — no water, supply interruption, low pressure (North Lebanon + Akkar)",
+      "WATER_pipe — burst pipe, water leak from public network",
+      "WATER_contamination — unsafe, discolored, or smelly water",
+      "WATER_meter — faulty meter, billing dispute",
+      "WASTEWATER_overflow — sewage overflow, blocked public sewer",
+      "WATER_connection — new connection, illegal connection report"
+    ],
+    "secondary_for_sectors": [],
+    "not_responsible_for": [
+      "Private building plumbing or internal pipes — private contractor",
+      "Rooftop tanks or building pumps — private responsibility",
+      "Water issues in Beirut or Mount Lebanon — route to BMLWE",
+      "Water issues south of Madfoun/Jbeil boundary — route to BMLWE",
+      "Water issues in South Lebanon or Nabatiyeh — route to SLWE",
+      "Water issues in Bekaa or Baalbek-Hermel — route to BWE"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "Water contamination reports — always HITL, potential public health emergency",
+      "Sewage overflow into streets or public spaces — HITL, public health risk",
+      "GPS falls near BMLWE/NLWE boundary (Batroun/Jbeil-Madfoun area)"
+    ]
+  },
+  "sources": [
+    "SRC-011",
+    "SRC-021",
+    "SRC-022",
+    "SRC-026",
+    "SRC-NLWE-ABOUT-PAGE",
+    "SRC-NLWE-CONTACT-PAGE"
+  ],
+  "overall_confidence": "high",
+  "last_reviewed": "2026-06-01"
+}

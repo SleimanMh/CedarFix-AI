@@ -10,6 +10,7 @@ Collections:
 """
 
 import os
+import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -26,6 +27,7 @@ from qdrant_client.models import (
 )
 
 from cedarfix_shared.schemas import RawCandidate, SeverityLevel, CanonicalLocationJSON
+from cedarfix_shared.metrics import QDRANT_OPERATION_DURATION, QDRANT_OPERATION_ERRORS
 
 QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
@@ -67,17 +69,35 @@ class QdrantStore:
         self.client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
     async def init_collections(self):
-        existing = {c.name for c in self.client.get_collections().collections}
+        start = time.time()
+        try:
+            existing = {c.name for c in self.client.get_collections().collections}
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="get_collections", collection="all").inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(operation="get_collections", collection="all").observe(
+                time.time() - start
+            )
         specs = [
             (TEXT_COLLECTION, TEXT_DIM),
             (CLIP_COLLECTION, CLIP_DIM),
         ]
         for name, dim in specs:
             if name not in existing:
-                self.client.create_collection(
-                    collection_name=name,
-                    vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-                )
+                start = time.time()
+                try:
+                    self.client.create_collection(
+                        collection_name=name,
+                        vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+                    )
+                except Exception:
+                    QDRANT_OPERATION_ERRORS.labels(operation="create_collection", collection=name).inc()
+                    raise
+                finally:
+                    QDRANT_OPERATION_DURATION.labels(
+                        operation="create_collection", collection=name
+                    ).observe(time.time() - start)
                 print(f"[IEP-3] Created Qdrant collection: {name} ({dim}-dim)")
 
     # ------------------------------------------------------------------
@@ -85,14 +105,23 @@ class QdrantStore:
     # ------------------------------------------------------------------
 
     async def store_text(self, complaint_id: str, vector: List[float], payload: Dict):
-        self.client.upsert(
-            collection_name=TEXT_COLLECTION,
-            points=[PointStruct(
-                id=_stable_id(complaint_id),
-                vector=vector,
-                payload={"complaint_id": complaint_id, **payload},
-            )],
-        )
+        start = time.time()
+        try:
+            self.client.upsert(
+                collection_name=TEXT_COLLECTION,
+                points=[PointStruct(
+                    id=_stable_id(complaint_id),
+                    vector=vector,
+                    payload={"complaint_id": complaint_id, **payload},
+                )],
+            )
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="upsert_text", collection=TEXT_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation="upsert_text", collection=TEXT_COLLECTION
+            ).observe(time.time() - start)
 
     async def store_text_candidate(self, complaint_id: str, index: int, vector: List[float], payload: Dict):
         """Store MPNet text encoding for one VLM image issue candidate."""
@@ -112,25 +141,43 @@ class QdrantStore:
 
     async def store_clip_text(self, complaint_id: str, vector: List[float], payload: Dict):
         """Store the CLIP text encoding of a complaint's text in clip_embeddings."""
-        self.client.upsert(
-            collection_name=CLIP_COLLECTION,
-            points=[PointStruct(
-                id=_clip_text_id(complaint_id),
-                vector=vector,
-                payload={"complaint_id": complaint_id, "vector_type": "clip_text", **payload},
-            )],
-        )
+        start = time.time()
+        try:
+            self.client.upsert(
+                collection_name=CLIP_COLLECTION,
+                points=[PointStruct(
+                    id=_clip_text_id(complaint_id),
+                    vector=vector,
+                    payload={"complaint_id": complaint_id, "vector_type": "clip_text", **payload},
+                )],
+            )
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="upsert_clip_text", collection=CLIP_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation="upsert_clip_text", collection=CLIP_COLLECTION
+            ).observe(time.time() - start)
 
     async def store_clip_image(self, complaint_id: str, vector: List[float], payload: Dict):
         """Store the CLIP image encoding of a complaint's image in clip_embeddings."""
-        self.client.upsert(
-            collection_name=CLIP_COLLECTION,
-            points=[PointStruct(
-                id=_clip_image_id(complaint_id),
-                vector=vector,
-                payload={"complaint_id": complaint_id, "vector_type": "clip_image", **payload},
-            )],
-        )
+        start = time.time()
+        try:
+            self.client.upsert(
+                collection_name=CLIP_COLLECTION,
+                points=[PointStruct(
+                    id=_clip_image_id(complaint_id),
+                    vector=vector,
+                    payload={"complaint_id": complaint_id, "vector_type": "clip_image", **payload},
+                )],
+            )
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="upsert_clip_image", collection=CLIP_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation="upsert_clip_image", collection=CLIP_COLLECTION
+            ).observe(time.time() - start)
 
     async def store_clip_image_candidate(self, complaint_id: str, index: int, vector: List[float], payload: Dict):
         """Store CLIP text encoding for one VLM image issue candidate caption."""
@@ -185,12 +232,21 @@ class QdrantStore:
         )
 
     async def search_text(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
-        response = self.client.query_points(
-            collection_name=TEXT_COLLECTION,
-            query=vector,
-            limit=top_k,
-            with_payload=True,
-        )
+        start = time.time()
+        try:
+            response = self.client.query_points(
+                collection_name=TEXT_COLLECTION,
+                query=vector,
+                limit=top_k,
+                with_payload=True,
+            )
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="search_text", collection=TEXT_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation="search_text", collection=TEXT_COLLECTION
+            ).observe(time.time() - start)
         return [self._to_raw_candidate(r, "text_search") for r in response.points]
 
     async def search_clip(
@@ -209,12 +265,21 @@ class QdrantStore:
           - query_type="clip_text" + hit vector_type="clip_image" → cross-modal text→image
           - query_type="clip_image" + hit vector_type="clip_text" → cross-modal image→text
         """
-        response = self.client.query_points(
-            collection_name=CLIP_COLLECTION,
-            query=query_vector,
-            limit=top_k,
-            with_payload=True,
-        )
+        start = time.time()
+        try:
+            response = self.client.query_points(
+                collection_name=CLIP_COLLECTION,
+                query=query_vector,
+                limit=top_k,
+                with_payload=True,
+            )
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation=f"search_{query_type}", collection=CLIP_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation=f"search_{query_type}", collection=CLIP_COLLECTION
+            ).observe(time.time() - start)
         candidates = []
         for r in response.points:
             c = self._to_raw_candidate(r, f"{query_type}_search")
@@ -283,13 +348,22 @@ class QdrantStore:
             # No location info — skip geo-time search
             return []
 
-        results = self.client.scroll(
-            collection_name=TEXT_COLLECTION,
-            scroll_filter=Filter(must=conditions),
-            limit=top_k,
-            with_payload=True,
-            with_vectors=False,
-        )[0]
+        start = time.time()
+        try:
+            results = self.client.scroll(
+                collection_name=TEXT_COLLECTION,
+                scroll_filter=Filter(must=conditions),
+                limit=top_k,
+                with_payload=True,
+                with_vectors=False,
+            )[0]
+        except Exception:
+            QDRANT_OPERATION_ERRORS.labels(operation="search_geo_time", collection=TEXT_COLLECTION).inc()
+            raise
+        finally:
+            QDRANT_OPERATION_DURATION.labels(
+                operation="search_geo_time", collection=TEXT_COLLECTION
+            ).observe(time.time() - start)
 
         candidates = []
         for r in results:

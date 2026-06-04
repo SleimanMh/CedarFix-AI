@@ -144,12 +144,28 @@ CREATE TABLE IF NOT EXISTS routing_knowledge (
     description         TEXT,
     confidence_prior    FLOAT DEFAULT 0.85,
     hotline             VARCHAR(50),
+    source_ids          JSONB DEFAULT '[]',
+    source_files        JSONB DEFAULT '[]',
+    hitl_conditions     JSONB DEFAULT '[]',
+    last_reviewed       VARCHAR(20),
+    source_profile      VARCHAR(50),
+    doc_type            VARCHAR(60) DEFAULT 'responsibility',
+    route_mode          VARCHAR(80) DEFAULT 'routing_candidate',
+    route_authority     VARCHAR(80) DEFAULT 'authoritative',
+    source_reliability  VARCHAR(80) DEFAULT 'unknown',
+    location_precision  VARCHAR(80),
+    exact_match_terms   JSONB DEFAULT '[]',
+    negative_signals    JSONB DEFAULT '[]',
+    structured_fields   JSONB DEFAULT '{}',
+    retrieval_weight    FLOAT DEFAULT 1.0,
     qdrant_point_id     VARCHAR(50),
     updated_at          TIMESTAMP DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_rk_entity_enum ON routing_knowledge(entity_enum);
 CREATE INDEX IF NOT EXISTS idx_rk_entity_type ON routing_knowledge(entity_type);
+CREATE INDEX IF NOT EXISTS idx_rk_doc_type ON routing_knowledge(doc_type);
+CREATE INDEX IF NOT EXISTS idx_rk_route_mode ON routing_knowledge(route_mode);
 
 
 -- =============================================================================
