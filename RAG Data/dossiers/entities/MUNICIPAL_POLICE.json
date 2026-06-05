@@ -1,0 +1,74 @@
+{
+  "entity_id": "MUNICIPAL_POLICE",
+  "entity_name": "Municipal Police / Municipal Enforcement Units (الشرطة البلدية)",
+  "entity_type": "local_enforcement_unit",
+  "parent_ministry": "MUN",
+  "facts": [
+    {
+      "fact_id": "MUNICIPAL_POLICE-F001",
+      "fact_type": "legal_responsibility",
+      "value": "Dynamic local enforcement unit under the resolved municipality for minor public-space, parking, noise, obstruction, local order, and municipal bylaw issues.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-MUNI-AUTONOMY-HANDBOOK",
+        "SRC-ISF-UNITS"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "Specific municipal police availability and channels vary by municipality."
+    },
+    {
+      "fact_id": "MUNICIPAL_POLICE-F002",
+      "fact_type": "operational_contact",
+      "value": "Resolve municipality first, then use municipality-specific channels where verified. Use municipality_official_channels.csv for available local channels.",
+      "confidence": "low",
+      "source_ids": [
+        "SRC-MUNI-AUTONOMY-HANDBOOK",
+        "SRC-ISF-UNITS"
+      ],
+      "human_review_required": true,
+      "human_review_reason": "Only a subset of municipalities currently has verified official-channel/workflow rows."
+    },
+    {
+      "fact_id": "MUNICIPAL_POLICE-F003",
+      "fact_type": "legal_responsibility",
+      "value": "Escalate to ISF for crime, threat, serious traffic danger, or public-order incidents beyond municipal enforcement. Use CD for rescue/fire/emergency response.",
+      "confidence": "medium",
+      "source_ids": [
+        "SRC-ISF-UNITS",
+        "SRC-CD-HOTLINE"
+      ],
+      "human_review_required": false,
+      "human_review_reason": null
+    }
+  ],
+  "routing_summary": {
+    "primary_for_sectors": [
+      "illegal_parking_blocking_access",
+      "noise_complaint_local",
+      "public_space_obstruction",
+      "minor_local_enforcement"
+    ],
+    "secondary_for_sectors": [
+      "MUN",
+      "ISF"
+    ],
+    "not_responsible_for": [
+      "criminal_matters",
+      "serious_security_threat",
+      "emergency_rescue",
+      "national_roads"
+    ],
+    "hitl_always_required": false,
+    "hitl_conditions": [
+      "municipality channel missing",
+      "complaint mentions threat, weapon, injury, or serious traffic danger"
+    ]
+  },
+  "sources": [
+    "SRC-MUNI-AUTONOMY-HANDBOOK",
+    "SRC-ISF-UNITS",
+    "SRC-CD-HOTLINE"
+  ],
+  "overall_confidence": "medium",
+  "last_reviewed": "2026-06-01"
+}
