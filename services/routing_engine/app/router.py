@@ -48,6 +48,10 @@ QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 
 RAG_ENABLED: bool = os.getenv("ROUTING_RAG_ENABLED", "true").lower() == "true"
 RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "8"))
+RAG_STAGE_PRIORITY_ENABLED: bool = os.getenv("ROUTING_RAG_STAGE_PRIORITY_ENABLED", "true").lower() == "true"
+RAG_STAGE1_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE1_TARGET", "12"))
+RAG_STAGE2_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE2_TARGET", "8"))
+RAG_STAGE3_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE3_TARGET", "6"))
 QDRANT_HOST: str = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
 RAG_COLLECTION: str = os.getenv("ROUTING_QDRANT_COLLECTION", "routing_knowledge")
@@ -141,6 +145,9 @@ Rules:
 - confidence < 0.65 → set requires_human_review: true.
 - Prefer candidates whose responsibility_level is primary, whose route_mode is routing_candidate,
   routing_rule, or geo_service_route, and whose handles match the complaint.
+- Prefer retrieval_stage=stage1_dispatch for the primary routing decision.
+- Use retrieval_stage=stage2_operations for channel, required fields, workflow, and SLA context.
+- Treat retrieval_stage=stage3_evidence as supporting evidence/provenance context, not first-line authority.
 - Do NOT choose a candidate for issues listed under does NOT handle.
 - Treat contact_fallback_only, audit_context, contact_context, query_and_type_expansion,
   resolution_context, resolution_policy, supporting_context, and staging_not_production
@@ -173,6 +180,10 @@ def _build_routing_prompt(
         f"  doc_type: {d.get('doc_type', 'responsibility')}\n"
         f"  route_mode: {d.get('route_mode', 'routing_candidate')}\n"
         f"  route_authority: {d.get('route_authority', 'authoritative')}\n"
+        f"  retrieval_stage: {d.get('retrieval_stage', 'unknown')}\n"
+        f"  retrieval_lane: {d.get('retrieval_lane', 'unknown')}\n"
+        f"  stage_priority: {d.get('stage_priority', 'unknown')}\n"
+        f"  stage1_dispatch_candidate: {d.get('stage1_dispatch_candidate', False)}\n"
         f"  source_reliability: {d.get('source_reliability', 'unknown')}\n"
         f"  responsibility_level: {d.get('responsibility_level', 'primary')}\n"
         f"  retrieval_weight: {d.get('retrieval_weight', 'unknown')}\n"
@@ -332,6 +343,12 @@ _ROUTE_MODE_BOOSTS = {
     "supporting_context": -0.08,
 }
 
+_STAGE_BOOSTS = {
+    "stage1_dispatch": 0.22,
+    "stage2_operations": 0.06,
+    "stage3_evidence": -0.05,
+}
+
 
 def _tokens(value: str) -> set[str]:
     return set(re.findall(r"[a-z0-9_+-]{3,}", value.lower()))
@@ -340,7 +357,10 @@ def _tokens(value: str) -> set[str]:
 def _doc_allows_auto_route(doc: dict) -> bool:
     route_mode = str(doc.get("route_mode") or "routing_candidate")
     authority = str(doc.get("route_authority") or "authoritative")
+    retrieval_stage = str(doc.get("retrieval_stage") or "")
     if bool(doc.get("hitl_always_required")):
+        return False
+    if retrieval_stage == "stage3_evidence":
         return False
     if authority in _BLOCKING_AUTHORITIES or route_mode in _SUPPORT_ONLY_MODES:
         return False
@@ -354,10 +374,14 @@ def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
 
     for doc in docs:
         route_mode = str(doc.get("route_mode") or "routing_candidate")
+        retrieval_stage = str(doc.get("retrieval_stage") or doc.get("_retrieval_stage_source") or "stage3_evidence")
+        stage_priority = int(doc.get("stage_priority") or 4)
         weight = float(doc.get("retrieval_weight") or 1.0)
         base_score = float(doc.get("_rag_score") or 0.0)
         score = base_score * max(0.1, min(weight, 2.0))
         score += _ROUTE_MODE_BOOSTS.get(route_mode, 0.0)
+        score += _STAGE_BOOSTS.get(retrieval_stage, 0.0)
+        score += max(-0.04, min(0.10, (4 - stage_priority) * 0.025))
 
         exact_matches = 0
         for term in doc.get("exact_match_terms", [])[:20]:
@@ -386,6 +410,46 @@ def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
     return ranked[:top_k]
 
 
+def _collect_qdrant_results(results: list, docs_by_id: dict[str, dict], stage: str) -> None:
+    for r in results:
+        payload = dict(r.payload or {})
+        doc_id = str(payload.get("doc_id") or "").strip()
+        if not doc_id:
+            continue
+        score = float(getattr(r, "score", 0.0) or 0.0)
+        payload["_rag_score"] = score
+        payload.setdefault("retrieval_stage", stage)
+        payload["_retrieval_stage_source"] = stage
+        current = docs_by_id.get(doc_id)
+        if current is None or float(current.get("_rag_score") or 0.0) < score:
+            docs_by_id[doc_id] = payload
+
+
+def _search_stage(
+    *,
+    qdrant,
+    qmodels,
+    query_vec: list[float],
+    stage: str,
+    limit: int,
+) -> list:
+    stage_filter = qmodels.Filter(
+        must=[
+            qmodels.FieldCondition(
+                key="retrieval_stage",
+                match=qmodels.MatchValue(value=stage),
+            )
+        ]
+    )
+    return qdrant.search(
+        collection_name=RAG_COLLECTION,
+        query_vector=query_vec,
+        limit=max(1, limit),
+        with_payload=True,
+        query_filter=stage_filter,
+    )
+
+
 def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
     start = time.time()
     try:
@@ -393,18 +457,37 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
         qdrant = _get_qdrant()
         from qdrant_client import models as qmodels
         query_vec = model.encode(query_text, normalize_embeddings=True).tolist()
-        results = qdrant.search(
-            collection_name=RAG_COLLECTION,
-            query_vector=query_vec,
-            limit=max(top_k * 3, top_k),
-            with_payload=True,
-        )
-        docs = []
-        for r in results:
-            payload = dict(r.payload or {})
-            score = float(getattr(r, "score", 0.0) or 0.0)
-            payload["_rag_score"] = score
-            docs.append(payload)
+
+        expanded_limit = max(top_k * 3, top_k)
+        docs_by_id: dict[str, dict] = {}
+
+        if RAG_STAGE_PRIORITY_ENABLED:
+            stage_plan = [
+                ("stage1_dispatch", max(top_k, RAG_STAGE1_TARGET)),
+                ("stage2_operations", max(top_k, RAG_STAGE2_TARGET)),
+                ("stage3_evidence", max(top_k, RAG_STAGE3_TARGET)),
+            ]
+            for stage, stage_limit in stage_plan:
+                stage_results = _search_stage(
+                    qdrant=qdrant,
+                    qmodels=qmodels,
+                    query_vec=query_vec,
+                    stage=stage,
+                    limit=stage_limit,
+                )
+                _collect_qdrant_results(stage_results, docs_by_id, stage)
+
+        # Fallback/augmentation path keeps backward compatibility and recall.
+        if len(docs_by_id) < expanded_limit:
+            fallback_results = qdrant.search(
+                collection_name=RAG_COLLECTION,
+                query_vector=query_vec,
+                limit=expanded_limit,
+                with_payload=True,
+            )
+            _collect_qdrant_results(fallback_results, docs_by_id, "unfiltered")
+
+        docs = list(docs_by_id.values())
         docs = _rerank_docs(query_text, docs, top_k=top_k)
         top_score = max((float(d.get("_rag_score") or 0.0) for d in docs), default=0.0)
         RAG_CANDIDATE_COUNT.observe(len(docs))

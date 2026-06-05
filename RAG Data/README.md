@@ -13,6 +13,8 @@ not a raw mirror of the project `data/` folder.
   documents generated from useful structured CedarFix data and the uploaded v74
   municipality gap-resolution handoff.
 - `compiled/routing_knowledge_docs.jsonl` is the complete embedding/seed input.
+- `compiled/routing_knowledge_compiled_production.json` is the single-file
+  production packaging export of the full compiled corpus.
 - `compiled/routing_knowledge_manifest.json` records corpus counts, source
   profiles, document types, route modes, and routing entities.
 - `validation_report.md` is produced by the validator and must pass before the
@@ -70,8 +72,16 @@ Then seed PostgreSQL and Qdrant:
 python scripts\seed_routing_knowledge.py
 ```
 
-The seed script reads `compiled/routing_knowledge_docs.jsonl` by default. Use
-`ROUTING_KNOWLEDGE_DOCS` only when testing an alternate compiled corpus.
+Best production command (single-file compiled corpus):
+
+```powershell
+$env:ROUTING_KNOWLEDGE_DOCS = "monitoring/RAG Data/compiled/routing_knowledge_compiled_production.json"
+python scripts\seed_routing_knowledge.py
+```
+
+The seed script reads `compiled/routing_knowledge_docs.jsonl` by default. It can
+also load `compiled/routing_knowledge_compiled_production.json` (JSON array)
+when `ROUTING_KNOWLEDGE_DOCS` points to that file.
 
 ## Current Validation
 
