@@ -152,12 +152,12 @@
       <div class="tab-panel active" id="panelLogin">
         <div class="auth-error" id="loginError"></div>
         <div class="field">
-          <label>Username</label>
-          <input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username" />
+          <label>Username or Email</label>
+          <input type="text" id="loginUsername" placeholder="Enter your username or email" autocomplete="off" autocapitalize="none" spellcheck="false" />
         </div>
         <div class="field">
           <label>Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" />
+          <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="off" />
         </div>
         <button class="btn-auth" id="btnLogin" onclick="doLogin()">Sign In</button>
       </div>
@@ -168,11 +168,15 @@
         <div class="auth-success" id="registerSuccess"></div>
         <div class="field">
           <label>Username</label>
-          <input type="text" id="regUsername" placeholder="Choose a username (min 3 chars)" autocomplete="username" />
+          <input type="text" id="regUsername" placeholder="Choose a username (min 3 chars)" autocomplete="off" autocapitalize="none" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="Enter your email" autocomplete="off" autocapitalize="none" spellcheck="false" />
         </div>
         <div class="field">
           <label>Password</label>
-          <input type="password" id="regPassword" placeholder="Choose a password (min 6 chars)" autocomplete="new-password" />
+          <input type="password" id="regPassword" placeholder="Choose a password (min 6 chars)" autocomplete="off" />
         </div>
         <div style="margin-bottom:18px">
           <label style="font-size:13px;font-weight:600;color:var(--gray-800);display:block;margin-bottom:8px">Account Type</label>
@@ -210,11 +214,17 @@
     }
     function hideError(id) { document.getElementById(id).style.display = 'none'; }
 
+    function clearAuthState() {
+      ['cf_token', 'cf_role', 'cf_user_id', 'cf_username', 'cf_email'].forEach(k => localStorage.removeItem(k));
+    }
+
     function saveAuth(data) {
+      clearAuthState();
       localStorage.setItem('cf_token', data.access_token);
       localStorage.setItem('cf_role', data.role);
       localStorage.setItem('cf_user_id', data.user_id);
       localStorage.setItem('cf_username', data.username);
+      if (data.email) localStorage.setItem('cf_email', data.email);
     }
 
     async function doLogin() {
@@ -248,9 +258,11 @@
       hideError('registerError');
       document.getElementById('registerSuccess').style.display = 'none';
       const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
       const password = document.getElementById('regPassword').value;
-      if (!username || !password) return showError('registerError', 'Please fill in all fields.');
+      if (!username || !email || !password) return showError('registerError', 'Please fill in all fields.');
       if (username.length < 3) return showError('registerError', 'Username must be at least 3 characters.');
+      if (!email.includes('@') || !email.split('@').pop().includes('.')) return showError('registerError', 'Please enter a valid email.');
       if (password.length < 6) return showError('registerError', 'Password must be at least 6 characters.');
 
       const btn = document.getElementById('btnRegister');
@@ -260,12 +272,16 @@
         const res = await fetch(`${GATEWAY}/auth/register`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({username, password, role: selectedRole}),
+          body: JSON.stringify({username, email, password, role: selectedRole}),
         });
         const data = await res.json();
         if (!res.ok) return showError('registerError', data.detail || 'Registration failed.');
-        saveAuth(data);
-        window.location.href = data.role === 'admin' ? 'admin.html' : 'index.html';
+        document.getElementById('registerSuccess').textContent = `Account "${data.username}" created. Please sign in.`;
+        document.getElementById('registerSuccess').style.display = 'block';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('loginUsername').value = data.username || username;
+        document.getElementById('loginPassword').value = '';
+        switchTab('login');
       } catch (e) {
         showError('registerError', 'Cannot connect to server.');
       } finally {

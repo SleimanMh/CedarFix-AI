@@ -17,9 +17,18 @@ async_engine = create_async_engine(async_db_url, echo=False)
 AsyncSessionLocal = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
+def normalize_username(username: str) -> str:
+    return (username or "").strip().lower()
+
+
+def normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
 async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255)"))
         # Dedicated store for admin-edited review outcomes and corrected JSON payloads.
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS admin_review_edits (
@@ -48,6 +57,15 @@ async def init_db():
         await conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_moderation_text_hashes_last_seen
             ON moderation_text_hashes(last_seen_at)
+        """))
+        await conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower
+            ON users (LOWER(username))
+        """))
+        await conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower
+            ON users (LOWER(email))
+            WHERE email IS NOT NULL
         """))
 
 
@@ -98,30 +116,70 @@ async def fetch_complaint(complaint_id: str):
 # User authentication
 # ---------------------------------------------------------------------------
 
-async def create_user(username: str, password_hash: str, role: str = "user") -> dict:
+async def create_user(username: str, email: str, password_hash: str, role: str = "user") -> Optional[dict]:
+    username = normalize_username(username)
+    email = normalize_email(email)
     user_id = str(uuid.uuid4())
     async with AsyncSessionLocal() as session:
-        await session.execute(
+        result = await session.execute(
             text(
-                "INSERT INTO users (id, username, password_hash, role) "
-                "VALUES (:id, :username, :password_hash, :role)"
+                "INSERT INTO users (id, username, email, password_hash, role) "
+                "VALUES (:id, :username, :email, :password_hash, :role) "
+                "ON CONFLICT DO NOTHING "
+                "RETURNING id, username, email, role"
             ),
-            {"id": user_id, "username": username, "password_hash": password_hash, "role": role},
+            {"id": user_id, "username": username, "email": email, "password_hash": password_hash, "role": role},
         )
         await session.commit()
-    return {"id": user_id, "username": username, "role": role}
+        row = result.fetchone()
+        if row:
+            return {"id": row[0], "username": row[1], "email": row[2], "role": row[3]}
+    return None
 
 
 async def get_user_by_username(username: str) -> Optional[dict]:
+    username = normalize_username(username)
     async with AsyncSessionLocal() as session:
         result = await session.execute(
-            text("SELECT id, username, password_hash, role FROM users WHERE username = :u"),
+            text(
+                "SELECT id, username, email, password_hash, role "
+                "FROM users "
+                "WHERE LOWER(username) = :u "
+                "ORDER BY created_at ASC "
+                "LIMIT 1"
+            ),
             {"u": username},
         )
         row = result.fetchone()
         if row:
-            return {"id": row[0], "username": row[1], "password_hash": row[2], "role": row[3]}
+            return {"id": row[0], "username": row[1], "email": row[2], "password_hash": row[3], "role": row[4]}
     return None
+
+
+async def get_user_by_email(email: str) -> Optional[dict]:
+    email = normalize_email(email)
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            text(
+                "SELECT id, username, email, password_hash, role "
+                "FROM users "
+                "WHERE LOWER(email) = :email "
+                "ORDER BY created_at ASC "
+                "LIMIT 1"
+            ),
+            {"email": email},
+        )
+        row = result.fetchone()
+        if row:
+            return {"id": row[0], "username": row[1], "email": row[2], "password_hash": row[3], "role": row[4]}
+    return None
+
+
+async def get_user_by_login(identifier: str) -> Optional[dict]:
+    identifier = (identifier or "").strip()
+    if "@" in identifier:
+        return await get_user_by_email(identifier)
+    return await get_user_by_username(identifier)
 
 
 async def update_last_login(user_id: str):

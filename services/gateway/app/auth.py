@@ -25,10 +25,10 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_token(user_id: str, username: str, role: str) -> str:
+def create_token(user_id: str, username: str, role: str, email: Optional[str] = None) -> str:
     expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS)
     return jwt.encode(
-        {"sub": username, "user_id": user_id, "role": role, "exp": expire},
+        {"sub": username, "user_id": user_id, "role": role, "email": email, "exp": expire},
         JWT_SECRET,
         algorithm=JWT_ALGORITHM,
     )

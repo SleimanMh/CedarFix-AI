@@ -257,6 +257,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_tcr_type ON type_correction_rates(complain
 CREATE TABLE IF NOT EXISTS users (
     id              VARCHAR(36) PRIMARY KEY,
     username        VARCHAR(100) UNIQUE NOT NULL,
+    email           VARCHAR(255),
     password_hash   VARCHAR(255) NOT NULL,
     role            VARCHAR(20) DEFAULT 'user',   -- 'user' | 'admin'
     created_at      TIMESTAMP DEFAULT NOW(),
@@ -264,6 +265,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users(LOWER(username));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(LOWER(email)) WHERE email IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_users_role     ON users(role);
 
 

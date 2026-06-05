@@ -9,6 +9,7 @@ TEAM: Backend Engineer
 """
 
 import asyncio
+import logging
 import os
 import time
 import uuid
@@ -30,7 +31,8 @@ from .orchestrator import run_pipeline
 from .config import settings
 from .database import (
     init_db, save_complaint, fetch_complaint,
-    create_user, get_user_by_username, update_last_login,
+    create_user, get_user_by_username, get_user_by_email, get_user_by_login,
+    normalize_username, normalize_email, update_last_login,
     fetch_user_complaints, fetch_admin_stats,
     fetch_all_complaints_admin, fetch_review_queue_admin,
     fetch_resolved_review_admin,
@@ -49,6 +51,7 @@ app = FastAPI(
     description="Complaint submission and pipeline orchestration endpoint",
     version="0.1.0",
 )
+log = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,6 +81,7 @@ async def health():
 
 class RegisterRequest(BaseModel):
     username: str
+    email: str
     password: str
     role: str = "user"   # clients should send "user"; "admin" requires a secret
 
@@ -89,9 +93,32 @@ class LoginRequest(BaseModel):
 
 @app.post("/auth/register", status_code=201)
 async def register(body: RegisterRequest):
-    if len(body.username) < 3 or len(body.password) < 6:
+    username = normalize_username(body.username)
+    email = normalize_email(body.email)
+    if len(username) < 3 or len(body.password) < 6 or "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Username >= 3 chars, valid email required, password >= 6 chars")
+    if await get_user_by_username(username):
+        raise HTTPException(status_code=409, detail="Username already taken")
+    if await get_user_by_email(email):
+        raise HTTPException(status_code=409, detail="Email already registered")
+    role = "admin" if body.role == "admin" else "user"
+    user = await create_user(username, email, hash_password(body.password), role)
+    if not user:
+        raise HTTPException(status_code=409, detail="Username or email already registered")
+    log.info("[auth] registered user_id=%s username=%s email=%s role=%s", user["id"], user["username"], user.get("email"), user["role"])
+    token = create_token(user["id"], user["username"], user["role"], user.get("email"))
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "user_id": user["id"],
+        "username": user["username"],
+        "email": user.get("email"),
+    }
+    username = normalize_username(body.username)
+    if len(username) < 3 or len(body.password) < 6:
         raise HTTPException(status_code=400, detail="Username ≥ 3 chars, password ≥ 6 chars")
-    existing = await get_user_by_username(body.username)
+    existing = await get_user_by_username(username)
     if existing:
         raise HTTPException(status_code=409, detail="Username already taken")
     # Only allow admin role if the correct env secret is configured
@@ -101,7 +128,10 @@ async def register(body: RegisterRequest):
         admin_secret = os.getenv("ADMIN_REGISTRATION_SECRET", "")
         # For capstone demo, allow admin role freely (no secret required)
         role = "admin"
-    user = await create_user(body.username, hash_password(body.password), role)
+    user = await create_user(username, hash_password(body.password), role)
+    if not user:
+        raise HTTPException(status_code=409, detail="Username already taken")
+    log.info("[auth] registered user_id=%s username=%s role=%s", user["id"], user["username"], user["role"])
     token = create_token(user["id"], user["username"], user["role"])
     return {"access_token": token, "token_type": "bearer",
             "role": user["role"], "user_id": user["id"], "username": user["username"]}
@@ -109,10 +139,29 @@ async def register(body: RegisterRequest):
 
 @app.post("/auth/login")
 async def login(body: LoginRequest):
-    user = await get_user_by_username(body.username)
+    identifier = (body.username or "").strip()
+    user = await get_user_by_login(identifier)
     if not user or not verify_password(body.password, user["password_hash"]):
+        log.info("[auth] failed login identifier=%s", identifier)
+        raise HTTPException(status_code=401, detail="Invalid username/email or password")
+    await update_last_login(user["id"])
+    log.info("[auth] login user_id=%s username=%s email=%s role=%s", user["id"], user["username"], user.get("email"), user["role"])
+    token = create_token(user["id"], user["username"], user["role"], user.get("email"))
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "user_id": user["id"],
+        "username": user["username"],
+        "email": user.get("email"),
+    }
+    username = normalize_username(body.username)
+    user = await get_user_by_username(username)
+    if not user or not verify_password(body.password, user["password_hash"]):
+        log.info("[auth] failed login username=%s", username)
         raise HTTPException(status_code=401, detail="Invalid username or password")
     await update_last_login(user["id"])
+    log.info("[auth] login user_id=%s username=%s role=%s", user["id"], user["username"], user["role"])
     token = create_token(user["id"], user["username"], user["role"])
     return {"access_token": token, "token_type": "bearer",
             "role": user["role"], "user_id": user["id"], "username": user["username"]}
