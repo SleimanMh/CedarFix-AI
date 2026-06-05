@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedarfix-config
+  namespace: cedarfix
+data:
+  UPLOADS_DIR: /data/uploads
+  GCS_BUCKET: ""
+
+  TEXT_SERVICE_URL: http://ai-service:8001
+  IMAGE_SERVICE_URL: http://vision-service:8002
+  EMBEDDING_SERVICE_URL: http://ai-service:8003
+  CLUSTERING_SERVICE_URL: http://ai-service:8004
+  PRIORITY_SERVICE_URL: http://localhost:8005
+  ROUTING_SERVICE_URL: http://ai-service:8006
+  EXPLANATION_SERVICE_URL: http://localhost:8007
+  REVIEW_SERVICE_URL: http://localhost:8008
+
+  QDRANT_HOST: qdrant
+  QDRANT_PORT: "6333"
+  QDRANT_COLLECTION: complaints
+  TEXT_EMBEDDING_DIM: "768"
+  IMAGE_EMBEDDING_DIM: "512"
+  FUSED_EMBEDDING_DIM: "768"
+
+  MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+  CLIP_MODEL_NAME: openai/clip-vit-base-patch32
+
+  QWEN_BASE_URL: http://host.docker.internal:8000/v1
+  QWEN_MODEL: cedarfix
+  QWEN_ENABLED: "true"
+  QWEN_GUIDED: "false"
+  OPENAI_MODEL: gpt-4o
+
+  VLM_BASE_URL: ""
+  VLM_MODEL: Qwen/Qwen2.5-VL-7B-Instruct
+  VLM_ENABLED: "true"
+  VLM_TIMEOUT: "25"
+
+  ROUTING_QDRANT_COLLECTION: routing_knowledge
+  ROUTING_RAG_ENABLED: "true"
+  ROUTING_RAG_TOP_K: "5"
+  AUTO_ROUTE_THRESHOLD: "0.85"
+  REVIEW_THRESHOLD: "0.65"
+
+  SIMILARITY_DUPLICATE_THRESHOLD: "0.92"
+  SIMILARITY_NEAR_DUPLICATE_THRESHOLD: "0.78"
+  HDBSCAN_MIN_CLUSTER_SIZE: "5"
+  LLM_JUDGE_ENABLED: "true"
+  LLM_JUDGE_TIMEOUT: "8"
+
+  MODERATION_ENABLED: "true"
+  MODERATION_LLM_THRESHOLD: "0.75"
+  AUTO_BAN_SPAM_THRESHOLD: "10"
+  NOMINATIM_URL: ""
+  JWT_EXPIRE_HOURS: "24"

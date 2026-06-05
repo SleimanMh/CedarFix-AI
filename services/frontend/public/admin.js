@@ -3,7 +3,7 @@
    Admin dashboard: stats, all complaints, review queue, duplicates
    ===================================================== */
 
-const GATEWAY = window.GATEWAY_URL || 'http://localhost:8000';
+const GATEWAY = window.GATEWAY_URL || '/api';
 const reviewItemsById = new Map();
 let activeReviewItem = null;
 

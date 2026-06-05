@@ -1,8 +1,11 @@
-version: "3.9"
-
 # =============================================================================
-# CedarFix AI — Full Stack Docker Compose
-# Each service maps to an IEP. Team members work independently per service.
+# CedarFix AI - compact local stack
+#
+# Default containers:
+#   postgres, qdrant, frontend, api-service, ai-service, vision-service
+#
+# Optional monitoring:
+#   docker compose --profile monitoring up
 # =============================================================================
 
 networks:
@@ -18,11 +21,6 @@ volumes:
   prometheus_data:
 
 services:
-
-  # ---------------------------------------------------------------------------
-  # INFRASTRUCTURE SERVICES
-  # ---------------------------------------------------------------------------
-
   postgres:
     image: postgres:15-alpine
     container_name: cedarfix-postgres
@@ -59,9 +57,157 @@ services:
       timeout: 5s
       retries: 5
 
+  api-service:
+    image: cedarfix-api:latest
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: cedarfix-api-service
+    command:
+      - python
+      - /app/docker/run_group.py
+      - gateway=services.gateway.app.main:app:8000
+      - priority=services.priority_engine.app.main:app:8005
+      - explanation=services.explanation_service.app.main:app:8007
+      - review=services.review_service.app.main:app:8008
+    environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      TEXT_SERVICE_URL: http://ai-service:8001
+      IMAGE_SERVICE_URL: http://vision-service:8002
+      EMBEDDING_SERVICE_URL: http://ai-service:8003
+      CLUSTERING_SERVICE_URL: http://ai-service:8004
+      PRIORITY_SERVICE_URL: http://localhost:8005
+      ROUTING_SERVICE_URL: http://ai-service:8006
+      EXPLANATION_SERVICE_URL: http://localhost:8007
+      REVIEW_SERVICE_URL: http://localhost:8008
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      UPLOADS_DIR: /data/uploads
+      MODERATION_ENABLED: "true"
+      MODERATION_LLM_THRESHOLD: "0.75"
+      AUTO_BAN_SPAM_THRESHOLD: "10"
+      NOMINATIM_URL: ""
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-http://host.docker.internal:8000/v1}
+      QWEN_MODEL: ${QWEN_MODEL:-cedarfix}
+      QWEN_API_KEY: ${QWEN_API_KEY:-none}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cedarfix-dev-secret-change-in-prod}
+      JWT_EXPIRE_HOURS: "24"
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+      - "8005:8005"
+      - "8007:8007"
+      - "8008:8008"
+    volumes:
+      - uploads_data:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - cedarfix-net
+
+  ai-service:
+    image: cedarfix-ai:latest
+    build:
+      context: .
+      dockerfile: docker/ai.Dockerfile
+    container_name: cedarfix-ai-service
+    command:
+      - python
+      - /app/docker/run_group.py
+      - text=services.text_understanding.app.main:app:8001
+      - embedding=services.embedding_service.app.main:app:8003
+      - matching=services.clustering_service.app.main:app:8004
+      - routing=services.routing_engine.app.main:app:8006
+    environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_COLLECTION: complaints
+      TEXT_EMBEDDING_DIM: "768"
+      IMAGE_EMBEDDING_DIM: "512"
+      FUSED_EMBEDDING_DIM: "768"
+      ROUTING_QDRANT_COLLECTION: "routing_knowledge"
+      ROUTING_RAG_ENABLED: "true"
+      ROUTING_RAG_TOP_K: "5"
+      MODEL_REGISTRY_NAME: cedarfix-routing
+      AUTO_ROUTE_THRESHOLD: "0.85"
+      REVIEW_THRESHOLD: "0.65"
+      SIMILARITY_DUPLICATE_THRESHOLD: "0.92"
+      SIMILARITY_NEAR_DUPLICATE_THRESHOLD: "0.78"
+      HDBSCAN_MIN_CLUSTER_SIZE: "5"
+      LLM_JUDGE_ENABLED: "true"
+      LLM_JUDGE_TIMEOUT: "8"
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-http://host.docker.internal:8000/v1}
+      QWEN_MODEL: ${QWEN_MODEL:-cedarfix}
+      QWEN_API_KEY: ${QWEN_API_KEY:-none}
+      QWEN_ENABLED: "true"
+      QWEN_GUIDED: ${QWEN_GUIDED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: gpt-4o
+    ports:
+      - "8001:8001"
+      - "8003:8003"
+      - "8004:8004"
+      - "8006:8006"
+    volumes:
+      - ./data/models:/root/.cache/huggingface
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - cedarfix-net
+
+  vision-service:
+    image: cedarfix-vision-ai:latest
+    build:
+      context: .
+      dockerfile: docker/vision.Dockerfile
+    container_name: cedarfix-vision-service
+    command:
+      - python
+      - /app/docker/run_group.py
+      - vision=services.image_understanding.app.main:app:8002
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      CLIP_MODEL_NAME: openai/clip-vit-base-patch32
+      VLM_BASE_URL: ${VLM_BASE_URL:-}
+      VLM_MODEL: ${VLM_MODEL:-Qwen/Qwen2.5-VL-7B-Instruct}
+      VLM_API_KEY: ${VLM_API_KEY:-none}
+      VLM_ENABLED: "true"
+      VLM_TIMEOUT: "25"
+      UPLOADS_DIR: /data/uploads
+      PORT: "8002"
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./data/models:/root/.cache/huggingface
+      - uploads_data:/data/uploads
+    networks:
+      - cedarfix-net
+
+  frontend:
+    image: cedarfix-frontend:latest
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: cedarfix-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-service
+    networks:
+      - cedarfix-net
+
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.12.1
     container_name: cedarfix-mlflow
+    profiles: ["monitoring"]
     command: >
       bash -c "pip install --quiet --no-cache-dir psycopg2-binary &&
       mlflow server
@@ -82,10 +228,11 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: cedarfix-prometheus
+    profiles: ["monitoring"]
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
     ports:
       - "9090:9090"
     volumes:
@@ -97,6 +244,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: cedarfix-grafana
+    profiles: ["monitoring"]
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-cedarfix_grafana}
@@ -112,282 +260,14 @@ services:
     networks:
       - cedarfix-net
 
-  # ---------------------------------------------------------------------------
-  # EEP — COMPLAINT GATEWAY (Team: Backend Engineer)
-  # ---------------------------------------------------------------------------
-
-  gateway:
-    build:
-      context: .
-      dockerfile: services/gateway/Dockerfile
-    container_name: cedarfix-gateway
-    environment:
-      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
-      TEXT_SERVICE_URL: http://text-understanding:8001
-      IMAGE_SERVICE_URL: http://image-understanding:8002
-      EMBEDDING_SERVICE_URL: http://embedding-service:8003
-      CLUSTERING_SERVICE_URL: http://incident-matching-service:8004
-      PRIORITY_SERVICE_URL: http://priority-engine:8005
-      ROUTING_SERVICE_URL: http://routing-engine:8006
-      EXPLANATION_SERVICE_URL: http://explanation-service:8007
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      UPLOADS_DIR: /data/uploads
-      # Moderation
-      MODERATION_ENABLED: "true"
-      MODERATION_LLM_THRESHOLD: "0.75"
-      AUTO_BAN_SPAM_THRESHOLD: "10"
-      # Location
-      NOMINATIM_URL: ""
-      # LLM (shared with other services)
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
-      QWEN_API_KEY: "none"
-      # Auth
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cedarfix-dev-secret-change-in-prod}
-      JWT_EXPIRE_HOURS: "24"
-    ports:
-      - "8000:8000"
-    volumes:
-      - uploads_data:/data/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # FRONTEND — Complaint Submission UI (nginx static)
-  # ---------------------------------------------------------------------------
-
-  frontend:
-    build:
-      context: ./services/frontend
-      dockerfile: Dockerfile
-    container_name: cedarfix-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - gateway
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-1 — TEXT UNDERSTANDING (Team: AI Engineer 1 — NLP)
-  # ---------------------------------------------------------------------------
-
-  text-understanding:
-    build:
-      context: .
-      dockerfile: services/text_understanding/Dockerfile
-    container_name: cedarfix-text-understanding
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
-      PORT: "8001"
-      # LLM routing
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
-      QWEN_API_KEY: "none"
-      QWEN_ENABLED: "true"
-      QWEN_GUIDED: ${QWEN_GUIDED:-false}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: gpt-4o
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./data/models:/root/.cache/huggingface
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-2 — IMAGE UNDERSTANDING (Team: AI Engineer 2 — Vision)
-  # ---------------------------------------------------------------------------
-
-  image-understanding:
-    build:
-      context: .
-      dockerfile: services/image_understanding/Dockerfile
-    container_name: cedarfix-image-understanding
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      CLIP_MODEL_NAME: openai/clip-vit-base-patch32
-      PORT: "8002"
-      # VLM — same RunPod endpoint as QWEN_BASE_URL (one VL model for text + vision)
-      VLM_BASE_URL: ${QWEN_BASE_URL:-}
-      VLM_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
-      VLM_ENABLED: "true"
-      VLM_TIMEOUT: "25"
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./data/models:/root/.cache/huggingface
-      - uploads_data:/data/uploads
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-3 — EMBEDDING + SIMILARITY (Team: AI Engineer 2 — Vision/Multimodal)
-  # ---------------------------------------------------------------------------
-
-  embedding-service:
-    build:
-      context: .
-      dockerfile: services/embedding_service/Dockerfile
-    container_name: cedarfix-embedding-service
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: "6333"
-      QDRANT_COLLECTION: complaints
-      TEXT_EMBEDDING_DIM: "768"
-      IMAGE_EMBEDDING_DIM: "512"
-      FUSED_EMBEDDING_DIM: "768"
-      PORT: "8003"
-    ports:
-      - "8003:8003"
-    depends_on:
-      - qdrant
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-4 — INCIDENT MATCHING + DUPLICATE DETECTION (Team: AI Engineer 1 — NLP)
-  # ---------------------------------------------------------------------------
-
-  incident-matching-service:
-    build:
-      context: .
-      dockerfile: services/clustering_service/Dockerfile
-    container_name: cedarfix-incident-matching-service
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: "6333"
-      SIMILARITY_DUPLICATE_THRESHOLD: "0.92"
-      SIMILARITY_NEAR_DUPLICATE_THRESHOLD: "0.78"
-      HDBSCAN_MIN_CLUSTER_SIZE: "5"
-      PORT: "8004"
-      # LLM Duplicate Judge — ambiguous 0.60–0.92 band
-      LLM_JUDGE_ENABLED: "true"
-      LLM_JUDGE_TIMEOUT: "8"
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
-      QWEN_API_KEY: "none"
-    ports:
-      - "8004:8004"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      qdrant:
-        condition: service_started
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-5 — PRIORITY ENGINE (Team: Backend Engineer)
-  # ---------------------------------------------------------------------------
-
-  priority-engine:
-    build:
-      context: .
-      dockerfile: services/priority_engine/Dockerfile
-    container_name: cedarfix-priority-engine
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      MODEL_REGISTRY_NAME: cedarfix-priority
-      PORT: "8005"
-    ports:
-      - "8005:8005"
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-6 — ROUTING ENGINE (Team: Backend Engineer)
-  # ---------------------------------------------------------------------------
-
-  routing-engine:
-    build:
-      context: .
-      dockerfile: services/routing_engine/Dockerfile
-    container_name: cedarfix-routing-engine
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
-      MODEL_REGISTRY_NAME: cedarfix-routing
-      AUTO_ROUTE_THRESHOLD: "0.85"
-      REVIEW_THRESHOLD: "0.65"
-      PORT: "8006"
-      # RAG routing knowledge base
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: "6333"
-      ROUTING_QDRANT_COLLECTION: "routing_knowledge"
-      ROUTING_RAG_ENABLED: "true"
-      ROUTING_RAG_TOP_K: "5"
-      MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
-      # LLM routing decision
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://5cnbtbstvc7me6-8000.proxy.runpod.net/v1}
-      QWEN_MODEL: ${QWEN_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
-      QWEN_API_KEY: "none"
-      QWEN_ENABLED: "true"
-    ports:
-      - "8006:8006"
-    volumes:
-      - ./data/models:/root/.cache/huggingface
-    depends_on:
-      postgres:
-        condition: service_healthy
-      qdrant:
-        condition: service_started
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-7 — EXPLANATION SERVICE (Team: AI Engineer 1 — Stretch)
-  # ---------------------------------------------------------------------------
-
-  explanation-service:
-    build:
-      context: .
-      dockerfile: services/explanation_service/Dockerfile
-    container_name: cedarfix-explanation-service
-    environment:
-      PORT: "8007"
-      MODE: template  # Set to "llm" to enable Qwen2.5 in stretch phase
-    ports:
-      - "8007:8007"
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-8 — HUMAN REVIEW + ACTIVE LEARNING (Team: Systems/Integration)
-  # ---------------------------------------------------------------------------
-
-  review-service:
-    build:
-      context: .
-      dockerfile: services/review_service/Dockerfile
-    container_name: cedarfix-review-service
-    environment:
-      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
-      PORT: "8008"
-    ports:
-      - "8008:8008"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - cedarfix-net
-
-  # ---------------------------------------------------------------------------
-  # IEP-9 — MONITORING + DRIFT + RETRAINING (Team: MLOps Engineer)
-  # ---------------------------------------------------------------------------
-
   monitoring-service:
+    image: cedarfix-monitoring:latest
     build:
       context: .
       dockerfile: services/monitoring_service/Dockerfile
     container_name: cedarfix-monitoring-service
+    profiles: ["monitoring"]
+    command: uvicorn services.monitoring_service.app.main:app --host 0.0.0.0 --port 8009
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
       MLFLOW_TRACKING_URI: http://mlflow:5000

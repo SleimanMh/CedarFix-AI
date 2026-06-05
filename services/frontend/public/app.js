@@ -3,7 +3,7 @@
    Handles form submission, image preview, GPS, results
    ===================================================== */
 
-const GATEWAY_URL = window.GATEWAY_URL || 'http://localhost:8000';
+const GATEWAY_URL = window.GATEWAY_URL || '/api';
 
 // ── DOM refs ──────────────────────────────────────────
 const form          = document.getElementById('complaintForm');

@@ -83,8 +83,8 @@ log = logging.getLogger(__name__)
 
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
-QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "https://plp5oqfqe81tdm-8000.proxy.runpod.net/v1")
-QWEN_MODEL: str = os.getenv("QWEN_MODEL", "qwen2.5-1.5b-instruct")
+QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "http://host.docker.internal:8000/v1")
+QWEN_MODEL: str = os.getenv("QWEN_MODEL", "cedarfix")
 QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 _TRANSLATE_ONLY_LANGUAGES = {"arabizi"}
