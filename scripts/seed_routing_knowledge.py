@@ -18,7 +18,7 @@ Environment variables (defaults match docker-compose.yml):
     DATABASE_URL  — PostgreSQL connection string
     QDRANT_HOST   — Qdrant host (default: localhost)
     QDRANT_PORT   — Qdrant port (default: 6333)
-    ROUTING_KNOWLEDGE_DOCS — compiled JSONL path
+    ROUTING_KNOWLEDGE_DOCS — compiled JSONL path or JSON array path
 
 The script is idempotent: re-running it upserts documents without creating
 duplicates (it deletes and re-inserts by doc_id).
@@ -432,14 +432,35 @@ ROUTING_DOCS = [
 
 
 def _load_compiled_docs(path: Path) -> list[dict[str, Any]]:
+    raw = path.read_text(encoding="utf-8")
+    stripped = raw.lstrip()
+    if not stripped:
+        return []
+
+    if stripped.startswith("["):
+        try:
+            loaded = json.loads(raw)
+        except Exception as exc:
+            raise ValueError(f"{path}: invalid JSON array: {exc}") from exc
+        if not isinstance(loaded, list):
+            raise ValueError(f"{path}: expected a JSON array of documents")
+        docs: list[dict[str, Any]] = []
+        for idx, item in enumerate(loaded, 1):
+            if not isinstance(item, dict):
+                raise ValueError(f"{path}: item {idx} is not a JSON object")
+            docs.append(item)
+        return docs
+
     docs: list[dict[str, Any]] = []
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_no, line in enumerate(raw.splitlines(), 1):
         if not line.strip():
             continue
         try:
             doc = json.loads(line)
         except Exception as exc:
             raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
+        if not isinstance(doc, dict):
+            raise ValueError(f"{path}:{line_no}: expected JSON object")
         docs.append(doc)
     return docs
 
@@ -461,6 +482,8 @@ def _build_embedding_text(doc: dict) -> str:
         f"Document type: {doc.get('doc_type', 'responsibility')}",
         f"Route mode: {doc.get('route_mode', 'routing_candidate')}",
         f"Route authority: {doc.get('route_authority', 'authoritative')}",
+        f"Retrieval stage: {doc.get('retrieval_stage', 'stage1_dispatch')}",
+        f"Retrieval lane: {doc.get('retrieval_lane', 'unknown')}",
         f"Source reliability: {doc.get('source_reliability', 'unknown')}",
         f"Complaint types: {', '.join(doc['complaint_types'])}",
         f"Keywords: {', '.join(doc['keywords'][:30])}",
@@ -544,7 +567,7 @@ def main():
     # Ensure routing_knowledge table exists
     cur.execute("""
         CREATE TABLE IF NOT EXISTS routing_knowledge (
-            id              VARCHAR(36) PRIMARY KEY,
+            id              VARCHAR(255) PRIMARY KEY,
             entity_name     VARCHAR(100) NOT NULL,
             entity_enum     VARCHAR(100) NOT NULL,
             entity_type     VARCHAR(30),
@@ -573,10 +596,15 @@ def main():
             negative_signals JSONB DEFAULT '[]',
             structured_fields JSONB DEFAULT '{}',
             retrieval_weight FLOAT DEFAULT 1.0,
+            retrieval_stage VARCHAR(40) DEFAULT 'stage1_dispatch',
+            retrieval_lane VARCHAR(40),
+            stage1_dispatch_candidate BOOLEAN DEFAULT FALSE,
+            stage_priority INTEGER DEFAULT 4,
             qdrant_point_id VARCHAR(50),
             updated_at      TIMESTAMP DEFAULT NOW()
         )
     """)
+    cur.execute("ALTER TABLE routing_knowledge ALTER COLUMN id TYPE VARCHAR(255)")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_ids JSONB DEFAULT '[]'")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS source_files JSONB DEFAULT '[]'")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS hitl_conditions JSONB DEFAULT '[]'")
@@ -591,6 +619,10 @@ def main():
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS negative_signals JSONB DEFAULT '[]'")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS structured_fields JSONB DEFAULT '{}'")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS retrieval_weight FLOAT DEFAULT 1.0")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS retrieval_stage VARCHAR(40) DEFAULT 'stage1_dispatch'")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS retrieval_lane VARCHAR(40)")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS stage1_dispatch_candidate BOOLEAN DEFAULT FALSE")
+    cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS stage_priority INTEGER DEFAULT 4")
     conn.commit()
 
     points = []
@@ -612,6 +644,7 @@ def main():
                  last_reviewed, source_profile, doc_type, route_mode, route_authority,
                  source_reliability, location_precision, exact_match_terms,
                  negative_signals, structured_fields, retrieval_weight,
+                 retrieval_stage, retrieval_lane, stage1_dispatch_candidate, stage_priority,
                  qdrant_point_id, updated_at)
             VALUES
                 (%s, %s, %s, %s, %s,
@@ -621,7 +654,8 @@ def main():
                  %s, %s, %s, %s, %s,
                  %s, %s, %s,
                  %s, %s, %s,
-                 %s, %s, NOW())
+                 %s, %s, %s, %s, %s,
+                 %s, NOW())
             ON CONFLICT (id) DO UPDATE SET
                 description     = EXCLUDED.description,
                 complaint_types = EXCLUDED.complaint_types,
@@ -641,6 +675,10 @@ def main():
                 negative_signals = EXCLUDED.negative_signals,
                 structured_fields = EXCLUDED.structured_fields,
                 retrieval_weight = EXCLUDED.retrieval_weight,
+                retrieval_stage = EXCLUDED.retrieval_stage,
+                retrieval_lane = EXCLUDED.retrieval_lane,
+                stage1_dispatch_candidate = EXCLUDED.stage1_dispatch_candidate,
+                stage_priority = EXCLUDED.stage_priority,
                 qdrant_point_id = EXCLUDED.qdrant_point_id,
                 updated_at      = NOW()
         """, (
@@ -673,6 +711,10 @@ def main():
             json.dumps(doc.get("negative_signals", [])),
             json.dumps(doc.get("structured_fields", {})),
             doc.get("retrieval_weight", 1.0),
+            doc.get("retrieval_stage", "stage1_dispatch"),
+            doc.get("retrieval_lane"),
+            bool(doc.get("stage1_dispatch_candidate", False)),
+            int(doc.get("stage_priority", 4)),
             point_id,
         ))
 
@@ -709,6 +751,10 @@ def main():
             "negative_signals": doc.get("negative_signals", []),
             "structured_fields": doc.get("structured_fields", {}),
             "retrieval_weight": doc.get("retrieval_weight", 1.0),
+            "retrieval_stage": doc.get("retrieval_stage", "stage1_dispatch"),
+            "retrieval_lane": doc.get("retrieval_lane"),
+            "stage1_dispatch_candidate": bool(doc.get("stage1_dispatch_candidate", False)),
+            "stage_priority": int(doc.get("stage_priority", 4)),
         }
 
         points.append(PointStruct(id=point_id, vector=embedding, payload=payload))
