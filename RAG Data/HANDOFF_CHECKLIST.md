@@ -62,6 +62,5 @@ Expected corpus size in the current handoff:
 - Validation errors: 0
 - Validation warnings: 0
 
-Known source-data caveat: 30 supplemental v150 municipality IDs still have no
-source-backed Arabic name, so they remain English-only instead of using guessed
-translations.
+Known source-data caveat resolved: all municipality rows now include Arabic
+names.
