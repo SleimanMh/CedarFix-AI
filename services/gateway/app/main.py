@@ -13,11 +13,10 @@ import logging
 import os
 import time
 import uuid
-from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
@@ -27,6 +26,7 @@ from cedarfix_shared.schemas import (
     ComplaintDecision, ComplaintRequest, LocationInput, PipelineStatus,
 )
 from cedarfix_shared.metrics import COMPLAINTS_TOTAL, PIPELINE_DURATION
+from cedarfix_shared.storage import local_image_path, save_image_ref, signed_image_url
 from .orchestrator import run_pipeline
 from .config import settings
 from .database import (
@@ -194,7 +194,7 @@ async def submit_complaint(
     if image:
         image_filename = f"{complaint_id}_{image.filename}"
         image_bytes = await image.read()
-        image_filename = _save_image(image_filename, image_bytes)
+        image_filename = _save_image(image_filename, image_bytes, image.content_type or "application/octet-stream")
 
     # Build location if provided
     location = None
@@ -349,15 +349,28 @@ async def admin_resolve_review(
     return {"status": "resolved", "item_id": item_id}
 
 
+@app.get("/media")
+async def get_media_ref(ref: str = Query(..., min_length=1)):
+    """Serve or redirect to a stored image reference."""
+    if ref.startswith(("http://", "https://")):
+        return RedirectResponse(ref)
+    if ref.startswith("gcs://"):
+        return RedirectResponse(signed_image_url(ref))
+
+    file_path = local_image_path(ref, uploads_dir=settings.uploads_dir)
+    if not file_path or not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(str(file_path))
+
+
 @app.get("/media/{image_name}")
 async def get_media(image_name: str):
     """
-    Serve locally uploaded complaint images so admin review can preview them.
-    If a full URL is stored, callers should use it directly.
+    Legacy local image preview route.
+    New code should call /media?ref=... so GCS refs are supported too.
     """
-    uploads = Path(settings.uploads_dir)
-    file_path = uploads / image_name
-    if not file_path.exists() or not file_path.is_file():
+    file_path = local_image_path(image_name, uploads_dir=settings.uploads_dir)
+    if not file_path or not file_path.exists() or not file_path.is_file():
         raise HTTPException(status_code=404, detail="Image not found")
     return FileResponse(str(file_path))
 
@@ -481,28 +494,10 @@ async def admin_retraining_export(
     return await fetch_retraining_export(mark_exported=mark_exported)
 
 
-def _save_image(filename: str, data: bytes) -> str:
+def _save_image(filename: str, data: bytes, content_type: str = "image/jpeg") -> str:
     """
     Save image and return a reference string.
-    If GCS_BUCKET is set, uploads to GCS and returns a signed URL (1-hour).
-    Otherwise saves to local disk and returns the bare filename.
+    Local deployments return local://filename.
+    GCS deployments return gcs://bucket/complaints/filename.
     """
-    import os
-    gcs_bucket = os.getenv("GCS_BUCKET", "")
-    if gcs_bucket:
-        from google.cloud import storage as gcs
-        client = gcs.Client()
-        bucket = client.bucket(gcs_bucket)
-        blob = bucket.blob(f"complaints/{filename}")
-        blob.upload_from_string(data, content_type="image/jpeg")
-        return blob.generate_signed_url(
-            expiration=3600,
-            method="GET",
-            version="v4",
-        )
-    else:
-        uploads_dir = settings.uploads_dir
-        os.makedirs(uploads_dir, exist_ok=True)
-        with open(os.path.join(uploads_dir, filename), "wb") as f:
-            f.write(data)
-        return filename
+    return save_image_ref(filename, data, content_type=content_type, uploads_dir=settings.uploads_dir)

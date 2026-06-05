@@ -27,8 +27,6 @@ metadata:
   namespace: cedarfix
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: ai-service
@@ -37,23 +35,11 @@ spec:
       labels:
         app: ai-service
     spec:
-      initContainers:
-        - name: wait-for-postgres
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done
-        - name: wait-for-qdrant
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - until nc -z qdrant 6333; do echo waiting for qdrant; sleep 2; done
+      serviceAccountName: cedarfix-app
       containers:
         - name: ai-service
-          image: cedarfix-ai:latest
-          imagePullPolicy: IfNotPresent
+          image: REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-ai:latest
+          imagePullPolicy: Always
           command: ["python", "/app/docker/run_group.py"]
           args:
             - text=services.text_understanding.app.main:app:8001
@@ -93,17 +79,34 @@ spec:
                 secretKeyRef:
                   name: cedarfix-secrets
                   key: QDRANT_API_KEY
-                  optional: true
           readinessProbe:
             httpGet:
               path: /health
               port: 8001
-            initialDelaySeconds: 30
+            initialDelaySeconds: 45
             periodSeconds: 15
           resources:
             requests:
-              cpu: "1"
-              memory: 3Gi
+              cpu: "2"
+              memory: 4Gi
             limits:
-              cpu: "4"
-              memory: 8Gi
+              cpu: "6"
+              memory: 12Gi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "$(CLOUD_SQL_INSTANCE)"
+          envFrom:
+            - configMapRef:
+                name: cedarfix-config
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 128Mi
+            limits:
+              cpu: "500m"
+              memory: 512Mi

@@ -28,6 +28,7 @@ from typing import Optional, List
 import httpx
 from cedarfix_shared.schemas import RoutingResult, RoutingEntity
 from cedarfix_shared.location import haversine_km
+from cedarfix_shared.qdrant import create_qdrant_client, qdrant_target_label
 from cedarfix_shared.metrics import (
     RAG_CANDIDATE_COUNT,
     RAG_RETRIEVAL_DURATION,
@@ -48,8 +49,6 @@ QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 
 RAG_ENABLED: bool = os.getenv("ROUTING_RAG_ENABLED", "true").lower() == "true"
 RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "8"))
-QDRANT_HOST: str = os.getenv("QDRANT_HOST", "qdrant")
-QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
 RAG_COLLECTION: str = os.getenv("ROUTING_QDRANT_COLLECTION", "routing_knowledge")
 EMBED_MODEL: str = os.getenv(
     "MODEL_NAME",
@@ -227,9 +226,8 @@ def _get_embed_model():
 def _get_qdrant():
     global _qdrant
     if _qdrant is None:
-        from qdrant_client import QdrantClient
-        _qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-        log.info("[IEP-6] Qdrant connected at %s:%s", QDRANT_HOST, QDRANT_PORT)
+        _qdrant = create_qdrant_client()
+        log.info("[IEP-6] Qdrant connected at %s", qdrant_target_label())
     return _qdrant
 
 

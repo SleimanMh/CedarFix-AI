@@ -166,7 +166,7 @@ function setReviewImage(imageFilename) {
 
   const src = /^https?:\/\//i.test(imageFilename)
     ? imageFilename
-    : `${GATEWAY}/media/${encodeURIComponent(imageFilename)}`;
+    : `${GATEWAY}/media?ref=${encodeURIComponent(imageFilename)}`;
 
   img.src = src;
   img.style.display = '';

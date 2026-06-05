@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     review_service_url: str = "http://review-service:8008"
     database_url: str = "postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix"
     uploads_dir: str = "/data/uploads"
+    storage_backend: str = "local"
+    gcs_bucket: str = ""
 
     class Config:
         env_file = ".env"

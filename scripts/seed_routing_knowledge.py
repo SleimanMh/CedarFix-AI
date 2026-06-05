@@ -32,6 +32,10 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "shared"))
+
+from cedarfix_shared.qdrant import create_qdrant_client, qdrant_target_label
+
 DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_docs.jsonl"
 
 # ---------------------------------------------------------------------------
@@ -493,8 +497,6 @@ def main():
         "DATABASE_URL",
         "postgresql://cedarfix:cedarfix_secret@localhost:5432/cedarfix",
     )
-    qdrant_host = os.getenv("QDRANT_HOST", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
     collection_name = os.getenv("ROUTING_QDRANT_COLLECTION", "routing_knowledge")
     embedding_model = os.getenv(
         "MODEL_NAME",
@@ -512,11 +514,10 @@ def main():
         print("ERROR: sentence-transformers not installed. Run: pip install sentence-transformers")
         sys.exit(1)
 
-    print(f"Connecting to Qdrant at {qdrant_host}:{qdrant_port}")
+    print(f"Connecting to Qdrant at {qdrant_target_label()}")
     try:
-        from qdrant_client import QdrantClient
         from qdrant_client.models import Distance, VectorParams, PointStruct
-        qdrant = QdrantClient(host=qdrant_host, port=qdrant_port)
+        qdrant = create_qdrant_client()
     except ImportError:
         print("ERROR: qdrant-client not installed. Run: pip install qdrant-client")
         sys.exit(1)

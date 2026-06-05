@@ -38,6 +38,7 @@ from typing import Optional, List
 from sqlalchemy import text
 
 from cedarfix_shared.schemas import ModerationDecisionEnum, ModerationResult
+from cedarfix_shared.storage import read_image_bytes
 
 log = logging.getLogger(__name__)
 
@@ -223,17 +224,11 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
         return None
     try:
         import base64
-        import os as _os
         from io import BytesIO
         from PIL import Image
         import openai
 
-        uploads_dir = _os.getenv("UPLOADS_DIR", "/data/uploads")
-        path = _os.path.join(uploads_dir, image_filename)
-        if not _os.path.exists(path):
-            return None
-
-        img = Image.open(path).convert("RGB")
+        img = Image.open(BytesIO(read_image_bytes(image_filename))).convert("RGB")
         w, h = img.size
         scale = min(1.0, 512 / max(w, h))
         if scale < 1.0:
@@ -243,7 +238,7 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
         b64 = base64.b64encode(buf.getvalue()).decode()
 
         client = openai.AsyncOpenAI(
-            api_key=_os.getenv("VLM_API_KEY", "none"),
+            api_key=os.getenv("VLM_API_KEY", "none"),
             base_url=vlm_base,
             max_retries=0,
             timeout=20.0,
@@ -253,7 +248,7 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
             "Return ONLY JSON: {\"is_harmful\": <true|false>, \"reason\": \"<1 sentence>\"}"
         )
         resp = await client.chat.completions.create(
-            model=_os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct"),
+            model=os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct"),
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": [

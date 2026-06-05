@@ -6,14 +6,15 @@ Phase 1: CLIP zero-shot + rule-based quality assessment (see analyzer.py).
 Phase 2: Qwen2.5-VL for image reasoning and text-image alignment (VLMAnalyzer).
 """
 
-import logging
 import os
-from pathlib import Path
+import logging
+from io import BytesIO
 
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
 from cedarfix_shared.schemas import ImageQualityJSON, ImageUnderstandingResult
+from cedarfix_shared.storage import read_image_bytes
 from .analyzer import SceneAnalyzer, VLMAnalyzer, VLMAlignmentChecker, VLM_ENABLED, VLM_BASE_URL
 
 log = logging.getLogger(__name__)
@@ -65,23 +66,10 @@ class ImageUnderstandingModel:
           - VLMAnalyzer runs for all valid images â†’ vlm_analysis field populated.
           - VLMAlignmentChecker runs when CLIP alignment is UNCERTAIN or CONTRADICTS.
         """
-        # Support both local paths and GCS signed/public URLs
+        # Support local:// refs, legacy bare filenames, gcs:// refs, and public/signed URLs.
         try:
-            if image_filename.startswith("http://") or image_filename.startswith("https://"):
-                import httpx
-                from io import BytesIO
-                resp = httpx.get(image_filename, timeout=15, follow_redirects=True)
-                resp.raise_for_status()
-                image = Image.open(BytesIO(resp.content)).convert("RGB")
-            else:
-                image_path = Path(UPLOADS_DIR) / image_filename
-                if not image_path.exists():
-                    return ImageUnderstandingResult(
-                        complaint_id=complaint_id,
-                        image_present=False,
-                        image_id=image_filename,
-                    )
-                image = Image.open(image_path).convert("RGB")
+            image_bytes = read_image_bytes(image_filename, uploads_dir=UPLOADS_DIR)
+            image = Image.open(BytesIO(image_bytes)).convert("RGB")
         except Exception:
             return ImageUnderstandingResult(
                 complaint_id=complaint_id,
