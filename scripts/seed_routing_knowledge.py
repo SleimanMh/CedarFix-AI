@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_docs.jsonl"
+DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_compiled_production.json"
 
 # ---------------------------------------------------------------------------
 # Routing knowledge documents
@@ -432,7 +432,7 @@ ROUTING_DOCS = [
 
 
 def _load_compiled_docs(path: Path) -> list[dict[str, Any]]:
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding="utf-8-sig")
     stripped = raw.lstrip()
     if not stripped:
         return []

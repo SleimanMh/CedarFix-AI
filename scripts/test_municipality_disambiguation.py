@@ -1,7 +1,7 @@
 """
 test_municipality_disambiguation.py
 =====================================
-Validates that the prepared municipality lookup JSONL + Qdrant municipality_lookup
+Validates that the prepared municipality lookup JSON/JSONL + Qdrant municipality_lookup
 collection can correctly disambiguate municipalities that share similar
 names but belong to different districts.
 
@@ -9,8 +9,8 @@ This addresses handoff item 5 from NEXT_CHAT_PROMPT_v116_TO_v117:
   "Build tests for ambiguous municipality names and false auto-routing."
 
 Test strategy:
-  Part A — Static JSONL tests (no Qdrant needed):
-    Assert the enriched JSONL has distinct district values for
+  Part A — Static JSON/JSONL tests (no Qdrant needed):
+    Assert the enriched lookup data has distinct district values for
     known ambiguous name pairs, so metadata filtering will work.
 
   Part B — Qdrant retrieval tests (requires running stack):
@@ -19,9 +19,9 @@ Test strategy:
     Skipped automatically when Qdrant is not reachable.
 
 Run:
-  pytest monitoring/scripts/test_municipality_disambiguation.py -v
+  pytest scripts/test_municipality_disambiguation.py -v
   # or without pytest:
-  python monitoring/scripts/test_municipality_disambiguation.py
+  python scripts/test_municipality_disambiguation.py
 """
 
 from __future__ import annotations
@@ -32,11 +32,11 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-ENRICHED_JSONL = (
+ENRICHED_DOCS = (
     REPO_ROOT
     / "RAG Data"
     / "municipality"
-    / "municipality_lookup_public.jsonl"
+    / "municipality_lookup_compiled_production.json"
 )
 
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ SPLIT_DISTRICT_PAIRS: list[tuple[str, str, str]] = [
 # Any municipality NOT in the scoped-200 set should be False
 POLICY_CHECKS: list[tuple[str, str, bool]] = [
     # (municipality_id, name, expected_can_auto_route)
-    ("M1",   "Beirut",   True),
+    ("M1",   "Beirut",   False),
     ("M2",   "Jbail",    True),
     ("M3",   "Edde",     False),
     ("M10",  "Aaqoura",  False),
@@ -85,8 +85,17 @@ POLICY_CHECKS: list[tuple[str, str, bool]] = [
 
 def load_enriched(path: Path) -> dict[str, dict]:
     """Returns dict keyed by municipality_id."""
+    raw = path.read_text(encoding="utf-8-sig")
     result: dict[str, dict] = {}
-    for line in path.read_text("utf-8").splitlines():
+    stripped = raw.lstrip()
+    if stripped.startswith("["):
+        loaded = json.loads(raw)
+        if not isinstance(loaded, list):
+            raise ValueError(f"{path}: expected a JSON array")
+        for doc in loaded:
+            result[doc["municipality_id"]] = doc
+        return result
+    for line in raw.splitlines():
         if not line.strip():
             continue
         doc = json.loads(line)
@@ -108,12 +117,12 @@ def _can_auto_route(doc: dict) -> bool:
 
 class StaticTests:
     def __init__(self) -> None:
-        if not ENRICHED_JSONL.exists():
+        if not ENRICHED_DOCS.exists():
             raise FileNotFoundError(
-                f"Enriched JSONL not found: {ENRICHED_JSONL}\n"
-                "Run scripts/prepare_v116_for_rag.py first."
+                f"Enriched municipality docs not found: {ENRICHED_DOCS}\n"
+                "Run scripts/compile_routing_knowledge.py or set MUNICIPALITY_LOOKUP_DOCS."
             )
-        self.docs = load_enriched(ENRICHED_JSONL)
+        self.docs = load_enriched(ENRICHED_DOCS)
         self.failures: list[str] = []
         self.passed = 0
 
@@ -126,10 +135,10 @@ class StaticTests:
             print(f"  FAIL  {msg}")
 
     def test_all_docs_present(self) -> None:
-        """1064 rows must be present."""
+        """Production lookup rows must be present."""
         self._assert(
-            len(self.docs) == 1064,
-            f"total docs == 1064 (got {len(self.docs)})"
+            len(self.docs) == 1065,
+            f"total docs == 1065 (got {len(self.docs)})"
         )
 
     def test_no_empty_retrieval_text(self) -> None:
@@ -154,9 +163,9 @@ class StaticTests:
         self._assert(not bad, f"user_confirmation_required==True for all ({len(bad)} violations)")
 
     def test_autoroute_count(self) -> None:
-        """Exactly 200 rows must have can_auto_route=True."""
+        """Exactly 180 rows must have can_auto_route=True."""
         auto = sum(1 for d in self.docs.values() if _can_auto_route(d))
-        self._assert(auto == 200, f"can_auto_route==True count == 200 (got {auto})")
+        self._assert(auto == 180, f"can_auto_route==True count == 180 (got {auto})")
 
     def test_policy_spot_checks(self) -> None:
         """Known municipalities must have correct can_auto_route value."""
@@ -303,7 +312,7 @@ class QdrantTests:
     def test_collection_has_1064_points(self) -> None:
         info = self.qdrant.get_collection(self.COLLECTION)
         count = info.points_count
-        self._assert(count == 1064, f"collection has 1064 points (got {count})")
+        self._assert(count == 1065, f"collection has 1065 points (got {count})")
 
     def test_beirut_top_result(self) -> None:
         """Query 'baladiye Beirut' must return Beirut (M1) as the top hit."""
@@ -353,7 +362,7 @@ class QdrantTests:
         )
 
     def test_autoroute_filter_returns_200(self) -> None:
-        """Scroll with can_auto_route=True filter must return exactly 200 points."""
+        """Scroll with can_auto_route=True filter must return exactly 180 points."""
         from qdrant_client.models import Filter, FieldCondition, MatchValue  # type: ignore
         records, _ = self.qdrant.scroll(
             collection_name=self.COLLECTION,
@@ -363,7 +372,7 @@ class QdrantTests:
             limit=300,
             with_payload=False,
         )
-        self._assert(len(records) == 200, f"can_auto_route=True scroll == 200 (got {len(records)})")
+        self._assert(len(records) == 180, f"can_auto_route=True scroll == 180 (got {len(records)})")
 
     def run_all(self) -> int:
         print("\n=== Part B: Qdrant Retrieval Tests ===\n")

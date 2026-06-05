@@ -1,6 +1,6 @@
 # Routing Knowledge Validation Report
 
-Source: `C:/Users/HP/Desktop/Project 503N/monitoring/RAG Data/compiled/routing_knowledge_compiled_production.json`
+Source: `RAG Data/compiled/routing_knowledge_compiled_production.json`
 Documents: 8831
 Source entities: 22
 Errors: 0

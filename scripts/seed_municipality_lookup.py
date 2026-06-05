@@ -2,7 +2,7 @@
 """
 Seed Municipality Lookup
 ========================
-Reads the prepared municipality lookup JSONL and upserts municipality
+Reads the prepared municipality lookup JSON/JSONL and upserts municipality
 routing profiles into:
 
   - PostgreSQL  → municipality_lookup table
@@ -22,9 +22,9 @@ Usage:
   python scripts/seed_municipality_lookup.py
 
 Environment variables:
-  MUNICIPALITY_LOOKUP_DOCS — path to enriched all-1064 JSONL
-                             (default: monitoring/RAG Data/municipality/
-                                                            municipality_lookup_public.jsonl)
+  MUNICIPALITY_LOOKUP_DOCS — path to enriched municipality lookup JSON/JSONL
+                             (default: RAG Data/municipality/
+                                      municipality_lookup_compiled_production.json)
   DATABASE_URL             — PostgreSQL DSN
   QDRANT_HOST              — Qdrant host (default: localhost)
   QDRANT_PORT              — Qdrant port (default: 6333)
@@ -44,10 +44,9 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DOCS = (
     REPO_ROOT
-    / "monitoring"
     / "RAG Data"
     / "municipality"
-    / "municipality_lookup_public.jsonl"
+    / "municipality_lookup_compiled_production.json"
 )
 
 QDRANT_COLLECTION = "municipality_lookup"
@@ -58,8 +57,23 @@ QDRANT_COLLECTION = "municipality_lookup"
 # ---------------------------------------------------------------------------
 
 def _load_docs(path: Path) -> list[dict[str, Any]]:
+    raw = path.read_text(encoding="utf-8-sig")
+    stripped = raw.lstrip()
+    if not stripped:
+        return []
+    if stripped.startswith("["):
+        loaded = json.loads(raw)
+        if not isinstance(loaded, list):
+            raise ValueError(f"{path}: expected a JSON array of documents")
+        docs: list[dict[str, Any]] = []
+        for idx, item in enumerate(loaded, 1):
+            if not isinstance(item, dict):
+                raise ValueError(f"{path}: item {idx} is not a JSON object")
+            docs.append(item)
+        return docs
+
     docs: list[dict[str, Any]] = []
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_no, line in enumerate(raw.splitlines(), 1):
         if not line.strip():
             continue
         try:
@@ -155,7 +169,7 @@ def main() -> None:
     if not docs_path.exists():
         print(
             f"ERROR: enriched JSONL not found at {docs_path}\n"
-            "Run scripts/prepare_v116_for_rag.py first."
+            "Run scripts/compile_routing_knowledge.py or set MUNICIPALITY_LOOKUP_DOCS."
         )
         sys.exit(1)
 
