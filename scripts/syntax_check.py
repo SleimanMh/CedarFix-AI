@@ -11,7 +11,7 @@ files = [
 ok = True
 for f in files:
     try:
-        with open(f, encoding='utf-8') as fh:
+        with open(f, encoding='utf-8-sig') as fh:
             src = fh.read()
         compile(src, f, 'exec')
         print(f'OK  {f}')

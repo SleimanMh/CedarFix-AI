@@ -1,4 +1,4 @@
-﻿"""
+"""
 Pipeline Orchestrator â€” calls IEPs in the correct order.
 IEP-1 and IEP-2 run in parallel (text and image are independent).
 IEP-3 through IEP-6 run sequentially (each depends on prior results).

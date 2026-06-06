@@ -260,7 +260,8 @@ class RoutingResult(BaseModel):
     secondary_confidence: float = 0.0
     routing_rationale: List[str] = []   # Tags explaining the decision
     retrieved_sources: List[str] = []   # RAG doc IDs used in decision
-    routing_source: str = "static"      # rag | rag_static_agree | rag_static_conflict | static_fallback | rag_no_match
+    retrieved_candidates: List[Dict[str, Any]] = []  # Compact RAG candidate payloads used for audit/debugging
+    routing_source: str = "rag"         # rag_llm | rag_retrieval | rag_support_only | rag_no_match | static_fallback
     auto_routed: bool                    # False = flagged for human review
     requires_review: bool
     review_reason: Optional[str] = None

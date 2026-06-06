@@ -5,14 +5,9 @@ IEP-6 Routing Engine — RAG + Static Fallback
 Flow:
   1. Build semantic query from complaint fields.
   2. Retrieve top-K routing documents from Qdrant "routing_knowledge" collection.
-  3. Pass retrieved docs + complaint to Qwen LLM → JSON routing decision.
-  4. Compare LLM result with static fallback table:
-       LLM alone (high confidence)           → routing_source = "rag"
-       LLM + static agree                    → routing_source = "rag_static_agree"
-       LLM + static disagree, LLM conf high  → routing_source = "rag"
-       LLM + static disagree, LLM conf low   → routing_source = "rag_static_conflict" + human review
-       LLM failed                            → routing_source = "static_fallback"
-  5. Location-based municipality override (non-Beirut complaints).
+  3. Pass retrieved docs + complaint to Qwen LLM when available.
+  4. If Qwen is unavailable, choose from the top reranked Qdrant candidate.
+  5. If Qdrant has no production routing authority, send to Human Review Queue.
 """
 
 from __future__ import annotations
@@ -49,6 +44,13 @@ QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 
 RAG_ENABLED: bool = os.getenv("ROUTING_RAG_ENABLED", "true").lower() == "true"
 RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "8"))
+RAG_STAGE_PRIORITY_ENABLED: bool = os.getenv("ROUTING_RAG_STAGE_PRIORITY_ENABLED", "true").lower() == "true"
+RAG_STAGE1_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE1_TARGET", "12"))
+RAG_STAGE2_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE2_TARGET", "8"))
+RAG_STAGE3_TARGET: int = int(os.getenv("ROUTING_RAG_STAGE3_TARGET", "6"))
+STATIC_FALLBACK_ENABLED: bool = os.getenv("ROUTING_STATIC_FALLBACK_ENABLED", "false").lower() == "true"
+QDRANT_HOST: str = os.getenv("QDRANT_HOST", "qdrant")
+QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
 RAG_COLLECTION: str = os.getenv("ROUTING_QDRANT_COLLECTION", "routing_knowledge")
 EMBED_MODEL: str = os.getenv(
     "MODEL_NAME",
@@ -56,7 +58,11 @@ EMBED_MODEL: str = os.getenv(
 )
 
 # ---------------------------------------------------------------------------
-# Static fallback table (always available, used when RAG/LLM fail)
+# Legacy static fallback table.
+#
+# Runtime routing is Qdrant-first. This table is used only when
+# ROUTING_STATIC_FALLBACK_ENABLED=true or by the old synchronous compatibility
+# shim at the bottom of the module.
 # ---------------------------------------------------------------------------
 
 TYPE_TO_ENTITY = {
@@ -140,6 +146,9 @@ Rules:
 - confidence < 0.65 → set requires_human_review: true.
 - Prefer candidates whose responsibility_level is primary, whose route_mode is routing_candidate,
   routing_rule, or geo_service_route, and whose handles match the complaint.
+- Prefer retrieval_stage=stage1_dispatch for the primary routing decision.
+- Use retrieval_stage=stage2_operations for channel, required fields, workflow, and SLA context.
+- Treat retrieval_stage=stage3_evidence as supporting evidence/provenance context, not first-line authority.
 - Do NOT choose a candidate for issues listed under does NOT handle.
 - Treat contact_fallback_only, audit_context, contact_context, query_and_type_expansion,
   resolution_context, resolution_policy, supporting_context, and staging_not_production
@@ -172,6 +181,10 @@ def _build_routing_prompt(
         f"  doc_type: {d.get('doc_type', 'responsibility')}\n"
         f"  route_mode: {d.get('route_mode', 'routing_candidate')}\n"
         f"  route_authority: {d.get('route_authority', 'authoritative')}\n"
+        f"  retrieval_stage: {d.get('retrieval_stage', 'unknown')}\n"
+        f"  retrieval_lane: {d.get('retrieval_lane', 'unknown')}\n"
+        f"  stage_priority: {d.get('stage_priority', 'unknown')}\n"
+        f"  stage1_dispatch_candidate: {d.get('stage1_dispatch_candidate', False)}\n"
         f"  source_reliability: {d.get('source_reliability', 'unknown')}\n"
         f"  responsibility_level: {d.get('responsibility_level', 'primary')}\n"
         f"  retrieval_weight: {d.get('retrieval_weight', 'unknown')}\n"
@@ -330,6 +343,12 @@ _ROUTE_MODE_BOOSTS = {
     "supporting_context": -0.08,
 }
 
+_STAGE_BOOSTS = {
+    "stage1_dispatch": 0.22,
+    "stage2_operations": 0.06,
+    "stage3_evidence": -0.05,
+}
+
 
 def _tokens(value: str) -> set[str]:
     return set(re.findall(r"[a-z0-9_+-]{3,}", value.lower()))
@@ -338,7 +357,10 @@ def _tokens(value: str) -> set[str]:
 def _doc_allows_auto_route(doc: dict) -> bool:
     route_mode = str(doc.get("route_mode") or "routing_candidate")
     authority = str(doc.get("route_authority") or "authoritative")
+    retrieval_stage = str(doc.get("retrieval_stage") or "")
     if bool(doc.get("hitl_always_required")):
+        return False
+    if retrieval_stage == "stage3_evidence":
         return False
     if authority in _BLOCKING_AUTHORITIES or route_mode in _SUPPORT_ONLY_MODES:
         return False
@@ -352,10 +374,14 @@ def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
 
     for doc in docs:
         route_mode = str(doc.get("route_mode") or "routing_candidate")
+        retrieval_stage = str(doc.get("retrieval_stage") or doc.get("_retrieval_stage_source") or "stage3_evidence")
+        stage_priority = int(doc.get("stage_priority") or 4)
         weight = float(doc.get("retrieval_weight") or 1.0)
         base_score = float(doc.get("_rag_score") or 0.0)
         score = base_score * max(0.1, min(weight, 2.0))
         score += _ROUTE_MODE_BOOSTS.get(route_mode, 0.0)
+        score += _STAGE_BOOSTS.get(retrieval_stage, 0.0)
+        score += max(-0.04, min(0.10, (4 - stage_priority) * 0.025))
 
         exact_matches = 0
         for term in doc.get("exact_match_terms", [])[:20]:
@@ -384,6 +410,46 @@ def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
     return ranked[:top_k]
 
 
+def _collect_qdrant_results(results: list, docs_by_id: dict[str, dict], stage: str) -> None:
+    for r in results:
+        payload = dict(r.payload or {})
+        doc_id = str(payload.get("doc_id") or "").strip()
+        if not doc_id:
+            continue
+        score = float(getattr(r, "score", 0.0) or 0.0)
+        payload["_rag_score"] = score
+        payload.setdefault("retrieval_stage", stage)
+        payload["_retrieval_stage_source"] = stage
+        current = docs_by_id.get(doc_id)
+        if current is None or float(current.get("_rag_score") or 0.0) < score:
+            docs_by_id[doc_id] = payload
+
+
+def _search_stage(
+    *,
+    qdrant,
+    qmodels,
+    query_vec: list[float],
+    stage: str,
+    limit: int,
+) -> list:
+    stage_filter = qmodels.Filter(
+        must=[
+            qmodels.FieldCondition(
+                key="retrieval_stage",
+                match=qmodels.MatchValue(value=stage),
+            )
+        ]
+    )
+    return qdrant.search(
+        collection_name=RAG_COLLECTION,
+        query_vector=query_vec,
+        limit=max(1, limit),
+        with_payload=True,
+        query_filter=stage_filter,
+    )
+
+
 def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
     start = time.time()
     try:
@@ -391,18 +457,37 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
         qdrant = _get_qdrant()
         from qdrant_client import models as qmodels
         query_vec = model.encode(query_text, normalize_embeddings=True).tolist()
-        results = qdrant.search(
-            collection_name=RAG_COLLECTION,
-            query_vector=query_vec,
-            limit=max(top_k * 3, top_k),
-            with_payload=True,
-        )
-        docs = []
-        for r in results:
-            payload = dict(r.payload or {})
-            score = float(getattr(r, "score", 0.0) or 0.0)
-            payload["_rag_score"] = score
-            docs.append(payload)
+
+        expanded_limit = max(top_k * 3, top_k)
+        docs_by_id: dict[str, dict] = {}
+
+        if RAG_STAGE_PRIORITY_ENABLED:
+            stage_plan = [
+                ("stage1_dispatch", max(top_k, RAG_STAGE1_TARGET)),
+                ("stage2_operations", max(top_k, RAG_STAGE2_TARGET)),
+                ("stage3_evidence", max(top_k, RAG_STAGE3_TARGET)),
+            ]
+            for stage, stage_limit in stage_plan:
+                stage_results = _search_stage(
+                    qdrant=qdrant,
+                    qmodels=qmodels,
+                    query_vec=query_vec,
+                    stage=stage,
+                    limit=stage_limit,
+                )
+                _collect_qdrant_results(stage_results, docs_by_id, stage)
+
+        # Fallback/augmentation path keeps backward compatibility and recall.
+        if len(docs_by_id) < expanded_limit:
+            fallback_results = qdrant.search(
+                collection_name=RAG_COLLECTION,
+                query_vector=query_vec,
+                limit=expanded_limit,
+                with_payload=True,
+            )
+            _collect_qdrant_results(fallback_results, docs_by_id, "unfiltered")
+
+        docs = list(docs_by_id.values())
         docs = _rerank_docs(query_text, docs, top_k=top_k)
         top_score = max((float(d.get("_rag_score") or 0.0) for d in docs), default=0.0)
         RAG_CANDIDATE_COUNT.observe(len(docs))
@@ -578,6 +663,72 @@ def _error_type(exc: Exception) -> str:
     return name or "unknown"
 
 
+def _clamp(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
+    return max(lower, min(upper, value))
+
+
+def _rag_confidence(doc: dict) -> float:
+    semantic_score = _clamp(float(doc.get("_rag_score") or 0.0))
+    confidence_prior = _clamp(float(doc.get("confidence_prior") or 0.7))
+    stage_bonus = 0.08 if doc.get("retrieval_stage") == "stage1_dispatch" else 0.03
+    level_bonus = 0.05 if doc.get("responsibility_level") == "primary" else 0.02
+    route_bonus = 0.04 if str(doc.get("route_mode") or "") in _AUTO_ROUTE_MODES else 0.0
+    confidence = (semantic_score * 0.62) + (confidence_prior * 0.24) + stage_bonus + level_bonus + route_bonus
+    return round(_clamp(confidence, 0.35, 0.97), 3)
+
+
+def _candidate_summary(doc: dict) -> dict:
+    return {
+        "doc_id": doc.get("doc_id"),
+        "entity_name": doc.get("entity_name"),
+        "entity_enum": doc.get("entity_enum"),
+        "doc_type": doc.get("doc_type"),
+        "route_mode": doc.get("route_mode"),
+        "route_authority": doc.get("route_authority"),
+        "responsibility_level": doc.get("responsibility_level"),
+        "retrieval_stage": doc.get("retrieval_stage"),
+        "rag_score": round(float(doc.get("_rag_score") or 0.0), 4),
+        "rerank_score": round(float(doc.get("_rerank_score") or 0.0), 4),
+        "allows_auto_route": _doc_allows_auto_route(doc),
+    }
+
+
+def _select_secondary_entity(primary: RoutingEntity, docs: list[dict]) -> Optional[RoutingEntity]:
+    for doc in docs:
+        entity = _resolve_entity(doc.get("entity_enum") or doc.get("entity_name"))
+        if entity and entity != primary and _doc_allows_auto_route(doc):
+            return entity
+    return None
+
+
+def _review_result(
+    *,
+    complaint_id: str,
+    routing_source: str,
+    review_reason: str,
+    retrieved_sources: list[str] | None = None,
+    retrieved_candidates: list[dict] | None = None,
+    rag_no_candidates: bool = False,
+    rationale: list[str] | None = None,
+) -> RoutingResult:
+    return RoutingResult(
+        complaint_id=complaint_id,
+        primary_entity=RoutingEntity.HUMAN_REVIEW,
+        primary_confidence=0.0,
+        secondary_entity=None,
+        secondary_confidence=0.0,
+        routing_rationale=rationale or [review_reason],
+        retrieved_sources=retrieved_sources or [],
+        retrieved_candidates=retrieved_candidates or [],
+        routing_source=routing_source,
+        auto_routed=False,
+        requires_review=True,
+        review_reason=review_reason,
+        rag_no_candidates=rag_no_candidates,
+        processing_ms=0,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Main Router class
 # ---------------------------------------------------------------------------
@@ -610,6 +761,148 @@ class ComplaintRouter:
         multimodal_alignment: dict,
     ) -> RoutingResult:
         ct = complaint_type or "other"
+
+        if not RAG_ENABLED:
+            if STATIC_FALLBACK_ENABLED:
+                static_primary, static_secondary, static_conf, static_rationale = _static_route(
+                    ct, location_district, location_mentions, location_municipality, location_governorate
+                )
+                requires_review = static_conf < self.review_threshold
+                return RoutingResult(
+                    complaint_id=complaint_id,
+                    primary_entity=static_primary,
+                    primary_confidence=round(static_conf, 3),
+                    secondary_entity=static_secondary,
+                    secondary_confidence=round(static_conf * 0.55, 3) if static_secondary else 0.0,
+                    routing_rationale=static_rationale,
+                    retrieved_sources=[],
+                    retrieved_candidates=[],
+                    routing_source="static_fallback",
+                    auto_routed=static_conf >= self.auto_threshold and not requires_review,
+                    requires_review=requires_review,
+                    review_reason="Low routing confidence" if requires_review else None,
+                    processing_ms=0,
+                )
+            return _review_result(
+                complaint_id=complaint_id,
+                routing_source="rag_disabled",
+                review_reason="RAG routing is disabled. Dynamic Qdrant routing is required for auto-routing.",
+            )
+
+        query_text = _build_query_text(
+            ct,
+            category,
+            subcategory,
+            summary,
+            location_municipality,
+            location_district,
+            location_governorate,
+            keywords,
+            signals,
+            routing_features,
+            evidence_text,
+            evidence_image,
+            alignment_features,
+            multimodal_alignment,
+            original_text,
+        )
+        docs = _retrieve_docs(query_text, top_k=RAG_TOP_K)
+        retrieved_sources = [d.get("doc_id", "") for d in docs]
+        retrieved_candidates = [_candidate_summary(d) for d in docs]
+
+        if not docs:
+            return _review_result(
+                complaint_id=complaint_id,
+                routing_source="rag_no_match",
+                review_reason=(
+                    "Qdrant returned zero routing candidates for this complaint. "
+                    "Human review is required; no static route was used."
+                ),
+                rag_no_candidates=True,
+            )
+
+        allowed_docs = [d for d in docs if _doc_allows_auto_route(d)]
+        if not allowed_docs:
+            return _review_result(
+                complaint_id=complaint_id,
+                routing_source="rag_support_only",
+                review_reason=(
+                    "Qdrant retrieved only support-only, fallback, audit, or manual-review "
+                    "documents. No production routing authority was found."
+                ),
+                retrieved_sources=retrieved_sources,
+                retrieved_candidates=retrieved_candidates,
+                rationale=["Retrieved RAG docs were context only and were not allowed to auto-route."],
+            )
+
+        top_doc = allowed_docs[0]
+        top_entity = _resolve_entity(top_doc.get("entity_enum") or top_doc.get("entity_name"))
+        if not top_entity:
+            return _review_result(
+                complaint_id=complaint_id,
+                routing_source="rag_unresolved_entity",
+                review_reason=(
+                    f"Top Qdrant candidate '{top_doc.get('entity_name')}' could not be mapped "
+                    "to a RoutingEntity enum."
+                ),
+                retrieved_sources=retrieved_sources,
+                retrieved_candidates=retrieved_candidates,
+            )
+
+        final_primary = top_entity
+        final_secondary = _select_secondary_entity(final_primary, allowed_docs[1:])
+        final_conf = _rag_confidence(top_doc)
+        routing_source = "rag_retrieval"
+        rationale = [
+            (
+                f"Qdrant top routing authority {top_doc.get('doc_id')} selected "
+                f"{top_doc.get('entity_name')} via {top_doc.get('route_mode')} "
+                f"({top_doc.get('retrieval_stage')}, score={float(top_doc.get('_rag_score') or 0.0):.3f})."
+            )
+        ]
+        requires_review = final_conf < self.review_threshold
+        review_reason: Optional[str] = "Low RAG routing confidence" if requires_review else None
+
+        prompt = _build_routing_prompt(
+            ct, original_text,
+            location_district, location_governorate, location_municipality,
+            keywords, allowed_docs,
+        )
+        llm_data = await _call_llm_routing(prompt)
+        if llm_data:
+            llm_entity = _resolve_entity(llm_data.get("primary_entity"))
+            llm_secondary = _resolve_entity(llm_data.get("secondary_entity"))
+            if llm_entity:
+                final_primary = llm_entity
+                final_secondary = llm_secondary or _select_secondary_entity(final_primary, allowed_docs)
+                final_conf = _clamp(float(llm_data.get("confidence", 0.0)))
+                routing_source = "rag_llm"
+                rationale = [llm_data.get("rationale") or "Qwen selected from Qdrant-retrieved candidates."]
+                requires_review = bool(llm_data.get("requires_human_review", False)) or final_conf < self.review_threshold
+                review_reason = llm_data.get("review_reason") or (
+                    "Low RAG LLM routing confidence" if final_conf < self.review_threshold else None
+                )
+            else:
+                log.warning("[IEP-6] LLM returned unresolvable entity: %s", llm_data.get("primary_entity"))
+
+        auto_routed = final_conf >= self.auto_threshold and not requires_review
+
+        return RoutingResult(
+            complaint_id=complaint_id,
+            primary_entity=final_primary,
+            primary_confidence=round(final_conf, 3),
+            secondary_entity=final_secondary,
+            secondary_confidence=round(final_conf * 0.55, 3) if final_secondary else 0.0,
+            routing_rationale=rationale,
+            retrieved_sources=retrieved_sources,
+            retrieved_candidates=retrieved_candidates,
+            routing_source=routing_source,
+            auto_routed=auto_routed,
+            requires_review=requires_review,
+            review_reason=review_reason,
+            rag_no_candidates=False,
+            processing_ms=0,
+        )
 
         # ── Static fallback (always computed first as baseline) ──────────────
         static_primary, static_secondary, static_conf, static_rationale = _static_route(
