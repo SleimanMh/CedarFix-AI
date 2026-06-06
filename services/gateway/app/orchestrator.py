@@ -1182,7 +1182,7 @@ async def _add_to_human_review(
         item = HumanReviewItem(
             complaint_id=complaint_id,
             validation_status=validation.status.value,
-            review_reason=validation.clarification_question or "",
+            review_reason=validation.clarification_question or validation.contradiction_reason or "",
             original_text=request.text,
             image_filename=request.image_filename,
             image_detected_type=validation.image_detected_type,
@@ -1194,104 +1194,4 @@ async def _add_to_human_review(
         )
     except Exception as e:
         print(f"[WARN] Could not queue human review item: {e}")
-    """
-    Full EEP â†’ IEP orchestration.
-    Returns a complete ComplaintDecision.
-    """
-    decision = ComplaintDecision(
-        complaint_id=complaint_id,
-        status=PipelineStatus.PROCESSING,
-        original_text=request.text,
-        location=request.location,
-        image_filename=request.image_filename,
-    )
-
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-
-        # --- Stage 1: IEP-1 + IEP-2 in parallel ---
-        t0 = time.time()
-        text_task = _call_text_understanding(client, complaint_id, request)
-        image_task = _call_image_understanding(client, complaint_id, request)
-        text_result, image_result = await asyncio.gather(text_task, image_task)
-        PIPELINE_DURATION.labels(stage="iep1_iep2").observe(time.time() - t0)
-
-        decision.text_analysis = text_result
-        decision.image_analysis = image_result
-
-        if text_result:
-            decision.complaint_type = text_result.issue_type
-
-        # --- Stage 2: IEP-3 Embedding + Similarity ---
-        t0 = time.time()
-        embedding_result = await _call_embedding_service(client, complaint_id, text_result, image_result)
-        decision.embedding = embedding_result
-        if embedding_result and embedding_result.alignment:
-            decision.text_image_alignment = embedding_result.alignment
-            a = embedding_result.alignment
-            if (
-                a.conflict_detected
-                and getattr(a, "reconciliation_status", None) in ("MODAL_CONFLICT", "modal_conflict")
-                and image_result and image_result.image_present
-            ):
-                decision.status = PipelineStatus.CONTRADICTION
-                decision.media_validation = MediaValidationResult(
-                    status=MediaValidationStatus.CONTRADICTION,
-                    text_is_complaint=True,
-                    image_has_complaint=True,
-                    text_detected_type=str(a.text_issue_type) if a.text_issue_type else None,
-                    image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
-                    contradiction_reason=(
-                        f"Your text describes a {a.text_issue_type or 'infrastructure'} issue "
-                        f"but your image appears to show something different "
-                        f"({a.image_issue_type or 'unrelated content'}). "
-                        f"Please resubmit with a photo that matches your complaint."
-                    ),
-                )
-                return decision
-        PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
-
-        # --- Stage 3: IEP-4 Clustering + Deduplication ---
-        t0 = time.time()
-        clustering_result = await _call_clustering_service(client, complaint_id, embedding_result)
-        decision.clustering = clustering_result
-        if clustering_result:
-            decision.is_duplicate = clustering_result.duplicate_status in ("DUPLICATE",)
-        PIPELINE_DURATION.labels(stage="iep4").observe(time.time() - t0)
-
-        # --- Stage 4: IEP-5 Priority ---
-        t0 = time.time()
-        priority_result = await _call_priority_engine(client, complaint_id, decision)
-        decision.priority = priority_result
-        if priority_result:
-            decision.severity = priority_result.severity
-            decision.priority_score = priority_result.priority_score
-        PIPELINE_DURATION.labels(stage="iep5").observe(time.time() - t0)
-
-        # --- Stage 5: IEP-6 Routing ---
-        t0 = time.time()
-        routing_result = await _call_routing_engine(client, complaint_id, decision)
-        decision.routing = routing_result
-        if routing_result:
-            decision.assigned_entity = routing_result.primary_entity
-            decision.routing_confidence = routing_result.primary_confidence
-        PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
-
-        # --- Confidence bundle assembly ---
-        decision.confidence_bundle = _build_confidence_bundle(
-            text_result=decision.text_analysis,
-            image_result=decision.image_analysis,
-            clustering_result=decision.clustering,
-            routing_result=routing_result,
-            alignment_result=embedding_result.alignment if embedding_result else None,
-        )
-
-        # --- Stage 6: IEP-7 Explanation (non-blocking, fire-and-forget) ---
-        explanation_result = await _call_explanation_service(client, complaint_id, decision)
-        decision.explanation = explanation_result
-
-    decision.status = PipelineStatus.REVIEW_REQUIRED if (
-        routing_result and routing_result.requires_review
-    ) else PipelineStatus.COMPLETED
-
-    return decision
 

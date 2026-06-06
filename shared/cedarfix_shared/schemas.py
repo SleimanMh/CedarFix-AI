@@ -4,11 +4,15 @@ All services import from here so the contract is single-source-of-truth.
 """
 
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 import uuid
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +382,7 @@ class ComplaintDecision(BaseModel):
     """
     complaint_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: PipelineStatus = PipelineStatus.COMPLETED
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
 
     # Raw input
     original_text: str
@@ -416,8 +420,7 @@ class ComplaintDecision(BaseModel):
     is_duplicate: bool = False
     total_pipeline_ms: Optional[int] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 # ---------------------------------------------------------------------------
@@ -485,7 +488,7 @@ class AdminCorrection(BaseModel):
     corrected_severity: Optional[SeverityLevel] = None
     corrected_complaint_type: Optional[ComplaintType] = None
     notes: Optional[str] = None
-    correction_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    correction_timestamp: datetime = Field(default_factory=_utcnow)
 
 
 # ---------------------------------------------------------------------------
@@ -699,7 +702,7 @@ class CanonicalLocationJSON(BaseModel):
 
 class CanonicalComplaint(BaseModel):
     complaint_id: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_utcnow)
     summary: str = ""
     category: str = ""
     subcategory: str = ""

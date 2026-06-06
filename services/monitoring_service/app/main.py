@@ -16,8 +16,8 @@ DRIFT DETECTION STRATEGY:
   4. Alert if correction rate > 15%
 """
 
-import os
-import time
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, BackgroundTasks
 from prometheus_client import make_asgi_app
 from cedarfix_shared.metrics import (
@@ -26,7 +26,18 @@ from cedarfix_shared.metrics import (
 from .drift import compute_drift_metrics
 from .retrain import trigger_retraining_job
 
-app = FastAPI(title="IEP-9: Monitoring Service", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Run periodic drift monitoring while the service is alive."""
+    task = asyncio.create_task(_periodic_drift_check())
+    try:
+        yield
+    finally:
+        task.cancel()
+
+
+app = FastAPI(title="IEP-9: Monitoring Service", version="0.1.0", lifespan=lifespan)
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
@@ -53,16 +64,8 @@ async def trigger_retrain(background_tasks: BackgroundTasks, model: str = "all")
     return {"status": "retraining_triggered", "model": model}
 
 
-@app.on_event("startup")
-async def startup():
-    """Compute initial drift metrics on startup."""
-    import asyncio
-    asyncio.create_task(_periodic_drift_check())
-
-
 async def _periodic_drift_check():
     """Check drift every hour and update Prometheus gauges."""
-    import asyncio
     while True:
         try:
             report = await compute_drift_metrics()

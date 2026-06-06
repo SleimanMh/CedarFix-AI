@@ -3,16 +3,19 @@ SQLAlchemy database models — PostgreSQL schema for CedarFix AI.
 Each table corresponds to a stage in the pipeline.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column, String, Float, Integer, Boolean, DateTime, Text, JSON, Enum as SAEnum
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 
 Base = declarative_base()
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix")
 
@@ -34,8 +37,8 @@ class Complaint(Base):
     __tablename__ = "complaints"
 
     id = Column(String, primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
     status = Column(String, default="pending")
 
     # Raw input
@@ -79,8 +82,8 @@ class Cluster(Base):
     __tablename__ = "clusters"
 
     id = Column(String, primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
     complaint_type = Column(String, nullable=True)
     dominant_district = Column(String, nullable=True)
     member_count = Column(Integer, default=0)
@@ -94,7 +97,7 @@ class AdminCorrection(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     complaint_id = Column(String, nullable=False)
     admin_id = Column(String, nullable=False)
-    correction_timestamp = Column(DateTime, default=datetime.utcnow)
+    correction_timestamp = Column(DateTime, default=_utcnow)
     corrected_routing = Column(String, nullable=True)
     corrected_severity = Column(String, nullable=True)
     corrected_complaint_type = Column(String, nullable=True)
@@ -106,7 +109,7 @@ class ModelPerformanceLog(Base):
     __tablename__ = "model_performance_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    logged_at = Column(DateTime, default=datetime.utcnow)
+    logged_at = Column(DateTime, default=_utcnow)
     model_name = Column(String, nullable=False)
     model_version = Column(String, nullable=True)
     metric_name = Column(String, nullable=False)
