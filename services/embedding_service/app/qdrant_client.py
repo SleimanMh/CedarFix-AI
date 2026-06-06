@@ -15,7 +15,6 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
     FieldCondition,
@@ -28,9 +27,7 @@ from qdrant_client.models import (
 
 from cedarfix_shared.schemas import RawCandidate, SeverityLevel, CanonicalLocationJSON
 from cedarfix_shared.metrics import QDRANT_OPERATION_DURATION, QDRANT_OPERATION_ERRORS
-
-QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
+from cedarfix_shared.qdrant import create_qdrant_client, qdrant_target_label
 
 TEXT_COLLECTION = os.getenv("QDRANT_TEXT_COLLECTION", "text_embeddings")
 CLIP_COLLECTION = os.getenv("QDRANT_CLIP_COLLECTION", "clip_embeddings")
@@ -66,7 +63,8 @@ def _clip_candidate_id(complaint_id: str, index: int) -> str:
 
 class QdrantStore:
     def __init__(self):
-        self.client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        self.client = create_qdrant_client()
+        print(f"[IEP-3] Qdrant connected at {qdrant_target_label()}")
 
     async def init_collections(self):
         start = time.time()

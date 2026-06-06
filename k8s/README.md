@@ -47,6 +47,15 @@ Open:
 http://localhost:8080
 ```
 
+## Storage Modes
+
+The app supports two image storage modes:
+
+- `STORAGE_BACKEND=local`: images are saved as `local://filename` under `UPLOADS_DIR`; keep `uploads-pvc`.
+- `STORAGE_BACKEND=gcs`: images are saved as stable `gcs://bucket/complaints/filename` refs; set `GCS_BUCKET` and remove the uploads PVC mounts for production.
+
+Do not store signed URLs in Postgres. The gateway generates temporary signed URLs only when serving `/media?ref=...`.
+
 ## GKE Notes
 
 Before deploying to GKE:
@@ -54,7 +63,7 @@ Before deploying to GKE:
 - Push images to Artifact Registry and replace `image:` values in the manifests.
 - Replace `k8s/secrets.example.yaml` values with real secrets or use Secret Manager CSI.
 - Prefer Cloud SQL for Postgres instead of in-cluster Postgres.
-- Prefer `GCS_BUCKET` for image uploads instead of the shared uploads PVC.
+- Set `STORAGE_BACKEND=gcs` and `GCS_BUCKET=<bucket-name>` for image uploads instead of the shared uploads PVC.
 - If using local uploads in GKE, replace `uploads-pvc` with Filestore or another shared storage class. The included PVC is intended for local/single-node Kubernetes.
 - Replace `cedarfix.local` in `ingress.yaml` with your real domain.
 

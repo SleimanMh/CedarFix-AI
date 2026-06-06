@@ -81,6 +81,8 @@ services:
       EXPLANATION_SERVICE_URL: http://localhost:8007
       REVIEW_SERVICE_URL: http://localhost:8008
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      GCS_BUCKET: ${GCS_BUCKET:-}
       UPLOADS_DIR: /data/uploads
       MODERATION_ENABLED: "true"
       MODERATION_LLM_THRESHOLD: "0.75"
@@ -126,6 +128,9 @@ services:
       MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
       QDRANT_HOST: qdrant
       QDRANT_PORT: "6333"
+      QDRANT_URL: ${QDRANT_URL:-}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      QDRANT_TIMEOUT: "20"
       QDRANT_COLLECTION: complaints
       TEXT_EMBEDDING_DIM: "768"
       IMAGE_EMBEDDING_DIM: "512"
@@ -181,6 +186,8 @@ services:
       VLM_API_KEY: ${VLM_API_KEY:-none}
       VLM_ENABLED: "true"
       VLM_TIMEOUT: "25"
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      GCS_BUCKET: ${GCS_BUCKET:-}
       UPLOADS_DIR: /data/uploads
       PORT: "8002"
     ports:

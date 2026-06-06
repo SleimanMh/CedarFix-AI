@@ -4,9 +4,9 @@ metadata:
   name: cedarfix-config
   namespace: cedarfix
 data:
-  STORAGE_BACKEND: local
-  UPLOADS_DIR: /data/uploads
-  GCS_BUCKET: ""
+  STORAGE_BACKEND: gcs
+  GCS_BUCKET: YOUR_GCS_BUCKET
+  UPLOADS_DIR: /tmp/uploads
 
   TEXT_SERVICE_URL: http://ai-service:8001
   IMAGE_SERVICE_URL: http://vision-service:8002
@@ -17,25 +17,32 @@ data:
   EXPLANATION_SERVICE_URL: http://localhost:8007
   REVIEW_SERVICE_URL: http://localhost:8008
 
-  QDRANT_HOST: qdrant
+  # Cloud SQL proxy listens on localhost inside api-service and ai-service pods.
+  CLOUD_SQL_INSTANCE: PROJECT_ID:REGION:cedarfix-postgres
+
+  # Leave host/port for local profile only. GCP uses QDRANT_URL from this ConfigMap.
+  QDRANT_HOST: ""
   QDRANT_PORT: "6333"
-  QDRANT_URL: ""
+  QDRANT_URL: https://YOUR_QDRANT_CLUSTER_URL
   QDRANT_TIMEOUT: "20"
   QDRANT_COLLECTION: complaints
+  QDRANT_TEXT_COLLECTION: text_embeddings
+  QDRANT_CLIP_COLLECTION: clip_embeddings
   TEXT_EMBEDDING_DIM: "768"
   IMAGE_EMBEDDING_DIM: "512"
+  CLIP_EMBEDDING_DIM: "512"
   FUSED_EMBEDDING_DIM: "768"
 
   MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
   CLIP_MODEL_NAME: openai/clip-vit-base-patch32
 
-  QWEN_BASE_URL: http://host.docker.internal:8000/v1
+  QWEN_BASE_URL: https://YOUR_TEXT_QWEN_RUNPOD.proxy.runpod.net/v1
   QWEN_MODEL: cedarfix
   QWEN_ENABLED: "true"
   QWEN_GUIDED: "false"
   OPENAI_MODEL: gpt-4o
 
-  VLM_BASE_URL: ""
+  VLM_BASE_URL: https://YOUR_VLM_RUNPOD.proxy.runpod.net/v1
   VLM_MODEL: Qwen/Qwen2.5-VL-7B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"
