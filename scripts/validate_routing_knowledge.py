@@ -12,7 +12,7 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_compiled_production.json"
+DEFAULT_INPUT = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_docs.jsonl"
 DEFAULT_REPORT = REPO_ROOT / "RAG Data" / "validation_report.md"
 
 sys.path.insert(0, str(REPO_ROOT / "shared"))
@@ -39,24 +39,8 @@ REQUIRED = {
 
 
 def _load(path: Path) -> list[dict[str, Any]]:
-    raw = path.read_text(encoding="utf-8-sig")
-    stripped = raw.lstrip()
-    if not stripped:
-        return []
-    if stripped.startswith("["):
-        loaded = json.loads(raw)
-        if not isinstance(loaded, list):
-            raise ValueError(f"{path}: expected a JSON array of documents")
-        docs: list[dict[str, Any]] = []
-        for idx, item in enumerate(loaded, 1):
-            if not isinstance(item, dict):
-                raise ValueError(f"{path}: item {idx} is not a JSON object")
-            item["_line_no"] = idx
-            docs.append(item)
-        return docs
-
     docs: list[dict[str, Any]] = []
-    for line_no, line in enumerate(raw.splitlines(), 1):
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
         try:
@@ -143,18 +127,11 @@ def validate(path: Path) -> tuple[list[dict[str, Any]], list[str], list[str], di
     return docs, errors, warnings, stats
 
 
-def _display_path(path: Path) -> str:
-    try:
-        return path.resolve().relative_to(REPO_ROOT).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
 def _write_report(path: Path, source_path: Path, errors: list[str], warnings: list[str], stats: dict[str, Any]) -> None:
     lines = [
         "# Routing Knowledge Validation Report",
         "",
-        f"Source: `{_display_path(source_path)}`",
+        f"Source: `{source_path.as_posix()}`",
         f"Documents: {stats['doc_count']}",
         f"Source entities: {stats['entity_count']}",
         f"Errors: {len(errors)}",
