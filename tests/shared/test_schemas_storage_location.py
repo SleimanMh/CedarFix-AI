@@ -9,7 +9,11 @@ from pydantic import ValidationError
 
 from cedarfix_shared import location, storage
 from cedarfix_shared.schemas import (
+    ComplaintDecision,
     ComplaintRequest,
+    ComplaintSplitItem,
+    ComplaintSplitResult,
+    ComplaintSubmissionResponse,
     LocationInput,
     PriorityResult,
     RoutingEntity,
@@ -23,6 +27,9 @@ def test_location_input_rejects_out_of_range_coordinates():
         LocationInput(latitude=91, longitude=35)
     with pytest.raises(ValidationError):
         LocationInput(latitude=33, longitude=-181)
+    manual = LocationInput(address_hint="Verdun", normalized="Verdun", municipality="Beirut")
+    assert manual.latitude is None
+    assert manual.normalized == "Verdun"
 
 
 def test_complaint_request_enforces_text_length():
@@ -30,6 +37,49 @@ def test_complaint_request_enforces_text_length():
         ComplaintRequest(text="too short")
     request = ComplaintRequest(text="Large pothole on Hamra main road")
     assert request.text.startswith("Large pothole")
+
+
+def test_split_submission_schemas_preserve_parent_child_contract():
+    split = ComplaintSplitResult(
+        original_text="1. pothole near Hamra 2. garbage near school",
+        is_multi=True,
+        source="heuristic",
+        complaints=[
+            ComplaintSplitItem(complaint_text="Large pothole near Hamra"),
+            ComplaintSplitItem(complaint_text="Garbage overflowing near school"),
+        ],
+    )
+    first = ComplaintDecision(
+        complaint_id="child-1",
+        original_text="Large pothole near Hamra",
+        parent_submission_id="submission-1",
+        split_index=1,
+        split_total=2,
+        split_source="heuristic",
+        original_submission_text=split.original_text,
+    )
+    second = ComplaintDecision(
+        complaint_id="child-2",
+        original_text="Garbage overflowing near school",
+        parent_submission_id="submission-1",
+        split_index=2,
+        split_total=2,
+        split_source="heuristic",
+        original_submission_text=split.original_text,
+    )
+    response = ComplaintSubmissionResponse(
+        submission_id="submission-1",
+        mode="multi",
+        is_multi=True,
+        complaint_count=2,
+        split_result=split,
+        complaints=[first, second],
+        primary_decision=first,
+    )
+
+    assert response.primary_decision.parent_submission_id == "submission-1"
+    assert response.split_result.complaints[1].complaint_text == "Garbage overflowing near school"
+    assert response.complaints[0].split_index == 1
 
 
 def test_result_schemas_validate_confidence_bounds():
@@ -167,6 +217,7 @@ def test_normalize_location_priority_paths(monkeypatch):
 
     raw = asyncio.run(location.normalize_location(raw_text="water leak in Verdun"))
     assert raw["normalized"] == "Verdun"
+    assert raw["municipality"] == "Beirut"
     assert raw["source"] == "text_lookup"
 
     hint = asyncio.run(location.normalize_location(user_hint="Tripoli"))

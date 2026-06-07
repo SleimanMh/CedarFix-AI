@@ -63,6 +63,9 @@ def test_frontend_javascript_uses_gateway_api_contracts():
     assert "window.GATEWAY_URL || '/api'" in app_js
     assert "fetch(`${GATEWAY_URL}/complaints`" in app_js
     assert "localStorage.getItem('cf_token')" in app_js
+    assert "data.primary_decision || data.complaints[0]" in app_js
+    assert "response.complaint_count || response.complaints.length" in app_js
+    assert "multiSubmissionId" in app_js
 
     for endpoint in (
         "/admin/stats",

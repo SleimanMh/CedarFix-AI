@@ -98,9 +98,10 @@ async def split_complaint_text(text: str) -> ComplaintSplitResult:
         except Exception as exc:
             fallback = _single(original, "fallback")
             fallback.review_reason = f"LLM splitter failed; left submission as single: {type(exc).__name__}"
+            _record_split_metrics(fallback)
             return fallback
 
-    return _single(original, "single")
+    return _split_heuristically(original)
 
 
 async def _split_with_llm(text: str) -> ComplaintSplitResult:
@@ -213,6 +214,9 @@ def _issue_groups(text: str) -> set[str]:
 
 
 def _independent_issue_clauses(text: str) -> list[str]:
+    if re.search(r"\b(?:and|و|w)\s+(?:now|so|because|causing|which|that)\b", text, flags=re.IGNORECASE):
+        return []
+
     parts = [
         _safe_text(part)
         for part in re.split(r"\s+(?:and|و|w)\s+(?=(?:the\s+|there\s+|fi\s+|there's\s+)?)", text, flags=re.IGNORECASE)

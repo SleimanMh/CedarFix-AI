@@ -36,7 +36,9 @@ def test_coerce_llm_output_repairs_loose_shapes_and_clamps_confidence(import_ser
     assert clean["location_mentions"] == ["Hamra"]
     assert clean["signals"]["emergency_signal"] is True
     assert clean["routing_features"]["affected_public_space"] is False
+    assert clean["routing_features"]["requires_emergency_attention"] is True
     assert clean["evidence"]["text_evidence"] == ["visible crack"]
+    assert clean["alignment_features"]["visible_hazard"] is False
     assert clean["alignment_features"]["objects"] == ["road"]
     assert clean["confidence"] == 1.0
 
@@ -87,3 +89,34 @@ def test_build_result_normalizes_dynamic_descriptors_and_location(import_service
     assert result.physical_component == "sidewalk"
     assert result.location.normalized == "Hamra"
     assert result.summary == "Broken sidewalk reported."
+
+
+def test_build_result_coerces_string_booleans_in_nested_features(import_service_module):
+    llm = import_service_module("text_understanding", "app.llm_extractor")
+
+    result = llm._build_result(
+        "c1",
+        "A telecom cable is hanging low over Hamra street",
+        "en",
+        {
+            "is_complaint": True,
+            "issue_type": "low hanging telecom cable",
+            "category": "telecom",
+            "subcategory": "telecom cable",
+            "severity": "HIGH",
+            "signals": {"emergency_signal": "false", "traffic_impact": "true"},
+            "routing_features": {
+                "affected_public_space": "false",
+                "requires_emergency_attention": "false",
+            },
+            "alignment_features": {"visible_hazard": "false", "objects": ["cable"]},
+            "confidence": 0.8,
+        },
+        processing_ms=5,
+    )
+
+    assert result.signals.emergency_signal is False
+    assert result.signals.traffic_impact is True
+    assert result.routing_features.affected_public_space is False
+    assert result.routing_features.requires_emergency_attention is False
+    assert result.alignment_features.visible_hazard is False

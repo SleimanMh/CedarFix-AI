@@ -257,6 +257,42 @@ def _coerce_llm_output(data: dict) -> dict:
         "emergency_signal": _bool(signals.get("emergency_signal")),
     }
 
+    routing_features = _as_dict(clean.get("routing_features"))
+    clean["routing_features"] = {
+        "domain": _scalar_text(routing_features.get("domain"), ""),
+        "physical_component": _scalar_text(routing_features.get("physical_component"), ""),
+        "failure_mode": _scalar_text(routing_features.get("failure_mode"), ""),
+        "hazard_type": _scalar_text(routing_features.get("hazard_type"), "none"),
+        "affected_public_space": _bool(routing_features.get("affected_public_space"), True),
+        "requires_emergency_attention": _bool(
+            routing_features.get("requires_emergency_attention"),
+            clean["signals"]["emergency_signal"],
+        ),
+    }
+
+    raw_evidence = clean.get("evidence")
+    evidence = _as_dict(raw_evidence)
+    clean["evidence"] = {
+        "text_evidence": (
+            _string_list(raw_evidence)
+            if isinstance(raw_evidence, str)
+            else _string_list(evidence.get("text_evidence"))
+        ),
+        "image_evidence": _string_list(evidence.get("image_evidence")),
+        "missing_information": _string_list(evidence.get("missing_information")),
+    }
+
+    alignment_features = _as_dict(clean.get("alignment_features"))
+    clean["alignment_features"] = {
+        "domain": _scalar_text(alignment_features.get("domain"), ""),
+        "physical_component": _scalar_text(alignment_features.get("physical_component"), ""),
+        "failure_mode": _scalar_text(alignment_features.get("failure_mode"), ""),
+        "visible_hazard": _bool(alignment_features.get("visible_hazard")),
+        "objects": _string_list(alignment_features.get("objects")),
+        "actions": _string_list(alignment_features.get("actions")),
+        "location_context": _string_list(alignment_features.get("location_context")),
+    }
+
     severity = str(clean.get("severity", "LOW")).upper()
     clean["severity"] = severity if severity in {"LOW", "MEDIUM", "HIGH", "CRITICAL"} else "LOW"
 
@@ -417,10 +453,10 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
 
     signals_raw = data.get("signals", {})
     signals = SignalsJSON(
-        public_safety_risk=bool(signals_raw.get("public_safety_risk", False)),
-        traffic_impact=bool(signals_raw.get("traffic_impact", False)),
-        corruption_signal=bool(signals_raw.get("corruption_signal", False)),
-        emergency_signal=bool(signals_raw.get("emergency_signal", False)),
+        public_safety_risk=_bool(signals_raw.get("public_safety_risk"), False),
+        traffic_impact=_bool(signals_raw.get("traffic_impact"), False),
+        corruption_signal=_bool(signals_raw.get("corruption_signal"), False),
+        emergency_signal=_bool(signals_raw.get("emergency_signal"), False),
     )
 
     rf_raw = data.get("routing_features", {})
@@ -429,8 +465,8 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
         physical_component=_snake_or_default(rf_raw.get("physical_component"), physical_component),
         failure_mode=_snake_or_default(rf_raw.get("failure_mode"), failure_mode),
         hazard_type=_snake(rf_raw.get("hazard_type", "none"), "none"),
-        affected_public_space=bool(rf_raw.get("affected_public_space", True)),
-        requires_emergency_attention=bool(rf_raw.get("requires_emergency_attention", signals.emergency_signal)),
+        affected_public_space=_bool(rf_raw.get("affected_public_space"), True),
+        requires_emergency_attention=_bool(rf_raw.get("requires_emergency_attention"), signals.emergency_signal),
     )
 
     ev_raw = data.get("evidence", {})
@@ -448,7 +484,7 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
         domain=_snake_or_default(af_raw.get("domain"), routing_features.domain),
         physical_component=_snake_or_default(af_raw.get("physical_component"), routing_features.physical_component),
         failure_mode=_snake_or_default(af_raw.get("failure_mode"), routing_features.failure_mode),
-        visible_hazard=bool(af_raw.get("visible_hazard", False)),
+        visible_hazard=_bool(af_raw.get("visible_hazard"), False),
         objects=[_snake(x) for x in af_raw.get("objects", []) if str(x).strip()],
         actions=[_snake(x) for x in af_raw.get("actions", []) if str(x).strip()],
         location_context=[str(x).strip() for x in af_raw.get("location_context", []) if str(x).strip()],

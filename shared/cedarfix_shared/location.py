@@ -230,6 +230,7 @@ def _google_admin_components(data: dict) -> Optional[dict]:
     governorate = pick("administrative_area_level_1")
 
     return {
+        "normalized": result.get("formatted_address", ""),
         "municipality": municipality,
         "district": district,
         "governorate": governorate,
@@ -317,6 +318,7 @@ async def geocode_text(text: str) -> Optional[dict]:
     loc = lookup_text(cleaned)
     if loc:
         return {
+            "normalized": loc.get("name"),
             "municipality": loc.get("municipality"),
             "district": loc.get("district"),
             "governorate": loc.get("governorate"),
@@ -405,7 +407,12 @@ async def normalize_location(
         if geo:
             return {
                 "raw": raw_text,
-                "normalized": geo.get("municipality") or geo.get("display_name") or raw_text,
+                "normalized": (
+                    geo.get("normalized")
+                    or geo.get("display_name")
+                    or geo.get("municipality")
+                    or raw_text
+                ),
                 "municipality": geo.get("municipality"),
                 "district": geo.get("district"),
                 "governorate": geo.get("governorate"),
@@ -419,16 +426,24 @@ async def normalize_location(
     if user_hint:
         geo = await geocode_text(user_hint)
         if geo:
+            source = geo.get("source") or "user_hint"
+            if source == "text_lookup":
+                source = "user_hint"
             return {
                 "raw": raw_text or user_hint,
-                "normalized": geo.get("municipality") or geo.get("display_name") or user_hint,
+                "normalized": (
+                    geo.get("normalized")
+                    or geo.get("display_name")
+                    or geo.get("municipality")
+                    or user_hint
+                ),
                 "municipality": geo.get("municipality"),
                 "district": geo.get("district"),
                 "governorate": geo.get("governorate"),
                 "latitude": geo.get("lat"),
                 "longitude": geo.get("lng"),
                 "confidence": 0.86 if geo.get("source") == "google_maps" else 0.70,
-                "source": geo.get("source") or "user_hint",
+                "source": source,
             }
 
     # 4. LLM-extracted passthrough
