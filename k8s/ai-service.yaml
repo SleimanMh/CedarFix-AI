@@ -94,6 +94,15 @@ spec:
                   name: cedarfix-secrets
                   key: QDRANT_API_KEY
                   optional: true
+            - name: GOOGLE_MAPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cedarfix-secrets
+                  key: GOOGLE_MAPS_API_KEY
+                  optional: true
+          volumeMounts:
+            - name: hf-model-cache
+              mountPath: /root/.cache/huggingface
           readinessProbe:
             httpGet:
               path: /health
@@ -107,3 +116,8 @@ spec:
             limits:
               cpu: "4"
               memory: 8Gi
+      volumes:
+        - name: hf-model-cache
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/sleim/Downloads/CedarFix AI/data/models
+            type: Directory

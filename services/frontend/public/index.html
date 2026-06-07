@@ -80,18 +80,32 @@
 
           <!-- Location -->
           <div class="field">
-            <label>Location</label>
-            <div class="location-row">
-              <input type="text" id="district" name="district" placeholder="District (e.g. Hamra, Jounieh)" />
+            <label>Complaint location</label>
+            <div class="location-mode">
+              <label class="location-option">
+                <input type="radio" name="locationMode" value="current_device" checked />
+                <span>At my current location</span>
+              </label>
+              <label class="location-option">
+                <input type="radio" name="locationMode" value="manual_text" />
+                <span>Somewhere else</span>
+              </label>
+            </div>
+            <div class="location-row" id="currentLocationRow">
               <button type="button" class="btn-locate" id="detectLocation">
                 <span>📍</span> Use my location
               </button>
             </div>
+            <div class="location-row hidden" id="manualLocationRow">
+              <input type="text" id="district" name="district" placeholder="Street, village, municipality, or district" />
+            </div>
             <div class="coords-row hidden" id="coordsRow">
               <span class="coords-badge" id="coordsDisplay"></span>
             </div>
+            <div class="field-error" id="locationError"></div>
             <input type="hidden" id="latitude" name="latitude" />
             <input type="hidden" id="longitude" name="longitude" />
+            <input type="hidden" id="addressHint" name="address_hint" />
           </div>
 
           <!-- Submit -->
@@ -105,6 +119,20 @@
 
       <!-- ── RESULT PANEL ── -->
       <section class="result-panel" id="resultPanel" style="display:none">
+
+        <!-- MULTI COMPLAINT RESULT -->
+        <div class="result-card card hidden" id="resultMulti">
+          <div class="result-header">
+            <span class="result-icon success-icon">✅</span>
+            <div>
+              <h3>Multiple Complaints Created</h3>
+              <span class="result-id" id="multiSubmissionId"></span>
+            </div>
+          </div>
+          <div class="validation-detail" id="multiSplitDetail"></div>
+          <div class="multi-list" id="multiComplaintList"></div>
+          <button class="btn-reset" id="btnMultiReset">Submit Another Complaint</button>
+        </div>
 
         <!-- SUCCESS -->
         <div class="result-card card" id="resultSuccess">

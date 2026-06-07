@@ -43,7 +43,7 @@ data:
   OPENAI_MODEL: gpt-4o
 
   VLM_BASE_URL: https://YOUR_VLM_RUNPOD.proxy.runpod.net/v1
-  VLM_MODEL: Qwen/Qwen2.5-VL-7B-Instruct
+  VLM_MODEL: Qwen/Qwen2.5-VL-3B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"
 

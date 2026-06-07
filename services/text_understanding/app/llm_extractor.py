@@ -77,7 +77,7 @@ class _LLMOutput(BaseModel):
 
 
 _LLM_OUTPUT_SCHEMA: dict = _LLMOutput.model_json_schema()
-QWEN_GUIDED: bool = os.getenv("QWEN_GUIDED", "true").lower() == "true"
+QWEN_GUIDED: bool = os.getenv("QWEN_GUIDED", "false").lower() == "true"
 
 log = logging.getLogger(__name__)
 
@@ -87,7 +87,10 @@ QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "http://host.docker.internal:800
 QWEN_MODEL: str = os.getenv("QWEN_MODEL", "cedarfix")
 QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
-_TRANSLATE_ONLY_LANGUAGES = {"arabizi"}
+QWEN_TIMEOUT: float = float(os.getenv("QWEN_TIMEOUT", "50"))
+QWEN_MAX_ATTEMPTS: int = max(1, int(os.getenv("QWEN_MAX_ATTEMPTS", "1")))
+QWEN_MAX_TOKENS: int = max(128, int(os.getenv("QWEN_MAX_TOKENS", "1536")))
+_TRANSLATE_ONLY_LANGUAGES: set[str] = set()
 
 
 def _error_type(exc: Exception) -> str:
@@ -357,7 +360,7 @@ async def _call_gpt4o_extract(text: str, language: str) -> dict:
 
 
 async def _call_qwen(text: str, language: str) -> dict:
-    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=35.0)
+    client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=QWEN_TIMEOUT)
 
     kwargs: dict = dict(
         model=QWEN_MODEL,
@@ -366,6 +369,7 @@ async def _call_qwen(text: str, language: str) -> dict:
             {"role": "user", "content": _user_prompt(text, language)},
         ],
         temperature=0.0,
+        max_tokens=QWEN_MAX_TOKENS,
     )
 
     if QWEN_GUIDED:
@@ -373,7 +377,7 @@ async def _call_qwen(text: str, language: str) -> dict:
     else:
         kwargs["response_format"] = {"type": "json_object"}
 
-    for attempt in range(2):
+    for attempt in range(QWEN_MAX_ATTEMPTS):
         try:
             response = await client.chat.completions.create(**kwargs)
             data = _parse_llm_json(response.choices[0].message.content)
@@ -386,8 +390,8 @@ async def _call_qwen(text: str, language: str) -> dict:
                 response = await client.chat.completions.create(**kwargs)
                 data = _parse_llm_json(response.choices[0].message.content)
                 return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
-            if attempt == 0 and "timed out" in str(e).lower():
-                log.warning("[IEP-1] Qwen timeout on attempt 1, retrying (%s)", e)
+            if attempt + 1 < QWEN_MAX_ATTEMPTS and "timed out" in str(e).lower():
+                log.warning("[IEP-1] Qwen timeout on attempt %s, retrying (%s)", attempt + 1, e)
                 continue
             raise
 
@@ -538,6 +542,7 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
         subcategory=subcategory,
         issue_type=issue_type,
         location=location,
+        location_mentions=[str(x).strip() for x in location_mentions if str(x).strip()],
         severity=severity,
         signals=signals,
         urgency_keywords=data.get("keywords", []),

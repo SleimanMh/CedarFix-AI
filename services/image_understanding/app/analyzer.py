@@ -666,6 +666,12 @@ class VLMAnalyzer:
             visual_candidates = _parse_visual_candidates(data)
             primary = visual_candidates[0]
 
+            severity = str(data.get("damage_severity") or "LOW").upper()
+            if severity in {"NONE", "NO_DAMAGE", "UNKNOWN", ""}:
+                severity = "LOW"
+            if severity not in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
+                severity = "LOW"
+
             return VLMImageAnalysis(
                 image_type=data.get("image_type", "other"),
                 is_valid_complaint_image=bool(data.get("is_valid_complaint_image", False)),
@@ -675,7 +681,7 @@ class VLMAnalyzer:
                 visual_category=primary.visual_category or _snake(data.get("visual_category"), "other"),
                 visual_subcategory=primary.visual_subcategory or _snake(data.get("visual_subcategory"), "other"),
                 caption=primary.caption or data.get("caption", ""),
-                damage_severity=data.get("damage_severity", "NONE"),
+                damage_severity=severity,
                 location_cues={
                     "detected_text": [str(x) for x in loc_raw.get("detected_text", []) if str(x).strip()],
                     "landmarks": [str(x) for x in loc_raw.get("landmarks", []) if str(x).strip()],

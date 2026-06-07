@@ -16,6 +16,11 @@ const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 const imagePreview  = document.getElementById('imagePreview');
 const removeImageBtn= document.getElementById('removeImage');
 const districtInput = document.getElementById('district');
+const addressHintInput = document.getElementById('addressHint');
+const locationModeInputs = Array.from(document.querySelectorAll('input[name="locationMode"]'));
+const currentLocationRow = document.getElementById('currentLocationRow');
+const manualLocationRow = document.getElementById('manualLocationRow');
+const locationError = document.getElementById('locationError');
 const detectBtn     = document.getElementById('detectLocation');
 const coordsRow     = document.getElementById('coordsRow');
 const coordsDisplay = document.getElementById('coordsDisplay');
@@ -26,6 +31,7 @@ const btnText       = submitBtn.querySelector('.btn-text');
 const btnSpinner    = document.getElementById('btnSpinner');
 
 const resultPanel   = document.getElementById('resultPanel');
+const resultMulti   = document.getElementById('resultMulti');
 const resultSuccess = document.getElementById('resultSuccess');
 const resultError   = document.getElementById('resultError');
 const resultContradiction  = document.getElementById('resultContradiction');
@@ -36,9 +42,33 @@ const formPanel     = document.querySelector('.form-panel');
 
 // All result cards — used to hide all before showing one
 const ALL_RESULT_CARDS = [
-  resultSuccess, resultError, resultContradiction,
+  resultMulti, resultSuccess, resultError, resultContradiction,
   resultClarification, resultHumanReview, resultInvalid,
 ];
+
+function selectedLocationMode() {
+  return document.querySelector('input[name="locationMode"]:checked')?.value || 'current_device';
+}
+
+function syncLocationMode() {
+  const mode = selectedLocationMode();
+  const isCurrent = mode === 'current_device';
+  currentLocationRow.classList.toggle('hidden', !isCurrent);
+  coordsRow.classList.toggle('hidden', !isCurrent || !latInput.value || !lngInput.value);
+  manualLocationRow.classList.toggle('hidden', isCurrent);
+  locationError.textContent = '';
+  if (isCurrent) {
+    addressHintInput.value = '';
+  } else {
+    latInput.value = '';
+    lngInput.value = '';
+    coordsDisplay.textContent = '';
+    coordsRow.classList.add('hidden');
+  }
+}
+
+locationModeInputs.forEach(input => input.addEventListener('change', syncLocationMode));
+syncLocationMode();
 
 // ── Character counter ─────────────────────────────────
 textArea.addEventListener('input', () => {
@@ -110,6 +140,7 @@ detectBtn.addEventListener('click', () => {
       lngInput.value  = longitude.toFixed(6);
       coordsDisplay.textContent = `📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
       coordsRow.classList.remove('hidden');
+      locationError.textContent = '';
       detectBtn.innerHTML = '<span>✅</span> Located';
       detectBtn.disabled = false;
     },
@@ -142,10 +173,30 @@ form.addEventListener('submit', async (e) => {
     const fd = new FormData();
     fd.append('text', text);
 
+    const locationMode = selectedLocationMode();
+    fd.append('location_input_mode', locationMode);
+    locationError.textContent = '';
+
     const district = districtInput.value.trim();
-    if (district)            fd.append('district', district);
-    if (latInput.value)      fd.append('latitude',  latInput.value);
-    if (lngInput.value)      fd.append('longitude', lngInput.value);
+    if (locationMode === 'current_device') {
+      if (!latInput.value || !lngInput.value) {
+        locationError.textContent = 'Use your device location or choose Somewhere else and type the complaint location.';
+        setLoading(false);
+        return;
+      }
+      fd.append('latitude',  latInput.value);
+      fd.append('longitude', lngInput.value);
+    } else {
+      if (!district) {
+        locationError.textContent = 'Enter where the complaint is located.';
+        districtInput.focus();
+        setLoading(false);
+        return;
+      }
+      addressHintInput.value = district;
+      fd.append('district', district);
+      fd.append('address_hint', district);
+    }
     if (imageInput.files[0]) fd.append('image', imageInput.files[0]);
 
     // Attach auth token if logged in so gateway binds complaint to user
@@ -165,28 +216,34 @@ form.addEventListener('submit', async (e) => {
     }
 
     const data = await resp.json();
+    const normalized = normalizeSubmissionResponse(data);
+    if (normalized.isMulti) {
+      showMultiResult(normalized.response);
+      return;
+    }
+    const decision = normalized.primary;
 
     // Route to the correct result panel based on pipeline status
-    switch (data.status) {
+    switch (decision.status) {
       case 'needs_clarification':
-        showClarification(data);
+        showClarification(decision);
         break;
       case 'contradiction':
-        showContradiction(data);
+        showContradiction(decision);
         break;
       case 'invalid_no_complaint':
         showInvalid();
         break;
       case 'review_required':
         // Could be human_review gate OR low-confidence routing — check media_validation
-        if (data.media_validation?.status === 'human_review') {
-          showHumanReview(data);
+        if (decision.media_validation?.status === 'human_review') {
+          showHumanReview(decision);
         } else {
-          showSuccess(data);
+          showSuccess(decision);
         }
         break;
       default:
-        showSuccess(data);
+        showSuccess(decision);
     }
 
   } catch (err) {
@@ -197,6 +254,48 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ── Render success result ─────────────────────────────
+function normalizeSubmissionResponse(data) {
+  if (Array.isArray(data?.complaints)) {
+    return {
+      response: data,
+      isMulti: data.is_multi === true && data.complaints.length > 1,
+      primary: data.primary_decision || data.complaints[0],
+    };
+  }
+  return { response: data, isMulti: false, primary: data };
+}
+
+function showMultiResult(response) {
+  document.getElementById('multiSubmissionId').textContent = `Submission: ${response.submission_id}`;
+  const split = response.split_result || {};
+  document.getElementById('multiSplitDetail').textContent =
+    `${response.complaint_count || response.complaints.length} separate complaints were created from your submission. Split source: ${split.source || 'unknown'}.`;
+
+  const list = document.getElementById('multiComplaintList');
+  list.innerHTML = '';
+  (response.complaints || []).forEach((d, idx) => {
+    const item = document.createElement('div');
+    item.className = 'multi-item';
+    const conf = d.routing_confidence != null ? `${Math.round(d.routing_confidence * 100)}%` : '-';
+    const text = d.original_text || '';
+    item.innerHTML = `
+      <div class="multi-item-head">
+        <strong>Complaint ${idx + 1}</strong>
+        <span>${d.status || 'processing'}</span>
+      </div>
+      <div class="multi-item-grid">
+        <span>ID</span><b>${d.complaint_id || '-'}</b>
+        <span>Type</span><b>${displayType(d.complaint_type || 'unknown', d.text_analysis?.subcategory || '')}</b>
+        <span>Routed To</span><b>${d.assigned_entity || '-'}</b>
+        <span>Confidence</span><b>${conf}</b>
+      </div>
+      <p>${escapeHtml(text)}</p>
+    `;
+    list.appendChild(item);
+  });
+  _showCard(resultMulti);
+}
+
 function showSuccess(d) {
   // Complaint ID
   document.getElementById('resultId').textContent = `ID: ${d.complaint_id}`;
@@ -352,6 +451,7 @@ function _showCard(card) {
 
 // ── Reset form ────────────────────────────────────────
 document.getElementById('btnReset').addEventListener('click', resetForm);
+document.getElementById('btnMultiReset').addEventListener('click', resetForm);
 document.getElementById('btnErrorReset').addEventListener('click', resetForm);
 document.getElementById('btnContradictionReset').addEventListener('click', resetForm);
 document.getElementById('btnClarificationReset').addEventListener('click', resetForm);
@@ -365,6 +465,10 @@ function resetForm() {
   coordsRow.classList.add('hidden');
   latInput.value = '';
   lngInput.value = '';
+  addressHintInput.value = '';
+  locationError.textContent = '';
+  locationModeInputs.forEach(input => { input.checked = input.value === 'current_device'; });
+  syncLocationMode();
   detectBtn.innerHTML = '<span>📍</span> Use my location';
   detectBtn.disabled = false;
   resultPanel.style.display = 'none';
@@ -381,6 +485,16 @@ function setLoading(on) {
 // ── Helpers ───────────────────────────────────────────
 function toggleEl(id, show) {
   document.getElementById(id).classList.toggle('hidden', !show);
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  }[ch]));
 }
 
 /**

@@ -5,6 +5,7 @@ IEP-3 through IEP-6 run sequentially (each depends on prior results).
 """
 
 import asyncio
+import re
 import time
 import httpx
 
@@ -18,13 +19,71 @@ from cedarfix_shared.schemas import (
     HumanReviewItem, TextImageAlignment,
     ConfidenceBundle, StageConfidence,
 )
-from cedarfix_shared.metrics import PIPELINE_DURATION
+from cedarfix_shared.metrics import (
+    GATEWAY_SERVICE_CALL_DURATION,
+    GATEWAY_SERVICE_CALL_ERRORS,
+    PIPELINE_DURATION,
+)
 from .config import settings
 from .moderation import moderate, ModerationDecisionEnum
 
 TIMEOUT = httpx.Timeout(60.0)
 SINGLE_MODAL_REVIEW_CONFIDENCE = 0.85
 IMAGE_CANDIDATE_CONFIDENCE_THRESHOLD = 0.40
+
+
+def _error_type(exc: Exception) -> str:
+    return type(exc).__name__
+
+
+def _as_json_dict(value) -> dict:
+    if value is None:
+        return {}
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    if isinstance(value, dict):
+        return value
+    return {}
+
+
+async def _post_json(
+    client: httpx.AsyncClient,
+    *,
+    service: str,
+    endpoint: str,
+    url: str,
+    payload: dict,
+) -> httpx.Response:
+    start = time.time()
+    try:
+        resp = await client.post(url, json=payload)
+    except Exception as exc:
+        GATEWAY_SERVICE_CALL_ERRORS.labels(
+            service=service,
+            endpoint=endpoint,
+            error_type=_error_type(exc),
+        ).inc()
+        GATEWAY_SERVICE_CALL_DURATION.labels(
+            service=service,
+            endpoint=endpoint,
+            status="error",
+        ).observe(time.time() - start)
+        raise
+    GATEWAY_SERVICE_CALL_DURATION.labels(
+        service=service,
+        endpoint=endpoint,
+        status=str(resp.status_code),
+    ).observe(time.time() - start)
+    try:
+        resp.raise_for_status()
+    except Exception as exc:
+        GATEWAY_SERVICE_CALL_ERRORS.labels(
+            service=service,
+            endpoint=endpoint,
+            error_type=_error_type(exc),
+        ).inc()
+        raise
+    return resp
 
 
 async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> ComplaintDecision:
@@ -34,7 +93,13 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         original_text=request.text,
         user_id=request.user_id,
         location=request.location,
+        location_input_mode=request.location_input_mode,
         image_filename=request.image_filename,
+        parent_submission_id=request.parent_submission_id,
+        split_index=request.split_index,
+        split_total=request.split_total,
+        split_source=request.split_source,
+        original_submission_text=request.original_submission_text,
     )
 
     # --- IEP-0: Moderation Gate (runs before everything else) ---
@@ -63,6 +128,11 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
 
         decision.text_analysis = text_result
         decision.image_analysis = image_result
+        decision.location_evaluation = _evaluate_location_extraction(
+            submitted_location=decision.location,
+            text_location=text_result.location if text_result else None,
+            input_mode=request.location_input_mode,
+        )
 
         if text_result:
             decision.complaint_type = text_result.issue_type
@@ -344,6 +414,102 @@ def _build_confidence_bundle(
     )
 
 
+def _has_location_signal(location) -> bool:
+    if not location:
+        return False
+    return any(
+        getattr(location, field, None)
+        for field in ("normalized", "municipality", "district", "governorate", "address_hint")
+    ) or (
+        getattr(location, "latitude", None) is not None
+        and getattr(location, "longitude", None) is not None
+    )
+
+
+def _norm_location_value(value) -> str:
+    return str(value or "").strip().casefold()
+
+
+def _evaluate_location_extraction(submitted_location, text_location, input_mode: str | None) -> dict:
+    """
+    Compare the LLM/text-extracted location with the submitted/resolved location.
+    The submitted/resolved location remains authoritative for routing.
+    """
+    if not submitted_location and not text_location:
+        return {
+            "input_mode": input_mode or "unspecified",
+            "submitted_location_available": False,
+            "llm_location_available": False,
+            "llm_matches_submitted": None,
+            "usable_for_finetuning": False,
+        }
+
+    submitted_parts = {
+        "normalized": getattr(submitted_location, "normalized", None),
+        "municipality": getattr(submitted_location, "municipality", None),
+        "district": getattr(submitted_location, "district", None),
+        "governorate": getattr(submitted_location, "governorate", None),
+        "source": getattr(submitted_location, "source", None),
+        "confidence": getattr(submitted_location, "confidence", 0.0),
+    } if submitted_location else {}
+    llm_parts = {
+        "normalized": getattr(text_location, "normalized", None),
+        "municipality": getattr(text_location, "municipality", None),
+        "district": getattr(text_location, "district", None),
+        "governorate": getattr(text_location, "governorate", None),
+        "source": getattr(text_location, "source", None),
+        "confidence": getattr(text_location, "confidence", 0.0),
+    } if text_location else {}
+
+    submitted_values = {
+        _norm_location_value(v)
+        for v in (
+            submitted_parts.get("normalized"),
+            submitted_parts.get("municipality"),
+            submitted_parts.get("district"),
+            submitted_parts.get("governorate"),
+        )
+        if v
+    }
+    llm_values = {
+        _norm_location_value(v)
+        for v in (
+            llm_parts.get("normalized"),
+            llm_parts.get("municipality"),
+            llm_parts.get("district"),
+            llm_parts.get("governorate"),
+        )
+        if v
+    }
+
+    match = None
+    if submitted_values and llm_values:
+        match = bool(submitted_values & llm_values)
+    elif llm_values:
+        match = False
+
+    return {
+        "input_mode": input_mode or "unspecified",
+        "submitted_location_available": bool(submitted_values),
+        "submitted_location": submitted_parts,
+        "llm_location_available": bool(llm_values),
+        "llm_location": llm_parts,
+        "llm_matches_submitted": match,
+        "authoritative_location_source": submitted_parts.get("source"),
+        "routing_uses_submitted_location": bool(submitted_values),
+        "usable_for_finetuning": bool(submitted_values and llm_values),
+        "finetuning_note": (
+            "Use submitted/resolved location as correction label."
+            if submitted_values and llm_values and match is False
+            else "Use as positive location extraction sample."
+            if submitted_values and llm_values and match is True
+            else "No LLM location label to correct."
+            if submitted_values and not llm_values
+            else ""
+        ),
+    }
+
+
 # ---------------------------------------------------------------------------
 # IEP Callers
 # ---------------------------------------------------------------------------
@@ -352,11 +518,13 @@ async def _call_text_understanding(
     client, complaint_id: str, request: ComplaintRequest
 ) -> TextUnderstandingResult | None:
     try:
-        resp = await client.post(
-            f"{settings.text_service_url}/analyze",
-            json={"complaint_id": complaint_id, "text": request.text},
+        resp = await _post_json(
+            client,
+            service="text_understanding",
+            endpoint="/analyze",
+            url=f"{settings.text_service_url}/analyze",
+            payload={"complaint_id": complaint_id, "text": request.text},
         )
-        resp.raise_for_status()
         return TextUnderstandingResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-1 failed: {e}")
@@ -369,9 +537,12 @@ async def _call_image_understanding(
     if not request.image_filename:
         return None
     try:
-        resp = await client.post(
-            f"{settings.image_service_url}/analyze",
-            json={
+        resp = await _post_json(
+            client,
+            service="image_understanding",
+            endpoint="/analyze",
+            url=f"{settings.image_service_url}/analyze",
+            payload={
                 "complaint_id": complaint_id,
                 "image_filename": request.image_filename,
                 # Pass complaint text so IEP-2 can compute clip_text_embedding.
@@ -380,7 +551,6 @@ async def _call_image_understanding(
                 "complaint_text": request.text,
             },
         )
-        resp.raise_for_status()
         return ImageUnderstandingResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-2 failed: {e}")
@@ -401,8 +571,13 @@ async def _call_embedding_service(
             "text_result": text_result.model_dump(),
             "image_result": image_result.model_dump() if image_result else None,
         }
-        resp = await client.post(f"{settings.embedding_service_url}/embed", json=payload)
-        resp.raise_for_status()
+        resp = await _post_json(
+            client,
+            service="embedding_service",
+            endpoint="/embed",
+            url=f"{settings.embedding_service_url}/embed",
+            payload=payload,
+        )
         return EmbeddingServiceResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-3 failed: {e}")
@@ -416,11 +591,13 @@ async def _call_clustering_service(
     if not embedding_result:
         return None
     try:
-        resp = await client.post(
-            f"{settings.clustering_service_url}/classify",
-            json=embedding_result.model_dump(mode="json"),
+        resp = await _post_json(
+            client,
+            service="clustering_service",
+            endpoint="/classify",
+            url=f"{settings.clustering_service_url}/classify",
+            payload=embedding_result.model_dump(mode="json"),
         )
-        resp.raise_for_status()
         return MultimodalClusteringResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-4 failed: {e}")
@@ -448,8 +625,13 @@ async def _call_priority_engine(client, complaint_id: str, decision: ComplaintDe
                 else 0.0
             ),
         }
-        resp = await client.post(f"{settings.priority_service_url}/predict", json=payload)
-        resp.raise_for_status()
+        resp = await _post_json(
+            client,
+            service="priority_engine",
+            endpoint="/predict",
+            url=f"{settings.priority_service_url}/predict",
+            payload=payload,
+        )
         return PriorityResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-5 failed: {e}")
@@ -460,16 +642,18 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
     try:
         text = decision.text_analysis
         image = decision.image_analysis
-        loc = text.location if text else None
+        submitted_loc = decision.location
+        llm_loc = text.location if text else None
+        loc = submitted_loc if _has_location_signal(submitted_loc) else llm_loc
 
-        text_rf = getattr(text, "routing_features", {}) if text else {}
-        text_af = getattr(text, "alignment_features", {}) if text else {}
-        text_ev = getattr(text, "evidence", {}) if text else {}
+        text_rf = _as_json_dict(getattr(text, "routing_features", None) if text else None)
+        text_af = _as_json_dict(getattr(text, "alignment_features", None) if text else None)
+        text_ev = _as_json_dict(getattr(text, "evidence", None) if text else None)
 
         img_vlm = image.vlm_analysis if image and image.image_present else None
-        image_rf = getattr(img_vlm, "routing_features", {}) if img_vlm else {}
-        image_af = getattr(img_vlm, "alignment_features", {}) if img_vlm else {}
-        image_ev = getattr(img_vlm, "evidence", {}) if img_vlm else {}
+        image_rf = _as_json_dict(getattr(img_vlm, "routing_features", None) if img_vlm else None)
+        image_af = _as_json_dict(getattr(img_vlm, "alignment_features", None) if img_vlm else None)
+        image_ev = _as_json_dict(getattr(img_vlm, "evidence", None) if img_vlm else None)
         validation = decision.media_validation
         use_image_for_routing = (
             validation is not None
@@ -508,8 +692,15 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
         }
 
         location_mentions = list(getattr(text, "location_mentions", []) or []) if text else []
-        if loc and loc.normalized:
-            location_mentions.append(loc.normalized)
+        for value in [
+            getattr(submitted_loc, "address_hint", None),
+            getattr(submitted_loc, "normalized", None),
+            getattr(submitted_loc, "municipality", None),
+            getattr(submitted_loc, "district", None),
+            getattr(llm_loc, "normalized", None),
+        ]:
+            if value:
+                location_mentions.append(value)
 
         payload = {
             "complaint_id": complaint_id,
@@ -531,12 +722,20 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
             ),
             "severity": decision.severity,
             "original_text": decision.original_text or "",
-            "location_district": loc.district if loc else (decision.location.district if decision.location else None),
-            "location_municipality": loc.municipality if loc else None,
-            "location_governorate": loc.governorate if loc else None,
+            "location_district": getattr(loc, "district", None) if loc else None,
+            "location_municipality": getattr(loc, "municipality", None) if loc else None,
+            "location_governorate": getattr(loc, "governorate", None) if loc else None,
             "location_mentions": location_mentions,
+            "location_resolution": {
+                "input_mode": decision.location_input_mode,
+                "authoritative_source": getattr(submitted_loc, "source", None) if submitted_loc else None,
+                "authoritative_confidence": getattr(submitted_loc, "confidence", 0.0) if submitted_loc else 0.0,
+                "llm_location": getattr(llm_loc, "normalized", None) if llm_loc else None,
+                "llm_source": getattr(llm_loc, "source", None) if llm_loc else None,
+                "llm_matches_submitted": (decision.location_evaluation or {}).get("llm_matches_submitted"),
+            },
             "extracted_keywords": text.urgency_keywords if text else [],
-            "signals": text.signals.model_dump() if text and text.signals else {},
+            "signals": text.signals.model_dump(mode="json") if text and text.signals else {},
             "routing_features": {
                 "text": text_rf,
                 "image": image_rf,
@@ -557,8 +756,13 @@ async def _call_routing_engine(client, complaint_id: str, decision: ComplaintDec
             },
             "multimodal_alignment": mm_payload,
         }
-        resp = await client.post(f"{settings.routing_service_url}/route", json=payload)
-        resp.raise_for_status()
+        resp = await _post_json(
+            client,
+            service="routing_engine",
+            endpoint="/route",
+            url=f"{settings.routing_service_url}/route",
+            payload=payload,
+        )
         return RoutingResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-6 failed: {e}")
@@ -569,9 +773,12 @@ async def _call_explanation_service(
     client, complaint_id: str, decision: ComplaintDecision
 ) -> ExplanationResult | None:
     try:
-        resp = await client.post(
-            f"{settings.explanation_service_url}/explain",
-            json={
+        resp = await _post_json(
+            client,
+            service="explanation_service",
+            endpoint="/explain",
+            url=f"{settings.explanation_service_url}/explain",
+            payload={
                 "complaint_id": complaint_id,
                 "complaint_type": decision.complaint_type,
                 "severity": decision.severity,
@@ -581,7 +788,6 @@ async def _call_explanation_service(
                 "urgency_factors": decision.priority.urgency_factors if decision.priority else [],
             },
         )
-        resp.raise_for_status()
         return ExplanationResult(**resp.json())
     except Exception as e:
         print(f"[WARN] IEP-7 failed: {e}")
@@ -659,6 +865,55 @@ def _norm_label(value: str | None) -> str | None:
     return normalized or None
 
 
+_DESCRIPTOR_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "area",
+    "detected",
+    "issue",
+    "visible",
+    "public",
+    "infrastructure",
+    "object",
+    "other",
+    "unknown",
+    "unspecified",
+}
+
+
+def _descriptor_tokens(value: str | None) -> set[str]:
+    label = _norm_label(value)
+    if not label:
+        return set()
+    return {
+        token
+        for token in re.split(r"_+", label)
+        if len(token) >= 3 and token not in _DESCRIPTOR_STOPWORDS
+    }
+
+
+def _descriptor_similarity(left: str | None, right: str | None) -> float:
+    left_label = _norm_label(left)
+    right_label = _norm_label(right)
+    if not left_label or not right_label:
+        return 0.0
+    if left_label == right_label:
+        return 1.0
+
+    left_tokens = _descriptor_tokens(left_label)
+    right_tokens = _descriptor_tokens(right_label)
+    if not left_tokens or not right_tokens:
+        return 0.0
+
+    overlap = left_tokens & right_tokens
+    if not overlap:
+        return 0.0
+    containment = len(overlap) / min(len(left_tokens), len(right_tokens))
+    jaccard = len(overlap) / len(left_tokens | right_tokens)
+    return max(jaccard, containment * 0.85)
+
+
 def _display_label(value: str | None, fallback: str = "unknown") -> str:
     return (_norm_label(value) or fallback).replace("_", " ")
 
@@ -711,17 +966,17 @@ def _descriptor_overlap(
     3 = full match (strong agreement)
     """
     score = 0
-    if text_domain and image_domain and text_domain == image_domain:
+    if _descriptor_similarity(text_domain, image_domain) >= 0.65:
         score += 1
-    if text_component and image_component and text_component == image_component:
+    if _descriptor_similarity(text_component, image_component) >= 0.65:
         score += 1
-    if text_mode and image_mode and text_mode == image_mode:
+    if _descriptor_similarity(text_mode, image_mode) >= 0.65:
         score += 1
     return score
 
 
 def _issues_explicitly_match(text_type: str | None, image_type: str | None) -> bool:
-    return bool(_norm_label(text_type) and _norm_label(text_type) == _norm_label(image_type))
+    return _descriptor_similarity(text_type, image_type) >= 0.75
 
 
 def _is_generic_visual_label(value: str | None) -> bool:
@@ -1188,110 +1443,12 @@ async def _add_to_human_review(
             image_detected_type=validation.image_detected_type,
             text_detected_type=validation.text_detected_type,
         )
-        await client.post(
-            f"{settings.review_service_url}/human-review",
-            json=item.model_dump(),
+        await _post_json(
+            client,
+            service="review_service",
+            endpoint="/human-review",
+            url=f"{settings.review_service_url}/human-review",
+            payload=item.model_dump(),
         )
     except Exception as e:
         print(f"[WARN] Could not queue human review item: {e}")
-    """
-    Full EEP â†’ IEP orchestration.
-    Returns a complete ComplaintDecision.
-    """
-    decision = ComplaintDecision(
-        complaint_id=complaint_id,
-        status=PipelineStatus.PROCESSING,
-        original_text=request.text,
-        location=request.location,
-        image_filename=request.image_filename,
-    )
-
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-
-        # --- Stage 1: IEP-1 + IEP-2 in parallel ---
-        t0 = time.time()
-        text_task = _call_text_understanding(client, complaint_id, request)
-        image_task = _call_image_understanding(client, complaint_id, request)
-        text_result, image_result = await asyncio.gather(text_task, image_task)
-        PIPELINE_DURATION.labels(stage="iep1_iep2").observe(time.time() - t0)
-
-        decision.text_analysis = text_result
-        decision.image_analysis = image_result
-
-        if text_result:
-            decision.complaint_type = text_result.issue_type
-
-        # --- Stage 2: IEP-3 Embedding + Similarity ---
-        t0 = time.time()
-        embedding_result = await _call_embedding_service(client, complaint_id, text_result, image_result)
-        decision.embedding = embedding_result
-        if embedding_result and embedding_result.alignment:
-            decision.text_image_alignment = embedding_result.alignment
-            a = embedding_result.alignment
-            if (
-                a.conflict_detected
-                and getattr(a, "reconciliation_status", None) in ("MODAL_CONFLICT", "modal_conflict")
-                and image_result and image_result.image_present
-            ):
-                decision.status = PipelineStatus.CONTRADICTION
-                decision.media_validation = MediaValidationResult(
-                    status=MediaValidationStatus.CONTRADICTION,
-                    text_is_complaint=True,
-                    image_has_complaint=True,
-                    text_detected_type=str(a.text_issue_type) if a.text_issue_type else None,
-                    image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
-                    contradiction_reason=(
-                        f"Your text describes a {a.text_issue_type or 'infrastructure'} issue "
-                        f"but your image appears to show something different "
-                        f"({a.image_issue_type or 'unrelated content'}). "
-                        f"Please resubmit with a photo that matches your complaint."
-                    ),
-                )
-                return decision
-        PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
-
-        # --- Stage 3: IEP-4 Clustering + Deduplication ---
-        t0 = time.time()
-        clustering_result = await _call_clustering_service(client, complaint_id, embedding_result)
-        decision.clustering = clustering_result
-        if clustering_result:
-            decision.is_duplicate = clustering_result.duplicate_status in ("DUPLICATE",)
-        PIPELINE_DURATION.labels(stage="iep4").observe(time.time() - t0)
-
-        # --- Stage 4: IEP-5 Priority ---
-        t0 = time.time()
-        priority_result = await _call_priority_engine(client, complaint_id, decision)
-        decision.priority = priority_result
-        if priority_result:
-            decision.severity = priority_result.severity
-            decision.priority_score = priority_result.priority_score
-        PIPELINE_DURATION.labels(stage="iep5").observe(time.time() - t0)
-
-        # --- Stage 5: IEP-6 Routing ---
-        t0 = time.time()
-        routing_result = await _call_routing_engine(client, complaint_id, decision)
-        decision.routing = routing_result
-        if routing_result:
-            decision.assigned_entity = routing_result.primary_entity
-            decision.routing_confidence = routing_result.primary_confidence
-        PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
-
-        # --- Confidence bundle assembly ---
-        decision.confidence_bundle = _build_confidence_bundle(
-            text_result=decision.text_analysis,
-            image_result=decision.image_analysis,
-            clustering_result=decision.clustering,
-            routing_result=routing_result,
-            alignment_result=embedding_result.alignment if embedding_result else None,
-        )
-
-        # --- Stage 6: IEP-7 Explanation (non-blocking, fire-and-forget) ---
-        explanation_result = await _call_explanation_service(client, complaint_id, decision)
-        decision.explanation = explanation_result
-
-    decision.status = PipelineStatus.REVIEW_REQUIRED if (
-        routing_result and routing_result.requires_review
-    ) else PipelineStatus.COMPLETED
-
-    return decision
-
