@@ -17,6 +17,28 @@ PIPELINE_DURATION = Histogram(
     ["stage"],
     buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0],
 )
+GATEWAY_SERVICE_CALL_DURATION = Histogram(
+    "cedarfix_gateway_service_call_duration_seconds",
+    "Gateway outbound service call latency",
+    ["service", "endpoint", "status"],
+    buckets=[0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0],
+)
+GATEWAY_SERVICE_CALL_ERRORS = Counter(
+    "cedarfix_gateway_service_call_errors_total",
+    "Gateway outbound service call errors",
+    ["service", "endpoint", "error_type"],
+)
+MULTI_COMPLAINT_SPLIT_TOTAL = Counter(
+    "cedarfix_multi_complaint_split_total",
+    "Complaint splitter decisions",
+    ["source", "is_multi"],
+)
+MULTI_COMPLAINT_CHILD_COUNT = Histogram(
+    "cedarfix_multi_complaint_child_count",
+    "Number of child complaints produced by the splitter",
+    ["source"],
+    buckets=[1, 2, 3, 4, 5, 8, 10],
+)
 
 # --- Text Understanding ---
 TEXT_ANALYSIS_DURATION = Histogram(

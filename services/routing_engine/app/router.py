@@ -22,7 +22,7 @@ from typing import Optional, List
 
 import httpx
 from cedarfix_shared.schemas import RoutingResult, RoutingEntity
-from cedarfix_shared.location import haversine_km
+from cedarfix_shared.location import haversine_km, lookup_text
 from cedarfix_shared.qdrant import create_qdrant_client, qdrant_target_label
 from cedarfix_shared.metrics import (
     RAG_CANDIDATE_COUNT,
@@ -41,6 +41,8 @@ QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "")
 QWEN_MODEL: str = os.getenv("QWEN_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
+QWEN_ROUTING_TIMEOUT: float = float(os.getenv("QWEN_ROUTING_TIMEOUT", "20"))
+QWEN_ROUTING_MAX_TOKENS: int = max(128, int(os.getenv("QWEN_ROUTING_MAX_TOKENS", "512")))
 
 RAG_ENABLED: bool = os.getenv("ROUTING_RAG_ENABLED", "true").lower() == "true"
 RAG_TOP_K: int = int(os.getenv("ROUTING_RAG_TOP_K", "8"))
@@ -144,6 +146,9 @@ Rules:
 - You MUST choose primary_entity from the provided candidates. Do not invent entities.
 - secondary_entity is optional — only set if two entities genuinely share responsibility.
 - confidence < 0.65 → set requires_human_review: true.
+- Use secondary_entity when two retrieved candidates genuinely share responsibility.
+- For public-space utility hazards, prefer the asset/network owner as primary and the local municipality
+  as secondary when both are retrieved and the municipality handles local access or public-space safety.
 - Prefer candidates whose responsibility_level is primary, whose route_mode is routing_candidate,
   routing_rule, or geo_service_route, and whose handles match the complaint.
 - Prefer retrieval_stage=stage1_dispatch for the primary routing decision.
@@ -155,12 +160,13 @@ Rules:
   records as supporting context only, not production routing authority.
 - Do NOT auto-route from docs marked fallback_only_not_auto_route, staging_not_production,
   blocker, supporting_audit, or validation_guardrail.
-- If all matching docs are support-only or hitl_always_required, choose Human Review Queue
-  when available, otherwise set requires_human_review: true.
-- If the best matching candidate is Human Review Queue or the candidate HITL rules apply,
-  choose Human Review Queue when available, otherwise set requires_human_review: true.
-- If the location is outside Beirut, prefer the correct regional entity over Beirut Municipality.
-- Telecom issues (internet/wifi/DSL) → Ogero. Electricity issues → EDL.
+- If the best matching authority has HITL rules, keep that authority as primary_entity
+  and set requires_human_review=true. Do not replace a real authority with Human Review Queue.
+- If the best matching candidate is Human Review Queue, set requires_human_review=true.
+- If the location is outside Beirut, prefer the correct regional or local entity over Beirut Municipality.
+- For utilities, choose from the retrieved candidates using responsibility, complaint handles,
+  and geographic metadata. Do not apply a default national utility when a more specific
+  local, regional, or concession candidate is retrieved.
 - Traffic accidents/police matters → Internal Security Forces.
 """
 
@@ -189,7 +195,9 @@ def _build_routing_prompt(
         f"  responsibility_level: {d.get('responsibility_level', 'primary')}\n"
         f"  retrieval_weight: {d.get('retrieval_weight', 'unknown')}\n"
         f"  confidence_prior: {d.get('confidence_prior', 'unknown')}\n"
+        f"  location_scope: {_location_scope_label(d)}\n"
         f"  geographic_scope: {d.get('governorates') or 'nationwide'}\n"
+        f"  districts: {', '.join(d.get('districts', [])[:8])}\n"
         f"  municipalities: {', '.join(d.get('municipalities', [])[:8])}\n"
         f"  handles: {', '.join(d.get('complaint_types', []))}\n"
         f"  keywords: {', '.join(d.get('keywords', [])[:12])}\n"
@@ -256,6 +264,8 @@ def _build_query_text(
     location_municipality: Optional[str],
     location_district: Optional[str],
     location_governorate: Optional[str],
+    location_mentions: Optional[List[str]],
+    location_context: Optional[dict[str, set[str]]],
     keywords: List[str],
     signals: dict,
     routing_features: dict,
@@ -278,12 +288,34 @@ def _build_query_text(
         parts.append(f"district: {location_district}")
     if location_governorate:
         parts.append(f"governorate: {location_governorate}")
+    if location_mentions:
+        parts.append(f"location_mentions: {', '.join(location_mentions[:8])}")
+    if location_context:
+        context_values = sorted(
+            {
+                value
+                for values in location_context.values()
+                for value in values
+                if value
+            }
+        )
+        if context_values:
+            parts.append(f"location_context: {', '.join(context_values[:12])}")
     if keywords:
         parts.append(f"keywords: {', '.join(keywords[:6])}")
     if signals:
         parts.append(f"signals: {json.dumps(signals, ensure_ascii=True)}")
     if routing_features:
         parts.append(f"routing_features: {json.dumps(routing_features, ensure_ascii=True)}")
+    context_blob = " ".join(
+        str(part)
+        for part in [complaint_type, category, subcategory, summary, original_text, " ".join(keywords or [])]
+    ).lower()
+    if _is_fixed_telecom_context(context_blob):
+        parts.append(
+            "telecom_context: fixed_telecom public_fixed_telecom_cable telecom_cabinet "
+            "physical_telecom_infrastructure landline fiber dsl asset_damage public_cable_hazard"
+        )
     if alignment_features:
         parts.append(f"alignment_features: {json.dumps(alignment_features, ensure_ascii=True)}")
     if evidence_text:
@@ -330,6 +362,7 @@ _BLOCKING_AUTHORITIES = {
     "validation_guardrail",
 }
 _ROUTE_MODE_BOOSTS = {
+    "entity_legal_scope": 0.16,
     "geo_service_route": 0.16,
     "routing_rule": 0.14,
     "routing_candidate": 0.12,
@@ -345,8 +378,44 @@ _ROUTE_MODE_BOOSTS = {
 
 _STAGE_BOOSTS = {
     "stage1_dispatch": 0.22,
+    "location_metadata": 0.18,
     "stage2_operations": 0.06,
     "stage3_evidence": -0.05,
+}
+
+_EMERGENCY_TERMS = {
+    "emergency",
+    "fire",
+    "flame",
+    "flames",
+    "smoke",
+    "burning",
+    "rescue",
+    "collapse",
+    "collapsing",
+    "explosion",
+    "trapped",
+    "life",
+    "safety",
+    "structural",
+    "hazard",
+}
+
+_FIXED_TELECOM_TERMS = {
+    "fixed_telecom",
+    "telecom",
+    "internet",
+    "landline",
+    "fiber",
+    "dsl",
+    "adsl",
+    "cable",
+    "cables",
+    "cabinet",
+    "public_fixed_telecom_cable",
+    "telecom_cable_cut",
+    "telecom_cabinet_damage",
+    "fixed_internet",
 }
 
 
@@ -354,22 +423,190 @@ def _tokens(value: str) -> set[str]:
     return set(re.findall(r"[a-z0-9_+-]{3,}", value.lower()))
 
 
+def _is_fixed_telecom_context(text: str) -> bool:
+    tokens = _tokens(text)
+    has_cable_or_asset = bool(tokens & {"cable", "cables", "cabinet", "box", "pole", "fiber", "dsl", "landline"})
+    has_telecom_signal = bool(tokens & {"internet", "telecom", "phone", "landline", "fiber", "dsl", "adsl"})
+    mobile_only = bool(tokens & {"mobile", "cellular", "4g", "5g"}) and not has_cable_or_asset
+    return has_cable_or_asset and has_telecom_signal and not mobile_only
+
+
+def _is_emergency_query(query_text: str) -> bool:
+    query_lower = query_text.lower()
+    if '"emergency_signal": true' in query_lower or '"requires_emergency_attention": true' in query_lower:
+        return True
+    return bool(_tokens(query_text) & _EMERGENCY_TERMS)
+
+
+def _doc_emergency_match_score(doc: dict, query_tokens: set[str]) -> float:
+    doc_text = " ".join(
+        str(part)
+        for part in [
+            doc.get("entity_name", ""),
+            doc.get("entity_type", ""),
+            doc.get("doc_type", ""),
+            doc.get("route_mode", ""),
+            doc.get("description", ""),
+            " ".join(str(x) for x in doc.get("complaint_types", []) or []),
+            " ".join(str(x) for x in doc.get("keywords", []) or []),
+            " ".join(str(x) for x in doc.get("exact_match_terms", []) or []),
+        ]
+    )
+    doc_tokens = _tokens(doc_text)
+    query_emergency_terms = query_tokens & _EMERGENCY_TERMS
+    doc_emergency_terms = doc_tokens & _EMERGENCY_TERMS
+    if not query_emergency_terms:
+        return 0.0
+    overlap = query_emergency_terms & doc_emergency_terms
+    if overlap:
+        return min(0.42, 0.18 + 0.08 * len(overlap))
+    if doc_emergency_terms:
+        return 0.08
+    return -0.16
+
+
+def _doc_fixed_telecom_match_score(doc: dict, query_tokens: set[str]) -> float:
+    doc_text = " ".join(
+        str(part)
+        for part in [
+            doc.get("entity_name", ""),
+            doc.get("entity_type", ""),
+            doc.get("doc_type", ""),
+            doc.get("route_mode", ""),
+            doc.get("description", ""),
+            " ".join(str(x) for x in doc.get("complaint_types", []) or []),
+            " ".join(str(x) for x in doc.get("keywords", []) or []),
+            " ".join(str(x) for x in doc.get("exact_match_terms", []) or []),
+        ]
+    )
+    doc_tokens = _tokens(doc_text)
+    overlap = (query_tokens & _FIXED_TELECOM_TERMS) & (doc_tokens & _FIXED_TELECOM_TERMS)
+    if overlap:
+        return min(0.50, 0.24 + 0.06 * len(overlap))
+    return -0.14
+
+
+def _normalize_geo(value: str | None) -> str:
+    if not value:
+        return ""
+    normalized = unicodedata.normalize("NFKD", str(value))
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    normalized = normalized.lower()
+    normalized = re.sub(r"\b(governorate|district|kadaa|qadaa|caza|municipality|city|area)\b", " ", normalized)
+    normalized = re.sub(r"[^a-z0-9]+", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _geo_variants(value: str | None) -> set[str]:
+    normalized = _normalize_geo(value)
+    if not normalized:
+        return set()
+    values = {normalized}
+    values.update(token for token in normalized.split() if len(token) >= 3)
+    return values
+
+
+def _add_location_value(context: dict[str, set[str]], key: str, value: str | None) -> None:
+    for variant in _geo_variants(value):
+        context.setdefault(key, set()).add(variant)
+        context.setdefault("all", set()).add(variant)
+
+
+def _build_location_context(
+    location_municipality: Optional[str],
+    location_district: Optional[str],
+    location_governorate: Optional[str],
+    location_mentions: Optional[List[str]],
+) -> dict[str, set[str]]:
+    context: dict[str, set[str]] = {"municipalities": set(), "districts": set(), "governorates": set(), "all": set()}
+    _add_location_value(context, "municipalities", location_municipality)
+    _add_location_value(context, "districts", location_district)
+    _add_location_value(context, "governorates", location_governorate)
+
+    for mention in location_mentions or []:
+        _add_location_value(context, "all", mention)
+        resolved = lookup_text(str(mention))
+        if resolved:
+            _add_location_value(context, "municipalities", resolved.get("municipality") or resolved.get("name"))
+            _add_location_value(context, "districts", resolved.get("district"))
+            _add_location_value(context, "governorates", resolved.get("governorate"))
+    return {key: values for key, values in context.items() if values}
+
+
+def _doc_geo_terms(doc: dict, field: str) -> set[str]:
+    terms: set[str] = set()
+    for value in doc.get(field, []) or []:
+        terms.update(_geo_variants(str(value)))
+    return terms
+
+
+def _doc_location_match_score(doc: dict, location_context: Optional[dict[str, set[str]]]) -> float:
+    if not location_context:
+        return 0.0
+
+    score = 0.0
+    municipality_overlap = location_context.get("municipalities", set()) & _doc_geo_terms(doc, "municipalities")
+    district_overlap = location_context.get("districts", set()) & _doc_geo_terms(doc, "districts")
+    governorate_overlap = location_context.get("governorates", set()) & _doc_geo_terms(doc, "governorates")
+
+    if municipality_overlap:
+        score += 0.22
+    if district_overlap:
+        score += 0.16
+    if governorate_overlap:
+        score += 0.08
+
+    doc_has_geo = any(
+        doc.get(field)
+        for field in ("municipalities", "districts", "governorates")
+    )
+    if doc_has_geo and not (municipality_overlap or district_overlap or governorate_overlap):
+        score -= 0.08
+    return score
+
+
+def _qdrant_geo_match_values(values: set[str], field: str) -> list[str]:
+    candidates: set[str] = set()
+    for value in values:
+        if not value:
+            continue
+        title = value.title()
+        candidates.add(title)
+        if " " in title:
+            candidates.add(title.replace(" ", "-"))
+        if field == "governorates" and "governorate" not in value:
+            candidates.add(f"{title} Governorate")
+            if " " in title:
+                candidates.add(f"{title.replace(' ', '-')} Governorate")
+    return sorted(candidates)
+
+
 def _doc_allows_auto_route(doc: dict) -> bool:
     route_mode = str(doc.get("route_mode") or "routing_candidate")
     authority = str(doc.get("route_authority") or "authoritative")
     retrieval_stage = str(doc.get("retrieval_stage") or "")
-    if bool(doc.get("hitl_always_required")):
-        return False
     if retrieval_stage == "stage3_evidence":
         return False
+    if route_mode == "routing_guardrail":
+        if authority != "guardrail":
+            return False
+        entity_label = str(doc.get("entity_enum") or doc.get("entity_name") or "").lower()
+        return "human review" not in entity_label
     if authority in _BLOCKING_AUTHORITIES or route_mode in _SUPPORT_ONLY_MODES:
         return False
     return route_mode in _AUTO_ROUTE_MODES or doc.get("responsibility_level") in {"primary", "secondary"}
 
 
-def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
+def _rerank_docs(
+    query_text: str,
+    docs: list[dict],
+    top_k: int,
+    location_context: Optional[dict[str, set[str]]] = None,
+) -> list[dict]:
     query_lower = query_text.lower()
     query_tokens = _tokens(query_text)
+    emergency_query = _is_emergency_query(query_text)
+    fixed_telecom_query = _is_fixed_telecom_context(query_text)
     ranked: list[dict] = []
 
     for doc in docs:
@@ -402,6 +639,20 @@ def _rerank_docs(query_text: str, docs: list[dict], top_k: int) -> list[dict]:
         elif doc.get("responsibility_level") == "secondary":
             score += 0.015
 
+        if emergency_query:
+            score += _doc_emergency_match_score(doc, query_tokens)
+            if retrieval_stage == "stage2_operations" and route_mode == "complaint_intake_or_channel":
+                score -= 0.18
+            location_score = min(0.10, _doc_location_match_score(doc, location_context))
+        else:
+            location_score = _doc_location_match_score(doc, location_context)
+        score += location_score
+
+        if fixed_telecom_query:
+            score += _doc_fixed_telecom_match_score(doc, query_tokens)
+            if retrieval_stage == "stage2_operations" and route_mode in {"complaint_intake_or_channel", "complaint_workflow"}:
+                score -= 0.08
+
         enriched = dict(doc)
         enriched["_rerank_score"] = round(score, 6)
         ranked.append(enriched)
@@ -425,6 +676,34 @@ def _collect_qdrant_results(results: list, docs_by_id: dict[str, dict], stage: s
             docs_by_id[doc_id] = payload
 
 
+def _qdrant_vector_search(
+    qdrant,
+    *,
+    collection_name: str,
+    query_vector: list[float],
+    limit: int,
+    with_payload: bool = True,
+    query_filter=None,
+) -> list:
+    if hasattr(qdrant, "search"):
+        return qdrant.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            limit=limit,
+            with_payload=with_payload,
+            query_filter=query_filter,
+        )
+
+    response = qdrant.query_points(
+        collection_name=collection_name,
+        query=query_vector,
+        limit=limit,
+        with_payload=with_payload,
+        query_filter=query_filter,
+    )
+    return list(getattr(response, "points", response) or [])
+
+
 def _search_stage(
     *,
     qdrant,
@@ -441,7 +720,8 @@ def _search_stage(
             )
         ]
     )
-    return qdrant.search(
+    return _qdrant_vector_search(
+        qdrant,
         collection_name=RAG_COLLECTION,
         query_vector=query_vec,
         limit=max(1, limit),
@@ -450,7 +730,47 @@ def _search_stage(
     )
 
 
-def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
+def _search_location_metadata(
+    *,
+    qdrant,
+    qmodels,
+    query_vec: list[float],
+    location_context: Optional[dict[str, set[str]]],
+    limit: int,
+) -> list:
+    if not location_context:
+        return []
+
+    results: list = []
+    for field in ("municipalities", "districts", "governorates"):
+        match_values = _qdrant_geo_match_values(location_context.get(field, set()), field)
+        for value in match_values[:8]:
+            geo_filter = qmodels.Filter(
+                must=[
+                    qmodels.FieldCondition(
+                        key=field,
+                        match=qmodels.MatchValue(value=value),
+                    )
+                ]
+            )
+            results.extend(
+                _qdrant_vector_search(
+                    qdrant,
+                    collection_name=RAG_COLLECTION,
+                    query_vector=query_vec,
+                    limit=max(1, limit),
+                    with_payload=True,
+                    query_filter=geo_filter,
+                )
+            )
+    return results
+
+
+def _retrieve_docs(
+    query_text: str,
+    top_k: int = 5,
+    location_context: Optional[dict[str, set[str]]] = None,
+) -> list[dict]:
     start = time.time()
     try:
         model = _get_embed_model()
@@ -477,9 +797,20 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
                 )
                 _collect_qdrant_results(stage_results, docs_by_id, stage)
 
+        if location_context:
+            location_results = _search_location_metadata(
+                qdrant=qdrant,
+                qmodels=qmodels,
+                query_vec=query_vec,
+                location_context=location_context,
+                limit=max(top_k, RAG_STAGE1_TARGET),
+            )
+            _collect_qdrant_results(location_results, docs_by_id, "location_metadata")
+
         # Fallback/augmentation path keeps backward compatibility and recall.
         if len(docs_by_id) < expanded_limit:
-            fallback_results = qdrant.search(
+            fallback_results = _qdrant_vector_search(
+                qdrant,
                 collection_name=RAG_COLLECTION,
                 query_vector=query_vec,
                 limit=expanded_limit,
@@ -488,7 +819,7 @@ def _retrieve_docs(query_text: str, top_k: int = 5) -> list[dict]:
             _collect_qdrant_results(fallback_results, docs_by_id, "unfiltered")
 
         docs = list(docs_by_id.values())
-        docs = _rerank_docs(query_text, docs, top_k=top_k)
+        docs = _rerank_docs(query_text, docs, top_k=top_k, location_context=location_context)
         top_score = max((float(d.get("_rag_score") or 0.0) for d in docs), default=0.0)
         RAG_CANDIDATE_COUNT.observe(len(docs))
         if docs:
@@ -516,7 +847,7 @@ async def _call_llm_routing(prompt: str) -> Optional[dict]:
             api_key=QWEN_API_KEY,
             base_url=QWEN_BASE_URL,
             max_retries=0,
-            timeout=20.0,
+            timeout=QWEN_ROUTING_TIMEOUT,
         )
         resp = await client.chat.completions.create(
             model=QWEN_MODEL,
@@ -526,6 +857,7 @@ async def _call_llm_routing(prompt: str) -> Optional[dict]:
             ],
             response_format={"type": "json_object"},
             temperature=0.0,
+            max_tokens=QWEN_ROUTING_MAX_TOKENS,
         )
         raw = resp.choices[0].message.content
         raw = re.sub(r"```(?:json)?", "", raw).strip()
@@ -687,10 +1019,19 @@ def _candidate_summary(doc: dict) -> dict:
         "route_authority": doc.get("route_authority"),
         "responsibility_level": doc.get("responsibility_level"),
         "retrieval_stage": doc.get("retrieval_stage"),
+        "location_scope": _location_scope_label(doc),
         "rag_score": round(float(doc.get("_rag_score") or 0.0), 4),
         "rerank_score": round(float(doc.get("_rerank_score") or 0.0), 4),
         "allows_auto_route": _doc_allows_auto_route(doc),
     }
+
+
+def _location_scope_label(doc: dict) -> str:
+    if doc.get("governs_nationally") is True:
+        return "nationwide"
+    if any(doc.get(field) for field in ("municipalities", "districts", "governorates")):
+        return "location_scoped"
+    return "nationwide_or_unspecified"
 
 
 def _select_secondary_entity(primary: RoutingEntity, docs: list[dict]) -> Optional[RoutingEntity]:
@@ -699,6 +1040,22 @@ def _select_secondary_entity(primary: RoutingEntity, docs: list[dict]) -> Option
         if entity and entity != primary and _doc_allows_auto_route(doc):
             return entity
     return None
+
+
+def _best_doc_for_entity(entity: RoutingEntity, docs: list[dict]) -> Optional[dict]:
+    for doc in docs:
+        if _resolve_entity(doc.get("entity_enum") or doc.get("entity_name")) == entity:
+            return doc
+    return None
+
+
+def _is_strong_primary_authority(doc: dict) -> bool:
+    return (
+        str(doc.get("retrieval_stage") or "") == "stage1_dispatch"
+        and str(doc.get("responsibility_level") or "") == "primary"
+        and str(doc.get("route_mode") or "") in {"routing_rule", "routing_candidate", "entity_legal_scope", "geo_service_route"}
+        and str(doc.get("route_authority") or "") not in _BLOCKING_AUTHORITIES
+    )
 
 
 def _review_result(
@@ -789,6 +1146,13 @@ class ComplaintRouter:
                 review_reason="RAG routing is disabled. Dynamic Qdrant routing is required for auto-routing.",
             )
 
+        location_context = _build_location_context(
+            location_municipality,
+            location_district,
+            location_governorate,
+            location_mentions,
+        )
+
         query_text = _build_query_text(
             ct,
             category,
@@ -797,6 +1161,8 @@ class ComplaintRouter:
             location_municipality,
             location_district,
             location_governorate,
+            location_mentions,
+            location_context,
             keywords,
             signals,
             routing_features,
@@ -806,7 +1172,7 @@ class ComplaintRouter:
             multimodal_alignment,
             original_text,
         )
-        docs = _retrieve_docs(query_text, top_k=RAG_TOP_K)
+        docs = _retrieve_docs(query_text, top_k=RAG_TOP_K, location_context=location_context)
         retrieved_sources = [d.get("doc_id", "") for d in docs]
         retrieved_candidates = [_candidate_summary(d) for d in docs]
 
@@ -852,6 +1218,10 @@ class ComplaintRouter:
         final_primary = top_entity
         final_secondary = _select_secondary_entity(final_primary, allowed_docs[1:])
         final_conf = _rag_confidence(top_doc)
+        lock_primary_to_guardrail = (
+            str(top_doc.get("route_mode") or "") == "routing_guardrail"
+            and top_entity != RoutingEntity.HUMAN_REVIEW
+        )
         routing_source = "rag_retrieval"
         rationale = [
             (
@@ -860,8 +1230,13 @@ class ComplaintRouter:
                 f"({top_doc.get('retrieval_stage')}, score={float(top_doc.get('_rag_score') or 0.0):.3f})."
             )
         ]
-        requires_review = final_conf < self.review_threshold
-        review_reason: Optional[str] = "Low RAG routing confidence" if requires_review else None
+        hitl_required = bool(top_doc.get("hitl_always_required"))
+        requires_review = hitl_required or final_conf < self.review_threshold
+        review_reason: Optional[str] = (
+            "Retrieved authority requires human review / emergency handling confirmation"
+            if hitl_required
+            else ("Low RAG routing confidence" if requires_review else None)
+        )
 
         prompt = _build_routing_prompt(
             ct, original_text,
@@ -873,15 +1248,63 @@ class ComplaintRouter:
             llm_entity = _resolve_entity(llm_data.get("primary_entity"))
             llm_secondary = _resolve_entity(llm_data.get("secondary_entity"))
             if llm_entity:
-                final_primary = llm_entity
-                final_secondary = llm_secondary or _select_secondary_entity(final_primary, allowed_docs)
-                final_conf = _clamp(float(llm_data.get("confidence", 0.0)))
+                llm_conf = _clamp(float(llm_data.get("confidence", 0.0)))
                 routing_source = "rag_llm"
                 rationale = [llm_data.get("rationale") or "Qwen selected from Qdrant-retrieved candidates."]
-                requires_review = bool(llm_data.get("requires_human_review", False)) or final_conf < self.review_threshold
-                review_reason = llm_data.get("review_reason") or (
-                    "Low RAG LLM routing confidence" if final_conf < self.review_threshold else None
-                )
+                if lock_primary_to_guardrail and llm_entity != top_entity:
+                    final_primary = top_entity
+                    final_secondary = llm_entity if llm_entity != RoutingEntity.HUMAN_REVIEW else _select_secondary_entity(
+                        final_primary, allowed_docs[1:]
+                    )
+                    final_conf = max(final_conf, llm_conf)
+                    requires_review = True
+                    review_reason = "Retrieved guardrail authority requires human review / emergency handling confirmation"
+                    rationale.append(
+                        "Top guardrail RAG authority kept as primary; LLM-selected entity kept as secondary/context."
+                    )
+                elif (
+                    llm_entity != top_entity
+                    and _is_strong_primary_authority(top_doc)
+                    and not _is_strong_primary_authority(_best_doc_for_entity(llm_entity, allowed_docs) or {})
+                ):
+                    final_primary = top_entity
+                    final_secondary = (
+                        llm_entity
+                        if llm_entity != RoutingEntity.HUMAN_REVIEW
+                        else _select_secondary_entity(final_primary, allowed_docs[1:])
+                    )
+                    final_conf = max(final_conf, llm_conf)
+                    requires_review = bool(top_doc.get("hitl_always_required")) or final_conf < self.review_threshold
+                    review_reason = (
+                        "Retrieved authority requires human review / emergency handling confirmation"
+                        if bool(top_doc.get("hitl_always_required"))
+                        else ("Low RAG routing confidence" if requires_review else None)
+                    )
+                    rationale.append(
+                        "Top stage1 authoritative RAG candidate kept as primary; "
+                        "LLM-selected entity kept as secondary/context."
+                    )
+                elif llm_entity == RoutingEntity.HUMAN_REVIEW and top_entity != RoutingEntity.HUMAN_REVIEW:
+                    final_conf = max(final_conf, llm_conf)
+                    requires_review = True
+                    review_reason = llm_data.get("review_reason") or "LLM requested human review for the selected authority"
+                else:
+                    final_primary = llm_entity
+                    final_secondary = llm_secondary or _select_secondary_entity(final_primary, allowed_docs)
+                    final_conf = llm_conf
+                    requires_review = (
+                        bool(llm_data.get("requires_human_review", False))
+                        or bool(top_doc.get("hitl_always_required"))
+                        or final_conf < self.review_threshold
+                    )
+                    review_reason = (
+                        "Retrieved authority requires human review / emergency handling confirmation"
+                        if bool(top_doc.get("hitl_always_required"))
+                        else (
+                            llm_data.get("review_reason")
+                            or ("Low RAG LLM routing confidence" if final_conf < self.review_threshold else None)
+                        )
+                    )
             else:
                 log.warning("[IEP-6] LLM returned unresolvable entity: %s", llm_data.get("primary_entity"))
 
@@ -901,161 +1324,6 @@ class ComplaintRouter:
             requires_review=requires_review,
             review_reason=review_reason,
             rag_no_candidates=False,
-            processing_ms=0,
-        )
-
-        # ── Static fallback (always computed first as baseline) ──────────────
-        static_primary, static_secondary, static_conf, static_rationale = _static_route(
-            ct, location_district, location_mentions, location_municipality, location_governorate
-        )
-
-        routing_source = "static_fallback"
-        retrieved_sources: list[str] = []
-        llm_data: Optional[dict] = None
-        final_primary = static_primary
-        final_secondary = static_secondary
-        final_conf = static_conf
-        rationale = list(static_rationale)
-        requires_review = final_conf < self.review_threshold
-        review_reason: Optional[str] = None
-        rag_no_candidates = False
-
-        # ── RAG path ─────────────────────────────────────────────────────────
-        if RAG_ENABLED:
-            query_text = _build_query_text(
-                ct,
-                category,
-                subcategory,
-                summary,
-                location_municipality,
-                location_district,
-                location_governorate,
-                keywords,
-                signals,
-                routing_features,
-                evidence_text,
-                evidence_image,
-                alignment_features,
-                multimodal_alignment,
-                original_text,
-            )
-            docs = _retrieve_docs(query_text, top_k=RAG_TOP_K)
-
-            if not docs:
-                # RAG has no knowledge of this complaint type / location combination.
-                # Flag for human review so the admin can (a) confirm unsupported type
-                # or (b) correct and add a gold label to the retraining store.
-                rag_no_candidates = True
-                requires_review = True
-                routing_source = "rag_no_match"
-                review_reason = (
-                    "RAG returned zero routing candidates for this complaint. "
-                    "The complaint type or location may not be in the current "
-                    "routing knowledge base. Human review required."
-                )
-
-            if docs:
-                retrieved_sources = [d.get("doc_id", "") for d in docs]
-                if not any(_doc_allows_auto_route(d) for d in docs):
-                    routing_source = "rag_support_only"
-                    final_primary = RoutingEntity.HUMAN_REVIEW
-                    final_secondary = None
-                    final_conf = min(static_conf, 0.55)
-                    requires_review = True
-                    review_reason = (
-                        "RAG retrieved only support-only, fallback, audit, or manual-review "
-                        "documents. No production routing authority was found."
-                    )
-                    rationale = [
-                        "Retrieved RAG docs were useful context but not production routing authority.",
-                        f"Static fallback was: {'; '.join(static_rationale)}",
-                    ]
-                else:
-                    prompt = _build_routing_prompt(
-                        ct, original_text,
-                        location_district, location_governorate, location_municipality,
-                        keywords, docs,
-                    )
-                    llm_data = await _call_llm_routing(prompt)
-
-            if llm_data:
-                llm_entity = _resolve_entity(llm_data.get("primary_entity"))
-                llm_secondary = _resolve_entity(llm_data.get("secondary_entity"))
-                llm_conf = float(llm_data.get("confidence", 0.0))
-                llm_rationale = llm_data.get("rationale", "")
-                llm_review = bool(llm_data.get("requires_human_review", False))
-                llm_review_reason = llm_data.get("review_reason")
-
-                if llm_entity:
-                    # Determine agreement with static fallback
-                    agrees = (llm_entity == static_primary)
-
-                    if llm_conf >= self.auto_threshold:
-                        # High-confidence LLM — trust it directly
-                        routing_source = "rag_static_agree" if agrees else "rag"
-                        final_primary = llm_entity
-                        final_secondary = llm_secondary or static_secondary
-                        final_conf = min(llm_conf + 0.05, 0.97) if agrees else llm_conf
-                        rationale = [llm_rationale]
-                        requires_review = llm_review
-                        review_reason = llm_review_reason
-
-                    elif llm_conf >= self.review_threshold:
-                        if agrees:
-                            # Both agree, moderate confidence → slight boost
-                            routing_source = "rag_static_agree"
-                            final_primary = llm_entity
-                            final_secondary = llm_secondary or static_secondary
-                            final_conf = min(llm_conf + 0.08, 0.90)
-                            rationale = [llm_rationale]
-                            requires_review = False
-                        else:
-                            # Disagreement at moderate confidence → human review
-                            routing_source = "rag_static_conflict"
-                            final_primary = RoutingEntity.HUMAN_REVIEW
-                            final_conf = llm_conf
-                            requires_review = True
-                            review_reason = (
-                                f"RAG suggests '{llm_entity.value}' "
-                                f"but static rule suggests '{static_primary.value}'"
-                            )
-                            rationale = [
-                                f"RAG: {llm_rationale}",
-                                f"Static: {'; '.join(static_rationale)}",
-                            ]
-                    else:
-                        # Low LLM confidence — fall back to static
-                        routing_source = "static_fallback"
-                        log.info(
-                            "[IEP-6] LLM confidence %.2f too low — using static fallback", llm_conf
-                        )
-                else:
-                    log.warning("[IEP-6] LLM returned unresolvable entity: %s", llm_data.get("primary_entity"))
-
-        # ── Final review check ────────────────────────────────────────────────
-        if final_conf < self.review_threshold and not requires_review:
-            requires_review = True
-            review_reason = review_reason or "Low routing confidence"
-
-        if requires_review and final_primary != RoutingEntity.HUMAN_REVIEW:
-            # Keep the entity but also flag for review (don't always override to HUMAN_REVIEW)
-            pass
-
-        auto_routed = final_conf >= self.auto_threshold and not requires_review
-
-        return RoutingResult(
-            complaint_id=complaint_id,
-            primary_entity=final_primary,
-            primary_confidence=round(final_conf, 3),
-            secondary_entity=final_secondary,
-            secondary_confidence=round(final_conf * 0.55, 3) if final_secondary else 0.0,
-            routing_rationale=rationale,
-            retrieved_sources=retrieved_sources,
-            routing_source=routing_source,
-            auto_routed=auto_routed,
-            requires_review=requires_review,
-            review_reason=review_reason,
-            rag_no_candidates=rag_no_candidates,
             processing_ms=0,
         )
 

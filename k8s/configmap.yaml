@@ -29,20 +29,25 @@ data:
   MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
   CLIP_MODEL_NAME: openai/clip-vit-base-patch32
 
-  QWEN_BASE_URL: http://host.docker.internal:8000/v1
+  QWEN_BASE_URL: https://b79esvlx5e5hhz-8000.proxy.runpod.net/v1
   QWEN_MODEL: cedarfix
   QWEN_ENABLED: "true"
   QWEN_GUIDED: "false"
+  QWEN_TIMEOUT: "50"
+  QWEN_MAX_ATTEMPTS: "1"
+  QWEN_MAX_TOKENS: "1536"
+  QWEN_ROUTING_TIMEOUT: "20"
+  QWEN_ROUTING_MAX_TOKENS: "512"
   OPENAI_MODEL: gpt-4o
 
-  VLM_BASE_URL: ""
-  VLM_MODEL: Qwen/Qwen2.5-VL-7B-Instruct
+  VLM_BASE_URL: https://ygeqezonqczwh4-8000.proxy.runpod.net/v1
+  VLM_MODEL: Qwen/Qwen2.5-VL-3B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"
 
   ROUTING_QDRANT_COLLECTION: routing_knowledge
   ROUTING_RAG_ENABLED: "true"
-  ROUTING_RAG_TOP_K: "5"
+  ROUTING_RAG_TOP_K: "8"
   AUTO_ROUTE_THRESHOLD: "0.85"
   REVIEW_THRESHOLD: "0.65"
 
@@ -56,4 +61,9 @@ data:
   MODERATION_LLM_THRESHOLD: "0.75"
   AUTO_BAN_SPAM_THRESHOLD: "10"
   NOMINATIM_URL: ""
+  GOOGLE_GEOCODING_URL: https://maps.googleapis.com/maps/api/geocode/json
+  MULTI_COMPLAINT_SPLITTER_ENABLED: "true"
+  MULTI_COMPLAINT_SPLITTER_LLM_ENABLED: "true"
+  MULTI_COMPLAINT_SPLITTER_MAX_CHILDREN: "5"
+  MULTI_COMPLAINT_SPLITTER_TIMEOUT: "12"
   JWT_EXPIRE_HOURS: "24"

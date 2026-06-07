@@ -48,7 +48,7 @@ log = logging.getLogger(__name__)
 
 MODERATION_ENABLED: bool = os.getenv("MODERATION_ENABLED", "true").lower() == "true"
 QWEN_BASE_URL: str = os.getenv("QWEN_BASE_URL", "")
-QWEN_MODEL: str = os.getenv("QWEN_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+QWEN_MODEL: str = os.getenv("QWEN_MODEL", "cedarfix")
 QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "none")
 LLM_THRESHOLD: float = float(os.getenv("MODERATION_LLM_THRESHOLD", "0.75"))
 
@@ -244,7 +244,12 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
             timeout=20.0,
         )
         system = (
-            "Is this image harmful (explicit, violent, hateful)? "
+            "You are a safety moderator for a public infrastructure complaint platform. "
+            "Return is_harmful=true ONLY for policy-violating image content: graphic violence, "
+            "sexual/explicit content, hate symbols, weapons/threats, self-harm, or abusive content. "
+            "Public infrastructure problems such as potholes, road damage, flooding, garbage, broken "
+            "streetlights, exposed utility damage, or other civic hazards are allowed evidence and MUST "
+            "return is_harmful=false even if they are dangerous in the real world. "
             "Return ONLY JSON: {\"is_harmful\": <true|false>, \"reason\": \"<1 sentence>\"}"
         )
         resp = await client.chat.completions.create(
@@ -253,7 +258,7 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
                 {"role": "system", "content": system},
                 {"role": "user", "content": [
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-                    {"type": "text", "text": "Is this image harmful?"},
+                    {"type": "text", "text": "Does this image contain policy-violating harmful content, or is it allowed civic infrastructure evidence?"},
                 ]},
             ],
             response_format={"type": "json_object"},

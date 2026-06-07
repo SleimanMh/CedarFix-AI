@@ -24,11 +24,14 @@ from pydantic import BaseModel
 from prometheus_client import make_asgi_app
 
 from cedarfix_shared.schemas import (
-    ComplaintDecision, ComplaintRequest, LocationInput, PipelineStatus,
+    ComplaintDecision, ComplaintRequest, ComplaintSubmissionResponse,
+    LocationInput, PipelineStatus,
 )
 from cedarfix_shared.metrics import COMPLAINTS_TOTAL, PIPELINE_DURATION
+from cedarfix_shared.location import normalize_location
 from cedarfix_shared.storage import local_image_path, save_image_ref, signed_image_url
 from .orchestrator import run_pipeline
+from .splitter import split_complaint_text
 from .config import settings
 from .database import (
     init_db, save_complaint, fetch_complaint,
@@ -141,13 +144,14 @@ async def login(body: LoginRequest):
     }
 
 
-@app.post("/complaints", response_model=ComplaintDecision, status_code=201)
+@app.post("/complaints", response_model=ComplaintSubmissionResponse, status_code=201)
 async def submit_complaint(
     text: str = Form(..., min_length=10, max_length=2000),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
     address_hint: Optional[str] = Form(None),
     district: Optional[str] = Form(None),
+    location_input_mode: Optional[str] = Form(None),
     user_id: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     current_user: Optional[dict] = Depends(get_current_user),
@@ -155,53 +159,105 @@ async def submit_complaint(
     """
     Submit a complaint with optional image and GPS coordinates.
     If a JWT token is present, user_id is taken from it automatically.
-    Returns the full ComplaintDecision with routing, severity, and dedup result.
+    Returns one or more ComplaintDecision objects. If the submitted text contains
+    multiple independent complaints, each child complaint is processed and stored
+    separately under the same parent submission id.
     """
     # Prefer authenticated user_id over form-submitted one
     resolved_user_id = (current_user["user_id"] if current_user else None) or user_id
 
     start_ms = int(time.time() * 1000)
-    complaint_id = str(uuid.uuid4())
+    submission_id = str(uuid.uuid4())
 
     # Handle image upload
     image_filename = None
     if image:
-        image_filename = f"{complaint_id}_{image.filename}"
+        image_filename = f"{submission_id}_{image.filename}"
         image_bytes = await image.read()
         image_filename = _save_image(image_filename, image_bytes, image.content_type or "application/octet-stream")
 
-    # Build location if provided
+    # Build and resolve submitted location if provided.
+    # This is the authoritative location for routing; LLM-extracted text
+    # location is only used as a fallback/evaluation signal.
     location = None
-    if latitude is not None and longitude is not None:
+    submitted_location_text = (address_hint or district or "").strip()
+    if latitude is not None or longitude is not None or submitted_location_text:
+        resolved = await normalize_location(
+            raw_text=submitted_location_text,
+            lat=latitude if latitude is not None and longitude is not None else None,
+            lng=longitude if latitude is not None and longitude is not None else None,
+            user_hint=submitted_location_text,
+        )
+        resolved_lat = resolved.get("latitude") if resolved else None
+        resolved_lng = resolved.get("longitude") if resolved else None
         location = LocationInput(
-            latitude=latitude,
-            longitude=longitude,
-            address_hint=address_hint,
-            district=district,
+            latitude=resolved_lat if resolved_lat is not None else latitude,
+            longitude=resolved_lng if resolved_lng is not None else longitude,
+            address_hint=submitted_location_text or address_hint,
+            district=(resolved.get("district") if resolved else None) or district or submitted_location_text or None,
+            municipality=resolved.get("municipality") if resolved else None,
+            governorate=resolved.get("governorate") if resolved else None,
+            normalized=(resolved.get("normalized") if resolved else None) or submitted_location_text or None,
+            source=(resolved.get("source") if resolved else None) or (
+                "gps" if latitude is not None and longitude is not None else "user_text"
+            ),
+            confidence=float(resolved.get("confidence") or 0.55) if resolved else 0.55,
         )
 
-    request = ComplaintRequest(
-        text=text,
-        location=location,
-        image_filename=image_filename,
-        user_id=resolved_user_id,
+    resolved_location_mode = location_input_mode or (
+        "current_device" if latitude is not None and longitude is not None else
+        "manual_text" if submitted_location_text else
+        "unspecified"
     )
 
     COMPLAINTS_TOTAL.labels(status="received").inc()
 
     try:
-        decision = await run_pipeline(complaint_id, request)
-        decision.total_pipeline_ms = int(time.time() * 1000) - start_ms
+        split_result = await split_complaint_text(text)
+        child_items = split_result.complaints or []
+        is_multi = bool(split_result.is_multi and len(child_items) > 1)
+        split_total = len(child_items)
 
-        await save_complaint(decision)
-        # Always persist the pipeline outputs for retraining / active learning.
-        # The retraining_store row will be reviewed by an admin later, especially
-        # when rag_no_match=TRUE or requires_review=TRUE.
-        await save_retraining_record(decision)
+        decisions: list[ComplaintDecision] = []
+        for idx, item in enumerate(child_items, 1):
+            child_start_ms = int(time.time() * 1000)
+            complaint_id = str(uuid.uuid4()) if is_multi else submission_id
+            request = ComplaintRequest(
+                text=item.complaint_text,
+                location=location,
+                location_input_mode=resolved_location_mode,
+                image_filename=image_filename,
+                user_id=resolved_user_id,
+                parent_submission_id=submission_id if is_multi else None,
+                split_index=idx if is_multi else None,
+                split_total=split_total if is_multi else None,
+                split_source=split_result.source,
+                original_submission_text=text if is_multi else None,
+            )
+
+            decision = await run_pipeline(complaint_id, request)
+            decision.total_pipeline_ms = int(time.time() * 1000) - child_start_ms
+            await save_complaint(decision)
+            # Always persist the pipeline outputs for retraining / active learning.
+            # The retraining_store row will be reviewed by an admin later, especially
+            # when rag_no_match=TRUE or requires_review=TRUE.
+            await save_retraining_record(decision)
+            decisions.append(decision)
+
         COMPLAINTS_TOTAL.labels(status="completed").inc()
-        PIPELINE_DURATION.labels(stage="full").observe(decision.total_pipeline_ms / 1000)
+        total_ms = int(time.time() * 1000) - start_ms
+        PIPELINE_DURATION.labels(stage="full").observe(total_ms / 1000)
 
-        return decision
+        return ComplaintSubmissionResponse(
+            submission_id=submission_id,
+            mode="multi" if is_multi else "single",
+            is_multi=is_multi,
+            complaint_count=len(decisions),
+            split_result=split_result,
+            complaints=decisions,
+            primary_decision=decisions[0] if decisions else None,
+            total_pipeline_ms=total_ms,
+        )
 
     except Exception as e:
         import traceback

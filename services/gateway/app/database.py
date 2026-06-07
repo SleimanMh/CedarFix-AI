@@ -29,6 +29,13 @@ async def init_db():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS parent_submission_id VARCHAR(36)"))
+        await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS split_index INTEGER"))
+        await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS split_total INTEGER"))
+        await conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_complaints_parent_submission_id
+            ON complaints(parent_submission_id)
+        """))
         # Dedicated store for admin-edited review outcomes and corrected JSON payloads.
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS admin_review_edits (
@@ -58,15 +65,30 @@ async def init_db():
             CREATE INDEX IF NOT EXISTS idx_moderation_text_hashes_last_seen
             ON moderation_text_hashes(last_seen_at)
         """))
-        await conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower
-            ON users (LOWER(username))
-        """))
-        await conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower
-            ON users (LOWER(email))
-            WHERE email IS NOT NULL
-        """))
+
+    await _try_create_unique_index(
+        "idx_users_username_lower",
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower
+        ON users (LOWER(username))
+        """,
+    )
+    await _try_create_unique_index(
+        "idx_users_email_lower",
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower
+        ON users (LOWER(email))
+        WHERE email IS NOT NULL
+        """,
+    )
+
+
+async def _try_create_unique_index(name: str, sql: str) -> None:
+    try:
+        async with async_engine.begin() as conn:
+            await conn.execute(text(sql))
+    except Exception as exc:
+        print(f"[WARN] Skipping optional unique index {name}: {exc}")
 
 
 async def save_complaint(decision: ComplaintDecision):
@@ -81,6 +103,9 @@ async def save_complaint(decision: ComplaintDecision):
             location_lng=decision.location.longitude if decision.location else None,
             location_district=decision.location.district if decision.location else None,
             image_filename=decision.image_filename,
+            parent_submission_id=decision.parent_submission_id,
+            split_index=decision.split_index,
+            split_total=decision.split_total,
             detected_language=decision.text_analysis.language if decision.text_analysis else None,
             complaint_type=decision.complaint_type,
             complaint_type_confidence=decision.text_analysis.confidence if decision.text_analysis else None,

@@ -150,18 +150,47 @@ class MediaValidationStatus(str, Enum):
 # ---------------------------------------------------------------------------
 
 class LocationInput(BaseModel):
-    latitude: float = Field(..., ge=-90, le=90)
-    longitude: float = Field(..., ge=-180, le=180)
+    latitude: Optional[float] = Field(None, ge=-90, le=90)
+    longitude: Optional[float] = Field(None, ge=-180, le=180)
     address_hint: Optional[str] = None  # e.g. "Hamra, Beirut"
     district: Optional[str] = None
+    municipality: Optional[str] = None
+    governorate: Optional[str] = None
+    normalized: Optional[str] = None
+    source: Optional[str] = None
+    confidence: float = Field(0.0, ge=0.0, le=1.0)
 
 
 class ComplaintRequest(BaseModel):
     """What the user submits to the Gateway."""
     text: str = Field(..., min_length=10, max_length=2000)
     location: Optional[LocationInput] = None
+    location_input_mode: Optional[str] = None  # current_device | manual_text | unspecified
     image_filename: Optional[str] = None  # Set by gateway after upload
     user_id: Optional[str] = None         # Anonymous allowed
+    parent_submission_id: Optional[str] = None
+    split_index: Optional[int] = None
+    split_total: Optional[int] = None
+    split_source: Optional[str] = None
+    original_submission_text: Optional[str] = None
+
+
+class ComplaintSplitItem(BaseModel):
+    complaint_text: str = Field(..., min_length=10, max_length=2000)
+    issue_hint: Optional[str] = None
+    location_mention: Optional[str] = None
+    evidence_source: str = "text"
+    confidence: float = Field(0.75, ge=0.0, le=1.0)
+    reason: Optional[str] = None
+
+
+class ComplaintSplitResult(BaseModel):
+    original_text: str
+    is_multi: bool = False
+    source: str = "single"  # llm | heuristic | single | fallback
+    complaints: List[ComplaintSplitItem] = Field(default_factory=list)
+    confidence: float = Field(1.0, ge=0.0, le=1.0)
+    review_reason: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -388,7 +417,14 @@ class ComplaintDecision(BaseModel):
     original_text: str
     user_id: Optional[str] = None
     location: Optional[LocationInput] = None
+    location_input_mode: Optional[str] = None
+    location_evaluation: Dict[str, Any] = {}
     image_filename: Optional[str] = None
+    parent_submission_id: Optional[str] = None
+    split_index: Optional[int] = None
+    split_total: Optional[int] = None
+    split_source: Optional[str] = None
+    original_submission_text: Optional[str] = None
 
     # IEP results
     text_analysis: Optional[TextUnderstandingResult] = None
@@ -421,6 +457,17 @@ class ComplaintDecision(BaseModel):
     total_pipeline_ms: Optional[int] = None
 
     model_config = ConfigDict(use_enum_values=True)
+
+
+class ComplaintSubmissionResponse(BaseModel):
+    submission_id: str
+    mode: str = "single"  # single | multi
+    is_multi: bool = False
+    complaint_count: int = 1
+    split_result: ComplaintSplitResult
+    complaints: List[ComplaintDecision]
+    primary_decision: Optional[ComplaintDecision] = None
+    total_pipeline_ms: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------
@@ -551,6 +598,7 @@ class TextUnderstandingResult(BaseModel):
     subcategory: str = ""       # pothole | flooding | outage …
     issue_type: str = "unknown"
     location: LocationJSON = Field(default_factory=LocationJSON)
+    location_mentions: List[str] = []
     severity: SeverityLevel = SeverityLevel.LOW
     signals: SignalsJSON = Field(default_factory=SignalsJSON)
     urgency_keywords: List[str] = []

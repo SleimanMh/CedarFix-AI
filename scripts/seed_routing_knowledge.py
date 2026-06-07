@@ -34,6 +34,28 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_compiled_production.json"
 
+
+def qdrant_target_label() -> str:
+    qdrant_url = os.getenv("QDRANT_URL")
+    if qdrant_url:
+        return qdrant_url
+    return f"{os.getenv('QDRANT_HOST', 'localhost')}:{os.getenv('QDRANT_PORT', '6333')}"
+
+
+def create_qdrant_client():
+    from qdrant_client import QdrantClient
+
+    qdrant_api_key = os.getenv("QDRANT_API_KEY") or None
+    qdrant_url = os.getenv("QDRANT_URL")
+    if qdrant_url:
+        return QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+
+    return QdrantClient(
+        host=os.getenv("QDRANT_HOST", "localhost"),
+        port=int(os.getenv("QDRANT_PORT", "6333")),
+        api_key=qdrant_api_key,
+    )
+
 # ---------------------------------------------------------------------------
 # Routing knowledge documents
 # ---------------------------------------------------------------------------
@@ -552,7 +574,7 @@ def main():
     else:
         print(f"Qdrant collection '{collection_name}' already exists — will upsert")
 
-    print(f"Connecting to PostgreSQL: {database_url[:50]}...")
+    print("Connecting to PostgreSQL: [masked]")
     try:
         import psycopg2
         conn = psycopg2.connect(database_url)
@@ -622,12 +644,19 @@ def main():
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS stage_priority INTEGER DEFAULT 4")
     conn.commit()
 
-    points = []
-    print(f"\nEmbedding and seeding {len(routing_docs)} documents...\n")
+    print(f"\nEmbedding {len(routing_docs)} documents...\n")
+    embedding_texts = [_build_embedding_text(doc) for doc in routing_docs]
+    embeddings = model.encode(
+        embedding_texts,
+        batch_size=int(os.getenv("ROUTING_SEED_EMBED_BATCH_SIZE", "64")),
+        normalize_embeddings=True,
+        show_progress_bar=True,
+    ).tolist()
 
-    for doc in routing_docs:
-        embed_text = _build_embedding_text(doc)
-        embedding = model.encode(embed_text, normalize_embeddings=True).tolist()
+    points = []
+    print(f"\nSeeding {len(routing_docs)} documents into PostgreSQL...\n")
+
+    for doc, embedding in zip(routing_docs, embeddings):
 
         point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, doc["doc_id"]))
 
@@ -763,8 +792,14 @@ def main():
     print("\nPostgreSQL inserts committed.")
 
     # Batch upsert into Qdrant
-    qdrant.upsert(collection_name=collection_name, points=points)
-    print(f"Qdrant upserted {len(points)} points into '{collection_name}'.")
+    upsert_batch_size = int(os.getenv("ROUTING_QDRANT_UPSERT_BATCH_SIZE", "256"))
+    for start in range(0, len(points), upsert_batch_size):
+        batch = points[start:start + upsert_batch_size]
+        qdrant.upsert(collection_name=collection_name, points=batch)
+        print(
+            f"Qdrant upserted {min(start + len(batch), len(points))}/"
+            f"{len(points)} points into '{collection_name}'."
+        )
 
     # Quick verification
     info = qdrant.get_collection(collection_name)

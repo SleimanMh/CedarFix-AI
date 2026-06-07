@@ -63,7 +63,13 @@ spec:
           volumeMounts:
             - name: uploads
               mountPath: /data/uploads
+            - name: hf-model-cache
+              mountPath: /root/.cache/huggingface
       volumes:
         - name: uploads
           persistentVolumeClaim:
             claimName: uploads-pvc
+        - name: hf-model-cache
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/sleim/Downloads/CedarFix AI/data/models
+            type: Directory

@@ -87,6 +87,12 @@ spec:
                 secretKeyRef:
                   name: cedarfix-secrets
                   key: OPENAI_API_KEY
+            - name: GOOGLE_MAPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cedarfix-secrets
+                  key: GOOGLE_MAPS_API_KEY
+                  optional: true
           readinessProbe:
             httpGet:
               path: /health

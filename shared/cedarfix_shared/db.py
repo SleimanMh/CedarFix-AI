@@ -48,6 +48,9 @@ class Complaint(Base):
     location_district = Column(String, nullable=True)
     image_filename = Column(String, nullable=True)
     user_id = Column(String, nullable=True)
+    parent_submission_id = Column(String, nullable=True)
+    split_index = Column(Integer, nullable=True)
+    split_total = Column(Integer, nullable=True)
 
     # IEP-1 results
     detected_language = Column(String, nullable=True)

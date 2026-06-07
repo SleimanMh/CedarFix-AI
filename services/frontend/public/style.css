@@ -225,6 +225,33 @@ textarea.invalid, input.invalid {
 .remove-image:hover { background: var(--red); }
 
 /* --- Location Row --- */
+.location-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.location-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.location-option:has(input:checked) {
+  border-color: var(--green);
+  background: var(--green-pale);
+  color: var(--green);
+}
+.location-option input {
+  margin: 0;
+}
 .location-row {
   display: flex;
   gap: 10px;
@@ -255,6 +282,49 @@ textarea.invalid, input.invalid {
   padding: 3px 10px;
   font-size: 12px;
   font-weight: 500;
+}
+
+.multi-list {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+.multi-item {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--gray-50);
+}
+.multi-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.multi-item-head span {
+  color: var(--gray-600);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.multi-item-grid {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 5px 10px;
+  font-size: 13px;
+}
+.multi-item-grid span {
+  color: var(--gray-600);
+}
+.multi-item-grid b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.multi-item p {
+  margin: 8px 0 0;
+  color: var(--gray-700);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* --- Submit Button --- */

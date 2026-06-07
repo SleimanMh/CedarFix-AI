@@ -201,14 +201,78 @@ def lookup_text(text: str, min_score: float = 0.80) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 NOMINATIM_URL = os.getenv("NOMINATIM_URL", "")  # empty = disabled
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
+GOOGLE_GEOCODING_URL = os.getenv(
+    "GOOGLE_GEOCODING_URL",
+    "https://maps.googleapis.com/maps/api/geocode/json",
+)
+
+
+def _google_admin_components(data: dict) -> Optional[dict]:
+    results = data.get("results") or []
+    if not results:
+        return None
+
+    result = results[0]
+    components = result.get("address_components") or []
+
+    def pick(*types: str) -> str:
+        for comp in components:
+            comp_types = set(comp.get("types") or [])
+            if any(t in comp_types for t in types):
+                return comp.get("long_name") or ""
+        return ""
+
+    geometry = result.get("geometry") or {}
+    loc = geometry.get("location") or {}
+    municipality = pick("locality", "postal_town", "administrative_area_level_3", "sublocality")
+    district = pick("administrative_area_level_2")
+    governorate = pick("administrative_area_level_1")
+
+    return {
+        "municipality": municipality,
+        "district": district,
+        "governorate": governorate,
+        "display_name": result.get("formatted_address", ""),
+        "lat": loc.get("lat"),
+        "lng": loc.get("lng"),
+        "source": "google_maps",
+    }
+
+
+async def _google_geocode(params: dict) -> Optional[dict]:
+    if not GOOGLE_MAPS_API_KEY:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            r = await client.get(
+                GOOGLE_GEOCODING_URL,
+                params={
+                    **params,
+                    "key": GOOGLE_MAPS_API_KEY,
+                    "language": "en",
+                    "region": "lb",
+                },
+            )
+            r.raise_for_status()
+            data = r.json()
+            if data.get("status") not in ("OK", "ZERO_RESULTS"):
+                return None
+            return _google_admin_components(data)
+    except Exception:
+        return None
 
 
 async def reverse_geocode(lat: float, lng: float) -> Optional[dict]:
     """
-    Call self-hosted Nominatim (or any OSM-compatible endpoint) if configured.
+    Call Google Maps when configured, then self-hosted Nominatim if configured.
     Returns a dict with municipality, district, governorate, display_name.
     Falls back to None gracefully if not configured or network fails.
     """
+    google = await _google_geocode({"latlng": f"{lat},{lng}"})
+    if google and (google.get("municipality") or google.get("district") or google.get("governorate")):
+        return google
+
     if not NOMINATIM_URL:
         return None
     try:
@@ -235,6 +299,33 @@ async def reverse_geocode(lat: float, lng: float) -> Optional[dict]:
             }
     except Exception:
         return None
+
+
+async def geocode_text(text: str) -> Optional[dict]:
+    """
+    Resolve a free-form location string with Google Maps when configured.
+    Falls back to the local Lebanon seed lookup when Google is unavailable.
+    """
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return None
+
+    google = await _google_geocode({"address": f"{cleaned}, Lebanon"})
+    if google and (google.get("municipality") or google.get("district") or google.get("governorate")):
+        return google
+
+    loc = lookup_text(cleaned)
+    if loc:
+        return {
+            "municipality": loc.get("municipality"),
+            "district": loc.get("district"),
+            "governorate": loc.get("governorate"),
+            "display_name": loc.get("name"),
+            "lat": loc.get("lat"),
+            "lng": loc.get("lng"),
+            "source": "text_lookup",
+        }
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -280,17 +371,18 @@ async def normalize_location(
     # 1. GPS path
     if lat is not None and lng is not None:
         geo = await reverse_geocode(lat, lng)
-        if geo and geo.get("municipality"):
+        if geo and (geo.get("municipality") or geo.get("district") or geo.get("governorate")):
+            normalized = geo.get("municipality") or geo.get("district") or geo.get("display_name") or f"{lat},{lng}"
             return {
                 "raw": raw_text or f"{lat},{lng}",
-                "normalized": geo["municipality"],
-                "municipality": geo["municipality"],
-                "district": geo["district"],
-                "governorate": geo["governorate"],
+                "normalized": normalized,
+                "municipality": geo.get("municipality"),
+                "district": geo.get("district"),
+                "governorate": geo.get("governorate"),
                 "latitude": lat,
                 "longitude": lng,
                 "confidence": 0.92,
-                "source": "reverse_geocode" if NOMINATIM_URL else "gps",
+                "source": geo.get("source") or "reverse_geocode",
             }
         # GPS coords available but no geocoder — try seed match by proximity
         best = _find_nearest_seed(lat, lng)
@@ -309,15 +401,35 @@ async def normalize_location(
 
     # 2. raw_text lookup
     if raw_text:
-        loc = lookup_text(raw_text)
-        if loc:
-            return _loc_to_result(loc, raw_text, "text_lookup", 0.80)
+        geo = await geocode_text(raw_text)
+        if geo:
+            return {
+                "raw": raw_text,
+                "normalized": geo.get("municipality") or geo.get("display_name") or raw_text,
+                "municipality": geo.get("municipality"),
+                "district": geo.get("district"),
+                "governorate": geo.get("governorate"),
+                "latitude": geo.get("lat"),
+                "longitude": geo.get("lng"),
+                "confidence": 0.88 if geo.get("source") == "google_maps" else 0.80,
+                "source": geo.get("source") or "text_lookup",
+            }
 
     # 3. user_hint lookup
     if user_hint:
-        loc = lookup_text(user_hint)
-        if loc:
-            return _loc_to_result(loc, user_hint, "user_hint", 0.70)
+        geo = await geocode_text(user_hint)
+        if geo:
+            return {
+                "raw": raw_text or user_hint,
+                "normalized": geo.get("municipality") or geo.get("display_name") or user_hint,
+                "municipality": geo.get("municipality"),
+                "district": geo.get("district"),
+                "governorate": geo.get("governorate"),
+                "latitude": geo.get("lat"),
+                "longitude": geo.get("lng"),
+                "confidence": 0.86 if geo.get("source") == "google_maps" else 0.70,
+                "source": geo.get("source") or "user_hint",
+            }
 
     # 4. LLM-extracted passthrough
     if llm_extracted_district or llm_extracted_governorate:
