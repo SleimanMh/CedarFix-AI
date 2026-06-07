@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: frontend
   namespace: cedarfix
+  annotations:
+    cloud.google.com/backend-config: '{"ports":{"80":"frontend-backendconfig"}}'
 spec:
   selector:
     app: frontend
@@ -17,7 +19,7 @@ metadata:
   name: frontend
   namespace: cedarfix
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -28,7 +30,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-frontend:latest
+          image: us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-frontend:latest
           imagePullPolicy: Always
           ports:
             - name: http

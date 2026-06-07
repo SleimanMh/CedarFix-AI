@@ -196,35 +196,45 @@
     function renderComplaint(d) {
       const sev = d.severity || '—';
       const conf = Math.round((d.routing_confidence || 0) * 100);
+      const isRejected = d.status === 'rejected';
+      const moderationReason = d.moderation?.reason || '';
+      const imageUploaded = !!(d.image_filename || d.image_id || d.image_analysis?.image_id);
+      const pendingText = isRejected ? 'Skipped: rejected by moderation before this stage' : 'Pending';
       const steps = [
         { label: 'Text Understanding', done: !!d.text_analysis,
           detail: d.text_analysis
             ? `${displayType(d.complaint_type, d.text_analysis.subcategory)} — ${d.text_analysis.detected_language || d.text_analysis.language || ''}`
-            : 'Not processed' },
+            : (isRejected ? 'Skipped: moderation stopped the pipeline' : 'Not processed') },
         { label: 'Image Understanding', done: !!d.image_analysis?.image_present,
           detail: d.image_analysis?.image_present
             ? displayImageFinding(d.image_analysis)
-            : 'No image' },
+            : (imageUploaded ? 'Image uploaded, analysis not run' : 'No image') },
         { label: 'Embedding + Similarity', done: !!d.embedding,
-          detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}` : 'Pending' },
+          detail: d.embedding ? `Strategy: ${d.embedding.fusion_strategy}` : pendingText },
         { label: 'Duplicate Detection', done: !!d.clustering,
-          detail: d.clustering ? `${d.clustering.duplicate_status} · Cluster size: ${d.clustering.cluster_size}` : 'Pending' },
+          detail: d.clustering ? `${d.clustering.duplicate_status} · Cluster size: ${d.clustering.cluster_size}` : pendingText },
         { label: 'Priority Engine', done: !!d.priority,
-          detail: d.priority ? `${sev} · Score: ${Math.round((d.priority_score||0)*100)}/100` : 'Pending' },
+          detail: d.priority ? `${sev} · Score: ${Math.round((d.priority_score||0)*100)}/100` : pendingText },
         { label: 'Routing Engine', done: !!d.routing,
-          detail: d.routing ? `${d.assigned_entity} (${conf}% confidence)` : 'Pending' },
+          detail: d.routing ? `${d.assigned_entity} (${conf}% confidence)` : pendingText },
         { label: 'Explanation', done: !!d.explanation,
-          detail: d.explanation?.explanation_text ? d.explanation.explanation_text.slice(0, 80) + '…' : 'Pending' },
+          detail: d.explanation?.explanation_text ? d.explanation.explanation_text.slice(0, 80) + '…' : pendingText },
       ];
       return `
         <div style="margin-bottom:16px">
           <h3 style="color:var(--green);font-size:16px">Complaint ${d.complaint_id?.slice(0,8)}…</h3>
-          <span style="font-size:12px;color:var(--gray-600)">${d.created_at || ''}</span>
+          <span style="font-size:12px;color:var(--gray-600)">${d.created_at || ''} · Status: <b>${d.status || 'unknown'}</b></span>
         </div>
         <div style="background:white;border-radius:8px;padding:14px;margin-bottom:16px">
           <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-600)">Original Text</span>
           <p style="font-size:14px;margin-top:6px;line-height:1.6">${d.original_text || ''}</p>
         </div>
+        ${isRejected ? `
+        <div style="background:#fde8ea;border:1px solid #f5b5bd;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#8a1020">
+          <strong>Rejected by moderation before pipeline processing.</strong>
+          ${moderationReason ? `<div style="margin-top:6px">${moderationReason}</div>` : ''}
+          ${imageUploaded ? `<div style="margin-top:6px;color:#6C757D">An image was uploaded, but image understanding did not run because moderation stopped the pipeline.</div>` : ''}
+        </div>` : ''}
         ${d.status === 'contradiction' && d.media_validation?.contradiction_reason ? `
         <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#856404">
           ⚠️ <strong>Contradiction detected:</strong> ${d.media_validation.contradiction_reason}

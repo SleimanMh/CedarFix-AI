@@ -18,6 +18,8 @@ metadata:
   namespace: cedarfix
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: vision-service
@@ -29,7 +31,7 @@ spec:
       serviceAccountName: cedarfix-app
       containers:
         - name: vision-service
-          image: REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-vision-ai:latest
+          image: us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-vision-ai:latest
           imagePullPolicy: Always
           command: ["python", "/app/docker/run_group.py"]
           args:
@@ -41,6 +43,11 @@ spec:
             - configMapRef:
                 name: cedarfix-config
           env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cedarfix-secrets
+                  key: DATABASE_URL
             - name: VLM_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -54,8 +61,26 @@ spec:
             periodSeconds: 15
           resources:
             requests:
-              cpu: "1"
-              memory: 3Gi
+              cpu: "500m"
+              memory: 2Gi
             limits:
-              cpu: "4"
-              memory: 10Gi
+              cpu: "2"
+              memory: 6Gi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "$(CLOUD_SQL_INSTANCE)"
+          envFrom:
+            - configMapRef:
+                name: cedarfix-config
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 128Mi
+            limits:
+              cpu: "500m"
+              memory: 256Mi

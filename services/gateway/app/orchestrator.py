@@ -5,6 +5,9 @@ IEP-3 through IEP-6 run sequentially (each depends on prior results).
 """
 
 import asyncio
+import json
+import logging
+import os
 import re
 import time
 import httpx
@@ -18,18 +21,28 @@ from cedarfix_shared.schemas import (
     ComplaintType, MediaValidationResult, MediaValidationStatus,
     HumanReviewItem, TextImageAlignment,
     ConfidenceBundle, StageConfidence,
+    AlignmentStatus, ReconciliationStatus,
 )
 from cedarfix_shared.metrics import (
     GATEWAY_SERVICE_CALL_DURATION,
     GATEWAY_SERVICE_CALL_ERRORS,
     PIPELINE_DURATION,
 )
+from cedarfix_shared.llm_audit import llm_audit_context
 from .config import settings
 from .moderation import moderate, ModerationDecisionEnum
 
 TIMEOUT = httpx.Timeout(60.0)
 SINGLE_MODAL_REVIEW_CONFIDENCE = 0.85
 IMAGE_CANDIDATE_CONFIDENCE_THRESHOLD = 0.40
+MEDIA_ALIGNMENT_LLM_ENABLED = os.getenv("MEDIA_ALIGNMENT_LLM_ENABLED", "true").lower() == "true"
+MEDIA_ALIGNMENT_MODEL = os.getenv("MEDIA_ALIGNMENT_MODEL") or os.getenv("OPENAI_MODEL", "gpt-4o")
+MEDIA_ALIGNMENT_API_KEY = os.getenv("MEDIA_ALIGNMENT_API_KEY") or os.getenv("OPENAI_API_KEY", "")
+MEDIA_ALIGNMENT_BASE_URL = os.getenv("MEDIA_ALIGNMENT_BASE_URL") or os.getenv("OPENAI_BASE_URL", "")
+MEDIA_ALIGNMENT_TIMEOUT = float(os.getenv("MEDIA_ALIGNMENT_TIMEOUT", "20"))
+MEDIA_ALIGNMENT_MIN_CONFIDENCE = float(os.getenv("MEDIA_ALIGNMENT_MIN_CONFIDENCE", "0.55"))
+
+log = logging.getLogger(__name__)
 
 
 def _error_type(exc: Exception) -> str:
@@ -140,7 +153,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         # --- Media Validation Gate ---
         # Runs after IEP-1+IEP-2, before any downstream IEPs.
         # Catches: no complaint in text, text/image contradictions, ambiguous submissions.
-        validation = _validate_media(text_result, image_result)
+        validation = await _validate_media(complaint_id, text_result, image_result)
         decision.media_validation = validation
         force_review_after_pipeline = False
 
@@ -180,21 +193,61 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
                 and getattr(a, "reconciliation_status", None) in ("MODAL_CONFLICT", "modal_conflict")
                 and image_result and image_result.image_present
             ):
-                decision.status = PipelineStatus.CONTRADICTION
-                decision.media_validation = MediaValidationResult(
-                    status=MediaValidationStatus.CONTRADICTION,
-                    text_is_complaint=True,
-                    image_has_complaint=True,
-                    text_detected_type=str(a.text_issue_type) if a.text_issue_type else None,
-                    image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
-                    contradiction_reason=(
-                        f"Your text describes a {a.text_issue_type or 'infrastructure'} issue "
-                        f"but your image appears to show something different "
-                        f"({a.image_issue_type or 'unrelated content'}). "
-                        f"Please resubmit with a photo that matches your complaint."
-                    ),
+                llm_alignment = await _llm_alignment_for_embedding_conflict(
+                    complaint_id, text_result, image_result, a
                 )
-                return decision
+                if (
+                    llm_alignment
+                    and llm_alignment.get("confidence", 0.0) >= MEDIA_ALIGNMENT_MIN_CONFIDENCE
+                    and llm_alignment["alignment"] in {"CONFIRMS", "RELATED"}
+                ):
+                    a.conflict_detected = False
+                    a.conflict_reason = None
+                    a.alignment_status = AlignmentStatus.SUPPORTS
+                    a.reconciliation_status = ReconciliationStatus.TEXT_AND_IMAGE_SUPPORT
+                    a.reconciliation_note = (
+                        "LLM media alignment override: "
+                        f"{llm_alignment.get('reason') or 'text and image describe the same issue'}"
+                    )
+                    if "llm_media_alignment" not in a.matched_features:
+                        a.matched_features.append("llm_media_alignment")
+                    a.conflicting_features = []
+                    decision.text_image_alignment = a
+                    decision.media_validation = MediaValidationResult(
+                        status=MediaValidationStatus.VALID,
+                        text_is_complaint=True,
+                        image_has_complaint=True,
+                        text_detected_type=_effective_text_issue_type(text_result) or str(a.text_issue_type),
+                        image_detected_type=str(a.image_issue_type) if a.image_issue_type else None,
+                        reconciled_type=_effective_text_issue_type(text_result) or str(a.text_issue_type),
+                        reconciled_source="llm_embedding_alignment",
+                    )
+                else:
+                    llm_reason = (
+                        llm_alignment.get("reason")
+                        if llm_alignment
+                        and llm_alignment.get("confidence", 0.0) >= MEDIA_ALIGNMENT_MIN_CONFIDENCE
+                        and llm_alignment.get("alignment") == "CONTRADICTS"
+                        else None
+                    )
+                    text_label = _effective_text_issue_type(text_result) or str(a.text_issue_type or "")
+                    image_label = str(a.image_issue_type) if a.image_issue_type else ""
+                    reason_tail = llm_reason or "Please resubmit with a photo that matches your complaint."
+                    decision.status = PipelineStatus.CONTRADICTION
+                    decision.media_validation = MediaValidationResult(
+                        status=MediaValidationStatus.CONTRADICTION,
+                        text_is_complaint=True,
+                        image_has_complaint=True,
+                        text_detected_type=text_label or None,
+                        image_detected_type=image_label or None,
+                        contradiction_reason=(
+                            f"Your text describes a {_display_label(text_label, 'infrastructure')} issue "
+                            f"but your image appears to show something different "
+                            f"({_display_label(image_label, 'unrelated content')}). "
+                            f"{reason_tail}"
+                        ),
+                    )
+                    return decision
         PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
 
         # --- Stage 3: IEP-4 Clustering + Deduplication ---
@@ -918,6 +971,27 @@ def _display_label(value: str | None, fallback: str = "unknown") -> str:
     return (_norm_label(value) or fallback).replace("_", " ")
 
 
+def _is_unknown_label(value: str | None) -> bool:
+    return (_norm_label(value) or "") in {"", "unknown", "other", "unspecified"}
+
+
+def _effective_text_issue_type(text_result: TextUnderstandingResult | None) -> str | None:
+    if not text_result:
+        return None
+
+    raw_issue = getattr(text_result, "issue_type", None)
+    issue_type = raw_issue.value if hasattr(raw_issue, "value") else str(raw_issue or "")
+    issue_type = _norm_label(issue_type)
+    if not _is_unknown_label(issue_type):
+        return issue_type
+
+    for attr in ("subcategory", "category", "failure_mode", "physical_component"):
+        value = _norm_label(getattr(text_result, attr, None))
+        if not _is_unknown_label(value):
+            return value
+    return issue_type or None
+
+
 def _derive_descriptors(
     issue_type: str | None,
     semantic_domain: str | None,
@@ -1078,7 +1152,225 @@ def _best_image_candidate_for_text(
     return best, best_overlap, best_exact
 
 
-def _validate_media(
+def _media_alignment_payload(
+    *,
+    text_result: TextUnderstandingResult | None,
+    image_result: ImageUnderstandingResult | None,
+    text_type: str | None,
+    text_category: str | None,
+    text_confidence: float | None,
+    text_semantic_domain: str | None,
+    text_physical_component: str | None,
+    text_failure_mode: str | None,
+    image_type: str | None,
+    image_category: str | None,
+    image_confidence: float | None,
+    image_semantic_domain: str | None,
+    image_physical_component: str | None,
+    image_failure_mode: str | None,
+    image_candidates: list[dict],
+    rule_overlap: int | None,
+    rule_exact_type_match: bool,
+    rule_contradiction: bool,
+) -> dict:
+    vu = image_result.visual_understanding if image_result else None
+    vlm = image_result.vlm_analysis if image_result else None
+    return {
+        "text_analysis": {
+            "original_text": getattr(text_result, "original_text", None),
+            "normalized_text": getattr(text_result, "normalized_text", None),
+            "summary": getattr(text_result, "summary", None),
+            "issue_type": text_type,
+            "category": text_category,
+            "subcategory": getattr(text_result, "subcategory", None),
+            "semantic_domain": text_semantic_domain,
+            "physical_component": text_physical_component,
+            "failure_mode": text_failure_mode,
+            "confidence": text_confidence,
+            "keywords": getattr(text_result, "urgency_keywords", []) or [],
+        },
+        "image_analysis": {
+            "caption": getattr(vu, "caption", None),
+            "vlm_caption": getattr(vlm, "caption", None),
+            "visual_category": image_category,
+            "visual_subcategory": image_type,
+            "semantic_domain": image_semantic_domain,
+            "physical_component": image_physical_component,
+            "failure_mode": image_failure_mode,
+            "damage_visible": getattr(vu, "damage_visible", None),
+            "confidence": image_confidence,
+            "candidates": image_candidates[:3],
+            "vlm_reasoning": getattr(vlm, "reasoning", None),
+        },
+        "rule_based_alignment": {
+            "overlap_score": rule_overlap,
+            "exact_type_match": rule_exact_type_match,
+            "would_flag_contradiction": rule_contradiction,
+        },
+    }
+
+
+async def _llm_alignment_for_embedding_conflict(
+    complaint_id: str | None,
+    text_result: TextUnderstandingResult | None,
+    image_result: ImageUnderstandingResult | None,
+    alignment: TextImageAlignment,
+) -> dict | None:
+    if not image_result or not image_result.image_present:
+        return None
+
+    text_type = _effective_text_issue_type(text_result) or _norm_label(alignment.text_issue_type)
+    text_category = getattr(text_result, "category", None) if text_result else None
+    text_confidence = float(getattr(text_result, "confidence", 0.0) or 0.0) if text_result else None
+    text_domain, text_component, text_mode = _derive_descriptors(
+        text_type,
+        getattr(text_result, "semantic_domain", None) if text_result else None,
+        getattr(text_result, "physical_component", None) if text_result else None,
+        getattr(text_result, "failure_mode", None) if text_result else None,
+        text_category,
+    )
+
+    image_candidates = _visual_issue_candidates(image_result)
+    best_candidate, overlap, exact_type_match = _best_image_candidate_for_text(
+        image_candidates,
+        text_type,
+        text_domain,
+        text_component,
+        text_mode,
+    )
+
+    vu = image_result.visual_understanding
+    vlm = image_result.vlm_analysis
+    image_type = _norm_label(alignment.image_issue_type) or getattr(vu, "visual_subcategory", None)
+    image_category = getattr(vu, "visual_category", None)
+    image_confidence = float(getattr(vu, "confidence", 0.0) or 0.0)
+    descriptor_src = vlm if vlm else vu
+    image_domain, image_component, image_mode = _derive_descriptors(
+        image_type,
+        getattr(descriptor_src, "semantic_domain", None),
+        getattr(descriptor_src, "physical_component", None),
+        getattr(descriptor_src, "failure_mode", None),
+        image_category,
+    )
+
+    if best_candidate:
+        image_type = best_candidate.get("image_type")
+        image_category = best_candidate.get("image_category")
+        image_confidence = best_candidate.get("image_confidence")
+        image_domain = best_candidate.get("image_semantic_domain")
+        image_component = best_candidate.get("image_physical_component")
+        image_mode = best_candidate.get("image_failure_mode")
+
+    return await _llm_media_alignment(complaint_id, _media_alignment_payload(
+        text_result=text_result,
+        image_result=image_result,
+        text_type=text_type,
+        text_category=text_category,
+        text_confidence=text_confidence,
+        text_semantic_domain=text_domain,
+        text_physical_component=text_component,
+        text_failure_mode=text_mode,
+        image_type=image_type,
+        image_category=image_category,
+        image_confidence=image_confidence,
+        image_semantic_domain=image_domain,
+        image_physical_component=image_component,
+        image_failure_mode=image_mode,
+        image_candidates=image_candidates,
+        rule_overlap=overlap,
+        rule_exact_type_match=exact_type_match,
+        rule_contradiction=True,
+    ))
+
+
+async def _llm_media_alignment(complaint_id: str | None, payload: dict) -> dict | None:
+    if not MEDIA_ALIGNMENT_LLM_ENABLED:
+        return None
+    if not MEDIA_ALIGNMENT_API_KEY and not MEDIA_ALIGNMENT_BASE_URL:
+        return None
+
+    system = (
+        "You are CedarFix's semantic media alignment judge. Compare the meaning of the "
+        "already-processed text JSON and image JSON for a public infrastructure complaint. "
+        "Do not compare labels literally; compare the real-world issue. Treat compatible "
+        "phrases such as pothole, road damage, cracked asphalt, road surface damage, and "
+        "surface hazard as matching unless there is a clear contradiction. Return ONLY JSON "
+        "with keys: alignment, confidence, reason, text_issue, image_issue. alignment must be "
+        "one of CONFIRMS, RELATED, CONTRADICTS, UNCLEAR."
+    )
+    user = {
+        "instruction": (
+            "Decide whether the image supports the text complaint. "
+            "CONFIRMS means same issue; RELATED means same public problem/domain but not exact; "
+            "CONTRADICTS means the image clearly shows a different issue; "
+            "UNCLEAR means insufficient or low-confidence evidence."
+        ),
+        "media": payload,
+    }
+
+    try:
+        from openai import AsyncOpenAI
+
+        kwargs = {
+            "api_key": MEDIA_ALIGNMENT_API_KEY or "none",
+            "max_retries": 0,
+            "timeout": MEDIA_ALIGNMENT_TIMEOUT,
+        }
+        if MEDIA_ALIGNMENT_BASE_URL:
+            kwargs["base_url"] = MEDIA_ALIGNMENT_BASE_URL
+        client = AsyncOpenAI(**kwargs)
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": json.dumps(user, ensure_ascii=True)},
+        ]
+        provider = "qwen" if MEDIA_ALIGNMENT_BASE_URL else "openai"
+        async with llm_audit_context(
+            complaint_id=complaint_id,
+            service="gateway",
+            call_type="media_alignment",
+            provider=provider,
+            model=MEDIA_ALIGNMENT_MODEL,
+            prompt_version="media_alignment_v2",
+            request_payload={
+                "messages": messages,
+                "response_format": "json_object",
+                "temperature": 0.0,
+                "max_tokens": 300,
+            },
+        ) as audit:
+            response = await client.chat.completions.create(
+                model=MEDIA_ALIGNMENT_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=300,
+            )
+            raw = response.choices[0].message.content or ""
+            audit["raw_output"] = raw
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            alignment = str(data.get("alignment") or "").strip().upper()
+            if alignment not in {"CONFIRMS", "RELATED", "CONTRADICTS", "UNCLEAR"}:
+                return None
+            try:
+                confidence = max(0.0, min(1.0, float(data.get("confidence", 0.0))))
+            except (TypeError, ValueError):
+                confidence = 0.0
+            data["alignment"] = alignment
+            data["confidence"] = confidence
+            audit["parsed_output"] = data
+            return data
+    except Exception as exc:
+        log.warning("[gateway] LLM media alignment failed; using rule fallback: %s", exc)
+        return None
+
+
+async def _validate_media(
+    complaint_id: str | None,
     text_result: TextUnderstandingResult | None,
     image_result: ImageUnderstandingResult | None,
 ) -> MediaValidationResult:
@@ -1097,8 +1389,7 @@ def _validate_media(
     text_failure_mode: str | None = None
 
     if text_result:
-        raw = text_result.issue_type
-        text_type_str = raw.value if hasattr(raw, "value") else str(raw)
+        text_type_str = _effective_text_issue_type(text_result)
         text_confidence = float(text_result.confidence)
         is_unknown_type = (text_type_str or "").strip().lower() in ("", "unknown", "other")
         text_is_complaint = (
@@ -1218,6 +1509,87 @@ def _validate_media(
                 and text_group and image_group
                 and text_group != image_group
                 and image_confidence is not None and image_confidence >= 0.50
+            )
+
+        llm_alignment = None
+        if image_has_complaint:
+            llm_alignment = await _llm_media_alignment(complaint_id, _media_alignment_payload(
+                text_result=text_result,
+                image_result=image_result,
+                text_type=text_type_str,
+                text_category=text_category,
+                text_confidence=text_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_type=image_type_str,
+                image_category=image_category,
+                image_confidence=image_confidence,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                image_candidates=image_candidates,
+                rule_overlap=overlap,
+                rule_exact_type_match=exact_type_match,
+                rule_contradiction=is_contradiction,
+            ))
+
+        if (
+            llm_alignment
+            and llm_alignment.get("confidence", 0.0) >= MEDIA_ALIGNMENT_MIN_CONFIDENCE
+            and llm_alignment["alignment"] in {"CONFIRMS", "RELATED"}
+        ):
+            rec_source = "llm_both" if llm_alignment["alignment"] == "CONFIRMS" else "llm_related"
+            return MediaValidationResult(
+                status=MediaValidationStatus.VALID,
+                text_is_complaint=True,
+                image_has_complaint=True,
+                text_detected_type=text_type_str,
+                text_detected_category=text_category,
+                text_confidence=text_confidence,
+                image_detected_type=image_type_str,
+                image_detected_category=image_category,
+                image_confidence=image_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                modality_overlap_score=overlap,
+                reconciled_type=text_type_str,
+                reconciled_source=rec_source,
+            )
+
+        if (
+            llm_alignment
+            and llm_alignment.get("confidence", 0.0) >= MEDIA_ALIGNMENT_MIN_CONFIDENCE
+            and llm_alignment["alignment"] == "CONTRADICTS"
+        ):
+            return MediaValidationResult(
+                status=MediaValidationStatus.CONTRADICTION,
+                text_is_complaint=True,
+                image_has_complaint=True,
+                text_detected_type=text_type_str,
+                text_detected_category=text_category,
+                text_confidence=text_confidence,
+                image_detected_type=image_type_str,
+                image_detected_category=image_category,
+                image_confidence=image_confidence,
+                text_semantic_domain=text_semantic_domain,
+                text_physical_component=text_physical_component,
+                text_failure_mode=text_failure_mode,
+                image_semantic_domain=image_semantic_domain,
+                image_physical_component=image_physical_component,
+                image_failure_mode=image_failure_mode,
+                modality_overlap_score=overlap,
+                reconciled_type=None,
+                reconciled_source="llm_contradiction",
+                contradiction_reason=(
+                    f"Your text describes a {_display_label(text_type_str, 'public infrastructure')} issue, "
+                    f"but the image appears to show {_display_label(image_type_str)}. "
+                    f"{llm_alignment.get('reason') or 'Please resubmit with matching text and photo.'}"
+                ),
             )
 
         if is_contradiction:

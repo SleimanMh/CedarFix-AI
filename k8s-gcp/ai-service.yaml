@@ -27,6 +27,8 @@ metadata:
   namespace: cedarfix
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: ai-service
@@ -38,7 +40,7 @@ spec:
       serviceAccountName: cedarfix-app
       containers:
         - name: ai-service
-          image: REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-ai:latest
+          image: us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-ai:latest
           imagePullPolicy: Always
           command: ["python", "/app/docker/run_group.py"]
           args:
@@ -69,11 +71,6 @@ spec:
                 secretKeyRef:
                   name: cedarfix-secrets
                   key: QWEN_API_KEY
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: cedarfix-secrets
-                  key: OPENAI_API_KEY
             - name: QDRANT_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -87,11 +84,11 @@ spec:
             periodSeconds: 15
           resources:
             requests:
-              cpu: "2"
-              memory: 4Gi
+              cpu: "750m"
+              memory: 3Gi
             limits:
-              cpu: "6"
-              memory: 12Gi
+              cpu: "3"
+              memory: 8Gi
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
           args:

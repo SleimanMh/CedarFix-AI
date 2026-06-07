@@ -9,6 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from cedarfix_shared.llm_audit import llm_audit_context
 from cedarfix_shared.metrics import MULTI_COMPLAINT_CHILD_COUNT, MULTI_COMPLAINT_SPLIT_TOTAL
 from cedarfix_shared.schemas import ComplaintSplitItem, ComplaintSplitResult
 
@@ -127,11 +128,22 @@ async def _split_with_llm(text: str) -> ComplaintSplitResult:
         "temperature": 0.0,
         "response_format": {"type": "json_object"},
     }
-    response = await client.chat.completions.create(**kwargs)
-    raw = response.choices[0].message.content or "{}"
-    data = json.loads(raw)
-    output = _LLMSplitOutput.model_validate(data)
-    return _coerce_result(text, "llm", output)
+    async with llm_audit_context(
+        complaint_id=None,
+        service="gateway",
+        call_type="complaint_splitter",
+        provider="qwen",
+        model=QWEN_MODEL,
+        prompt_version="complaint_splitter_v1",
+        request_payload={**kwargs, "api_key": "[redacted]"},
+    ) as audit:
+        response = await client.chat.completions.create(**kwargs)
+        raw = response.choices[0].message.content or "{}"
+        audit["raw_output"] = raw
+        data = json.loads(raw)
+        output = _LLMSplitOutput.model_validate(data)
+        audit["parsed_output"] = output.model_dump(mode="json")
+        return _coerce_result(text, "llm", output)
 
 
 def _split_heuristically(text: str) -> ComplaintSplitResult:

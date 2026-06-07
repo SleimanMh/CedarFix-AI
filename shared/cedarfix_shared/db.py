@@ -115,3 +115,24 @@ class ModelPerformanceLog(Base):
     metric_name = Column(String, nullable=False)
     metric_value = Column(Float, nullable=False)
     window_days = Column(Integer, default=7)
+
+
+class LLMAuditLog(Base):
+    __tablename__ = "llm_audit_logs"
+
+    id = Column(String, primary_key=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    complaint_id = Column(String, nullable=True, index=True)
+    service = Column(String, nullable=False)
+    call_type = Column(String, nullable=False)
+    provider = Column(String, nullable=False)
+    model = Column(String, nullable=False)
+    prompt_version = Column(String, nullable=True)
+    status = Column(String, nullable=False)
+    latency_ms = Column(Integer, nullable=True)
+    request_payload = Column(JSON, nullable=True)
+    raw_output = Column(Text, nullable=True)
+    parsed_output = Column(JSON, nullable=True)
+    error_type = Column(String, nullable=True)
+    error_message = Column(Text, nullable=True)
+    artifact_uri = Column(String, nullable=True)

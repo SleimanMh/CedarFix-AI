@@ -21,6 +21,7 @@ from cedarfix_shared.schemas import (
 )
 from cedarfix_shared.location import lookup_text
 from cedarfix_shared.metrics import TEXT_EXTRACTION_FAILURE_TOTAL, TEXT_EXTRACTION_SOURCE_TOTAL
+from cedarfix_shared.llm_audit import llm_audit_context
 from .extractor import StructuredExtractor
 
 
@@ -62,7 +63,7 @@ QWEN_ENABLED: bool = os.getenv("QWEN_ENABLED", "true").lower() == "true"
 QWEN_TIMEOUT: float = float(os.getenv("QWEN_TIMEOUT", "50"))
 QWEN_MAX_ATTEMPTS: int = max(1, int(os.getenv("QWEN_MAX_ATTEMPTS", "1")))
 QWEN_MAX_TOKENS: int = max(128, int(os.getenv("QWEN_MAX_TOKENS", "1536")))
-_TRANSLATE_ONLY_LANGUAGES: set[str] = set()
+_TRANSLATE_ONLY_LANGUAGES: set[str] = {"arabizi"}
 
 
 def _error_type(exc: Exception) -> str:
@@ -79,6 +80,12 @@ def _error_type(exc: Exception) -> str:
 _TRANSLATE_PROMPT = """\
 You are a Lebanese dialect translator.
 Translate the Arabizi text (Arabic written with Latin letters and numbers like 3, 7, 2, 5) into natural English.
+Interpret Lebanese public-infrastructure context carefully:
+- isharet/icharet l sayr = traffic light/traffic signal, not a delivery route
+- Cola/Kola usually refers to the Cola area/intersection in Beirut, not the drink
+- 3m tdawi = is lighting/turning on/shining
+- asfar = yellow
+- mn three days = for three days
 Return ONLY a JSON object with a single field:
 {"translation": "<English text>"}
 No explanation, no markdown.
@@ -268,45 +275,73 @@ def _coerce_llm_output(data: dict) -> dict:
     return clean
 
 
-async def _call_gpt4o_translate(text: str) -> str:
+async def _call_gpt4o_translate(text: str, complaint_id: str | None = None) -> str:
     client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-    response = await client.chat.completions.create(
+    messages = [
+        {"role": "system", "content": _TRANSLATE_PROMPT},
+        {"role": "user", "content": text},
+    ]
+    async with llm_audit_context(
+        complaint_id=complaint_id,
+        service="text_understanding",
+        call_type="arabizi_translation",
+        provider="openai",
         model=OPENAI_MODEL,
-        messages=[
-            {"role": "system", "content": _TRANSLATE_PROMPT},
-            {"role": "user", "content": text},
-        ],
-        response_format={"type": "json_object"},
-        temperature=0.0,
-    )
-    result = json.loads(response.choices[0].message.content)
-    return result.get("translation", text)
+        prompt_version="arabizi_translation_v2",
+        request_payload={"messages": messages, "temperature": 0.0, "response_format": "json_object"},
+    ) as audit:
+        response = await client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.0,
+        )
+        raw = response.choices[0].message.content
+        audit["raw_output"] = raw
+        result = json.loads(raw)
+        audit["parsed_output"] = result
+        return result.get("translation", text)
 
 
-async def _call_gpt4o_extract(text: str, language: str) -> dict:
+async def _call_gpt4o_extract(text: str, language: str, complaint_id: str | None = None) -> dict:
     client = AsyncOpenAI(api_key=OPENAI_API_KEY, max_retries=0, timeout=35.0)
-    response = await client.chat.completions.create(
+    messages = [
+        {"role": "system", "content": _SYSTEM_PROMPT},
+        {"role": "user", "content": _user_prompt(text, language)},
+    ]
+    async with llm_audit_context(
+        complaint_id=complaint_id,
+        service="text_understanding",
+        call_type="text_extraction_fallback",
+        provider="openai",
         model=OPENAI_MODEL,
-        messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": _user_prompt(text, language)},
-        ],
-        response_format={"type": "json_object"},
-        temperature=0.0,
-    )
-    data = _parse_llm_json(response.choices[0].message.content)
-    return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+        prompt_version="text_extraction_v3",
+        request_payload={"messages": messages, "temperature": 0.0, "response_format": "json_object"},
+    ) as audit:
+        response = await client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.0,
+        )
+        raw = response.choices[0].message.content
+        audit["raw_output"] = raw
+        data = _parse_llm_json(raw)
+        parsed = _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+        audit["parsed_output"] = parsed
+        return parsed
 
 
-async def _call_qwen(text: str, language: str) -> dict:
+async def _call_qwen(text: str, language: str, complaint_id: str | None = None) -> dict:
     client = AsyncOpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL, max_retries=0, timeout=QWEN_TIMEOUT)
+    messages = [
+        {"role": "system", "content": _SYSTEM_PROMPT},
+        {"role": "user", "content": _user_prompt(text, language)},
+    ]
 
     kwargs: dict = dict(
         model=QWEN_MODEL,
-        messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": _user_prompt(text, language)},
-        ],
+        messages=messages,
         temperature=0.0,
         max_tokens=QWEN_MAX_TOKENS,
     )
@@ -318,17 +353,43 @@ async def _call_qwen(text: str, language: str) -> dict:
 
     for attempt in range(QWEN_MAX_ATTEMPTS):
         try:
-            response = await client.chat.completions.create(**kwargs)
-            data = _parse_llm_json(response.choices[0].message.content)
-            return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+            async with llm_audit_context(
+                complaint_id=complaint_id,
+                service="text_understanding",
+                call_type="text_extraction",
+                provider="qwen",
+                model=QWEN_MODEL,
+                prompt_version="text_extraction_v3",
+                request_payload={**kwargs, "api_key": "[redacted]"},
+            ) as audit:
+                response = await client.chat.completions.create(**kwargs)
+                raw = response.choices[0].message.content
+                audit["raw_output"] = raw
+                data = _parse_llm_json(raw)
+                parsed = _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+                audit["parsed_output"] = parsed
+                return parsed
         except Exception as e:
             if QWEN_GUIDED and ("guided" in str(e).lower() or "extra_body" in str(e).lower() or "422" in str(e)):
                 log.warning("[IEP-1] guided_json not supported (%s), retrying without", e)
                 kwargs.pop("extra_body", None)
                 kwargs["response_format"] = {"type": "json_object"}
-                response = await client.chat.completions.create(**kwargs)
-                data = _parse_llm_json(response.choices[0].message.content)
-                return _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+                async with llm_audit_context(
+                    complaint_id=complaint_id,
+                    service="text_understanding",
+                    call_type="text_extraction",
+                    provider="qwen",
+                    model=QWEN_MODEL,
+                    prompt_version="text_extraction_v3",
+                    request_payload={**kwargs, "api_key": "[redacted]", "guided_retry": True},
+                ) as audit:
+                    response = await client.chat.completions.create(**kwargs)
+                    raw = response.choices[0].message.content
+                    audit["raw_output"] = raw
+                    data = _parse_llm_json(raw)
+                    parsed = _LLMOutput.model_validate(_coerce_llm_output(data)).model_dump()
+                    audit["parsed_output"] = parsed
+                    return parsed
             if attempt + 1 < QWEN_MAX_ATTEMPTS and "timed out" in str(e).lower():
                 log.warning("[IEP-1] Qwen timeout on attempt %s, retrying (%s)", attempt + 1, e)
                 continue
@@ -373,6 +434,29 @@ def _dynamic_descriptor_fallback(
     return semantic_domain, physical_component, failure_mode
 
 
+def _is_unknown_label(value: str | None) -> bool:
+    return (value or "").strip().lower() in {"", "unknown", "other", "unspecified"}
+
+
+def _promote_issue_type(
+    issue_type: str,
+    category: str,
+    subcategory: str,
+    failure_mode: str,
+) -> str:
+    if not _is_unknown_label(issue_type):
+        return issue_type
+    if not _is_unknown_label(subcategory):
+        return subcategory
+    if not _is_unknown_label(category) and not _is_unknown_label(failure_mode):
+        return f"{category}_{failure_mode}"
+    if not _is_unknown_label(category):
+        return category
+    if not _is_unknown_label(failure_mode):
+        return failure_mode
+    return "unknown"
+
+
 def _build_result(complaint_id: str, original_text: str, language: str, data: dict, processing_ms: int) -> TextUnderstandingResult:
     if not data.get("is_complaint", True):
         translation = data.get("english_translation", original_text)
@@ -403,6 +487,7 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
     semantic_domain = _snake_or_default(data.get("semantic_domain"), "unknown")
     physical_component = _snake_or_default(data.get("physical_component"), "unknown")
     failure_mode = _snake_or_default(data.get("failure_mode"), "unknown")
+    issue_type = _promote_issue_type(issue_type, category, subcategory, failure_mode)
     semantic_domain, physical_component, failure_mode = _dynamic_descriptor_fallback(
         issue_type, category, subcategory, semantic_domain, physical_component, failure_mode
     )
@@ -508,25 +593,43 @@ class LLMExtractor:
         data: Optional[dict] = None
         english_text = text
 
-        if OPENAI_API_KEY:
+        if language in _TRANSLATE_ONLY_LANGUAGES:
+            if OPENAI_API_KEY:
+                try:
+                    english_text = await _call_gpt4o_translate(text, complaint_id)
+                    TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="gpt4o_translation").inc()
+                    log.info("[IEP-1] GPT-4o translated %s text for complaint %s", language, complaint_id)
+                except Exception as e:
+                    TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="gpt4o_translation", error_type=_error_type(e)).inc()
+                    log.warning("[IEP-1] GPT-4o translation failed (%s), using raw text for Qwen", e)
+            else:
+                log.warning("[IEP-1] OPENAI_API_KEY missing; using raw %s text for Qwen", language)
+
+        qwen_input = english_text if language in _TRANSLATE_ONLY_LANGUAGES else text
+        qwen_language = "en" if language in _TRANSLATE_ONLY_LANGUAGES and english_text != text else language
+
+        if QWEN_ENABLED:
             try:
-                data = await _call_gpt4o_extract(text, language)
+                data = await _call_qwen(qwen_input, qwen_language, complaint_id)
+                if language in _TRANSLATE_ONLY_LANGUAGES:
+                    data["english_translation"] = english_text
+                else:
+                    english_text = data.get("english_translation") or text
+                TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="qwen").inc()
+            except Exception as e:
+                TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="qwen", error_type=_error_type(e)).inc()
+                fallback_target = "rule-based" if language in _TRANSLATE_ONLY_LANGUAGES else "GPT-4o/rule-based"
+                log.warning("[IEP-1] Qwen failed (%s), falling back to %s", e, fallback_target)
+
+        if data is None and OPENAI_API_KEY and language not in _TRANSLATE_ONLY_LANGUAGES:
+            try:
+                data = await _call_gpt4o_extract(english_text, language, complaint_id)
                 english_text = data.get("english_translation") or text
                 TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="gpt4o").inc()
             except Exception as e:
                 TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="gpt4o", error_type=_error_type(e)).inc()
-                log.warning("[IEP-1] GPT-4o extraction failed (%s), using fallback path", e)
+                log.warning("[IEP-1] GPT-4o extraction failed (%s), using rule-based fallback", e)
                 english_text = text
-
-        if QWEN_ENABLED and data is None and language not in _TRANSLATE_ONLY_LANGUAGES:
-            try:
-                data = await _call_qwen(english_text, language)
-                TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="qwen").inc()
-            except Exception as e:
-                TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="qwen", error_type=_error_type(e)).inc()
-                log.warning("[IEP-1] Qwen failed (%s), falling back to rule-based", e)
-        elif QWEN_ENABLED and data is None and language in _TRANSLATE_ONLY_LANGUAGES:
-            log.warning("[IEP-1] Skipping Qwen: Arabizi is handled by GPT-4o only")
 
         processing_ms = int((time.time() - t0) * 1000)
 
@@ -555,7 +658,7 @@ class LLMExtractor:
             result.processing_ms = processing_ms
             return result
 
-        if language in _TRANSLATE_ONLY_LANGUAGES:
+        if language in _TRANSLATE_ONLY_LANGUAGES and data is not None:
             data["english_translation"] = english_text
 
         return _build_result(complaint_id, text, language, data, processing_ms)

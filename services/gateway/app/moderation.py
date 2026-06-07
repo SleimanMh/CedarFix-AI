@@ -37,6 +37,7 @@ from typing import Optional, List
 
 from sqlalchemy import text
 
+from cedarfix_shared.llm_audit import llm_audit_context
 from cedarfix_shared.schemas import ModerationDecisionEnum, ModerationResult
 from cedarfix_shared.storage import read_image_bytes
 
@@ -75,9 +76,31 @@ _SPAM_PATTERNS = [
     re.compile(r"\b(\w+)\b(\s+\1){3,}", re.I),  # word repeated 4+ times
 ]
 
+_CIVIC_EMERGENCY_TERMS = {
+    "fire", "smoke", "burning", "building", "explosion", "flood", "flooding",
+    "collapsed", "collapse", "accident", "road", "pothole", "sidewalk",
+    "electric", "electricity", "wire", "sewer", "garbage", "water",
+}
+
+_POLICY_VIOLATION_TERMS = {
+    "graphic violence", "gore", "blood", "corpse", "dead body", "weapon",
+    "gun", "knife", "threat", "self-harm", "sexual", "explicit", "hate",
+    "abusive",
+}
+
 
 def _text_hash(text: str) -> str:
     return hashlib.sha256(text.strip().lower().encode()).hexdigest()[:16]
+
+
+def _is_civic_emergency_context(complaint_text: str, reason: str) -> bool:
+    context = f"{complaint_text} {reason}".lower()
+    return any(term in context for term in _CIVIC_EMERGENCY_TERMS)
+
+
+def _has_policy_violation_reason(reason: str) -> bool:
+    reason_lower = reason.lower()
+    return any(term in reason_lower for term in _POLICY_VIOLATION_TERMS)
 
 
 async def _record_text_hash(text_value: str, user_id: Optional[str]) -> bool:
@@ -189,22 +212,39 @@ async def _llm_moderate_text(text: str) -> Optional[dict]:
             max_retries=0,
             timeout=10.0,
         )
-        resp = await client.chat.completions.create(
+        messages = [
+            {"role": "system", "content": _LLM_SYSTEM},
+            {"role": "user", "content": f"Complaint text: \"{text[:1000]}\""},
+        ]
+        async with llm_audit_context(
+            complaint_id=None,
+            service="gateway",
+            call_type="text_moderation",
+            provider="qwen",
             model=QWEN_MODEL,
-            messages=[
-                {"role": "system", "content": _LLM_SYSTEM},
-                {"role": "user", "content": f"Complaint text: \"{text[:1000]}\""},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.0,
-        )
-        raw = resp.choices[0].message.content
-        raw = re.sub(r"```(?:json)?", "", raw).strip()
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start == -1 or end == 0:
-            return None
-        return json.loads(raw[start:end])
+            prompt_version="moderation_text_v1",
+            request_payload={
+                "messages": messages,
+                "response_format": "json_object",
+                "temperature": 0.0,
+            },
+        ) as audit:
+            resp = await client.chat.completions.create(
+                model=QWEN_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.0,
+            )
+            raw = resp.choices[0].message.content
+            audit["raw_output"] = raw
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            audit["parsed_output"] = data
+            return data
     except Exception as e:
         log.warning("[IEP-0] LLM moderation call failed: %s", e)
         return None
@@ -247,31 +287,57 @@ async def _vlm_moderate_image(image_filename: str) -> Optional[dict]:
             "You are a safety moderator for a public infrastructure complaint platform. "
             "Return is_harmful=true ONLY for policy-violating image content: graphic violence, "
             "sexual/explicit content, hate symbols, weapons/threats, self-harm, or abusive content. "
-            "Public infrastructure problems such as potholes, road damage, flooding, garbage, broken "
-            "streetlights, exposed utility damage, or other civic hazards are allowed evidence and MUST "
-            "return is_harmful=false even if they are dangerous in the real world. "
+            "Public infrastructure problems such as potholes, road damage, building fire, smoke, flooding, "
+            "garbage, broken streetlights, exposed utility damage, or other civic hazards are allowed "
+            "evidence and MUST return is_harmful=false even if they are dangerous in the real world. "
             "Return ONLY JSON: {\"is_harmful\": <true|false>, \"reason\": \"<1 sentence>\"}"
         )
-        resp = await client.chat.completions.create(
-            model=os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct"),
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": [
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-                    {"type": "text", "text": "Does this image contain policy-violating harmful content, or is it allowed civic infrastructure evidence?"},
-                ]},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.0,
-            max_tokens=64,
-        )
-        raw = resp.choices[0].message.content
-        raw = re.sub(r"```(?:json)?", "", raw).strip()
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start == -1 or end == 0:
-            return None
-        return json.loads(raw[start:end])
+        model = os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct")
+        user_content = [
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+            {"type": "text", "text": "Does this image contain policy-violating harmful content, or is it allowed civic infrastructure evidence?"},
+        ]
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_content},
+        ]
+        async with llm_audit_context(
+            complaint_id=None,
+            service="gateway",
+            call_type="image_moderation",
+            provider="qwen_vlm",
+            model=model,
+            prompt_version="moderation_image_v2",
+            request_payload={
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": [
+                        {"type": "image_url", "image_url": {"url": "[base64_image_redacted]"}},
+                        user_content[-1],
+                    ]},
+                ],
+                "response_format": "json_object",
+                "temperature": 0.0,
+                "max_tokens": 64,
+            },
+        ) as audit:
+            resp = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=64,
+            )
+            raw = resp.choices[0].message.content
+            audit["raw_output"] = raw
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            audit["parsed_output"] = data
+            return data
     except Exception as e:
         log.warning("[IEP-0] VLM image moderation failed: %s", e)
         return None
@@ -348,15 +414,22 @@ async def moderate(
                 reason = f"Political content detected (downgraded from REJECT): {reason}"
 
     # â”€â”€ Layer 3: VLM image moderation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    if image_filename and final_decision != ModerationDecisionEnum.PASS:
+    content_flags = [flag for flag in heuristic_flags if flag != "exact_duplicate"]
+    should_check_image_policy = image_filename and final_decision != ModerationDecisionEnum.PASS and bool(content_flags)
+    if should_check_image_policy:
         vlm_data = await _vlm_moderate_image(image_filename)
         vlm_checked = True
         if vlm_data:
             is_harmful_img = bool(vlm_data.get("is_harmful", False))
+            vlm_reason = str(vlm_data.get("reason", ""))
             if is_harmful_img:
-                # Harmful image â†’ escalate to REJECT unless already
-                final_decision = ModerationDecisionEnum.REJECT
-                reason = f"Harmful image detected: {vlm_data.get('reason', '')}; {reason}"
+                if _is_civic_emergency_context(complaint_text, vlm_reason) and not _has_policy_violation_reason(vlm_reason):
+                    final_decision = ModerationDecisionEnum.FLAG
+                    reason = f"Civic emergency image allowed for review: {vlm_reason}; {reason}"
+                else:
+                    # Harmful image -> escalate to REJECT only for actual policy violations.
+                    final_decision = ModerationDecisionEnum.REJECT
+                    reason = f"Harmful image detected: {vlm_reason}; {reason}"
 
     # AI-generated image is a weak signal â€” note it but never reject alone
     # (VLMAnalyzer in model.py sets is_ai_generated on the full analysis)

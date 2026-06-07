@@ -6,11 +6,9 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: gce
     kubernetes.io/ingress.global-static-ip-name: cedarfix-ip
-    networking.gke.io/managed-certificates: cedarfix-cert
 spec:
   rules:
-    - host: cedarfix.example.com
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix

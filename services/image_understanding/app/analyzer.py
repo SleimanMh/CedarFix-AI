@@ -28,6 +28,7 @@ from cedarfix_shared.schemas import (
     VisualIssueCandidate,
     VLMImageAnalysis,
 )
+from cedarfix_shared.llm_audit import llm_audit_context
 
 log = logging.getLogger(__name__)
 
@@ -604,6 +605,7 @@ class VLMAnalyzer:
         self,
         image: Image.Image,
         complaint_text: Optional[str] = None,
+        complaint_id: Optional[str] = None,
     ) -> Optional[VLMImageAnalysis]:
         """
         Send image to the VLM and parse the structured response.
@@ -632,23 +634,47 @@ class VLMAnalyzer:
                 max_retries=0,
                 timeout=VLM_TIMEOUT,
             )
-            resp = await client.chat.completions.create(
-                model=VLM_MODEL,
-                messages=[
+            messages = [
+                {"role": "system", "content": _VLM_SYSTEM},
+                {"role": "user", "content": user_content},
+            ]
+            audit_payload = {
+                "messages": [
                     {"role": "system", "content": _VLM_SYSTEM},
-                    {"role": "user", "content": user_content},
+                    {"role": "user", "content": [
+                        {"type": "image_url", "image_url": {"url": "[base64_image_redacted]"}},
+                        user_content[-1],
+                    ]},
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.0,
-                max_tokens=900,
-            )
-            raw = resp.choices[0].message.content
-            raw = re.sub(r"```(?:json)?", "", raw).strip()
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            if start == -1 or end == 0:
-                return None
-            data = json.loads(raw[start:end])
+                "response_format": "json_object",
+                "temperature": 0.0,
+                "max_tokens": 900,
+            }
+            async with llm_audit_context(
+                complaint_id=complaint_id,
+                service="image_understanding",
+                call_type="image_analysis",
+                provider="qwen_vlm",
+                model=VLM_MODEL,
+                prompt_version="vlm_image_analysis_v2",
+                request_payload=audit_payload,
+            ) as audit:
+                resp = await client.chat.completions.create(
+                    model=VLM_MODEL,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=0.0,
+                    max_tokens=900,
+                )
+                raw = resp.choices[0].message.content
+                audit["raw_output"] = raw
+                cleaned = re.sub(r"```(?:json)?", "", raw).strip()
+                start = cleaned.find("{")
+                end = cleaned.rfind("}") + 1
+                if start == -1 or end == 0:
+                    return None
+                data = json.loads(cleaned[start:end])
+                audit["parsed_output"] = data
 
             loc_raw = data.get("location_cues", {})
             if isinstance(loc_raw, list):
@@ -740,6 +766,7 @@ class VLMAlignmentChecker:
         image: Image.Image,
         complaint_text: str,
         clip_alignment: str,
+        complaint_id: Optional[str] = None,
     ) -> Optional[dict]:
         """
         Returns dict: {alignment, text_issue, image_issue, confidence, reason}
@@ -764,26 +791,51 @@ class VLMAlignmentChecker:
                 max_retries=0,
                 timeout=VLM_TIMEOUT,
             )
-            resp = await client.chat.completions.create(
+            user_content = [
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+                {"type": "text", "text": f"Complaint text: \"{complaint_text[:300]}\"\nCLIP initial alignment: {clip_alignment}. Please confirm or correct."},
+            ]
+            messages = [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user_content},
+            ]
+            async with llm_audit_context(
+                complaint_id=complaint_id,
+                service="image_understanding",
+                call_type="vlm_text_image_alignment",
+                provider="qwen_vlm",
                 model=VLM_MODEL,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": [
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-                        {"type": "text", "text": f"Complaint text: \"{complaint_text[:300]}\"\nCLIP initial alignment: {clip_alignment}. Please confirm or correct."},
-                    ]},
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.0,
-                max_tokens=256,
-            )
-            raw = resp.choices[0].message.content
-            raw = re.sub(r"```(?:json)?", "", raw).strip()
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            if start == -1 or end == 0:
-                return None
-            return json.loads(raw[start:end])
+                prompt_version="vlm_alignment_v1",
+                request_payload={
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": [
+                            {"type": "image_url", "image_url": {"url": "[base64_image_redacted]"}},
+                            user_content[-1],
+                        ]},
+                    ],
+                    "response_format": "json_object",
+                    "temperature": 0.0,
+                    "max_tokens": 256,
+                },
+            ) as audit:
+                resp = await client.chat.completions.create(
+                    model=VLM_MODEL,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=0.0,
+                    max_tokens=256,
+                )
+                raw = resp.choices[0].message.content
+                audit["raw_output"] = raw
+                cleaned = re.sub(r"```(?:json)?", "", raw).strip()
+                start = cleaned.find("{")
+                end = cleaned.rfind("}") + 1
+                if start == -1 or end == 0:
+                    return None
+                data = json.loads(cleaned[start:end])
+                audit["parsed_output"] = data
+                return data
         except Exception as e:
             log.warning("[IEP-2] VLM alignment check failed: %s", e)
             return None

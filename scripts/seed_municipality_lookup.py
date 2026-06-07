@@ -56,6 +56,17 @@ QDRANT_COLLECTION = "municipality_lookup"
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
 def _load_docs(path: Path) -> list[dict[str, Any]]:
     raw = path.read_text(encoding="utf-8-sig")
     stripped = raw.lstrip()
@@ -182,7 +193,11 @@ def main() -> None:
         "postgresql://cedarfix:cedarfix_secret@localhost:5432/cedarfix",
     )
     qdrant_host = os.getenv("QDRANT_HOST", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+    qdrant_port = _env_int("QDRANT_PORT", 6333)
+    qdrant_url = os.getenv("QDRANT_URL")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY") or None
+    qdrant_timeout = _env_int("QDRANT_TIMEOUT", 120)
+    qdrant_prefer_grpc = _env_bool("QDRANT_PREFER_GRPC", False)
     model_name  = os.getenv(
         "MODEL_NAME",
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
@@ -201,11 +216,26 @@ def main() -> None:
         sys.exit(1)
 
     # ── Qdrant ────────────────────────────────────────────────────────────────
-    print(f"Connecting to Qdrant at {qdrant_host}:{qdrant_port}")
+    print(f"Connecting to Qdrant at {qdrant_url or f'{qdrant_host}:{qdrant_port}'}")
     try:
         from qdrant_client import QdrantClient  # type: ignore
         from qdrant_client.models import Distance, VectorParams, PointStruct  # type: ignore
-        qdrant = QdrantClient(host=qdrant_host, port=qdrant_port)
+        if qdrant_url:
+            qdrant = QdrantClient(
+                url=qdrant_url,
+                api_key=qdrant_api_key,
+                timeout=qdrant_timeout,
+                prefer_grpc=qdrant_prefer_grpc,
+            )
+        else:
+            qdrant = QdrantClient(
+                host=qdrant_host,
+                port=qdrant_port,
+                grpc_port=_env_int("QDRANT_GRPC_PORT", 6334),
+                api_key=qdrant_api_key,
+                timeout=qdrant_timeout,
+                prefer_grpc=qdrant_prefer_grpc,
+            )
     except ImportError:
         print("ERROR: qdrant-client not installed.")
         print("  pip install qdrant-client")
@@ -360,15 +390,37 @@ def main() -> None:
     conn.close()
     print("\nPostgreSQL inserts committed.")
 
-    # Batch upsert into Qdrant
-    qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
-    print(f"Qdrant upserted {len(points)} points into '{QDRANT_COLLECTION}'.")
-
-    info = qdrant.get_collection(QDRANT_COLLECTION)
+    # Bulk upload into Qdrant. The municipality dataset is large enough that a
+    # single blocking upsert can hit HTTP read timeouts on local/k8s Qdrant.
+    upload_batch_size = _env_int("MUNICIPALITY_QDRANT_UPLOAD_BATCH_SIZE", 128)
+    upload_parallel = _env_int("MUNICIPALITY_QDRANT_UPLOAD_PARALLEL", 2)
+    upload_retries = _env_int("MUNICIPALITY_QDRANT_UPLOAD_MAX_RETRIES", 5)
+    upload_wait = _env_bool("MUNICIPALITY_QDRANT_UPLOAD_WAIT", False)
     print(
-        f"\nQdrant collection '{QDRANT_COLLECTION}': {info.points_count} points, "
-        f"dim={info.config.params.vectors.size}"
+        f"Bulk uploading {len(points)} points to Qdrant collection '{QDRANT_COLLECTION}' "
+        f"(batch_size={upload_batch_size}, parallel={upload_parallel}, "
+        f"max_retries={upload_retries}, wait={upload_wait})..."
     )
+    qdrant.upload_points(
+        collection_name=QDRANT_COLLECTION,
+        points=points,
+        batch_size=upload_batch_size,
+        parallel=upload_parallel,
+        max_retries=upload_retries,
+        wait=upload_wait,
+    )
+    print(f"Qdrant bulk upload submitted {len(points)} points into '{QDRANT_COLLECTION}'.")
+
+    if _env_bool("QDRANT_VERIFY_AFTER_UPLOAD", True):
+        try:
+            info = qdrant.get_collection(QDRANT_COLLECTION)
+            print(
+                f"\nQdrant collection '{QDRANT_COLLECTION}': {info.points_count} points, "
+                f"dim={info.config.params.vectors.size}"
+            )
+        except Exception as exc:
+            print(f"\nWARNING: Qdrant upload was submitted, but verification read failed: {type(exc).__name__}: {exc}")
+            print("         Re-run with QDRANT_VERIFY_AFTER_UPLOAD=false to skip this read on slow Qdrant.")
     print("\nSeeding complete.")
     print("Next: run scripts/test_municipality_disambiguation.py to validate.")
 

@@ -30,6 +30,7 @@ from cedarfix_shared.schemas import (
     ReconciliationStatus,
     SimilarityScores,
 )
+from cedarfix_shared.llm_audit import llm_audit_context
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ Verdict definitions:
 
 
 async def _call_llm_judge(
+    incoming_complaint_id: str,
     incoming_text: str,
     incoming_type: str,
     incoming_location: str,
@@ -98,22 +100,39 @@ async def _call_llm_judge(
             f"Composite similarity score: {composite_score:.3f} (in ambiguous 0.60–0.92 range).\n"
             "Is this a duplicate?"
         )
-        resp = await client.chat.completions.create(
+        messages = [
+            {"role": "system", "content": _JUDGE_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ]
+        async with llm_audit_context(
+            complaint_id=incoming_complaint_id,
+            service="clustering_service",
+            call_type="duplicate_judge",
+            provider="qwen",
             model=QWEN_MODEL,
-            messages=[
-                {"role": "system", "content": _JUDGE_SYSTEM},
-                {"role": "user", "content": user_msg},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.0,
-        )
-        raw = resp.choices[0].message.content
-        raw = re.sub(r"```(?:json)?", "", raw).strip()
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start == -1 or end == 0:
-            return None
-        return json.loads(raw[start:end])
+            prompt_version="duplicate_judge_v1",
+            request_payload={
+                "messages": messages,
+                "response_format": "json_object",
+                "temperature": 0.0,
+            },
+        ) as audit:
+            resp = await client.chat.completions.create(
+                model=QWEN_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.0,
+            )
+            raw = resp.choices[0].message.content
+            audit["raw_output"] = raw
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            audit["parsed_output"] = data
+            return data
     except Exception as e:
         log.warning("[IEP-4] LLM judge call failed: %s", e)
         return None
@@ -158,6 +177,8 @@ _TIME_HALF_LIFE_HOURS = 24.0
 _LOC_DECAY_KM = 0.5          # Haversine decay: 50% at 350m, ~0 at 2km
 _LOC_DISTRICT_MATCH = 0.80   # score when same district but no GPS
 _LOC_NEUTRAL = 0.50          # score when no location info on either side
+_LOC_CONFLICT_SCORE_MAX = 0.15
+_LOC_CONFLICT_DUPLICATE_CAP = 0.65
 
 
 class MultimodalScorer:
@@ -235,6 +256,18 @@ class MultimodalScorer:
             w["time"]      * time_sim
         )
 
+        location_conflict = _location_conflict(
+            lat_a=canonical.location.latitude,
+            lon_a=canonical.location.longitude,
+            dist_a=canonical.location.district,
+            lat_b=candidate.location.latitude,
+            lon_b=candidate.location.longitude,
+            dist_b=candidate.location.district,
+            loc_sim=loc_sim,
+        )
+        if location_conflict:
+            composite = min(composite, _LOC_CONFLICT_DUPLICATE_CAP)
+
         # Convergence bonus: both cross-modal signals strong → likely true duplicate
         if (
             candidate.clip_text_is_xmodal and clip_text_raw > XMODAL_BONUS_THRESHOLD
@@ -252,6 +285,11 @@ class MultimodalScorer:
             if recheck
             else None
         )
+        if location_conflict:
+            recheck_reason = (
+                (recheck_reason + " | " if recheck_reason else "")
+                + "Location conflict: same-looking issue is in a different area"
+            )
 
         scores = SimilarityScores(
             text_similarity=round(mpnet_sim, 4),
@@ -298,6 +336,9 @@ class MultimodalScorer:
         result = self.score(canonical, candidate, text_embedding, image_embedding, image_present)
         composite = result.multimodal_score
 
+        if result.similarity_scores.location_similarity <= _LOC_CONFLICT_SCORE_MAX:
+            return result
+
         # Fast paths: skip LLM for clear cases
         if composite >= LLM_JUDGE_BAND_HIGH or composite < LLM_JUDGE_BAND_LOW:
             return result
@@ -313,6 +354,7 @@ class MultimodalScorer:
         )
 
         llm_data = await _call_llm_judge(
+            incoming_complaint_id=canonical.complaint_id,
             incoming_text=incoming_text[:300],
             incoming_type=str(canonical.issue_type),
             incoming_location=incoming_loc,
@@ -406,6 +448,22 @@ def _location_similarity(
     if dist_a and dist_b:
         return _LOC_DISTRICT_MATCH if dist_a == dist_b else 0.10
     return _LOC_NEUTRAL
+
+
+def _location_conflict(
+    lat_a: Optional[float], lon_a: Optional[float], dist_a: Optional[str],
+    lat_b: Optional[float], lon_b: Optional[float], dist_b: Optional[str],
+    loc_sim: float,
+) -> bool:
+    both_have_gps = (
+        lat_a is not None and lon_a is not None
+        and lat_b is not None and lon_b is not None
+    )
+    if both_have_gps:
+        return loc_sim <= _LOC_CONFLICT_SCORE_MAX
+    if dist_a and dist_b:
+        return dist_a.strip().casefold() != dist_b.strip().casefold()
+    return False
 
 
 def _temporal_similarity(

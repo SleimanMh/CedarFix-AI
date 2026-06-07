@@ -17,6 +17,8 @@ import logging
 import os
 import re
 import time
+
+from cedarfix_shared.llm_audit import llm_audit_context
 import unicodedata
 from typing import Optional, List
 
@@ -249,7 +251,28 @@ def _get_qdrant():
     if _qdrant is None:
         _qdrant = create_qdrant_client()
         log.info("[IEP-6] Qdrant connected at %s", qdrant_target_label())
+        _ensure_rag_payload_indexes(_qdrant)
     return _qdrant
+
+
+def _ensure_rag_payload_indexes(qdrant) -> None:
+    try:
+        from qdrant_client import models as qmodels
+    except Exception:
+        return
+
+    for field in ("retrieval_stage", "municipalities", "districts", "governorates"):
+        try:
+            qdrant.create_payload_index(
+                collection_name=RAG_COLLECTION,
+                field_name=field,
+                field_schema=qmodels.PayloadSchemaType.KEYWORD,
+            )
+        except Exception as exc:
+            message = str(exc).lower()
+            if "already exists" in message or "index already" in message:
+                continue
+            log.warning("[IEP-6] Could not create Qdrant payload index %s.%s: %s", RAG_COLLECTION, field, exc)
 
 
 # ---------------------------------------------------------------------------
@@ -849,23 +872,41 @@ async def _call_llm_routing(prompt: str) -> Optional[dict]:
             max_retries=0,
             timeout=QWEN_ROUTING_TIMEOUT,
         )
-        resp = await client.chat.completions.create(
+        messages = [
+            {"role": "system", "content": _ROUTING_SYSTEM},
+            {"role": "user", "content": prompt},
+        ]
+        async with llm_audit_context(
+            complaint_id=None,
+            service="routing_engine",
+            call_type="routing_judge",
+            provider="qwen",
             model=QWEN_MODEL,
-            messages=[
-                {"role": "system", "content": _ROUTING_SYSTEM},
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.0,
-            max_tokens=QWEN_ROUTING_MAX_TOKENS,
-        )
-        raw = resp.choices[0].message.content
-        raw = re.sub(r"```(?:json)?", "", raw).strip()
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start == -1 or end == 0:
-            return None
-        return json.loads(raw[start:end])
+            prompt_version="routing_v2",
+            request_payload={
+                "messages": messages,
+                "response_format": "json_object",
+                "temperature": 0.0,
+                "max_tokens": QWEN_ROUTING_MAX_TOKENS,
+            },
+        ) as audit:
+            resp = await client.chat.completions.create(
+                model=QWEN_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=QWEN_ROUTING_MAX_TOKENS,
+            )
+            raw = resp.choices[0].message.content
+            audit["raw_output"] = raw
+            raw = re.sub(r"```(?:json)?", "", raw).strip()
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                return None
+            data = json.loads(raw[start:end])
+            audit["parsed_output"] = data
+            return data
     except Exception as e:
         log.warning("[IEP-6] LLM routing call failed: %s", e)
         return None

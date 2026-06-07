@@ -5,7 +5,7 @@ metadata:
   namespace: cedarfix
 data:
   STORAGE_BACKEND: gcs
-  GCS_BUCKET: YOUR_GCS_BUCKET
+  GCS_BUCKET: cedarfix-prod-images-sleiman
   UPLOADS_DIR: /tmp/uploads
 
   TEXT_SERVICE_URL: http://ai-service:8001
@@ -18,12 +18,12 @@ data:
   REVIEW_SERVICE_URL: http://localhost:8008
 
   # Cloud SQL proxy listens on localhost inside api-service and ai-service pods.
-  CLOUD_SQL_INSTANCE: PROJECT_ID:REGION:cedarfix-postgres
+  CLOUD_SQL_INSTANCE: cedarfix:us-central1:cedarfix-postgres
 
   # Leave host/port for local profile only. GCP uses QDRANT_URL from this ConfigMap.
   QDRANT_HOST: ""
   QDRANT_PORT: "6333"
-  QDRANT_URL: https://YOUR_QDRANT_CLUSTER_URL
+  QDRANT_URL: https://3ce76d84-8dc2-4da6-a043-1ce1e25ad3cc.us-east4-0.gcp.cloud.qdrant.io
   QDRANT_TIMEOUT: "20"
   QDRANT_COLLECTION: complaints
   QDRANT_TEXT_COLLECTION: text_embeddings
@@ -36,13 +36,24 @@ data:
   MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
   CLIP_MODEL_NAME: openai/clip-vit-base-patch32
 
-  QWEN_BASE_URL: https://YOUR_TEXT_QWEN_RUNPOD.proxy.runpod.net/v1
+  QWEN_BASE_URL: https://pt63iegwl1al00-8000.proxy.runpod.net/v1
   QWEN_MODEL: cedarfix
   QWEN_ENABLED: "true"
   QWEN_GUIDED: "false"
   OPENAI_MODEL: gpt-4o
+  MEDIA_ALIGNMENT_LLM_ENABLED: "true"
+  MEDIA_ALIGNMENT_MODEL: cedarfix
+  MEDIA_ALIGNMENT_API_KEY: none
+  MEDIA_ALIGNMENT_BASE_URL: https://pt63iegwl1al00-8000.proxy.runpod.net/v1
+  MEDIA_ALIGNMENT_TIMEOUT: "20"
+  MEDIA_ALIGNMENT_MIN_CONFIDENCE: "0.55"
+  LLM_AUDIT_ENABLED: "true"
+  LLM_AUDIT_GCS_ENABLED: "true"
+  LLM_AUDIT_GCS_PREFIX: llm-audit
+  LLM_AUDIT_MAX_JSON_CHARS: "50000"
+  LLM_AUDIT_MAX_RAW_CHARS: "50000"
 
-  VLM_BASE_URL: https://YOUR_VLM_RUNPOD.proxy.runpod.net/v1
+  VLM_BASE_URL: https://70pjp4ssi40ij0-8000.proxy.runpod.net/v1
   VLM_MODEL: Qwen/Qwen2.5-VL-3B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"

@@ -8,5 +8,5 @@ resources:
   - ai-service.yaml
   - vision-service.yaml
   - frontend.yaml
-  - managed-cert.yaml
+  - frontend-backendconfig.yaml
   - ingress.yaml

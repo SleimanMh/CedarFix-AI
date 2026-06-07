@@ -103,7 +103,7 @@ class ImageUnderstandingModel:
         if self.vlm_analyzer:
             # Primary image understanding must remain image-only. Text is used
             # later by the dedicated alignment checker, not to bias labels.
-            vlm_analysis = await self.vlm_analyzer.analyze(image, None)
+            vlm_analysis = await self.vlm_analyzer.analyze(image, None, complaint_id)
 
             # Prefer VLM labels/caption when available so downstream UI and matching
             # reflect the richer model output (especially for issue_type=other cases).
@@ -126,7 +126,7 @@ class ImageUnderstandingModel:
                 # We check here too to avoid an unnecessary VLM call
                 clip_alignment = None  # alignment.py fills this in after fusion; pre-check skipped
                 vlm_align_data = await self.vlm_aligner.check_alignment(
-                    image, complaint_text, clip_alignment or "UNCERTAIN"
+                    image, complaint_text, clip_alignment or "UNCERTAIN", complaint_id
                 )
                 if vlm_align_data:
                     vlm_analysis = vlm_analysis.model_copy(update={

@@ -66,11 +66,18 @@ class CandidateRetriever:
         """
         # Ordered result lists for RRF (vector searches only)
         result_lists: List[List[RawCandidate]] = []
+        normalized_location = canonical.location.normalized_location
+        district = canonical.location.district
 
         # ── Source 1: MPNet text search ──────────────────────────────────────
         if text_embedding:
             hits = [
-                h for h in await self._qdrant.search_text(text_embedding, top_k=TOP_K)
+                h for h in await self._qdrant.search_text(
+                    text_embedding,
+                    top_k=TOP_K,
+                    normalized_location=normalized_location,
+                    district=district,
+                )
                 if h.complaint_id != canonical.complaint_id
             ]
             result_lists.append(hits)
@@ -79,7 +86,11 @@ class CandidateRetriever:
         if clip_text_embedding:
             hits = [
                 h for h in await self._qdrant.search_clip(
-                    clip_text_embedding, query_type="clip_text", top_k=TOP_K
+                    clip_text_embedding,
+                    query_type="clip_text",
+                    top_k=TOP_K,
+                    normalized_location=normalized_location,
+                    district=district,
                 )
                 if h.complaint_id != canonical.complaint_id
             ]
@@ -89,7 +100,11 @@ class CandidateRetriever:
         if image_present and image_embedding:
             hits = [
                 h for h in await self._qdrant.search_clip(
-                    image_embedding, query_type="clip_image", top_k=TOP_K
+                    image_embedding,
+                    query_type="clip_image",
+                    top_k=TOP_K,
+                    normalized_location=normalized_location,
+                    district=district,
                 )
                 if h.complaint_id != canonical.complaint_id
             ]

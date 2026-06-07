@@ -18,15 +18,21 @@ It expects:
 
 ## 1. Replace Placeholders
 
-Replace these strings in `k8s-gcp/*.yaml`:
+Current values already applied to `k8s-gcp/*.yaml`:
 
-- `PROJECT_ID`
-- `REGION`
-- `YOUR_GCS_BUCKET`
-- `YOUR_QDRANT_CLUSTER_URL`
+- Project ID: `cedarfix`
+- Region: `us-central1`
+- GCS bucket: `cedarfix-prod-images-sleiman`
+- Cloud SQL instance: `cedarfix:us-central1:cedarfix-postgres`
+- Qdrant URL: `https://3ce76d84-8dc2-4da6-a043-1ce1e25ad3cc.us-east4-0.gcp.cloud.qdrant.io`
+- Artifact Registry repo: `cedarfix`
+
+Still replace these before deployment:
+
 - `YOUR_TEXT_QWEN_RUNPOD.proxy.runpod.net`
 - `YOUR_VLM_RUNPOD.proxy.runpod.net`
-- `cedarfix.example.com`
+
+The first GCP ingress is configured for HTTP access through the reserved static IP. Add a domain and managed certificate later.
 
 ## 2. Required GCP Resources
 
@@ -39,20 +45,20 @@ gcloud services enable container.googleapis.com artifactregistry.googleapis.com 
 Create Artifact Registry:
 
 ```powershell
-gcloud artifacts repositories create cedarfix --repository-format=docker --location=REGION
-gcloud auth configure-docker REGION-docker.pkg.dev
+gcloud artifacts repositories create cedarfix --repository-format=docker --location=us-central1
+gcloud auth configure-docker us-central1-docker.pkg.dev
 ```
 
 Create GCS bucket:
 
 ```powershell
-gcloud storage buckets create gs://YOUR_GCS_BUCKET --location=REGION --uniform-bucket-level-access
+gcloud storage buckets create gs://cedarfix-prod-images-sleiman --location=us-central1 --uniform-bucket-level-access
 ```
 
 Create Cloud SQL:
 
 ```powershell
-gcloud sql instances create cedarfix-postgres --database-version=POSTGRES_15 --region=REGION --tier=db-custom-2-7680 --storage-size=20GB --storage-type=SSD
+gcloud sql instances create cedarfix-postgres --database-version=POSTGRES_15 --region=us-central1 --tier=db-custom-2-7680 --storage-size=20GB --storage-type=SSD
 gcloud sql databases create cedarfix --instance=cedarfix-postgres
 gcloud sql users create cedarfix --instance=cedarfix-postgres --password=STRONG_DB_PASSWORD
 ```
@@ -60,8 +66,8 @@ gcloud sql users create cedarfix --instance=cedarfix-postgres --password=STRONG_
 Create GKE:
 
 ```powershell
-gcloud container clusters create cedarfix-gke --region REGION --num-nodes 2 --machine-type e2-standard-4 --enable-ip-alias --workload-pool=PROJECT_ID.svc.id.goog
-gcloud container clusters get-credentials cedarfix-gke --region REGION
+gcloud container clusters create cedarfix-gke --zone us-central1-a --num-nodes 1 --machine-type e2-standard-2 --enable-ip-alias --workload-pool=cedarfix.svc.id.goog
+gcloud container clusters get-credentials cedarfix-gke --zone us-central1-a
 ```
 
 Create static IP:
@@ -81,28 +87,28 @@ gcloud iam service-accounts create cedarfix-gke --display-name="CedarFix GKE"
 Grant Cloud SQL and GCS access:
 
 ```powershell
-gcloud projects add-iam-policy-binding PROJECT_ID --member="serviceAccount:cedarfix-gke@PROJECT_ID.iam.gserviceaccount.com" --role="roles/cloudsql.client"
-gcloud storage buckets add-iam-policy-binding gs://YOUR_GCS_BUCKET --member="serviceAccount:cedarfix-gke@PROJECT_ID.iam.gserviceaccount.com" --role="roles/storage.objectAdmin"
+gcloud projects add-iam-policy-binding cedarfix --member="serviceAccount:cedarfix-gke@cedarfix.iam.gserviceaccount.com" --role="roles/cloudsql.client"
+gcloud storage buckets add-iam-policy-binding gs://cedarfix-prod-images-sleiman --member="serviceAccount:cedarfix-gke@cedarfix.iam.gserviceaccount.com" --role="roles/storage.objectAdmin"
 ```
 
 Allow the Kubernetes service account to impersonate it:
 
 ```powershell
-gcloud iam service-accounts add-iam-policy-binding cedarfix-gke@PROJECT_ID.iam.gserviceaccount.com --role roles/iam.workloadIdentityUser --member "serviceAccount:PROJECT_ID.svc.id.goog[cedarfix/cedarfix-app]"
+gcloud iam service-accounts add-iam-policy-binding cedarfix-gke@cedarfix.iam.gserviceaccount.com --role roles/iam.workloadIdentityUser --member "serviceAccount:cedarfix.svc.id.goog[cedarfix/cedarfix-app]"
 ```
 
 ## 4. Build And Push Images
 
 ```powershell
-docker build -t REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-api:latest -f docker/api.Dockerfile .
-docker build -t REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-ai:latest -f docker/ai.Dockerfile .
-docker build -t REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-vision-ai:latest -f docker/vision.Dockerfile .
-docker build -t REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-frontend:latest -f services/frontend/Dockerfile services/frontend
+docker build -t us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-api:latest -f docker/api.Dockerfile .
+docker build -t us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-ai:latest -f docker/ai.Dockerfile .
+docker build -t us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-vision-ai:latest -f docker/vision.Dockerfile .
+docker build -t us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-frontend:latest -f services/frontend/Dockerfile services/frontend
 
-docker push REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-api:latest
-docker push REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-ai:latest
-docker push REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-vision-ai:latest
-docker push REGION-docker.pkg.dev/PROJECT_ID/cedarfix/cedarfix-frontend:latest
+docker push us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-api:latest
+docker push us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-ai:latest
+docker push us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-vision-ai:latest
+docker push us-central1-docker.pkg.dev/cedarfix/cedarfix/cedarfix-frontend:latest
 ```
 
 ## 5. Create Secrets

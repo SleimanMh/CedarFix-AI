@@ -227,6 +227,36 @@ CREATE INDEX IF NOT EXISTS idx_mod_audit_created_at  ON moderation_audit(created
 
 
 -- =============================================================================
+-- LLM Audit Log
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS llm_audit_logs (
+    id              VARCHAR(36) PRIMARY KEY,
+    created_at      TIMESTAMP DEFAULT NOW(),
+    complaint_id    VARCHAR(36),
+    service         VARCHAR(100) NOT NULL,
+    call_type       VARCHAR(100) NOT NULL,
+    provider        VARCHAR(50) NOT NULL,
+    model           VARCHAR(200) NOT NULL,
+    prompt_version  VARCHAR(100),
+    status          VARCHAR(20) NOT NULL,
+    latency_ms      INTEGER,
+    request_payload JSONB,
+    raw_output      TEXT,
+    parsed_output   JSONB,
+    error_type      VARCHAR(100),
+    error_message   TEXT,
+    artifact_uri    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_llm_audit_complaint_id ON llm_audit_logs(complaint_id);
+CREATE INDEX IF NOT EXISTS idx_llm_audit_created_at   ON llm_audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_llm_audit_service      ON llm_audit_logs(service, call_type);
+CREATE INDEX IF NOT EXISTS idx_llm_audit_provider     ON llm_audit_logs(provider, model);
+CREATE INDEX IF NOT EXISTS idx_llm_audit_status       ON llm_audit_logs(status);
+
+
+-- =============================================================================
 -- Type Correction Accuracy — Materialized View (refreshed by monitoring service)
 -- =============================================================================
 

@@ -35,6 +35,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_COMPILED_DOCS = REPO_ROOT / "RAG Data" / "compiled" / "routing_knowledge_compiled_production.json"
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
 def qdrant_target_label() -> str:
     qdrant_url = os.getenv("QDRANT_URL")
     if qdrant_url:
@@ -47,13 +58,23 @@ def create_qdrant_client():
 
     qdrant_api_key = os.getenv("QDRANT_API_KEY") or None
     qdrant_url = os.getenv("QDRANT_URL")
+    timeout = _env_int("QDRANT_TIMEOUT", 120)
+    prefer_grpc = _env_bool("QDRANT_PREFER_GRPC", False)
     if qdrant_url:
-        return QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+        return QdrantClient(
+            url=qdrant_url,
+            api_key=qdrant_api_key,
+            timeout=timeout,
+            prefer_grpc=prefer_grpc,
+        )
 
     return QdrantClient(
         host=os.getenv("QDRANT_HOST", "localhost"),
-        port=int(os.getenv("QDRANT_PORT", "6333")),
+        port=_env_int("QDRANT_PORT", 6333),
+        grpc_port=_env_int("QDRANT_GRPC_PORT", 6334),
         api_key=qdrant_api_key,
+        timeout=timeout,
+        prefer_grpc=prefer_grpc,
     )
 
 # ---------------------------------------------------------------------------
@@ -574,6 +595,18 @@ def main():
     else:
         print(f"Qdrant collection '{collection_name}' already exists — will upsert")
 
+    print(f"\nEmbedding {len(routing_docs)} documents...\n")
+    embedding_texts = [_build_embedding_text(doc) for doc in routing_docs]
+    embeddings = model.encode(
+        embedding_texts,
+        batch_size=int(os.getenv("ROUTING_SEED_EMBED_BATCH_SIZE", "64")),
+        normalize_embeddings=True,
+        show_progress_bar=True,
+    ).tolist()
+
+    points = []
+    print(f"\nSeeding {len(routing_docs)} documents into PostgreSQL...\n")
+
     print("Connecting to PostgreSQL: [masked]")
     try:
         import psycopg2
@@ -583,7 +616,8 @@ def main():
         print("ERROR: psycopg2 not installed. Run: pip install psycopg2-binary")
         sys.exit(1)
 
-    # Ensure routing_knowledge table exists
+    # Ensure routing_knowledge table exists after embeddings are ready so the
+    # database connection does not sit idle during the expensive encode step.
     cur.execute("""
         CREATE TABLE IF NOT EXISTS routing_knowledge (
             id              VARCHAR(255) PRIMARY KEY,
@@ -643,18 +677,6 @@ def main():
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS stage1_dispatch_candidate BOOLEAN DEFAULT FALSE")
     cur.execute("ALTER TABLE routing_knowledge ADD COLUMN IF NOT EXISTS stage_priority INTEGER DEFAULT 4")
     conn.commit()
-
-    print(f"\nEmbedding {len(routing_docs)} documents...\n")
-    embedding_texts = [_build_embedding_text(doc) for doc in routing_docs]
-    embeddings = model.encode(
-        embedding_texts,
-        batch_size=int(os.getenv("ROUTING_SEED_EMBED_BATCH_SIZE", "64")),
-        normalize_embeddings=True,
-        show_progress_bar=True,
-    ).tolist()
-
-    points = []
-    print(f"\nSeeding {len(routing_docs)} documents into PostgreSQL...\n")
 
     for doc, embedding in zip(routing_docs, embeddings):
 
@@ -791,20 +813,39 @@ def main():
     conn.close()
     print("\nPostgreSQL inserts committed.")
 
-    # Batch upsert into Qdrant
-    upsert_batch_size = int(os.getenv("ROUTING_QDRANT_UPSERT_BATCH_SIZE", "256"))
-    for start in range(0, len(points), upsert_batch_size):
-        batch = points[start:start + upsert_batch_size]
-        qdrant.upsert(collection_name=collection_name, points=batch)
-        print(
-            f"Qdrant upserted {min(start + len(batch), len(points))}/"
-            f"{len(points)} points into '{collection_name}'."
-        )
+    # Bulk upload into Qdrant. This uses the client's resilient upload helper
+    # instead of many blocking upsert requests, which avoids read timeouts on
+    # large routing collections.
+    upload_batch_size = _env_int(
+        "ROUTING_QDRANT_UPLOAD_BATCH_SIZE",
+        _env_int("ROUTING_QDRANT_UPSERT_BATCH_SIZE", 128),
+    )
+    upload_parallel = _env_int("ROUTING_QDRANT_UPLOAD_PARALLEL", 2)
+    upload_retries = _env_int("ROUTING_QDRANT_UPLOAD_MAX_RETRIES", 5)
+    upload_wait = _env_bool("ROUTING_QDRANT_UPLOAD_WAIT", False)
+    print(
+        f"Bulk uploading {len(points)} points to Qdrant collection '{collection_name}' "
+        f"(batch_size={upload_batch_size}, parallel={upload_parallel}, "
+        f"max_retries={upload_retries}, wait={upload_wait})..."
+    )
+    qdrant.upload_points(
+        collection_name=collection_name,
+        points=points,
+        batch_size=upload_batch_size,
+        parallel=upload_parallel,
+        max_retries=upload_retries,
+        wait=upload_wait,
+    )
+    print(f"Qdrant bulk upload submitted {len(points)} points into '{collection_name}'.")
 
-    # Quick verification
-    info = qdrant.get_collection(collection_name)
-    print(f"\nQdrant collection '{collection_name}': {info.points_count} points, "
-          f"dim={info.config.params.vectors.size}")
+    if _env_bool("QDRANT_VERIFY_AFTER_UPLOAD", True):
+        try:
+            info = qdrant.get_collection(collection_name)
+            print(f"\nQdrant collection '{collection_name}': {info.points_count} points, "
+                  f"dim={info.config.params.vectors.size}")
+        except Exception as exc:
+            print(f"\nWARNING: Qdrant upload was submitted, but verification read failed: {type(exc).__name__}: {exc}")
+            print("         Re-run with QDRANT_VERIFY_AFTER_UPLOAD=false to skip this read on slow Qdrant.")
     print("\nSeeding complete.")
 
 

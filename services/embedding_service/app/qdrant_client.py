@@ -20,6 +20,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    PayloadSchemaType,
     PointStruct,
     Range,
     VectorParams,
@@ -61,6 +62,44 @@ def _clip_candidate_id(complaint_id: str, index: int) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"clip_candidate_{complaint_id}_{index}"))
 
 
+def _create_payload_index_best_effort(client, collection: str, field: str, schema: PayloadSchemaType) -> None:
+    try:
+        client.create_payload_index(
+            collection_name=collection,
+            field_name=field,
+            field_schema=schema,
+        )
+    except Exception as exc:
+        message = str(exc).lower()
+        if "already exists" in message or "index already" in message:
+            return
+        print(f"[IEP-3] Could not create Qdrant payload index {collection}.{field}: {exc}")
+
+
+def _location_filter(normalized_location: Optional[str], district: Optional[str]) -> Optional[Filter]:
+    normalized = (normalized_location or "").strip()
+    district_value = (district or "").strip()
+    if normalized:
+        return Filter(
+            must=[
+                FieldCondition(
+                    key="normalized_location",
+                    match=MatchValue(value=normalized),
+                )
+            ]
+        )
+    if district_value:
+        return Filter(
+            must=[
+                FieldCondition(
+                    key="district",
+                    match=MatchValue(value=district_value),
+                )
+            ]
+        )
+    return None
+
+
 class QdrantStore:
     def __init__(self):
         self.client = create_qdrant_client()
@@ -97,6 +136,24 @@ class QdrantStore:
                         operation="create_collection", collection=name
                     ).observe(time.time() - start)
                 print(f"[IEP-3] Created Qdrant collection: {name} ({dim}-dim)")
+
+        for field, schema in (
+            ("issue_type", PayloadSchemaType.KEYWORD),
+            ("normalized_location", PayloadSchemaType.KEYWORD),
+            ("district", PayloadSchemaType.KEYWORD),
+            ("timestamp", PayloadSchemaType.FLOAT),
+            ("latitude", PayloadSchemaType.FLOAT),
+            ("longitude", PayloadSchemaType.FLOAT),
+        ):
+            _create_payload_index_best_effort(self.client, TEXT_COLLECTION, field, schema)
+
+        for field, schema in (
+            ("vector_type", PayloadSchemaType.KEYWORD),
+            ("issue_type", PayloadSchemaType.KEYWORD),
+            ("normalized_location", PayloadSchemaType.KEYWORD),
+            ("district", PayloadSchemaType.KEYWORD),
+        ):
+            _create_payload_index_best_effort(self.client, CLIP_COLLECTION, field, schema)
 
     # ------------------------------------------------------------------
     # Store
@@ -229,14 +286,22 @@ class QdrantStore:
             raw_mpnet_text_sim=round(r.score, 4) if source == "text_search" else 0.0,
         )
 
-    async def search_text(self, vector: List[float], top_k: int = 10) -> List[RawCandidate]:
+    async def search_text(
+        self,
+        vector: List[float],
+        top_k: int = 10,
+        normalized_location: Optional[str] = None,
+        district: Optional[str] = None,
+    ) -> List[RawCandidate]:
         start = time.time()
+        query_filter = _location_filter(normalized_location, district)
         try:
             response = self.client.query_points(
                 collection_name=TEXT_COLLECTION,
                 query=vector,
                 limit=top_k,
                 with_payload=True,
+                query_filter=query_filter,
             )
         except Exception:
             QDRANT_OPERATION_ERRORS.labels(operation="search_text", collection=TEXT_COLLECTION).inc()
@@ -252,6 +317,8 @@ class QdrantStore:
         query_vector: List[float],
         query_type: str,
         top_k: int = 10,
+        normalized_location: Optional[str] = None,
+        district: Optional[str] = None,
     ) -> List[RawCandidate]:
         """
         Search the unified clip_embeddings collection.
@@ -264,12 +331,14 @@ class QdrantStore:
           - query_type="clip_image" + hit vector_type="clip_text" → cross-modal image→text
         """
         start = time.time()
+        query_filter = _location_filter(normalized_location, district)
         try:
             response = self.client.query_points(
                 collection_name=CLIP_COLLECTION,
                 query=query_vector,
                 limit=top_k,
                 with_payload=True,
+                query_filter=query_filter,
             )
         except Exception:
             QDRANT_OPERATION_ERRORS.labels(operation=f"search_{query_type}", collection=CLIP_COLLECTION).inc()

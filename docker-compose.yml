@@ -97,6 +97,17 @@ services:
       QWEN_BASE_URL: ${QWEN_BASE_URL:-http://host.docker.internal:8000/v1}
       QWEN_MODEL: ${QWEN_MODEL:-cedarfix}
       QWEN_API_KEY: ${QWEN_API_KEY:-none}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      MEDIA_ALIGNMENT_LLM_ENABLED: ${MEDIA_ALIGNMENT_LLM_ENABLED:-true}
+      MEDIA_ALIGNMENT_MODEL: ${MEDIA_ALIGNMENT_MODEL:-cedarfix}
+      MEDIA_ALIGNMENT_API_KEY: ${MEDIA_ALIGNMENT_API_KEY:-none}
+      MEDIA_ALIGNMENT_BASE_URL: ${MEDIA_ALIGNMENT_BASE_URL:-http://host.docker.internal:8000/v1}
+      MEDIA_ALIGNMENT_TIMEOUT: ${MEDIA_ALIGNMENT_TIMEOUT:-20}
+      MEDIA_ALIGNMENT_MIN_CONFIDENCE: ${MEDIA_ALIGNMENT_MIN_CONFIDENCE:-0.55}
+      LLM_AUDIT_ENABLED: ${LLM_AUDIT_ENABLED:-true}
+      LLM_AUDIT_GCS_ENABLED: ${LLM_AUDIT_GCS_ENABLED:-false}
+      LLM_AUDIT_GCS_PREFIX: ${LLM_AUDIT_GCS_PREFIX:-llm-audit}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cedarfix-dev-secret-change-in-prod}
       JWT_EXPIRE_HOURS: "24"
       PORT: "8000"
@@ -131,6 +142,9 @@ services:
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      LLM_AUDIT_ENABLED: ${LLM_AUDIT_ENABLED:-true}
+      LLM_AUDIT_GCS_ENABLED: ${LLM_AUDIT_GCS_ENABLED:-false}
+      LLM_AUDIT_GCS_PREFIX: ${LLM_AUDIT_GCS_PREFIX:-llm-audit}
       MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
       QDRANT_HOST: qdrant
       QDRANT_PORT: "6333"
@@ -192,7 +206,11 @@ services:
       - /app/docker/run_group.py
       - vision=services.image_understanding.app.main:app:8002
     environment:
+      DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      LLM_AUDIT_ENABLED: ${LLM_AUDIT_ENABLED:-true}
+      LLM_AUDIT_GCS_ENABLED: ${LLM_AUDIT_GCS_ENABLED:-false}
+      LLM_AUDIT_GCS_PREFIX: ${LLM_AUDIT_GCS_PREFIX:-llm-audit}
       CLIP_MODEL_NAME: openai/clip-vit-base-patch32
       VLM_BASE_URL: ${VLM_BASE_URL:-}
       VLM_MODEL: ${VLM_MODEL:-Qwen/Qwen2.5-VL-3B-Instruct}
