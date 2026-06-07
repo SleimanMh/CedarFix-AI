@@ -330,17 +330,21 @@ async def moderate(
             is_spam = bool(llm_data.get("is_spam", False))
             is_abusive = bool(llm_data.get("is_abusive", False))
             is_political = bool(llm_data.get("is_political", False))
-            llm_decision_str = llm_data.get("decision", "PASS")
+            llm_decision_str = str(llm_data.get("decision", "PASS")).strip().lower()
             llm_conf = float(llm_data.get("confidence", 0.0))
             llm_reason = llm_data.get("reason", "")
 
             # LLM overrides heuristic only if high confidence
             if llm_conf >= LLM_THRESHOLD:
-                try:
-                    final_decision = ModerationDecisionEnum(llm_decision_str)
+                llm_decision = {
+                    "pass": ModerationDecisionEnum.PASS,
+                    "flag": ModerationDecisionEnum.FLAG,
+                    "flag_for_review": ModerationDecisionEnum.FLAG,
+                    "reject": ModerationDecisionEnum.REJECT,
+                }.get(llm_decision_str)
+                if llm_decision:
+                    final_decision = llm_decision
                     reason = llm_reason
-                except ValueError:
-                    pass  # keep heuristic decision
 
             # Political â†’ FLAG not REJECT (policy rule)
             if is_political and final_decision == ModerationDecisionEnum.REJECT:

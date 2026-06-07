@@ -13,6 +13,7 @@ import logging
 import os
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
@@ -49,10 +50,18 @@ from .auth import (
     get_current_user, require_user, require_admin,
 )
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await init_db()
+    yield
+
+
 app = FastAPI(
     title="CedarFix AI — Gateway",
     description="Complaint submission and pipeline orchestration endpoint",
     version="0.1.0",
+    lifespan=lifespan,
 )
 log = logging.getLogger(__name__)
 
@@ -66,11 +75,6 @@ app.add_middleware(
 # Mount Prometheus metrics endpoint
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
-
-
-@app.on_event("startup")
-async def startup():
-    await init_db()
 
 
 @app.get("/health")
@@ -118,26 +122,6 @@ async def register(body: RegisterRequest):
         "username": user["username"],
         "email": user.get("email"),
     }
-    username = normalize_username(body.username)
-    if len(username) < 3 or len(body.password) < 6:
-        raise HTTPException(status_code=400, detail="Username ≥ 3 chars, password ≥ 6 chars")
-    existing = await get_user_by_username(username)
-    if existing:
-        raise HTTPException(status_code=409, detail="Username already taken")
-    # Only allow admin role if the correct env secret is configured
-    role = "user"
-    if body.role == "admin":
-        import os
-        admin_secret = os.getenv("ADMIN_REGISTRATION_SECRET", "")
-        # For capstone demo, allow admin role freely (no secret required)
-        role = "admin"
-    user = await create_user(username, hash_password(body.password), role)
-    if not user:
-        raise HTTPException(status_code=409, detail="Username already taken")
-    log.info("[auth] registered user_id=%s username=%s role=%s", user["id"], user["username"], user["role"])
-    token = create_token(user["id"], user["username"], user["role"])
-    return {"access_token": token, "token_type": "bearer",
-            "role": user["role"], "user_id": user["id"], "username": user["username"]}
 
 
 @app.post("/auth/login")
@@ -158,16 +142,6 @@ async def login(body: LoginRequest):
         "username": user["username"],
         "email": user.get("email"),
     }
-    username = normalize_username(body.username)
-    user = await get_user_by_username(username)
-    if not user or not verify_password(body.password, user["password_hash"]):
-        log.info("[auth] failed login username=%s", username)
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    await update_last_login(user["id"])
-    log.info("[auth] login user_id=%s username=%s role=%s", user["id"], user["username"], user["role"])
-    token = create_token(user["id"], user["username"], user["role"])
-    return {"access_token": token, "token_type": "bearer",
-            "role": user["role"], "user_id": user["id"], "username": user["username"]}
 
 
 @app.post("/complaints", response_model=ComplaintSubmissionResponse, status_code=201)

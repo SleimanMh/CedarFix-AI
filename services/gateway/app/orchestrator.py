@@ -1437,7 +1437,7 @@ async def _add_to_human_review(
         item = HumanReviewItem(
             complaint_id=complaint_id,
             validation_status=validation.status.value,
-            review_reason=validation.clarification_question or "",
+            review_reason=validation.clarification_question or validation.contradiction_reason or "",
             original_text=request.text,
             image_filename=request.image_filename,
             image_detected_type=validation.image_detected_type,
@@ -1452,3 +1452,4 @@ async def _add_to_human_review(
         )
     except Exception as e:
         print(f"[WARN] Could not queue human review item: {e}")
+

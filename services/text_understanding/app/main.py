@@ -15,6 +15,7 @@ Model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
 """
 
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 from prometheus_client import make_asgi_app
@@ -30,18 +31,24 @@ from cedarfix_shared.metrics import (
 )
 from .model import TextUnderstandingModel
 
-app = FastAPI(title="IEP-1: Text Understanding", version="0.2.0")
-metrics_app = make_asgi_app()
-app.mount("/metrics", metrics_app)
-
 model: TextUnderstandingModel = None
 
 
-@app.on_event("startup")
 async def load_models():
     global model
     model = TextUnderstandingModel()
     await model.load()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await load_models()
+    yield
+
+
+app = FastAPI(title="IEP-1: Text Understanding", version="0.2.0", lifespan=lifespan)
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
 
 
 @app.get("/health")

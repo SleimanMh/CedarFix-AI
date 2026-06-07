@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     text_service_url: str = "http://text-understanding:8001"
     image_service_url: str = "http://image-understanding:8002"
     embedding_service_url: str = "http://embedding-service:8003"
@@ -13,8 +15,5 @@ class Settings(BaseSettings):
     uploads_dir: str = "/data/uploads"
     storage_backend: str = "local"
     gcs_bucket: str = ""
-
-    class Config:
-        env_file = ".env"
 
 settings = Settings()

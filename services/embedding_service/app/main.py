@@ -16,6 +16,7 @@ For candidate retrieval see retrieval.py.
 
 import os
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -56,10 +57,6 @@ STORE_IMAGE_CANDIDATE_EMBEDDINGS = (
     os.getenv("STORE_IMAGE_CANDIDATE_EMBEDDINGS", "true").lower() == "true"
 )
 CAPTION_AUGMENT_CONFIDENCE_THRESHOLD = float(os.getenv("CAPTION_AUGMENT_CONFIDENCE_THRESHOLD", "0.55"))
-
-app = FastAPI(title="IEP-3: Embedding + Retrieval Service", version="0.3.0")
-metrics_app = make_asgi_app()
-app.mount("/metrics", metrics_app)
 
 qdrant: QdrantStore = None
 retriever: CandidateRetriever = None
@@ -153,7 +150,6 @@ def _candidate_payload(base_payload: dict, candidate, index: int) -> dict:
     }
 
 
-@app.on_event("startup")
 async def startup():
     global qdrant, retriever, _clip_tokenizer, _clip_text_model, _text_encoder
     qdrant = QdrantStore()
@@ -168,6 +164,17 @@ async def startup():
         print(f"[IEP-3] Loading MPNet text encoder for caption augmentation: {TEXT_MODEL_NAME}")
         _text_encoder = SentenceTransformer(TEXT_MODEL_NAME)
         print("[IEP-3] MPNet auxiliary text encoder ready.")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await startup()
+    yield
+
+
+app = FastAPI(title="IEP-3: Embedding + Retrieval Service", version="0.3.0", lifespan=lifespan)
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
 
 
 @app.get("/health")

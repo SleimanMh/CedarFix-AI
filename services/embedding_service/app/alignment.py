@@ -32,6 +32,11 @@ def _jaccard(a: set[str], b: set[str]) -> float:
     return len(a & b) / max(1, len(a | b))
 
 
+def _known(value: Optional[str]) -> Optional[str]:
+    text = str(value or "").strip()
+    return text if text and text.lower() not in {"unknown", "none"} else None
+
+
 def _derive_text_routing_features(text: TextUnderstandingResult) -> RoutingFeaturesJSON:
     rf = getattr(text, "routing_features", None)
     if rf is None:
@@ -41,10 +46,10 @@ def _derive_text_routing_features(text: TextUnderstandingResult) -> RoutingFeatu
     else:
         base = RoutingFeaturesJSON(**rf)
     return RoutingFeaturesJSON(
-        domain=(base.domain or text.semantic_domain or text.category or "unknown"),
-        physical_component=(base.physical_component or text.physical_component or "unknown"),
-        failure_mode=(base.failure_mode or text.failure_mode or "unknown"),
-        hazard_type=(base.hazard_type or "none"),
+        domain=(_known(base.domain) or _known(text.semantic_domain) or _known(text.category) or "unknown"),
+        physical_component=(_known(base.physical_component) or _known(text.physical_component) or "unknown"),
+        failure_mode=(_known(base.failure_mode) or _known(text.failure_mode) or "unknown"),
+        hazard_type=(_known(base.hazard_type) or "none"),
         affected_public_space=bool(base.affected_public_space if base.affected_public_space is not None else True),
         requires_emergency_attention=bool(base.requires_emergency_attention or getattr(text.signals, "emergency_signal", False)),
     )
@@ -59,9 +64,9 @@ def _derive_text_alignment_features(text: TextUnderstandingResult, rf: RoutingFe
     else:
         base = AlignmentFeaturesJSON(**af)
     return AlignmentFeaturesJSON(
-        domain=(base.domain or rf.domain or "unknown"),
-        physical_component=(base.physical_component or rf.physical_component or "unknown"),
-        failure_mode=(base.failure_mode or rf.failure_mode or "unknown"),
+        domain=(_known(base.domain) or _known(rf.domain) or "unknown"),
+        physical_component=(_known(base.physical_component) or _known(rf.physical_component) or "unknown"),
+        failure_mode=(_known(base.failure_mode) or _known(rf.failure_mode) or "unknown"),
         visible_hazard=bool(base.visible_hazard),
         objects=list(base.objects or []),
         actions=list(base.actions or []),
@@ -80,10 +85,26 @@ def _derive_image_routing_features(image: ImageUnderstandingResult) -> RoutingFe
     else:
         base = RoutingFeaturesJSON(**rf)
     return RoutingFeaturesJSON(
-        domain=(base.domain or getattr(src, "semantic_domain", None) or getattr(vu, "semantic_domain", None) or vu.visual_category or "unknown"),
-        physical_component=(base.physical_component or getattr(src, "physical_component", None) or getattr(vu, "physical_component", None) or "unknown"),
-        failure_mode=(base.failure_mode or getattr(src, "failure_mode", None) or getattr(vu, "failure_mode", None) or "unknown"),
-        hazard_type=(base.hazard_type or "none"),
+        domain=(
+            _known(base.domain)
+            or _known(getattr(src, "semantic_domain", None))
+            or _known(getattr(vu, "semantic_domain", None))
+            or _known(vu.visual_category)
+            or "unknown"
+        ),
+        physical_component=(
+            _known(base.physical_component)
+            or _known(getattr(src, "physical_component", None))
+            or _known(getattr(vu, "physical_component", None))
+            or "unknown"
+        ),
+        failure_mode=(
+            _known(base.failure_mode)
+            or _known(getattr(src, "failure_mode", None))
+            or _known(getattr(vu, "failure_mode", None))
+            or "unknown"
+        ),
+        hazard_type=(_known(base.hazard_type) or "none"),
         affected_public_space=bool(base.affected_public_space if base.affected_public_space is not None else True),
         requires_emergency_attention=bool(base.requires_emergency_attention),
     )
@@ -101,9 +122,9 @@ def _derive_image_alignment_features(image: ImageUnderstandingResult, rf: Routin
         base = AlignmentFeaturesJSON(**af)
     inferred_objects = list(getattr(vu, "detected_objects", []) or [])
     return AlignmentFeaturesJSON(
-        domain=(base.domain or rf.domain or "unknown"),
-        physical_component=(base.physical_component or rf.physical_component or "unknown"),
-        failure_mode=(base.failure_mode or rf.failure_mode or "unknown"),
+        domain=(_known(base.domain) or _known(rf.domain) or "unknown"),
+        physical_component=(_known(base.physical_component) or _known(rf.physical_component) or "unknown"),
+        failure_mode=(_known(base.failure_mode) or _known(rf.failure_mode) or "unknown"),
         visible_hazard=bool(base.visible_hazard if base.visible_hazard is not None else getattr(vu, "damage_visible", False)),
         objects=list(base.objects or inferred_objects),
         actions=list(base.actions or []),
@@ -192,7 +213,7 @@ def compute_multimodal_alignment(
     if action_overlap > 0.4:
         matched.append("actions")
 
-    loc_text = _safe_set(text_output.location_mentions)
+    loc_text = _safe_set(getattr(text_output, "location_mentions", []))
     loc_img = _safe_set((image_output.vlm_analysis.location_cues.get("detected_text", []) if image_output.vlm_analysis else []))
     loc_img |= _safe_set((image_output.vlm_analysis.location_cues.get("landmarks", []) if image_output.vlm_analysis else []))
     loc_img |= _safe_set((image_output.vlm_analysis.location_cues.get("street_signs", []) if image_output.vlm_analysis else []))
