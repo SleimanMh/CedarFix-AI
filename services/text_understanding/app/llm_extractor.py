@@ -31,31 +31,6 @@ class _SignalsOutput(BaseModel):
     emergency_signal: bool = False
 
 
-class _RoutingFeaturesOutput(BaseModel):
-    domain: str = "unknown"
-    physical_component: str = "unknown"
-    failure_mode: str = "unknown"
-    hazard_type: str = "none"
-    affected_public_space: bool = True
-    requires_emergency_attention: bool = False
-
-
-class _EvidenceOutput(BaseModel):
-    text_evidence: List[str] = []
-    image_evidence: List[str] = []
-    missing_information: List[str] = []
-
-
-class _AlignmentFeaturesOutput(BaseModel):
-    domain: str = "unknown"
-    physical_component: str = "unknown"
-    failure_mode: str = "unknown"
-    visible_hazard: bool = False
-    objects: List[str] = []
-    actions: List[str] = []
-    location_context: List[str] = []
-
-
 class _LLMOutput(BaseModel):
     is_complaint: bool = True
     english_translation: str = ""
@@ -67,9 +42,6 @@ class _LLMOutput(BaseModel):
     keywords: List[str] = []
     summary: str = ""
     signals: _SignalsOutput = Field(default_factory=_SignalsOutput)
-    routing_features: _RoutingFeaturesOutput = Field(default_factory=_RoutingFeaturesOutput)
-    evidence: _EvidenceOutput = Field(default_factory=_EvidenceOutput)
-    alignment_features: _AlignmentFeaturesOutput = Field(default_factory=_AlignmentFeaturesOutput)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     semantic_domain: str = "unknown"
     physical_component: str = "unknown"
@@ -119,6 +91,11 @@ Return only a valid JSON object matching the requested fields. No markdown, no p
 Do not decide the responsible public entity. Do not perform routing.
 Never output routing decisions or review decisions.
 When the input is not English, fill english_translation with a natural English translation.
+Return these top-level keys only: is_complaint, english_translation, issue_type, category,
+subcategory, severity, location_mentions, keywords, summary, signals, confidence,
+semantic_domain, physical_component, failure_mode.
+Do not include routing_features, evidence, alignment_features, responsible_entity,
+routing_decision, or other nested enrichment fields; the backend derives them.
 
 is_complaint: true if the text describes ANY real public infrastructure or public-space problem
 in streets, sidewalks, public buildings, parks, utilities, public transport stops, drainage, sanitation,
@@ -179,7 +156,6 @@ failure_mode:
 summary:
 - Always provide one short factual sentence. Do not leave it empty for complaint text.
 
-Fill routing_features, evidence, and alignment_features with the same factual descriptors.
 If unsure, use the closest factual component from the text and lower confidence; do not guess a specific object.
 
 Other rules:
@@ -279,43 +255,6 @@ def _coerce_llm_output(data: dict) -> dict:
         "traffic_impact": _bool(signals.get("traffic_impact")),
         "corruption_signal": _bool(signals.get("corruption_signal")),
         "emergency_signal": _bool(signals.get("emergency_signal")),
-    }
-
-    routing = _as_dict(clean.get("routing_features"))
-    clean["routing_features"] = {
-        "domain": routing.get("domain") or clean.get("semantic_domain") or clean.get("category") or "unknown",
-        "physical_component": routing.get("physical_component") or clean.get("physical_component") or "unknown",
-        "failure_mode": routing.get("failure_mode") or clean.get("failure_mode") or "unknown",
-        "hazard_type": routing.get("hazard_type") or "none",
-        "affected_public_space": _bool(routing.get("affected_public_space"), True),
-        "requires_emergency_attention": _bool(
-            routing.get("requires_emergency_attention"), clean["signals"]["emergency_signal"]
-        ),
-    }
-
-    evidence = clean.get("evidence")
-    if isinstance(evidence, dict):
-        clean["evidence"] = {
-            "text_evidence": _string_list(evidence.get("text_evidence")),
-            "image_evidence": _string_list(evidence.get("image_evidence")),
-            "missing_information": _string_list(evidence.get("missing_information")),
-        }
-    else:
-        clean["evidence"] = {
-            "text_evidence": _string_list(evidence),
-            "image_evidence": [],
-            "missing_information": [],
-        }
-
-    alignment = _as_dict(clean.get("alignment_features"))
-    clean["alignment_features"] = {
-        "domain": alignment.get("domain") or clean["routing_features"]["domain"],
-        "physical_component": alignment.get("physical_component") or clean["routing_features"]["physical_component"],
-        "failure_mode": alignment.get("failure_mode") or clean["routing_features"]["failure_mode"],
-        "visible_hazard": _bool(alignment.get("visible_hazard")),
-        "objects": _string_list(alignment.get("objects")),
-        "actions": _string_list(alignment.get("actions")),
-        "location_context": _string_list(alignment.get("location_context")),
     }
 
     severity = str(clean.get("severity", "LOW")).upper()
@@ -495,8 +434,11 @@ def _build_result(complaint_id: str, original_text: str, language: str, data: di
     )
 
     ev_raw = data.get("evidence", {})
+    text_evidence = [str(x) for x in ev_raw.get("text_evidence", []) if str(x).strip()]
+    if not text_evidence and original_text.strip():
+        text_evidence = [original_text.strip()]
     evidence = ExtractionEvidenceJSON(
-        text_evidence=[str(x) for x in ev_raw.get("text_evidence", []) if str(x).strip()],
+        text_evidence=text_evidence,
         image_evidence=[str(x) for x in ev_raw.get("image_evidence", []) if str(x).strip()],
         missing_information=[str(x) for x in ev_raw.get("missing_information", []) if str(x).strip()],
     )
@@ -604,7 +546,7 @@ class LLMExtractor:
                 affected_public_space=True,
                 requires_emergency_attention=bool(getattr(result, "signals", SignalsJSON()).emergency_signal),
             )
-            result.evidence = ExtractionEvidenceJSON()
+            result.evidence = ExtractionEvidenceJSON(text_evidence=[text.strip()] if text.strip() else [])
             result.alignment_features = AlignmentFeaturesJSON(
                 domain=result.routing_features.domain,
                 physical_component=result.routing_features.physical_component,

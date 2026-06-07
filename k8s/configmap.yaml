@@ -29,7 +29,7 @@ data:
   MODEL_NAME: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
   CLIP_MODEL_NAME: openai/clip-vit-base-patch32
 
-  QWEN_BASE_URL: https://vohjpwfvslwdp7-8000.proxy.runpod.net/v1
+  QWEN_BASE_URL: https://b79esvlx5e5hhz-8000.proxy.runpod.net/v1
   QWEN_MODEL: cedarfix
   QWEN_ENABLED: "true"
   QWEN_GUIDED: "false"
@@ -40,14 +40,14 @@ data:
   QWEN_ROUTING_MAX_TOKENS: "512"
   OPENAI_MODEL: gpt-4o
 
-  VLM_BASE_URL: https://mcn4qq621xtcpm-8000.proxy.runpod.net/v1
+  VLM_BASE_URL: https://ygeqezonqczwh4-8000.proxy.runpod.net/v1
   VLM_MODEL: Qwen/Qwen2.5-VL-3B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"
 
   ROUTING_QDRANT_COLLECTION: routing_knowledge
   ROUTING_RAG_ENABLED: "true"
-  ROUTING_RAG_TOP_K: "5"
+  ROUTING_RAG_TOP_K: "8"
   AUTO_ROUTE_THRESHOLD: "0.85"
   REVIEW_THRESHOLD: "0.65"
 

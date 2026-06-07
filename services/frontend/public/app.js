@@ -278,6 +278,7 @@ function showMultiResult(response) {
     item.className = 'multi-item';
     const conf = d.routing_confidence != null ? `${Math.round(d.routing_confidence * 100)}%` : '-';
     const text = d.original_text || '';
+    const secondary = d.routing?.secondary_entity;
     item.innerHTML = `
       <div class="multi-item-head">
         <strong>Complaint ${idx + 1}</strong>
@@ -287,6 +288,7 @@ function showMultiResult(response) {
         <span>ID</span><b>${d.complaint_id || '-'}</b>
         <span>Type</span><b>${displayType(d.complaint_type || 'unknown', d.text_analysis?.subcategory || '')}</b>
         <span>Routed To</span><b>${d.assigned_entity || '-'}</b>
+        ${secondary ? `<span>Also Notify</span><b>${escapeHtml(secondary)}</b>` : ''}
         <span>Confidence</span><b>${conf}</b>
       </div>
       <p>${escapeHtml(text)}</p>
@@ -338,6 +340,10 @@ function showSuccess(d) {
   // Routing entity
   document.getElementById('resEntity').textContent =
     d.assigned_entity || '—';
+
+  const secondaryEntity = d.routing?.secondary_entity;
+  document.getElementById('resSecondaryEntity').textContent = secondaryEntity || '-';
+  toggleEl('secondaryEntityRow', !!secondaryEntity);
 
   // Confidence bar
   const conf = d.routing_confidence || 0;

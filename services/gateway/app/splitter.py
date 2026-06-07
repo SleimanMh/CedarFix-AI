@@ -37,7 +37,16 @@ Return JSON only. Do not route, classify authorities, or invent details.
 If the text describes one issue, return is_multi=false and exactly one complaint using the original text.
 If the text describes multiple independent public-infrastructure issues, return one item per issue.
 Keep each complaint self-contained and preserve any location mention tied to that issue.
-Do not split details that describe the same issue, such as cause/effect/severity of one complaint."""
+If a location appears once and later complaint clauses omit a location, copy the shared location into
+each child complaint unless the text clearly gives different locations.
+Do not split just because the text contains "and", "but", "so", or "now".
+Do not split details that describe the same issue, such as cause/effect/severity of one complaint.
+Keep these as single complaints:
+- garbage burning near a school so black smoke is spreading into the street
+- a broken water pipe leaking for days and now the road is collapsing around it
+- internet cables hanging low and touching a streetlight pole
+Split only when there are clearly independent issues that need separate routing, such as
+an electricity outage in one clause and a building fire in another."""
 
 
 def _safe_text(value: str) -> str:
@@ -85,14 +94,13 @@ async def split_complaint_text(text: str) -> ComplaintSplitResult:
 
     if SPLITTER_LLM_ENABLED and QWEN_BASE_URL:
         try:
-            result = await _split_with_llm(original)
-            return result
+            return await _split_with_llm(original)
         except Exception as exc:
-            fallback = _split_heuristically(original)
-            fallback.review_reason = f"LLM splitter failed; used fallback: {type(exc).__name__}"
+            fallback = _single(original, "fallback")
+            fallback.review_reason = f"LLM splitter failed; left submission as single: {type(exc).__name__}"
             return fallback
 
-    return _split_heuristically(original)
+    return _single(original, "single")
 
 
 async def _split_with_llm(text: str) -> ComplaintSplitResult:
@@ -181,7 +189,52 @@ def _enumerated_parts(text: str) -> list[str]:
     ):
         return [part for part in delimiter_parts if len(part) >= 10]
 
+    clause_parts = _independent_issue_clauses(text)
+    if len(clause_parts) > 1:
+        return clause_parts
+
     return [text]
+
+
+_ISSUE_GROUP_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("electricity", re.compile(r"\b(electricity|power|outage|blackout|kahraba|electrical)\b", re.IGNORECASE)),
+    ("fire", re.compile(r"\b(fire|burning|smoke|flames?)\b", re.IGNORECASE)),
+    ("water", re.compile(r"\b(water|pipe|leak|may|maye)\b", re.IGNORECASE)),
+    ("waste", re.compile(r"\b(garbage|trash|waste|dump|sanitation)\b", re.IGNORECASE)),
+    ("road", re.compile(r"\b(pothole|road|street|asphalt|sidewalk|bridge)\b", re.IGNORECASE)),
+    ("drainage", re.compile(r"\b(flood|drain|sewer|sewage|manhole|overflow)\b", re.IGNORECASE)),
+    ("telecom", re.compile(r"\b(internet|phone|telecom|cable)\b", re.IGNORECASE)),
+    ("traffic", re.compile(r"\b(traffic|signal|accident|blocked)\b", re.IGNORECASE)),
+]
+
+
+def _issue_groups(text: str) -> set[str]:
+    return {group for group, pattern in _ISSUE_GROUP_PATTERNS if pattern.search(text)}
+
+
+def _independent_issue_clauses(text: str) -> list[str]:
+    parts = [
+        _safe_text(part)
+        for part in re.split(r"\s+(?:and|و|w)\s+(?=(?:the\s+|there\s+|fi\s+|there's\s+)?)", text, flags=re.IGNORECASE)
+        if _safe_text(part)
+    ]
+    if not (2 <= len(parts) <= SPLITTER_MAX_CHILDREN):
+        return []
+
+    groups_by_part = [_issue_groups(part) for part in parts]
+    if any(not groups for groups in groups_by_part):
+        return []
+
+    all_groups = set().union(*groups_by_part)
+    if len(all_groups) < 2:
+        return []
+
+    for idx, groups in enumerate(groups_by_part):
+        others = set().union(*(g for j, g in enumerate(groups_by_part) if j != idx))
+        if not (groups - others):
+            return []
+
+    return [part for part in parts if len(part) >= 10]
 
 
 def _single(text: str, source: str) -> ComplaintSplitResult:

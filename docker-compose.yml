@@ -143,7 +143,7 @@ services:
       FUSED_EMBEDDING_DIM: "768"
       ROUTING_QDRANT_COLLECTION: "routing_knowledge"
       ROUTING_RAG_ENABLED: "true"
-      ROUTING_RAG_TOP_K: "5"
+      ROUTING_RAG_TOP_K: "8"
       MODEL_REGISTRY_NAME: cedarfix-routing
       AUTO_ROUTE_THRESHOLD: "0.85"
       REVIEW_THRESHOLD: "0.65"
