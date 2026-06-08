@@ -84,7 +84,7 @@ def _write_gcs_artifact(audit_id: str, record: dict) -> Optional[str]:
         return None
 
 
-def _log_mlflow_metadata(record: dict) -> None:
+def _log_mlflow_metadata(record: dict, full_record: Optional[dict] = None) -> None:
     if not MLFLOW_TRACKING_URI:
         return
     try:
@@ -105,6 +105,37 @@ def _log_mlflow_metadata(record: dict) -> None:
             })
             if record.get("latency_ms") is not None:
                 mlflow.log_metric("latency_ms", record["latency_ms"])
+            artifact_record = full_record or record
+            mlflow.log_dict(
+                _json_safe(artifact_record.get("request_payload")),
+                "request_payload.json",
+            )
+            if artifact_record.get("raw_output") is not None:
+                mlflow.log_text(
+                    str(artifact_record["raw_output"]),
+                    "raw_output.txt",
+                )
+            if artifact_record.get("parsed_output") is not None:
+                mlflow.log_dict(
+                    _json_safe(artifact_record.get("parsed_output")),
+                    "parsed_output.json",
+                )
+            mlflow.log_dict(
+                {
+                    "audit_id": artifact_record.get("id"),
+                    "complaint_id": artifact_record.get("complaint_id"),
+                    "service": artifact_record.get("service"),
+                    "call_type": artifact_record.get("call_type"),
+                    "provider": artifact_record.get("provider"),
+                    "model": artifact_record.get("model"),
+                    "prompt_version": artifact_record.get("prompt_version"),
+                    "status": artifact_record.get("status"),
+                    "latency_ms": artifact_record.get("latency_ms"),
+                    "error_type": artifact_record.get("error_type"),
+                    "error_message": artifact_record.get("error_message"),
+                },
+                "audit_metadata.json",
+            )
     except Exception as exc:
         log.debug("[llm-audit] MLflow metadata log skipped: %s", exc)
 
@@ -192,7 +223,7 @@ def write_llm_audit(
     except Exception as exc:
         log.warning("[llm-audit] Postgres audit write failed: %s", exc)
 
-    _log_mlflow_metadata(record)
+    _log_mlflow_metadata(record, full_record)
 
 
 @asynccontextmanager

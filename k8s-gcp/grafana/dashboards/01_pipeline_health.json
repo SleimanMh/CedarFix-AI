@@ -1,0 +1,126 @@
+{
+  "id": null,
+  "title": "CedarFix AI — Pipeline Health",
+  "uid": "cedarfix-pipeline",
+  "tags": ["cedarfix", "pipeline"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Complaints (All Time)",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+      "targets": [
+        {
+          "expr": "sum(cedarfix_complaints_total)",
+          "legendFormat": "Total"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {"calcs": ["lastNotNull"]}
+      }
+    },
+    {
+      "id": 2,
+      "title": "Complaints Last 1h",
+      "type": "stat",
+      "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+      "targets": [
+        {
+          "expr": "increase(cedarfix_complaints_total[1h])",
+          "legendFormat": "Last 1h"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Pipeline P95 Latency (seconds)",
+      "type": "stat",
+      "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(cedarfix_pipeline_duration_seconds_bucket{stage='full'}[5m]))",
+          "legendFormat": "P95"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Failed Complaints",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
+      "targets": [
+        {
+          "expr": "cedarfix_complaints_total{status='failed'}",
+          "legendFormat": "Failed"
+        }
+      ],
+      "options": {"thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "red", "value": 1}]}}
+    },
+    {
+      "id": 5,
+      "title": "Complaint Rate (per minute)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(cedarfix_complaints_total[5m]) * 60",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Pipeline Stage Latency (P95)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(cedarfix_pipeline_duration_seconds_bucket[5m]))",
+          "legendFormat": "{{stage}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Text Analysis Latency P95 (seconds)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 12, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(cedarfix_text_analysis_duration_seconds_bucket[5m]))",
+          "legendFormat": "IEP-1 P95"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Image Analysis Latency P95 (seconds)",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 12, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(cedarfix_image_analysis_duration_seconds_bucket[5m]))",
+          "legendFormat": "IEP-2 P95"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Language Distribution",
+      "type": "piechart",
+      "gridPos": {"x": 16, "y": 12, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "cedarfix_language_distribution_total",
+          "legendFormat": "{{lang}}"
+        }
+      ]
+    }
+  ]
+}

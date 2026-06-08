@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedarfix-monitoring-config
+  namespace: cedarfix
+data:
+  GRAFANA_USER: admin
+  GRAFANA_PASSWORD: cedarfix_grafana
+  PROMETHEUS_RETENTION: 7d
+  PROMETHEUS_STORAGE_SIZE: 10Gi
+  GRAFANA_STORAGE_SIZE: 5Gi
+  MLFLOW_ARTIFACT_ROOT: gs://cedarfix-prod-images-sleiman/mlflow-artifacts

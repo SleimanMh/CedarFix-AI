@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: cedarfix
+spec:
+  type: LoadBalancer
+  selector:
+    app: mlflow
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  namespace: cedarfix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      serviceAccountName: cedarfix-app
+      containers:
+        - name: mlflow
+          image: ghcr.io/mlflow/mlflow:v2.12.1
+          command:
+            - /bin/sh
+            - -c
+            - |
+              pip install --quiet --no-cache-dir "protobuf<6" psycopg2-binary google-cloud-storage && \
+              mlflow server \
+                --backend-store-uri "$DATABASE_URL" \
+                --default-artifact-root "$MLFLOW_ARTIFACT_ROOT" \
+                --host 0.0.0.0 \
+                --port 5000
+          envFrom:
+            - configMapRef:
+                name: cedarfix-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cedarfix-secrets
+                  key: DATABASE_URL
+            - name: MLFLOW_ARTIFACT_ROOT
+              valueFrom:
+                configMapKeyRef:
+                  name: cedarfix-monitoring-config
+                  key: MLFLOW_ARTIFACT_ROOT
+          ports:
+            - containerPort: 5000
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+          args:
+            - --structured-logs
+            - --port=5432
+            - $(CLOUD_SQL_INSTANCE)
+          envFrom:
+            - configMapRef:
+                name: cedarfix-config
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 128Mi
+            limits:
+              cpu: "500m"
+              memory: 256Mi

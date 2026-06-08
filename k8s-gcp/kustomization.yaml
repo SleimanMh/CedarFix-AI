@@ -1,12 +1,34 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: cedarfix
+generatorOptions:
+  disableNameSuffixHash: true
 resources:
   - namespace.yaml
   - serviceaccount.yaml
   - configmap.yaml
+  - monitoring-config.yaml
   - api-service.yaml
   - ai-service.yaml
   - vision-service.yaml
   - frontend.yaml
   - frontend-backendconfig.yaml
+  - prometheus.yaml
+  - grafana.yaml
+  - mlflow.yaml
   - ingress.yaml
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - prometheus-gke.yml
+  - name: grafana-datasources
+    files:
+      - grafana/provisioning/datasources/prometheus.yml
+  - name: grafana-dashboards-provider
+    files:
+      - grafana/provisioning/dashboards/provider.yml
+  - name: grafana-dashboards
+    files:
+      - grafana/dashboards/01_pipeline_health.json
+      - grafana/dashboards/02_ai_behavior.json
+      - grafana/dashboards/03_drift_monitor.json
