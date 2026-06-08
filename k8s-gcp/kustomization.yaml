@@ -11,6 +11,7 @@ resources:
   - api-service.yaml
   - ai-service.yaml
   - vision-service.yaml
+  - monitoring-service.yaml
   - frontend.yaml
   - frontend-backendconfig.yaml
   - prometheus.yaml

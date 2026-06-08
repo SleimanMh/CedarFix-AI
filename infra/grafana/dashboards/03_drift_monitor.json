@@ -83,6 +83,86 @@
           "legendFormat": "Implicit Accuracy (1 - correction rate)"
         }
       ]
+    },
+    {
+      "id": 5,
+      "title": "GPT-4o Judge: Average Overall Score",
+      "type": "gauge",
+      "gridPos": {"x": 0, "y": 14, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_evaluation_avg_overall_score", "legendFormat": "Overall"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 5},
+            {"color": "green", "value": 8}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 10
+      }
+    },
+    {
+      "id": 6,
+      "title": "GPT-4o Judge: Average Routing Score",
+      "type": "gauge",
+      "gridPos": {"x": 6, "y": 14, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_evaluation_avg_routing_score", "legendFormat": "Routing"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 5},
+            {"color": "green", "value": 8}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 10
+      }
+    },
+    {
+      "id": 7,
+      "title": "GPT-4o Judge: Average Extraction Score",
+      "type": "gauge",
+      "gridPos": {"x": 12, "y": 14, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_evaluation_avg_extraction_score", "legendFormat": "Extraction"}
+      ],
+      "options": {
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 5},
+            {"color": "green", "value": 8}
+          ]
+        },
+        "minValue": 0,
+        "maxValue": 10
+      }
+    },
+    {
+      "id": 8,
+      "title": "GPT-4o Judge: Evaluation Count",
+      "type": "stat",
+      "gridPos": {"x": 18, "y": 14, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "cedarfix_evaluation_total", "legendFormat": "Stored evaluations"}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "GPT-4o Judge Score Trend",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 20, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "cedarfix_evaluation_avg_overall_score", "legendFormat": "Overall"},
+        {"expr": "cedarfix_evaluation_avg_routing_score", "legendFormat": "Routing"},
+        {"expr": "cedarfix_evaluation_avg_extraction_score", "legendFormat": "Extraction"}
+      ]
     }
   ]
 }

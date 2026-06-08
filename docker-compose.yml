@@ -305,11 +305,24 @@ services:
       dockerfile: services/monitoring_service/Dockerfile
     container_name: cedarfix-monitoring-service
     profiles: ["monitoring"]
-    command: uvicorn services.monitoring_service.app.main:app --host 0.0.0.0 --port 8009
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8009
     environment:
       DATABASE_URL: postgresql://cedarfix:cedarfix_secret@postgres:5432/cedarfix
       MLFLOW_TRACKING_URI: http://mlflow:5000
       PROMETHEUS_URL: http://prometheus:9090
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      EVALUATION_JUDGE_MODEL: ${EVALUATION_JUDGE_MODEL:-gpt-4o}
+      EVALUATION_SCHEDULER_ENABLED: ${EVALUATION_SCHEDULER_ENABLED:-true}
+      EVALUATION_RUN_ON_STARTUP: ${EVALUATION_RUN_ON_STARTUP:-false}
+      EVALUATION_TIMEZONE: ${EVALUATION_TIMEZONE:-Asia/Beirut}
+      EVALUATION_SAMPLE_RATE: ${EVALUATION_SAMPLE_RATE:-0.20}
+      EVALUATION_BATCH_SIZE: ${EVALUATION_BATCH_SIZE:-4}
+      EVALUATION_REQUEST_TIMEOUT: ${EVALUATION_REQUEST_TIMEOUT:-90}
+      EVALUATION_BATCH_DELAY_SECONDS: ${EVALUATION_BATCH_DELAY_SECONDS:-20}
+      EVALUATION_MAX_RETRIES: ${EVALUATION_MAX_RETRIES:-3}
+      EVALUATION_MAX_TOKENS: ${EVALUATION_MAX_TOKENS:-4096}
+      EVALUATION_INCLUDE_IMAGE_PARTS: ${EVALUATION_INCLUDE_IMAGE_PARTS:-false}
       EMBEDDING_DRIFT_THRESHOLD: "0.15"
       CORRECTION_RATE_ALERT_THRESHOLD: "0.15"
       PORT: "8009"

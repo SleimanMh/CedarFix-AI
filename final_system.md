@@ -664,6 +664,63 @@ Important behavior:
 - Production audit should still be stored in Postgres/GCS even if MLflow is unavailable.
 - Prompt versions should be stable strings such as `text_extraction_v3`, `vlm_image_analysis_v2`, `routing_judge_v1`, or `media_alignment_v1`.
 
+### Offline GPT-4o LLM-as-Judge Evaluation
+
+The monitoring service includes an offline evaluation subsystem named Daily GPT-4o LLM-as-Judge Evaluation Service. This subsystem is explicitly not part of the complaint processing pipeline and must never influence text understanding, image understanding, media validation, duplicate detection, priority, routing, or explanation.
+
+Purpose:
+
+- Quality monitoring.
+- MLflow analytics.
+- Research and thesis evaluation.
+- Model comparison across CedarFix versions.
+
+Schedule:
+
+- Runs daily at midnight using `EVALUATION_TIMEZONE`, default `Asia/Beirut`.
+- Selects a random 20 percent sample of complaints created during the previous day.
+- Processes complaints in batches of 10.
+- Sends each batch to GPT-4o using the current judge prompt version. The initial version was `evaluation_judge_v1`; `evaluation_judge_v2` added stricter consistency checks; `evaluation_judge_v3` adds hard-cap instructions for generic routing, unrelated secondary authorities, severity mismatches, and review/explanation mismatches.
+- Stores GPT-4o returned scores and reasoning in Postgres table `complaint_evaluations`.
+- Publishes Prometheus metrics for average routing score, average extraction score, average overall score, and evaluation count.
+- Logs each evaluation batch to MLflow experiment `cedarfix/evaluation_judge`.
+
+Critical boundary:
+
+- GPT-4o executes the rubric and produces all scores.
+- Backend code does not compute per-complaint text, image, routing, explanation, media validation, or overall scores.
+- Backend code only gathers data, builds prompts, sends requests, validates returned JSON, stores results, and aggregates already-returned scores for monitoring.
+
+Judge input per complaint:
+
+- Original complaint text.
+- Original image URL if present.
+- Text JSON.
+- Image JSON.
+- Media validation result.
+- Routing result.
+- Explanation result.
+- Final complaint decision.
+
+Judge output per complaint:
+
+- `text_understanding.score`, reason, and errors.
+- `image_understanding.score`, reason, and errors.
+- `media_validation.score`, reason, and errors.
+- `routing.score`, reason, and errors.
+- `explanation.score`, reason, and errors.
+- `overall_decision.score`, reason, and errors.
+
+Storage:
+
+- Table: `complaint_evaluations`.
+- Main fields: `complaint_id`, `evaluated_at`, `judge_model`, `prompt_version`, component scores, `overall_score`, and `reasoning_json`.
+
+Operational endpoints:
+
+- `GET /evaluation/status` on monitoring service returns stored aggregate evaluation metrics.
+- `POST /evaluation/run` manually triggers the offline evaluator in the background.
+
 ## 21. Fallback Matrix
 
 | Stage | Primary | Fallback 1 | Fallback 2 | Final Safety Behavior |
@@ -851,4 +908,3 @@ For dashboard mismatch:
 ## 27. Final Design Principle
 
 CedarFix should automate only when the evidence is strong. The system should use fine-tuned Qwen for structured text extraction, Qwen VLM for structured image understanding, embeddings for semantic retrieval, RAG for authority routing, and human review whenever text/image alignment, location, duplicate status, or routing confidence is uncertain.
-

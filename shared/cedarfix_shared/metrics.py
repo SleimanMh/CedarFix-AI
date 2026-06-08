@@ -278,3 +278,36 @@ ADMIN_CORRECTION_RATE = Gauge(
     "cedarfix_admin_correction_rate",
     "Rate of admin corrections in the last 7 days",
 )
+
+# --- Offline GPT-4o Judge Evaluation ---
+EVALUATION_COUNT = Counter(
+    "cedarfix_evaluation_count_total",
+    "Offline GPT-4o judge evaluations completed",
+    ["prompt_version", "judge_model", "status"],
+)
+EVALUATION_BATCH_DURATION = Histogram(
+    "cedarfix_evaluation_batch_duration_seconds",
+    "Offline GPT-4o judge batch evaluation latency",
+    ["prompt_version", "judge_model", "status"],
+    buckets=[1.0, 3.0, 5.0, 10.0, 20.0, 40.0, 80.0, 160.0],
+)
+EVALUATION_AVG_ROUTING_SCORE = Gauge(
+    "cedarfix_evaluation_avg_routing_score",
+    "Average GPT-4o judge routing score",
+    ["prompt_version", "judge_model"],
+)
+EVALUATION_AVG_EXTRACTION_SCORE = Gauge(
+    "cedarfix_evaluation_avg_extraction_score",
+    "Average GPT-4o judge extraction score across text and image components",
+    ["prompt_version", "judge_model"],
+)
+EVALUATION_AVG_OVERALL_SCORE = Gauge(
+    "cedarfix_evaluation_avg_overall_score",
+    "Average GPT-4o judge overall decision score",
+    ["prompt_version", "judge_model"],
+)
+EVALUATION_TOTAL_GAUGE = Gauge(
+    "cedarfix_evaluation_total",
+    "Total stored offline GPT-4o judge evaluations",
+    ["prompt_version", "judge_model"],
+)

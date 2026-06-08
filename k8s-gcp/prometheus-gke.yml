@@ -47,3 +47,8 @@ scrape_configs:
     static_configs:
       - targets: ['vision-service:8002']
     metrics_path: /metrics
+
+  - job_name: 'monitoring-service'
+    static_configs:
+      - targets: ['monitoring-service:8009']
+    metrics_path: /metrics

@@ -136,3 +136,20 @@ class LLMAuditLog(Base):
     error_type = Column(String, nullable=True)
     error_message = Column(Text, nullable=True)
     artifact_uri = Column(String, nullable=True)
+
+
+class ComplaintEvaluation(Base):
+    __tablename__ = "complaint_evaluations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    complaint_id = Column(String, nullable=False, index=True)
+    evaluated_at = Column(DateTime, default=datetime.utcnow, index=True)
+    judge_model = Column(String, nullable=False)
+    prompt_version = Column(String, nullable=False, index=True)
+    text_score = Column(Integer, nullable=True)
+    image_score = Column(Integer, nullable=True)
+    alignment_score = Column(Integer, nullable=True)
+    routing_score = Column(Integer, nullable=True)
+    explanation_score = Column(Integer, nullable=True)
+    overall_score = Column(Integer, nullable=True)
+    reasoning_json = Column(JSON, nullable=False)
