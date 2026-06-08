@@ -303,7 +303,7 @@ function showSuccess(d) {
   document.getElementById('resultId').textContent = `ID: ${d.complaint_id}`;
 
   // Basic fields — Type: show subcategory as the primary label when type is "other"
-  const rawType = d.complaint_type || 'Unknown';
+  const rawType = d.text_analysis?.issue_type || d.complaint_type || 'Unknown';
   const sub = d.text_analysis?.subcategory || '';
   const isOther = rawType === 'other';
   const specificSub = sub && !['other', 'unknown', ''].includes(sub.toLowerCase());

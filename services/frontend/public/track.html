@@ -203,7 +203,7 @@
       const steps = [
         { label: 'Text Understanding', done: !!d.text_analysis,
           detail: d.text_analysis
-            ? `${displayType(d.complaint_type, d.text_analysis.subcategory)} — ${d.text_analysis.detected_language || d.text_analysis.language || ''}`
+            ? `${displayType(d.text_analysis.issue_type || 'unknown', d.text_analysis.subcategory)} — ${d.text_analysis.detected_language || d.text_analysis.language || ''}`
             : (isRejected ? 'Skipped: moderation stopped the pipeline' : 'Not processed') },
         { label: 'Image Understanding', done: !!d.image_analysis?.image_present,
           detail: d.image_analysis?.image_present

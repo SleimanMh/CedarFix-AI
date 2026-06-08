@@ -157,11 +157,12 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         decision.media_validation = validation
         force_review_after_pipeline = False
 
-        if validation.reconciled_type:
+        if validation.reconciled_type and validation.status != MediaValidationStatus.CONTRADICTION:
             decision.complaint_type = validation.reconciled_type
 
         if validation.status == MediaValidationStatus.CONTRADICTION:
             decision.status = PipelineStatus.CONTRADICTION
+            decision.complaint_type = _effective_text_issue_type(text_result) or getattr(text_result, "issue_type", None) or "unknown"
             return decision
 
         if validation.status == MediaValidationStatus.NEEDS_CLARIFICATION:
@@ -234,6 +235,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
                     image_label = str(a.image_issue_type) if a.image_issue_type else ""
                     reason_tail = llm_reason or "Please resubmit with a photo that matches your complaint."
                     decision.status = PipelineStatus.CONTRADICTION
+                    decision.complaint_type = text_label or "unknown"
                     decision.media_validation = MediaValidationResult(
                         status=MediaValidationStatus.CONTRADICTION,
                         text_is_complaint=True,

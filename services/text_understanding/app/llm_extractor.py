@@ -621,15 +621,21 @@ class LLMExtractor:
                 fallback_target = "rule-based" if language in _TRANSLATE_ONLY_LANGUAGES else "GPT-4o/rule-based"
                 log.warning("[IEP-1] Qwen failed (%s), falling back to %s", e, fallback_target)
 
-        if data is None and OPENAI_API_KEY and language not in _TRANSLATE_ONLY_LANGUAGES:
+        if data is None and OPENAI_API_KEY:
             try:
-                data = await _call_gpt4o_extract(english_text, language, complaint_id)
-                english_text = data.get("english_translation") or text
+                gpt_input = english_text if language in _TRANSLATE_ONLY_LANGUAGES else text
+                gpt_language = "en" if language in _TRANSLATE_ONLY_LANGUAGES else language
+                data = await _call_gpt4o_extract(gpt_input, gpt_language, complaint_id)
+                if language in _TRANSLATE_ONLY_LANGUAGES:
+                    data["english_translation"] = english_text
+                else:
+                    english_text = data.get("english_translation") or text
                 TEXT_EXTRACTION_SOURCE_TOTAL.labels(source="gpt4o").inc()
             except Exception as e:
                 TEXT_EXTRACTION_FAILURE_TOTAL.labels(source="gpt4o", error_type=_error_type(e)).inc()
                 log.warning("[IEP-1] GPT-4o extraction failed (%s), using rule-based fallback", e)
-                english_text = text
+                if language not in _TRANSLATE_ONLY_LANGUAGES:
+                    english_text = text
 
         processing_ms = int((time.time() - t0) * 1000)
 

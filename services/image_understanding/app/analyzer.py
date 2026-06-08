@@ -41,6 +41,8 @@ VLM_MODEL: str = os.getenv("VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct")
 VLM_ENABLED: bool = os.getenv("VLM_ENABLED", "true").lower() == "true"
 VLM_TIMEOUT: float = float(os.getenv("VLM_TIMEOUT", "25"))
 VLM_API_KEY: str = os.getenv("VLM_API_KEY", "none")
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 # ---------------------------------------------------------------------------
 # CLIP zero-shot prompt banks
@@ -601,6 +603,156 @@ class VLMAnalyzer:
         if not VLM_BASE_URL:
             raise RuntimeError("VLM_BASE_URL is not set — cannot initialise VLMAnalyzer")
 
+    @staticmethod
+    def _parse_analysis_response(data: dict) -> Optional[VLMImageAnalysis]:
+        loc_raw = data.get("location_cues", {})
+        if isinstance(loc_raw, list):
+            loc_raw = {
+                "detected_text": [str(x) for x in loc_raw if x],
+                "landmarks": [],
+                "street_signs": [],
+                "storefront_names": [],
+                "confidence": 0.5,
+            }
+
+        rf = data.get("routing_features", {}) or {}
+        ev = data.get("evidence", {}) or {}
+        af = data.get("alignment_features", {}) or {}
+        visual_candidates = _parse_visual_candidates(data)
+        if not visual_candidates:
+            return None
+        primary = visual_candidates[0]
+
+        severity = str(data.get("damage_severity") or "LOW").upper()
+        if severity in {"NONE", "NO_DAMAGE", "UNKNOWN", ""}:
+            severity = "LOW"
+        if severity not in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
+            severity = "LOW"
+
+        return VLMImageAnalysis(
+            image_type=data.get("image_type", "other"),
+            is_valid_complaint_image=bool(data.get("is_valid_complaint_image", False)),
+            is_harmful=bool(data.get("is_harmful", False)),
+            is_ai_generated=bool(data.get("is_ai_generated", False)),
+            damage_visible=bool(data.get("damage_visible", False)),
+            visual_category=primary.visual_category or _snake(data.get("visual_category"), "other"),
+            visual_subcategory=primary.visual_subcategory or _snake(data.get("visual_subcategory"), "other"),
+            caption=primary.caption or data.get("caption", ""),
+            damage_severity=severity,
+            location_cues={
+                "detected_text": [str(x) for x in loc_raw.get("detected_text", []) if str(x).strip()],
+                "landmarks": [str(x) for x in loc_raw.get("landmarks", []) if str(x).strip()],
+                "street_signs": [str(x) for x in loc_raw.get("street_signs", []) if str(x).strip()],
+                "storefront_names": [str(x) for x in loc_raw.get("storefront_names", []) if str(x).strip()],
+                "confidence": float(loc_raw.get("confidence", 0.0)),
+            },
+            confidence=_float(primary.confidence, _float(data.get("confidence"), 0.5)),
+            reasoning=data.get("reasoning", ""),
+            vlm_alignment=None,
+            vlm_alignment_confidence=0.0,
+            semantic_domain=primary.semantic_domain or data.get("semantic_domain"),
+            physical_component=primary.physical_component or data.get("physical_component"),
+            failure_mode=primary.failure_mode or data.get("failure_mode"),
+            routing_features={
+                "domain": rf.get("domain") or data.get("semantic_domain") or "unknown",
+                "physical_component": rf.get("physical_component") or data.get("physical_component") or "unknown",
+                "failure_mode": rf.get("failure_mode") or data.get("failure_mode") or "unknown",
+                "hazard_type": rf.get("hazard_type", "none"),
+                "affected_public_space": bool(rf.get("affected_public_space", True)),
+                "requires_emergency_attention": bool(rf.get("requires_emergency_attention", False)),
+            },
+            evidence={
+                "text_evidence": [str(x) for x in ev.get("text_evidence", []) if str(x).strip()],
+                "image_evidence": [str(x) for x in ev.get("image_evidence", []) if str(x).strip()],
+                "missing_information": [str(x) for x in ev.get("missing_information", []) if str(x).strip()],
+            },
+            alignment_features={
+                "domain": af.get("domain") or data.get("semantic_domain") or "unknown",
+                "physical_component": af.get("physical_component") or data.get("physical_component") or "unknown",
+                "failure_mode": af.get("failure_mode") or data.get("failure_mode") or "unknown",
+                "visible_hazard": bool(af.get("visible_hazard", data.get("damage_visible", False))),
+                "objects": [str(x) for x in af.get("objects", []) if str(x).strip()],
+                "actions": [str(x) for x in af.get("actions", []) if str(x).strip()],
+                "location_context": [str(x) for x in af.get("location_context", []) if str(x).strip()],
+            },
+            visual_candidates=visual_candidates,
+        )
+
+    async def _call_openai_fallback(
+        self,
+        image: Image.Image,
+        complaint_id: Optional[str] = None,
+    ) -> Optional[VLMImageAnalysis]:
+        if not OPENAI_API_KEY:
+            return None
+        try:
+            import openai
+
+            b64 = _image_to_base64(image)
+            user_content: list = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                },
+                {
+                    "type": "text",
+                    "text": (
+                        "Analyse this image for public infrastructure damage. "
+                        "Return image-only findings; do not compare against any complaint text."
+                    ),
+                },
+            ]
+            messages = [
+                {"role": "system", "content": _VLM_SYSTEM},
+                {"role": "user", "content": user_content},
+            ]
+            client = openai.AsyncOpenAI(
+                api_key=OPENAI_API_KEY,
+                max_retries=0,
+                timeout=VLM_TIMEOUT,
+            )
+            async with llm_audit_context(
+                complaint_id=complaint_id,
+                service="image_understanding",
+                call_type="image_analysis_fallback",
+                provider="openai",
+                model=OPENAI_MODEL,
+                prompt_version="vlm_image_analysis_v2",
+                request_payload={
+                    "messages": [
+                        {"role": "system", "content": _VLM_SYSTEM},
+                        {"role": "user", "content": [
+                            {"type": "image_url", "image_url": {"url": "[base64_image_redacted]"}},
+                            user_content[-1],
+                        ]},
+                    ],
+                    "response_format": "json_object",
+                    "temperature": 0.0,
+                    "max_tokens": 900,
+                },
+            ) as audit:
+                resp = await client.chat.completions.create(
+                    model=OPENAI_MODEL,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=0.0,
+                    max_tokens=900,
+                )
+                raw = resp.choices[0].message.content
+                audit["raw_output"] = raw
+                cleaned = re.sub(r"```(?:json)?", "", raw).strip()
+                start = cleaned.find("{")
+                end = cleaned.rfind("}") + 1
+                if start == -1 or end == 0:
+                    return None
+                data = json.loads(cleaned[start:end])
+                parsed = self._parse_analysis_response(data)
+                audit["parsed_output"] = data
+                return parsed
+        except Exception as e:
+            log.warning("[IEP-2] GPT-4o image fallback failed: %s", e)
+            return None
+
     async def analyze(
         self,
         image: Image.Image,
@@ -676,79 +828,10 @@ class VLMAnalyzer:
                 data = json.loads(cleaned[start:end])
                 audit["parsed_output"] = data
 
-            loc_raw = data.get("location_cues", {})
-            if isinstance(loc_raw, list):
-                loc_raw = {
-                    "detected_text": [str(x) for x in loc_raw if x],
-                    "landmarks": [],
-                    "street_signs": [],
-                    "storefront_names": [],
-                    "confidence": 0.5,
-                }
-
-            rf = data.get("routing_features", {}) or {}
-            ev = data.get("evidence", {}) or {}
-            af = data.get("alignment_features", {}) or {}
-            visual_candidates = _parse_visual_candidates(data)
-            primary = visual_candidates[0]
-
-            severity = str(data.get("damage_severity") or "LOW").upper()
-            if severity in {"NONE", "NO_DAMAGE", "UNKNOWN", ""}:
-                severity = "LOW"
-            if severity not in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
-                severity = "LOW"
-
-            return VLMImageAnalysis(
-                image_type=data.get("image_type", "other"),
-                is_valid_complaint_image=bool(data.get("is_valid_complaint_image", False)),
-                is_harmful=bool(data.get("is_harmful", False)),
-                is_ai_generated=bool(data.get("is_ai_generated", False)),
-                damage_visible=bool(data.get("damage_visible", False)),
-                visual_category=primary.visual_category or _snake(data.get("visual_category"), "other"),
-                visual_subcategory=primary.visual_subcategory or _snake(data.get("visual_subcategory"), "other"),
-                caption=primary.caption or data.get("caption", ""),
-                damage_severity=severity,
-                location_cues={
-                    "detected_text": [str(x) for x in loc_raw.get("detected_text", []) if str(x).strip()],
-                    "landmarks": [str(x) for x in loc_raw.get("landmarks", []) if str(x).strip()],
-                    "street_signs": [str(x) for x in loc_raw.get("street_signs", []) if str(x).strip()],
-                    "storefront_names": [str(x) for x in loc_raw.get("storefront_names", []) if str(x).strip()],
-                    "confidence": float(loc_raw.get("confidence", 0.0)),
-                },
-                confidence=_float(primary.confidence, _float(data.get("confidence"), 0.5)),
-                reasoning=data.get("reasoning", ""),
-                vlm_alignment=None,
-                vlm_alignment_confidence=0.0,
-                semantic_domain=primary.semantic_domain or data.get("semantic_domain"),
-                physical_component=primary.physical_component or data.get("physical_component"),
-                failure_mode=primary.failure_mode or data.get("failure_mode"),
-                routing_features={
-                    "domain": rf.get("domain") or data.get("semantic_domain") or "unknown",
-                    "physical_component": rf.get("physical_component") or data.get("physical_component") or "unknown",
-                    "failure_mode": rf.get("failure_mode") or data.get("failure_mode") or "unknown",
-                    "hazard_type": rf.get("hazard_type", "none"),
-                    "affected_public_space": bool(rf.get("affected_public_space", True)),
-                    "requires_emergency_attention": bool(rf.get("requires_emergency_attention", False)),
-                },
-                evidence={
-                    "text_evidence": [str(x) for x in ev.get("text_evidence", []) if str(x).strip()],
-                    "image_evidence": [str(x) for x in ev.get("image_evidence", []) if str(x).strip()],
-                    "missing_information": [str(x) for x in ev.get("missing_information", []) if str(x).strip()],
-                },
-                alignment_features={
-                    "domain": af.get("domain") or data.get("semantic_domain") or "unknown",
-                    "physical_component": af.get("physical_component") or data.get("physical_component") or "unknown",
-                    "failure_mode": af.get("failure_mode") or data.get("failure_mode") or "unknown",
-                    "visible_hazard": bool(af.get("visible_hazard", data.get("damage_visible", False))),
-                    "objects": [str(x) for x in af.get("objects", []) if str(x).strip()],
-                    "actions": [str(x) for x in af.get("actions", []) if str(x).strip()],
-                    "location_context": [str(x) for x in af.get("location_context", []) if str(x).strip()],
-                },
-                visual_candidates=visual_candidates,
-            )
+            return self._parse_analysis_response(data)
         except Exception as e:
             log.warning("[IEP-2] VLM analysis failed: %s", e)
-            return None
+            return await self._call_openai_fallback(image, complaint_id)
 
 
 class VLMAlignmentChecker:

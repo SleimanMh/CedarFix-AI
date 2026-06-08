@@ -106,36 +106,40 @@ def _log_mlflow_metadata(record: dict, full_record: Optional[dict] = None) -> No
             if record.get("latency_ms") is not None:
                 mlflow.log_metric("latency_ms", record["latency_ms"])
             artifact_record = full_record or record
-            mlflow.log_dict(
-                _json_safe(artifact_record.get("request_payload")),
-                "request_payload.json",
-            )
-            if artifact_record.get("raw_output") is not None:
-                mlflow.log_text(
-                    str(artifact_record["raw_output"]),
-                    "raw_output.txt",
-                )
-            if artifact_record.get("parsed_output") is not None:
+            try:
                 mlflow.log_dict(
-                    _json_safe(artifact_record.get("parsed_output")),
-                    "parsed_output.json",
+                    _json_safe(artifact_record.get("request_payload")),
+                    "request_payload.json",
                 )
-            mlflow.log_dict(
-                {
-                    "audit_id": artifact_record.get("id"),
-                    "complaint_id": artifact_record.get("complaint_id"),
-                    "service": artifact_record.get("service"),
-                    "call_type": artifact_record.get("call_type"),
-                    "provider": artifact_record.get("provider"),
-                    "model": artifact_record.get("model"),
-                    "prompt_version": artifact_record.get("prompt_version"),
-                    "status": artifact_record.get("status"),
-                    "latency_ms": artifact_record.get("latency_ms"),
-                    "error_type": artifact_record.get("error_type"),
-                    "error_message": artifact_record.get("error_message"),
-                },
-                "audit_metadata.json",
-            )
+                mlflow.log_dict(
+                    {
+                        "audit_id": artifact_record.get("id"),
+                        "complaint_id": artifact_record.get("complaint_id"),
+                        "service": artifact_record.get("service"),
+                        "call_type": artifact_record.get("call_type"),
+                        "provider": artifact_record.get("provider"),
+                        "model": artifact_record.get("model"),
+                        "prompt_version": artifact_record.get("prompt_version"),
+                        "status": artifact_record.get("status"),
+                        "latency_ms": artifact_record.get("latency_ms"),
+                        "error_type": artifact_record.get("error_type"),
+                        "error_message": artifact_record.get("error_message"),
+                    },
+                    "audit_metadata.json",
+                )
+                if artifact_record.get("raw_output") is not None:
+                    mlflow.log_text(
+                        str(artifact_record["raw_output"]),
+                        "raw_output.txt",
+                    )
+                if artifact_record.get("parsed_output") is not None:
+                    mlflow.log_dict(
+                        _json_safe(artifact_record.get("parsed_output")),
+                        "parsed_output.json",
+                    )
+            except Exception as artifact_exc:
+                mlflow.set_tag("artifact_logging_status", "failed")
+                mlflow.set_tag("artifact_logging_error", str(artifact_exc)[:500])
     except Exception as exc:
         log.debug("[llm-audit] MLflow metadata log skipped: %s", exc)
 
