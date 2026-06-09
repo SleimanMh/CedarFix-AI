@@ -241,6 +241,11 @@ The test structure and readiness gates are documented in `tests/README.md` and `
 
 Local Kubernetes manifests live in `k8s/`. GCP/GKE manifests live in `k8s-gcp/`.
 
+Live GCP URLs:
+
+- App: `http://8.233.150.116/`
+- MLflow: `http://136.112.186.183/`
+
 Deployment-specific configuration is split between:
 
 - ConfigMaps: non-secret runtime settings, service URLs, thresholds, model names, collection names.
