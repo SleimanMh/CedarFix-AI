@@ -380,6 +380,8 @@ def test_async_router_keeps_hitl_authority_as_primary(router_module, monkeypatch
         router.route_async(
             **_route_kwargs(
                 complaint_type="public_safety",
+                category="public_safety",
+                subcategory="structural_hazard",
                 original_text="There is smoke and a collapse risk near the building.",
             )
         )
@@ -425,7 +427,16 @@ def test_async_router_guardrail_lock_keeps_top_authority_as_primary(router_modul
     monkeypatch.setattr(router_module, "_call_llm_routing", llm_selects_isf)
 
     router = router_module.ComplaintRouter(auto_threshold=0.85, review_threshold=0.65)
-    result = asyncio.run(router.route_async(**_route_kwargs(complaint_type="public_safety")))
+    result = asyncio.run(
+        router.route_async(
+            **_route_kwargs(
+                complaint_type="public_safety",
+                category="public_safety",
+                subcategory="emergency_response",
+                original_text="Fire and collapse risk reported near a residential building.",
+            )
+        )
+    )
 
     assert result.primary_entity == schemas.RoutingEntity.CIVIL_DEFENSE
     assert result.secondary_entity == schemas.RoutingEntity.INTERNAL_SECURITY
@@ -467,7 +478,17 @@ def test_async_router_real_authority_remains_primary_when_llm_requests_human_rev
     monkeypatch.setattr(router_module, "_call_llm_routing", llm_requests_review)
 
     router = router_module.ComplaintRouter(auto_threshold=0.85, review_threshold=0.65)
-    result = asyncio.run(router.route_async(**_route_kwargs(complaint_type="telecom_outage")))
+    result = asyncio.run(
+        router.route_async(
+            **_route_kwargs(
+                complaint_type="telecom_outage",
+                category="telecom",
+                subcategory="internet_outage",
+                original_text="The fixed internet cable and fiber line are down.",
+                keywords=["internet", "cable", "fiber"],
+            )
+        )
+    )
 
     assert result.primary_entity == schemas.RoutingEntity.OGERO
     assert result.primary_confidence >= 0.7
