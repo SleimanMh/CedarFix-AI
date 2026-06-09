@@ -225,6 +225,10 @@ form.addEventListener('submit', async (e) => {
 
     // Route to the correct result panel based on pipeline status
     switch (decision.status) {
+      case 'processing':
+      case 'pending':
+        showSuccess(decision);
+        break;
       case 'needs_clarification':
         showClarification(decision);
         break;
@@ -299,6 +303,9 @@ function showMultiResult(response) {
 }
 
 function showSuccess(d) {
+  const isProcessing = d.status === 'processing' || d.status === 'pending';
+  resultSuccess.querySelector('h3').textContent = isProcessing ? 'Complaint Queued' : 'Complaint Received';
+
   // Complaint ID
   document.getElementById('resultId').textContent = `ID: ${d.complaint_id}`;
 
@@ -308,7 +315,7 @@ function showSuccess(d) {
   const isOther = rawType === 'other';
   const specificSub = sub && !['other', 'unknown', ''].includes(sub.toLowerCase());
 
-  document.getElementById('resType').textContent = displayType(rawType, sub);
+  document.getElementById('resType').textContent = isProcessing ? 'Processing' : displayType(rawType, sub);
 
   // Category Detail row — show category when type is "other" with a specific subcategory
   const subRow = document.getElementById('subcategoryRow');
@@ -324,7 +331,7 @@ function showSuccess(d) {
 
   const lang = d.text_analysis?.detected_language;
   const langMap = { ar: '🇦🇷 Arabic', fr: '🇫🇷 French', en: '🇬🇧 English', unknown: '—' };
-  document.getElementById('resLang').textContent = langMap[lang] || lang || '—';
+  document.getElementById('resLang').textContent = isProcessing ? 'Queued' : (langMap[lang] || lang || '—');
 
   // Severity with color
   const sev = d.severity || '—';
@@ -339,7 +346,7 @@ function showSuccess(d) {
 
   // Routing entity
   document.getElementById('resEntity').textContent =
-    d.assigned_entity || '—';
+    isProcessing ? 'Routing pending' : (d.assigned_entity || '—');
 
   const secondaryEntity = d.routing?.secondary_entity;
   document.getElementById('resSecondaryEntity').textContent = secondaryEntity || '-';
@@ -361,7 +368,11 @@ function showSuccess(d) {
 
   // Explanation
   const expText = d.explanation?.explanation_text;
-  if (expText) {
+  if (isProcessing) {
+    document.getElementById('resExplanation').textContent =
+      'Your complaint was saved and is being processed in the background. Open My Complaints to track text, image, duplicate, priority, and routing stages.';
+    document.getElementById('explanationBlock').style.display = '';
+  } else if (expText) {
     document.getElementById('resExplanation').textContent = expText;
     document.getElementById('explanationBlock').style.display = '';
   } else {

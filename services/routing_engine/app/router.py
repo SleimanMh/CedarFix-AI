@@ -85,6 +85,70 @@ TYPE_TO_ENTITY = {
     "other":              (RoutingEntity.HUMAN_REVIEW,             None,                               0.40),
 }
 
+TYPE_ALIASES = {
+    "big_road_pothole": "pothole",
+    "large_road_pothole": "pothole",
+    "road_pothole": "pothole",
+    "road_surface_pothole": "pothole",
+    "large_road_surface_damage": "road_damage",
+    "road_surface_damage": "road_damage",
+    "electricity_outage_area": "electricity_outage",
+    "extended_electricity_outage": "electricity_outage",
+    "area_power_outage": "electricity_outage",
+    "power_outage": "electricity_outage",
+}
+
+TRANSPORTATION_ENTITIES = {
+    RoutingEntity.MINISTRY_PUBLIC_WORKS,
+    RoutingEntity.BEIRUT_MUNICIPALITY,
+    RoutingEntity.NORTH_MUNICIPALITY,
+    RoutingEntity.SOUTH_MUNICIPALITY,
+    RoutingEntity.MOUNT_LEBANON_MUNICIPALITY,
+    RoutingEntity.BEKAA_MUNICIPALITY,
+    RoutingEntity.GENERIC_MUNICIPALITY,
+    RoutingEntity.MUNICIPAL_POLICE,
+    RoutingEntity.INTERNAL_SECURITY,
+    RoutingEntity.CDR,
+    RoutingEntity.HUMAN_REVIEW,
+}
+
+ELECTRICITY_ENTITIES = {
+    RoutingEntity.EDL,
+    RoutingEntity.EDZ,
+    RoutingEntity.MINISTRY_ENERGY_WATER,
+    RoutingEntity.GENERIC_MUNICIPALITY,
+    RoutingEntity.HUMAN_REVIEW,
+}
+
+WATER_ENTITIES = {
+    RoutingEntity.WATER_AUTHORITY,
+    RoutingEntity.WATER_NORTH,
+    RoutingEntity.WATER_SOUTH,
+    RoutingEntity.WATER_BEKAA,
+    RoutingEntity.MINISTRY_ENERGY_WATER,
+    RoutingEntity.GENERIC_MUNICIPALITY,
+    RoutingEntity.HUMAN_REVIEW,
+}
+
+TELECOM_ENTITIES = {
+    RoutingEntity.OGERO,
+    RoutingEntity.TRA,
+    RoutingEntity.MOBILE_OPERATOR,
+    RoutingEntity.GENERIC_MUNICIPALITY,
+    RoutingEntity.HUMAN_REVIEW,
+}
+
+SERVICE_OWNER_ENTITIES = {
+    "electricity": {RoutingEntity.EDL, RoutingEntity.EDZ},
+    "water": {
+        RoutingEntity.WATER_AUTHORITY,
+        RoutingEntity.WATER_NORTH,
+        RoutingEntity.WATER_SOUTH,
+        RoutingEntity.WATER_BEKAA,
+    },
+    "telecom": {RoutingEntity.OGERO, RoutingEntity.TRA, RoutingEntity.MOBILE_OPERATOR},
+}
+
 # Municipality → RoutingEntity override (used when complaint is outside Beirut)
 MUNICIPALITY_ENTITY_MAP = {
     "Beirut":     RoutingEntity.BEIRUT_MUNICIPALITY,
@@ -175,11 +239,18 @@ Rules:
 
 def _build_routing_prompt(
     complaint_type: str,
+    category: str,
+    subcategory: str,
+    summary: str,
     original_text: str,
     location_district: Optional[str],
     location_governorate: Optional[str],
     location_municipality: Optional[str],
     keywords: List[str],
+    routing_features: dict,
+    evidence_text: List[str],
+    evidence_image: List[str],
+    alignment_features: dict,
     docs: list[dict],
 ) -> str:
     docs_text = "\n\n".join([
@@ -221,11 +292,19 @@ def _build_routing_prompt(
 
     return (
         f"Complaint type: {complaint_type}\n"
+        f"Category: {category or 'unknown'}\n"
+        f"Subcategory: {subcategory or 'unknown'}\n"
+        f"Summary: {summary[:300] if summary else 'none'}\n"
         f"Location: {location_str}\n"
         f"Keywords: {', '.join(keywords[:8]) if keywords else 'none'}\n"
+        f"Routing features: {json.dumps(routing_features or {}, ensure_ascii=True)}\n"
+        f"Text evidence: {json.dumps((evidence_text or [])[:6], ensure_ascii=True)}\n"
+        f"Image evidence: {json.dumps((evidence_image or [])[:6], ensure_ascii=True)}\n"
+        f"Alignment features: {json.dumps(alignment_features or {}, ensure_ascii=True)}\n"
         f"Complaint text: \"{original_text[:300]}\"\n\n"
         f"Retrieved routing candidates:\n{docs_text}\n\n"
-        "Choose the correct entity from the candidates above."
+        "Choose the correct entity from the candidates above by comparing each candidate's handles, "
+        "negative signals, and responsibilities against the complaint evidence."
     )
 
 
@@ -351,6 +430,55 @@ def _build_query_text(
     return " | ".join(parts)
 
 
+def _build_issue_only_query_text(
+    complaint_type: str,
+    category: str,
+    subcategory: str,
+    summary: str,
+    keywords: List[str],
+    signals: dict,
+    routing_features: dict,
+    evidence_text: List[str],
+    evidence_image: List[str],
+    alignment_features: dict,
+    multimodal_alignment: dict,
+) -> str:
+    return _build_query_text(
+        complaint_type,
+        category,
+        subcategory,
+        summary,
+        None,
+        None,
+        None,
+        [],
+        None,
+        keywords,
+        signals,
+        routing_features,
+        evidence_text,
+        evidence_image,
+        alignment_features,
+        multimodal_alignment,
+        "",
+    )
+
+
+def _without_municipality_context(query_text: str) -> str:
+    parts = []
+    blocked = (
+        "municipality:",
+        "location_mentions:",
+        "location_context:",
+    )
+    for part in query_text.split(" | "):
+        lowered = part.strip().lower()
+        if lowered.startswith(blocked):
+            continue
+        parts.append(part)
+    return " | ".join(parts)
+
+
 _AUTO_ROUTE_MODES = {
     "routing_candidate",
     "routing_rule",
@@ -444,6 +572,104 @@ _FIXED_TELECOM_TERMS = {
 
 def _tokens(value: str) -> set[str]:
     return set(re.findall(r"[a-z0-9_+-]{3,}", value.lower()))
+
+
+def _canonical_complaint_type(
+    complaint_type: Optional[str],
+    category: Optional[str] = None,
+    subcategory: Optional[str] = None,
+    original_text: Optional[str] = None,
+) -> str:
+    parts = " ".join(
+        str(v or "")
+        for v in (complaint_type, category, subcategory, original_text)
+    ).lower()
+    raw = (complaint_type or "other").strip() or "other"
+    if raw in TYPE_TO_ENTITY:
+        return raw
+    if raw in TYPE_ALIASES:
+        return TYPE_ALIASES[raw]
+    if "pothole" in parts:
+        return "pothole"
+    if any(term in parts for term in ("road_surface", "road surface", "asphalt", "road damage")):
+        return "road_damage"
+    return raw
+
+
+def _domain_from_request(
+    complaint_type: str,
+    category: Optional[str],
+    subcategory: Optional[str],
+    routing_features: dict,
+    original_text: Optional[str],
+) -> str:
+    derived = routing_features.get("derived") if isinstance(routing_features, dict) else {}
+    text_features = routing_features.get("text") if isinstance(routing_features, dict) else {}
+    feature_parts: list[str] = []
+    for source in (derived, text_features):
+        if isinstance(source, dict):
+            feature_parts.extend(
+                str(source.get(field) or "")
+                for field in ("domain", "physical_component", "failure_mode", "hazard_type")
+            )
+            domain = str(source.get("domain") or "").strip().lower()
+            if domain and domain not in {"unknown", "other", "utilities"}:
+                return domain
+
+    parts = " ".join(
+        str(v or "")
+        for v in (complaint_type, category, subcategory, original_text, " ".join(feature_parts))
+    ).lower()
+    if any(term in parts for term in ("pothole", "road", "street", "asphalt", "traffic", "sidewalk")):
+        return "transportation"
+    if any(term in parts for term in ("electric", "power", "grid", "streetlight")):
+        return "electricity"
+    if any(term in parts for term in ("water", "sewer", "pipe", "flood")):
+        return "water"
+    if any(term in parts for term in ("telecom", "internet", "fiber", "cable", "ogero")):
+        return "telecom"
+    return "unknown"
+
+
+def _doc_domain_compatible(doc: dict, domain: str) -> bool:
+    entity = _resolve_entity(doc.get("entity_enum") or doc.get("entity_name"))
+    if domain == "transportation":
+        if entity and entity not in TRANSPORTATION_ENTITIES:
+            return False
+    elif domain == "electricity":
+        if entity and entity not in ELECTRICITY_ENTITIES:
+            return False
+    elif domain == "water":
+        if entity and entity not in WATER_ENTITIES:
+            return False
+    elif domain == "telecom":
+        if entity and entity not in TELECOM_ENTITIES:
+            return False
+    else:
+        return True
+
+    doc_text = " ".join(
+        str(part or "")
+        for part in (
+            doc.get("doc_type"),
+            doc.get("route_mode"),
+            doc.get("entity_type"),
+            doc.get("description"),
+            " ".join(str(x) for x in doc.get("complaint_types", []) or []),
+            " ".join(str(x) for x in doc.get("keywords", []) or []),
+            " ".join(str(x) for x in doc.get("exact_match_terms", []) or []),
+        )
+    ).lower()
+    tokens = _tokens(doc_text)
+    if domain == "transportation" and {"electric", "electricite", "edz", "edl", "water", "telecom", "internet", "ogero"} & tokens:
+        return False
+    if domain == "electricity" and {"water", "telecom", "internet", "ogero"} & tokens:
+        return False
+    if domain == "water" and {"electric", "electricite", "edz", "edl", "telecom", "internet", "ogero"} & tokens:
+        return False
+    if domain == "telecom" and {"electric", "electricite", "edz", "edl", "water"} & tokens:
+        return False
+    return True
 
 
 def _is_fixed_telecom_context(text: str) -> bool:
@@ -699,6 +925,80 @@ def _collect_qdrant_results(results: list, docs_by_id: dict[str, dict], stage: s
             docs_by_id[doc_id] = payload
 
 
+def _merge_retrieval_passes(
+    issue_docs: list[dict],
+    location_docs: list[dict],
+    no_municipality_docs: list[dict] | None = None,
+    *,
+    top_k: int,
+    domain: str,
+) -> list[dict]:
+    merged: dict[str, dict] = {}
+
+    def add_docs(docs: list[dict], retrieval_pass: str) -> None:
+        for rank, doc in enumerate(docs, 1):
+            doc_id = str(doc.get("doc_id") or "").strip()
+            if not doc_id:
+                continue
+            candidate = dict(doc)
+            candidate.setdefault("retrieval_passes", [])
+            candidate["retrieval_passes"] = list(candidate["retrieval_passes"])
+            if retrieval_pass not in candidate["retrieval_passes"]:
+                candidate["retrieval_passes"].append(retrieval_pass)
+            candidate[f"_{retrieval_pass}_rank"] = rank
+
+            current = merged.get(doc_id)
+            if current is None:
+                merged[doc_id] = candidate
+                continue
+
+            current_passes = set(current.get("retrieval_passes", []))
+            current_passes.add(retrieval_pass)
+            current["retrieval_passes"] = sorted(current_passes)
+            current[f"_{retrieval_pass}_rank"] = rank
+            if float(candidate.get("_rerank_score") or 0.0) > float(current.get("_rerank_score") or 0.0):
+                for key, value in candidate.items():
+                    if key != "retrieval_passes":
+                        current[key] = value
+
+    add_docs(issue_docs, "issue")
+    add_docs(location_docs, "location")
+    add_docs(no_municipality_docs or [], "no_municipality")
+
+    clean = [doc for doc in merged.values() if _doc_domain_compatible(doc, domain)]
+    for doc in clean:
+        pass_bonus = 0.10 if {"issue", "location"} <= set(doc.get("retrieval_passes", [])) else 0.0
+        issue_rank = int(doc.get("_issue_rank") or 99)
+        location_rank = int(doc.get("_location_rank") or 99)
+        no_muni_rank = int(doc.get("_no_municipality_rank") or 99)
+        rank_bonus = max(0.0, (12 - min(issue_rank, location_rank, no_muni_rank)) * 0.012)
+        pass_bonus += 0.06 if "no_municipality" in set(doc.get("retrieval_passes", [])) else 0.0
+        if str(doc.get("route_mode") or "") == "complaint_intake_or_channel":
+            pass_bonus -= 0.10
+        doc["_merged_score"] = round(float(doc.get("_rerank_score") or 0.0) + pass_bonus + rank_bonus, 6)
+
+    clean.sort(
+        key=lambda d: (
+            float(d.get("_merged_score") or 0.0),
+            float(d.get("_rerank_score") or 0.0),
+            float(d.get("_rag_score") or 0.0),
+        ),
+        reverse=True,
+    )
+    return clean[:top_k]
+
+
+def _has_service_owner_candidate(docs: list[dict], domain: str) -> bool:
+    owners = SERVICE_OWNER_ENTITIES.get(domain)
+    if not owners:
+        return True
+    for doc in docs:
+        entity = _resolve_entity(doc.get("entity_enum") or doc.get("entity_name"))
+        if entity in owners and _doc_allows_auto_route(doc):
+            return True
+    return False
+
+
 def _qdrant_vector_search(
     qdrant,
     *,
@@ -925,7 +1225,7 @@ def _static_route(
 ) -> tuple[RoutingEntity, Optional[RoutingEntity], float, list[str]]:
     """Returns (primary, secondary, confidence, rationale_tags)."""
     rationale: list[str] = []
-    ct = complaint_type or "other"
+    ct = _canonical_complaint_type(complaint_type)
     primary, secondary, base_conf = TYPE_TO_ENTITY.get(ct, TYPE_TO_ENTITY["other"])
     rationale.append(f"type '{ct}' → {primary.value}")
 
@@ -1063,6 +1363,8 @@ def _candidate_summary(doc: dict) -> dict:
         "location_scope": _location_scope_label(doc),
         "rag_score": round(float(doc.get("_rag_score") or 0.0), 4),
         "rerank_score": round(float(doc.get("_rerank_score") or 0.0), 4),
+        "merged_score": round(float(doc.get("_merged_score") or 0.0), 4),
+        "retrieval_passes": doc.get("retrieval_passes", []),
         "allows_auto_route": _doc_allows_auto_route(doc),
     }
 
@@ -1158,7 +1460,8 @@ class ComplaintRouter:
         alignment_features: dict,
         multimodal_alignment: dict,
     ) -> RoutingResult:
-        ct = complaint_type or "other"
+        ct = _canonical_complaint_type(complaint_type, category, subcategory, original_text)
+        request_domain = _domain_from_request(ct, category, subcategory, routing_features, original_text)
 
         if not RAG_ENABLED:
             if STATIC_FALLBACK_ENABLED:
@@ -1194,7 +1497,20 @@ class ComplaintRouter:
             location_mentions,
         )
 
-        query_text = _build_query_text(
+        issue_query_text = _build_issue_only_query_text(
+            ct,
+            category,
+            subcategory,
+            summary,
+            keywords,
+            signals,
+            routing_features,
+            evidence_text,
+            evidence_image,
+            alignment_features,
+            multimodal_alignment,
+        )
+        location_query_text = _build_query_text(
             ct,
             category,
             subcategory,
@@ -1213,7 +1529,32 @@ class ComplaintRouter:
             multimodal_alignment,
             original_text,
         )
-        docs = _retrieve_docs(query_text, top_k=RAG_TOP_K, location_context=location_context)
+        issue_docs = _retrieve_docs(issue_query_text, top_k=RAG_TOP_K, location_context=None)
+        no_municipality_query_text = _without_municipality_context(location_query_text)
+        location_docs = _retrieve_docs(location_query_text, top_k=RAG_TOP_K, location_context=location_context)
+        no_municipality_docs = _retrieve_docs(
+            no_municipality_query_text,
+            top_k=RAG_TOP_K,
+            location_context=None,
+        )
+        docs = _merge_retrieval_passes(
+            issue_docs,
+            location_docs,
+            no_municipality_docs,
+            top_k=7,
+            domain=request_domain,
+        )
+        if docs and request_domain in SERVICE_OWNER_ENTITIES and not _has_service_owner_candidate(docs, request_domain):
+            return _review_result(
+                complaint_id=complaint_id,
+                routing_source="rag_domain_no_authority",
+                review_reason=(
+                    f"RAG retrieval did not return an authoritative {request_domain} service owner. "
+                    "Human review is required; no static authority fallback was used."
+                ),
+                retrieved_sources=[d.get("doc_id", "") for d in docs],
+                retrieved_candidates=[_candidate_summary(d) for d in docs],
+            )
         retrieved_sources = [d.get("doc_id", "") for d in docs]
         retrieved_candidates = [_candidate_summary(d) for d in docs]
 
@@ -1280,9 +1621,18 @@ class ComplaintRouter:
         )
 
         prompt = _build_routing_prompt(
-            ct, original_text,
+            ct,
+            category,
+            subcategory,
+            summary,
+            original_text,
             location_district, location_governorate, location_municipality,
-            keywords, allowed_docs,
+            keywords,
+            routing_features,
+            evidence_text,
+            evidence_image,
+            alignment_features,
+            allowed_docs,
         )
         llm_data = await _call_llm_routing(prompt)
         if llm_data:
@@ -1379,7 +1729,7 @@ class ComplaintRouter:
         keywords: List[str],
     ) -> RoutingResult:
         """Synchronous static-only path (used when async context not available)."""
-        ct = complaint_type or "other"
+        ct = _canonical_complaint_type(complaint_type)
         static_primary, static_secondary, static_conf, static_rationale = _static_route(
             ct, location_district, location_mentions, None, None
         )

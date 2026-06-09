@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from cedarfix_shared.db import Base
-from cedarfix_shared.schemas import ComplaintDecision
+from cedarfix_shared.schemas import ComplaintDecision, PipelineStatus
 from .config import settings
 
 # Use asyncpg for async Postgres support in the gateway
@@ -93,6 +93,14 @@ async def _try_create_unique_index(name: str, sql: str) -> None:
 
 async def save_complaint(decision: ComplaintDecision):
     from cedarfix_shared.db import Complaint
+    status_value = decision.status.value if hasattr(decision.status, "value") else str(decision.status)
+    requires_review = (
+        status_value == PipelineStatus.REVIEW_REQUIRED.value
+        or (
+            (decision.routing.requires_review or decision.routing.rag_no_candidates)
+            if decision.routing else False
+        )
+    )
     async with AsyncSessionLocal() as session:
         record = Complaint(
             id=decision.complaint_id,
@@ -118,11 +126,11 @@ async def save_complaint(decision: ComplaintDecision):
             assigned_entity=decision.assigned_entity,
             routing_confidence=decision.routing_confidence,
             auto_routed=decision.routing.auto_routed if decision.routing else None,
-            requires_review=decision.routing.requires_review if decision.routing else False,
+            requires_review=requires_review,
             total_pipeline_ms=decision.total_pipeline_ms,
             full_decision_json=json.loads(decision.json()),
         )
-        session.add(record)
+        await session.merge(record)
         await session.commit()
 
 
@@ -229,6 +237,8 @@ async def fetch_user_complaints(user_id: str, page: int = 1, limit: int = 20) ->
                        assigned_entity, duplicate_status, requires_review,
                        priority_score, location_district,
                        LEFT(original_text, 120) AS text_preview,
+                       full_decision_json->'routing'->>'secondary_entity' AS secondary_entity,
+                       full_decision_json->'routing'->>'secondary_confidence' AS secondary_confidence,
                        full_decision_json->'text_analysis'->>'subcategory' AS subcategory,
                        full_decision_json->'text_analysis'->>'category' AS category
                 FROM complaints

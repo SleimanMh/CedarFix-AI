@@ -16,7 +16,7 @@ import uuid
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends, Query
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
@@ -76,6 +76,40 @@ async def startup():
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "gateway"}
+
+
+async def _process_complaint_background(
+    complaint_id: str,
+    request: ComplaintRequest,
+    started_ms: int,
+) -> None:
+    try:
+        decision = await run_pipeline(complaint_id, request)
+        decision.total_pipeline_ms = int(time.time() * 1000) - started_ms
+        await save_complaint(decision)
+        await save_retraining_record(decision)
+        COMPLAINTS_TOTAL.labels(status="completed").inc()
+        PIPELINE_DURATION.labels(stage="full").observe(decision.total_pipeline_ms / 1000)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        failed = ComplaintDecision(
+            complaint_id=complaint_id,
+            status=PipelineStatus.FAILED,
+            original_text=request.text,
+            user_id=request.user_id,
+            location=request.location,
+            location_input_mode=request.location_input_mode,
+            image_filename=request.image_filename,
+            parent_submission_id=request.parent_submission_id,
+            split_index=request.split_index,
+            split_total=request.split_total,
+            split_source=request.split_source,
+            original_submission_text=request.original_submission_text,
+            total_pipeline_ms=int(time.time() * 1000) - started_ms,
+        )
+        await save_complaint(failed)
+        COMPLAINTS_TOTAL.labels(status="failed").inc()
 
 
 # =============================================================================
@@ -172,6 +206,7 @@ async def login(body: LoginRequest):
 
 @app.post("/complaints", response_model=ComplaintSubmissionResponse, status_code=201)
 async def submit_complaint(
+    background_tasks: BackgroundTasks,
     text: str = Form(..., min_length=10, max_length=2000),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
@@ -185,9 +220,9 @@ async def submit_complaint(
     """
     Submit a complaint with optional image and GPS coordinates.
     If a JWT token is present, user_id is taken from it automatically.
-    Returns one or more ComplaintDecision objects. If the submitted text contains
-    multiple independent complaints, each child complaint is processed and stored
-    separately under the same parent submission id.
+    Returns one or more processing ComplaintDecision objects immediately. If the
+    submitted text contains multiple independent complaints, each child complaint
+    is stored under the same parent submission id and processed in the background.
     """
     # Prefer authenticated user_id over form-submitted one
     resolved_user_id = (current_user["user_id"] if current_user else None) or user_id
@@ -261,18 +296,27 @@ async def submit_complaint(
                 original_submission_text=text if is_multi else None,
             )
 
-            decision = await run_pipeline(complaint_id, request)
-            decision.total_pipeline_ms = int(time.time() * 1000) - child_start_ms
-            await save_complaint(decision)
-            # Always persist the pipeline outputs for retraining / active learning.
-            # The retraining_store row will be reviewed by an admin later, especially
-            # when rag_no_match=TRUE or requires_review=TRUE.
-            await save_retraining_record(decision)
-            decisions.append(decision)
+            pending = ComplaintDecision(
+                complaint_id=complaint_id,
+                status=PipelineStatus.PROCESSING,
+                original_text=item.complaint_text,
+                user_id=resolved_user_id,
+                location=location,
+                location_input_mode=resolved_location_mode,
+                image_filename=image_filename,
+                parent_submission_id=submission_id if is_multi else None,
+                split_index=idx if is_multi else None,
+                split_total=split_total if is_multi else None,
+                split_source=split_result.source,
+                original_submission_text=text if is_multi else None,
+            )
+            await save_complaint(pending)
+            background_tasks.add_task(_process_complaint_background, complaint_id, request, child_start_ms)
+            decisions.append(pending)
 
-        COMPLAINTS_TOTAL.labels(status="completed").inc()
+        COMPLAINTS_TOTAL.labels(status="queued").inc()
         total_ms = int(time.time() * 1000) - start_ms
-        PIPELINE_DURATION.labels(stage="full").observe(total_ms / 1000)
+        PIPELINE_DURATION.labels(stage="submission_enqueue").observe(total_ms / 1000)
 
         return ComplaintSubmissionResponse(
             submission_id=submission_id,

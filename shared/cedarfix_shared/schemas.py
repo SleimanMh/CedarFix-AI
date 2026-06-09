@@ -451,6 +451,7 @@ class ComplaintDecision(BaseModel):
     routing_confidence: Optional[float] = None
     is_duplicate: bool = False
     total_pipeline_ms: Optional[int] = None
+    stage_timings_ms: Dict[str, int] = Field(default_factory=dict)
 
     class Config:
         use_enum_values = True

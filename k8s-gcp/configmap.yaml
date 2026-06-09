@@ -53,7 +53,7 @@ data:
   LLM_AUDIT_MAX_JSON_CHARS: "50000"
   LLM_AUDIT_MAX_RAW_CHARS: "50000"
 
-  VLM_BASE_URL: https://70pjp4ssi40ij0-8000.proxy.runpod.net/v1
+  VLM_BASE_URL: https://b8t0qyw0bddvat-8000.proxy.runpod.net/v1
   VLM_MODEL: Qwen/Qwen2.5-VL-3B-Instruct
   VLM_ENABLED: "true"
   VLM_TIMEOUT: "25"

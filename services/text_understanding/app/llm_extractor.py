@@ -408,6 +408,95 @@ def _snake_or_default(value: str | None, default: str) -> str:
     return default if normalized in {"", "unknown"} and default else normalized
 
 
+_TELECOM_INFRA_TERMS = {
+    "telecom",
+    "internet",
+    "fiber",
+    "dsl",
+    "landline",
+    "phone line",
+    "telecom cable",
+    "telecom cables",
+    "internet cable",
+    "internet cables",
+}
+
+_CABLE_HAZARD_TERMS = {
+    "cable",
+    "cables",
+    "wire",
+    "wires",
+    "falling",
+    "fallen",
+    "hanging",
+    "low hanging",
+    "downed",
+    "outage",
+}
+
+
+def _contains_any(text: str, terms: set[str]) -> bool:
+    return any(term in text for term in terms)
+
+
+def _repair_contradictory_infra_output(data: dict, original_text: str) -> dict:
+    """
+    Fine-tuned models sometimes emit contradictory JSON, e.g. is_complaint=false
+    while also extracting telecom_cables + internet_outage. Repair only obvious
+    public infrastructure cases so spam/personal text still stays rejected.
+    """
+    clean = dict(data or {})
+    haystack = " ".join(
+        str(part)
+        for part in [
+            original_text,
+            clean.get("english_translation", ""),
+            clean.get("issue_type", ""),
+            clean.get("category", ""),
+            clean.get("subcategory", ""),
+            clean.get("semantic_domain", ""),
+            clean.get("physical_component", ""),
+            clean.get("failure_mode", ""),
+            " ".join(str(x) for x in clean.get("keywords", []) or []),
+            " ".join(str(x) for x in clean.get("location_mentions", []) or []),
+        ]
+    ).lower()
+
+    telecom_problem = _contains_any(haystack, _TELECOM_INFRA_TERMS) and _contains_any(haystack, _CABLE_HAZARD_TERMS)
+    if not telecom_problem:
+        return clean
+
+    clean["is_complaint"] = True
+    if str(clean.get("english_translation") or "").strip().lower() in {
+        "not a public infrastructure complaint.",
+        "not a public infrastructure complaint",
+    }:
+        clean["english_translation"] = original_text
+    clean["issue_type"] = "telecom_cable_hazard"
+    clean["category"] = "telecom_network"
+    clean["subcategory"] = "falling_or_downed_telecom_cable_with_outage"
+    clean["semantic_domain"] = "utilities"
+    clean["physical_component"] = "telecom_cable"
+    clean["failure_mode"] = "falling_or_downed_with_outage" if "outage" in haystack else "falling_or_downed"
+    try:
+        current_confidence = float(clean.get("confidence") or 0.0)
+    except (TypeError, ValueError):
+        current_confidence = 0.0
+    clean["confidence"] = max(current_confidence, 0.82)
+    clean["summary"] = clean.get("summary") or "Telecom cables are falling and an internet outage is reported."
+
+    signals = dict(clean.get("signals") or {})
+    signals["public_safety_risk"] = bool(
+        signals.get("public_safety_risk")
+        or _contains_any(haystack, {"falling", "fallen", "hanging", "downed", "route", "road", "street"})
+    )
+    signals["traffic_impact"] = bool(signals.get("traffic_impact") or _contains_any(haystack, {"route", "road", "street"}))
+    clean["signals"] = signals
+    keywords = [str(x) for x in clean.get("keywords", []) or [] if str(x).strip()]
+    clean["keywords"] = list(dict.fromkeys([*keywords, "telecom cables", "internet outage"]))
+    return clean
+
+
 def _dynamic_descriptor_fallback(
     issue_type: str,
     category: str,
@@ -667,4 +756,5 @@ class LLMExtractor:
         if language in _TRANSLATE_ONLY_LANGUAGES and data is not None:
             data["english_translation"] = english_text
 
+        data = _repair_contradictory_infra_output(data, text)
         return _build_result(complaint_id, text, language, data, processing_ms)

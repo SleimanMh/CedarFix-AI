@@ -114,6 +114,12 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         split_source=request.split_source,
         original_submission_text=request.original_submission_text,
     )
+    human_review_queued = False
+
+    def _record_stage(stage: str, started_at: float) -> None:
+        elapsed_seconds = time.time() - started_at
+        PIPELINE_DURATION.labels(stage=stage).observe(elapsed_seconds)
+        decision.stage_timings_ms[stage] = int(elapsed_seconds * 1000)
 
     # --- IEP-0: Moderation Gate (runs before everything else) ---
     t0 = time.time()
@@ -123,7 +129,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         user_id=getattr(request, "user_id", None),
     )
     decision.moderation = mod_result
-    PIPELINE_DURATION.labels(stage="iep0_moderation").observe(time.time() - t0)
+    _record_stage("iep0_moderation", t0)
 
     if mod_result.decision == ModerationDecisionEnum.REJECT:
         decision.status = PipelineStatus.REJECTED
@@ -137,7 +143,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
             _call_text_understanding(client, complaint_id, request),
             _call_image_understanding(client, complaint_id, request),
         )
-        PIPELINE_DURATION.labels(stage="iep1_iep2").observe(time.time() - t0)
+        _record_stage("iep1_iep2", t0)
 
         decision.text_analysis = text_result
         decision.image_analysis = image_result
@@ -153,7 +159,9 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         # --- Media Validation Gate ---
         # Runs after IEP-1+IEP-2, before any downstream IEPs.
         # Catches: no complaint in text, text/image contradictions, ambiguous submissions.
+        t0 = time.time()
         validation = await _validate_media(complaint_id, text_result, image_result)
+        _record_stage("media_validation", t0)
         decision.media_validation = validation
         force_review_after_pipeline = False
 
@@ -168,11 +176,13 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         if validation.status == MediaValidationStatus.NEEDS_CLARIFICATION:
             decision.status = PipelineStatus.NEEDS_CLARIFICATION
             await _add_to_human_review(client, complaint_id, request, validation)
+            human_review_queued = True
             return decision
 
         if validation.status == MediaValidationStatus.HUMAN_REVIEW:
             decision.status = PipelineStatus.REVIEW_REQUIRED
             await _add_to_human_review(client, complaint_id, request, validation)
+            human_review_queued = True
             if validation.text_is_complaint or validation.image_has_complaint:
                 force_review_after_pipeline = True
             else:
@@ -249,8 +259,9 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
                             f"{reason_tail}"
                         ),
                     )
+                    _record_stage("iep3", t0)
                     return decision
-        PIPELINE_DURATION.labels(stage="iep3").observe(time.time() - t0)
+        _record_stage("iep3", t0)
 
         # --- Stage 3: IEP-4 Clustering + Deduplication ---
         t0 = time.time()
@@ -258,7 +269,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         decision.clustering = clustering_result
         if clustering_result:
             decision.is_duplicate = clustering_result.duplicate_status == DuplicateStatus.DUPLICATE
-        PIPELINE_DURATION.labels(stage="iep4").observe(time.time() - t0)
+        _record_stage("iep4", t0)
 
         # --- Stage 4: IEP-5 Priority ---
         t0 = time.time()
@@ -267,7 +278,7 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         if priority_result:
             decision.severity = priority_result.severity
             decision.priority_score = priority_result.priority_score
-        PIPELINE_DURATION.labels(stage="iep5").observe(time.time() - t0)
+        _record_stage("iep5", t0)
 
         # --- Stage 5: IEP-6 Routing ---
         t0 = time.time()
@@ -296,8 +307,9 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
                         clarification_question=None,
                     ),
                 )
+                human_review_queued = True
 
-        PIPELINE_DURATION.labels(stage="iep6").observe(time.time() - t0)
+        _record_stage("iep6", t0)
 
         # --- Confidence bundle assembly ---
         decision.confidence_bundle = _build_confidence_bundle(
@@ -309,12 +321,39 @@ async def run_pipeline(complaint_id: str, request: ComplaintRequest) -> Complain
         )
 
         # --- Stage 6: IEP-7 Explanation ---
+        t0 = time.time()
         explanation_result = await _call_explanation_service(client, complaint_id, decision)
         decision.explanation = explanation_result
+        _record_stage("iep7", t0)
 
-    decision.status = PipelineStatus.REVIEW_REQUIRED if (
-        force_review_after_pipeline or (routing_result and routing_result.requires_review)
-    ) else PipelineStatus.COMPLETED
+        decision.status = PipelineStatus.REVIEW_REQUIRED if (
+            force_review_after_pipeline
+            or (
+                routing_result
+                and (routing_result.requires_review or routing_result.rag_no_candidates)
+            )
+        ) else PipelineStatus.COMPLETED
+
+        if decision.status == PipelineStatus.REVIEW_REQUIRED and not human_review_queued:
+            review_reason = (
+                getattr(routing_result, "review_reason", None)
+                or getattr(decision.confidence_bundle, "review_triggered_by", None)
+                or "Final pipeline decision requires human review."
+            )
+            await _add_to_human_review(
+                client,
+                complaint_id,
+                request,
+                MediaValidationResult(
+                    status=MediaValidationStatus.HUMAN_REVIEW,
+                    text_is_complaint=bool(text_result and getattr(text_result, "is_complaint", True)),
+                    image_has_complaint=bool(image_result and getattr(image_result, "image_present", False)),
+                    text_detected_type=_effective_text_issue_type(text_result) if text_result else None,
+                    image_detected_type=_effective_image_issue_type(image_result) if image_result else None,
+                    clarification_question=review_reason,
+                ),
+            )
+            human_review_queued = True
 
     return decision
 
@@ -992,6 +1031,18 @@ def _effective_text_issue_type(text_result: TextUnderstandingResult | None) -> s
         if not _is_unknown_label(value):
             return value
     return issue_type or None
+
+
+def _effective_image_issue_type(image_result: ImageUnderstandingResult | None) -> str | None:
+    if not image_result or not getattr(image_result, "image_present", False):
+        return None
+    vu = getattr(image_result, "visual_understanding", None)
+    if not vu:
+        return None
+    return _norm_label(
+        getattr(vu, "visual_subcategory", None)
+        or getattr(vu, "visual_category", None)
+    ) or None
 
 
 def _derive_descriptors(
@@ -1808,10 +1859,11 @@ async def _add_to_human_review(
 ) -> None:
     """Fire-and-forget: queue flagged submissions in the review service."""
     try:
+        validation_status = validation.status.value if hasattr(validation.status, "value") else str(validation.status)
         item = HumanReviewItem(
             complaint_id=complaint_id,
-            validation_status=validation.status.value,
-            review_reason=validation.clarification_question or "",
+            validation_status=validation_status,
+            review_reason=validation.clarification_question or validation.contradiction_reason or "",
             original_text=request.text,
             image_filename=request.image_filename,
             image_detected_type=validation.image_detected_type,

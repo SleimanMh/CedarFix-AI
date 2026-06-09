@@ -29,6 +29,7 @@ ISSUE_HIERARCHY: Dict[ComplaintType, Tuple[str, str]] = {
     ComplaintType.FLOODING:         ("drainage",    "flooding"),
     ComplaintType.WASTE:            ("sanitation",  "waste_accumulation"),
     ComplaintType.ELECTRICITY:      ("electricity", "outage"),
+    ComplaintType.TELECOM_OUTAGE:   ("telecom",     "telecom_outage"),
     ComplaintType.TRAFFIC_LIGHT:    ("roads",       "traffic_light"),
     ComplaintType.WATER_PIPE:       ("water",       "pipe_leak"),
     ComplaintType.WATER_OUTAGE:     ("water",       "water_outage"),
@@ -47,6 +48,7 @@ ISSUE_DESCRIPTORS: Dict[ComplaintType, Tuple[str, str, str]] = {
     ComplaintType.FLOODING:         ("environment",    "drainage_system", "overflow"),
     ComplaintType.WASTE:            ("environment",    "public_space",    "accumulation"),
     ComplaintType.ELECTRICITY:      ("utilities",      "electrical_line", "outage"),
+    ComplaintType.TELECOM_OUTAGE:   ("utilities",      "telecom_cable",   "outage_or_damage"),
     ComplaintType.TRAFFIC_LIGHT:    ("transportation", "traffic_signal",  "damage"),
     ComplaintType.WATER_PIPE:       ("utilities",      "water_pipe",      "damage"),
     ComplaintType.WATER_OUTAGE:     ("utilities",      "water_supply",    "outage"),
@@ -86,6 +88,12 @@ ISSUE_KEYWORDS: Dict[ComplaintType, List[str]] = {
         "electricity", "power cut", "power outage", "no power",
         "blackout", "electric issue", "electrical problem",
         "no electricity", "power failure",
+    ],
+    ComplaintType.TELECOM_OUTAGE: [
+        "telecom", "internet outage", "internet down", "no internet",
+        "landline outage", "phone line", "fiber cable", "telecom cable",
+        "telecom cables", "cable falling", "cables falling", "falling cable",
+        "falling cables", "low hanging cable", "downed cable", "internet cable",
     ],
     ComplaintType.TRAFFIC_LIGHT: [
         "traffic light", "traffic signal", "signal broken",

@@ -76,6 +76,11 @@ spec:
                 secretKeyRef:
                   name: cedarfix-secrets
                   key: QDRANT_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cedarfix-secrets
+                  key: OPENAI_API_KEY
           readinessProbe:
             httpGet:
               path: /health
